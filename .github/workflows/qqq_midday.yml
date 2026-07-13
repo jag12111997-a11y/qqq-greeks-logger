@@ -42,17 +42,18 @@ jobs:
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          SESSION: 'pm'
           WINDOW: '7'
           INTERVAL_SECONDS: '60'
           DURATION_SECONDS: '4500'
         run: python qqq_greeks_logger_alpaca.py
 
-      - name: Commit updated CSV back to repo
+      - name: Commit updated data back to repo
         if: always()
         run: |
           git config user.name "qqq-logger-bot"
           git config user.email "actions@github.com"
-          git add qqq_greeks_log.csv
+          git add data
           git commit -m "Midday session $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
           git pull --rebase --autostash origin main || true
           git push || (git pull --rebase --autostash origin main && git push)
