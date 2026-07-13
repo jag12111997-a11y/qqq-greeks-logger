@@ -1,30 +1,31 @@
 # ============================================================
-# QQQ Greeks Logger — MORNING burst
+# QQQ Greeks Logger — MIDDAY burst
 # ============================================================
-# 6:45-8:45 AM Pacific: one snapshot every 5 minutes, window +/-$15.
+# 12:15-1:30 PM Pacific: one snapshot every 1 minute, window +/-$7.
 #
-# GitHub cron runs on UTC and can't schedule faster than every 5 min,
-# so this ONE job starts at 6:45 and loops internally for 2 hours.
-#   13:45 UTC = 6:45 AM PDT (summer). In winter it shifts to 5:45 AM
-#   PST until the cron is bumped. GitHub may start the job a few
-#   minutes late; once started, the 5-minute cadence is exact.
+# GitHub cron can't fire every minute, so this ONE job starts at
+# 12:15 and loops internally every 60 seconds for 75 minutes.
+#   19:15 UTC = 12:15 PM PDT (summer). In winter it shifts to
+#   11:15 AM PST until the cron is bumped.
+# Runs to 1:30 on purpose: the free feed is ~15 min delayed, so the
+# ~1:15 snapshot is what actually shows the 1:00 PM close.
 # ============================================================
 
-name: QQQ Greeks Logger - Morning
+name: QQQ Greeks Logger - Midday
 
 on:
   schedule:
-    - cron: '45 13 * * 1-5'
+    - cron: '15 19 * * 1-5'
   workflow_dispatch: {}
 
 concurrency:
-  group: qqq-morning
+  group: qqq-midday
   cancel-in-progress: false
 
 jobs:
   log-greeks:
     runs-on: ubuntu-latest
-    timeout-minutes: 135
+    timeout-minutes: 90
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -37,13 +38,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run logger (6:45-8:45 PT, every 5 min, +/-$15)
+      - name: Run logger (12:15-1:30 PT, every 1 min, +/-$7)
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
-          WINDOW: '15'
-          INTERVAL_SECONDS: '300'
-          DURATION_SECONDS: '7200'
+          WINDOW: '7'
+          INTERVAL_SECONDS: '60'
+          DURATION_SECONDS: '4500'
         run: python qqq_greeks_logger_alpaca.py
 
       - name: Commit updated CSV back to repo
@@ -52,6 +53,6 @@ jobs:
           git config user.name "qqq-logger-bot"
           git config user.email "actions@github.com"
           git add qqq_greeks_log.csv
-          git commit -m "Morning session $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
+          git commit -m "Midday session $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
           git pull --rebase --autostash origin main || true
           git push || (git pull --rebase --autostash origin main && git push)
