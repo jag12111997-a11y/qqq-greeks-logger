@@ -1,0 +1,55 @@
+# ============================================================
+# GITHUB ACTIONS SCHEDULE FILE — Alpaca version
+# ============================================================
+# SAME RULE AS BEFORE: this file must be saved as .yml (not .txt)
+# inside a folder path exactly like: .github/workflows/
+#   Save it as: .github/workflows/qqq_logger.yml
+#
+# RUN TIMES (Pacific -> UTC, already converted):
+#     7:15 AM Pacific  -> 14:15 UTC
+#     10:15 AM Pacific -> 17:15 UTC
+#     12:45 PM Pacific -> 19:45 UTC
+#   These shift by 1 hour when Daylight Saving Time changes.
+#
+# TWO SECRETS NEEDED THIS TIME (Alpaca uses a Key + Secret pair):
+#     ALPACA_API_KEY     -> your Key ID
+#     ALPACA_API_SECRET  -> your Secret Key
+# ============================================================
+
+name: QQQ Greeks Logger
+
+on:
+  schedule:
+    - cron: '15 14 * * 1-5'
+    - cron: '15 17 * * 1-5'
+    - cron: '45 19 * * 1-5'
+  workflow_dispatch: {}
+
+jobs:
+  log-greeks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run logger
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+        run: python qqq_greeks_logger_alpaca.py
+
+      - name: Commit updated CSV back to repo
+        run: |
+          git config user.name "qqq-logger-bot"
+          git config user.email "actions@github.com"
+          git add qqq_greeks_log.csv
+          git commit -m "Log run $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
+          git push
