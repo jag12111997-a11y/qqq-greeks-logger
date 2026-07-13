@@ -22,7 +22,8 @@
 #     iv     -> implied volatility as a decimal (0.18 = 18%)
 #     delta  -> per $1 move in QQQ (0..1 for calls)
 #     gamma  -> change in delta per $1 move in QQQ
-#     theta  -> dollars lost per calendar day (negative)
+#     theta  -> dollars lost over 1 calendar day (broker convention); for a
+#               0DTE option this is the time value you lose holding to expiry
 #     vega   -> dollars gained per 1 percentage-point rise in IV
 #
 #   IV is solved from the option's mid price (or last if no quote).
@@ -101,10 +102,14 @@ def _call_greeks(S, K, T, r, q, sigma):
     delta = math.exp(-q * T) * _norm_cdf(d1)
     gamma = math.exp(-q * T) * _norm_pdf(d1) / (S * sigma * sqrtT)
     vega = S * math.exp(-q * T) * _norm_pdf(d1) * sqrtT / 100.0          # per 1% IV
-    theta_year = (-(S * math.exp(-q * T) * _norm_pdf(d1) * sigma) / (2.0 * sqrtT)
-                  - r * K * math.exp(-r * T) * _norm_cdf(d2)
-                  + q * S * math.exp(-q * T) * _norm_cdf(d1))
-    theta = theta_year / 365.0                                          # per day
+    # Theta: broker "1-calendar-day" convention = the price change from today to
+    # tomorrow. For a 0DTE option tomorrow is past expiry, so value drops to
+    # intrinsic and theta becomes the remaining time value you lose by holding
+    # to expiry -- matching what Webull / thinkorswim / etc. display. (The raw
+    # Black-Scholes instantaneous theta blows up near expiry and overstates the
+    # per-day loss, which is why brokers use this convention for 0DTE.)
+    T_next = max(T - 1.0 / 365.0, 0.0)
+    theta = _bs_call_price(S, K, T_next, r, q, sigma) - _bs_call_price(S, K, T, r, q, sigma)
     return delta, gamma, theta, vega
 
 
