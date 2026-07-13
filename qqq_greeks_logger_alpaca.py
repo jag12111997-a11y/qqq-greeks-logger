@@ -8,7 +8,14 @@
 #     Greeks (iv/delta/gamma/theta/vega) for each strike
 #   - Appends one timestamped snapshot per capture to a CSV
 #
+# OUTPUT LAYOUT (organized by day and session):
+#   data/YYYY-MM-DD/am/qqq_greeks_YYYY-MM-DD_am.csv   (morning)
+#   data/YYYY-MM-DD/pm/qqq_greeks_YYYY-MM-DD_pm.csv   (midday)
+#   Each session writes its own dated file into its am/ or pm/
+#   folder, so history stays sorted by date instead of one big file.
+#
 # SESSION / LOOP MODE (set via environment variables):
+#   SESSION           "am" or "pm" (which folder to write into)
 #   WINDOW            dollars each side of spot     (default 15)
 #   INTERVAL_SECONDS  seconds between snapshots      (default 0)
 #   DURATION_SECONDS  total length of the session    (default 0)
@@ -44,7 +51,8 @@ from zoneinfo import ZoneInfo
 import requests
 
 SYMBOL = "QQQ"
-OUTPUT_FILE = "qqq_greeks_log.csv"
+BASE_DIR = "data"                       # top-level folder for organized history
+SESSION = os.environ.get("SESSION", "").lower()   # "am" / "pm" (auto if blank)
 DATA_BASE = "https://data.alpaca.markets"
 TRADING_BASE = os.environ.get("ALPACA_TRADING_BASE", "https://paper-api.alpaca.markets")
 
@@ -245,31 +253,25 @@ def build_snapshot_rows():
     return rows
 
 
+def output_path():
+    # data/<trading date>/<am|pm>/qqq_greeks_<date>_<session>.csv
+    et = ZoneInfo("America/New_York")
+    now_et = datetime.datetime.now(et)
+    date = now_et.date().isoformat()
+    session = SESSION if SESSION in ("am", "pm") else ("am" if now_et.hour < 12 else "pm")
+    return os.path.join(BASE_DIR, date, session, f"qqq_greeks_{date}_{session}.csv")
+
+
 def write_rows(new_rows):
-    # Append if the file's header already matches; otherwise create it, or
-    # do a one-time migration to the new schema (preserving old rows).
-    if not os.path.exists(OUTPUT_FILE):
-        with open(OUTPUT_FILE, "w", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=FIELDNAMES)
+    # Each day+session has its own file; create with a header, else append.
+    path = output_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    is_new = not os.path.exists(path)
+    with open(path, "a", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=FIELDNAMES)
+        if is_new:
             w.writeheader()
-            w.writerows(new_rows)
-        return
-
-    with open(OUTPUT_FILE, newline="") as f:
-        reader = csv.DictReader(f)
-        header = reader.fieldnames
-        old_rows = list(reader) if header != FIELDNAMES else None
-
-    if header == FIELDNAMES:
-        with open(OUTPUT_FILE, "a", newline="") as f:
-            csv.DictWriter(f, fieldnames=FIELDNAMES).writerows(new_rows)
-    else:
-        with open(OUTPUT_FILE, "w", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=FIELDNAMES)
-            w.writeheader()
-            for row in old_rows:
-                w.writerow({k: row.get(k, "") for k in FIELDNAMES})
-            w.writerows(new_rows)
+        w.writerows(new_rows)
 
 
 def main():
