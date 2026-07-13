@@ -1,17 +1,22 @@
 # ============================================================
 # GITHUB ACTIONS SCHEDULE FILE — Alpaca version
 # ============================================================
-# SAME RULE AS BEFORE: this file must be saved as .yml (not .txt)
-# inside a folder path exactly like: .github/workflows/
-#   Save it as: .github/workflows/qqq_logger.yml
+# Save as: .github/workflows/qqq_logger.yml
 #
-# RUN TIMES (Pacific -> UTC, already converted):
-#     7:15 AM Pacific  -> 14:15 UTC
-#     10:15 AM Pacific -> 17:15 UTC
-#     12:45 PM Pacific -> 19:45 UTC
-#   These shift by 1 hour when Daylight Saving Time changes.
+# RUN TIMES — chosen to stay INSIDE U.S. market hours in BOTH
+# daylight saving (summer) and standard time (winter). GitHub's
+# scheduler always runs on UTC and ignores daylight saving, so
+# these fixed UTC times are picked to be safe in either season.
 #
-# TWO SECRETS NEEDED THIS TIME (Alpaca uses a Key + Secret pair):
+#   UTC time      Summer (PDT)     Winter (PST)
+#   15:00 UTC  ->   8:00 AM          7:00 AM
+#   17:15 UTC  ->  10:15 AM          9:15 AM
+#   19:30 UTC  ->  12:30 PM         11:30 AM
+#
+#   The market is open 6:30 AM - 1:00 PM Pacific year-round, so
+#   all three runs land safely inside the session either season.
+#
+# TWO SECRETS NEEDED (Alpaca uses a Key + Secret pair):
 #     ALPACA_API_KEY     -> your Key ID
 #     ALPACA_API_SECRET  -> your Secret Key
 # ============================================================
@@ -20,9 +25,9 @@ name: QQQ Greeks Logger
 
 on:
   schedule:
-    - cron: '15 14 * * 1-5'
+    - cron: '0 15 * * 1-5'
     - cron: '15 17 * * 1-5'
-    - cron: '45 19 * * 1-5'
+    - cron: '30 19 * * 1-5'
   workflow_dispatch: {}
 
 jobs:
