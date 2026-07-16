@@ -13,9 +13,10 @@
 
 name: QQQ Greeks Logger - Midday
 
+# Started by cron-job.org at 12:15 PM Pacific (weekdays), which fires on time
+# via workflow_dispatch. GitHub's own cron is intentionally NOT used here
+# (it runs late/unreliably and would cause duplicate sessions).
 on:
-  schedule:
-    - cron: '15 19 * * 1-5'
   workflow_dispatch: {}
 
 concurrency:
