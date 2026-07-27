@@ -1,0 +1,12 @@
+# macOS clutter — Finder drops these everywhere, they don't belong in git
+.DS_Store
+**/.DS_Store
+
+# Python compiled bytecode — regenerated automatically, never commit it
+__pycache__/
+**/__pycache__/
+*.pyc
+
+# Big binaries that drifted into the data folder
+data.zip
+*.xlsx

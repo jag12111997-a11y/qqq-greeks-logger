@@ -1,0 +1,47 @@
+name: Market Dash
+
+on:
+  schedule:
+    - cron: '30 13 * * 1-5'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-market-dash:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests yfinance webull
+
+      - name: Run market dash fetch
+        working-directory: market-dash
+        env:
+          # FRED fills CPI and the 2s10s curve.
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          # Alpaca powers the GEX engine (full options chain, calls + puts).
+          # The saved secret is named ALPACA_API_SECRET (that's what your
+          # greeks logger used). Your .env files call it ALPACA_SECRET_KEY,
+          # so the script sees it under BOTH names and reads whichever exists.
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET }}
+        run: python market_dash_fetch.py
+
+      - name: Commit new data back to repo
+        run: |
+          git config user.name "market-dash-bot"
+          git config user.email "actions@github.com"
+          git add market-dash/data market-dash/history.js
+          git commit -m "Market dash $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
+          git push
