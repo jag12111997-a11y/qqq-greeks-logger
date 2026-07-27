@@ -6,10 +6,12 @@
 <title>M@rk3t D@$h</title>
 <style>
   :root {
-    --bg:#0d1117; --panel:#161b22; --line:#272e38;
-    --txt:#e6edf3; --dim:#8b949e; --faint:#5a6371;
-    --up:#3fb950; --down:#f85149; --flat:#8b949e;
-    --accent:#58a6ff; --warn:#d29922;
+    /* Webull neon-on-black. Pure black ground, saturated accents. */
+    --bg:#000000; --panel:#0b0b10; --line:#1e1e2a;
+    --txt:#ececf4; --dim:#8b8ba6; --faint:#55556b;
+    --up:#00e676; --down:#ff453a; --flat:#8b8ba6;
+    --accent:#00e5ff; --warn:#ffd600;
+    --purple:#b388ff; --magenta:#ff00e5; --orange:#ff9100; --teal:#64ffda;
   }
   * { box-sizing:border-box; }
   body {
@@ -21,7 +23,8 @@
 
   header { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
            border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:22px; }
-  h1 { font-size:26px; margin:0; letter-spacing:1px; }
+  h1 { font-size:26px; margin:0; letter-spacing:2px; color:var(--accent);
+       text-shadow:0 0 12px rgba(0,229,255,.35); }
   .stamp { color:var(--dim); font-size:12px; }
   select { background:var(--panel); color:var(--txt); border:1px solid var(--line);
            padding:5px 9px; border-radius:6px; font-family:inherit; font-size:12px; }
@@ -29,7 +32,8 @@
   .regime { background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent);
             border-radius:8px; padding:16px 18px; margin-bottom:22px; }
   .regime .label { color:var(--dim); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; }
-  .regime .call { font-size:21px; margin-top:6px; }
+  .regime .call { font-size:21px; margin-top:6px; letter-spacing:1px;
+                  text-shadow:0 0 14px currentColor; }
   .regime .why { color:var(--dim); font-size:12.5px; margin-top:8px; }
 
   /* Themed bands. Inside a band, boxes sit in a grid but align to the TOP so a
@@ -43,6 +47,7 @@
                color:var(--dim); white-space:nowrap; }
   .band i { flex:1; height:1px; background:var(--line); }
   section { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:15px 17px; }
+  .regime { box-shadow:0 0 24px rgba(0,229,255,.06); }
   section h2 { font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
                color:var(--dim); margin:0 0 12px; font-weight:600; }
 
@@ -70,6 +75,7 @@
   .read[open] > summary { margin-bottom:6px; }
 
   .up { color:var(--up); } .down { color:var(--down); } .flat { color:var(--flat); }
+  table.wl tr:not(:first-child):hover { background:rgba(0,229,255,.05); }
 
   table { width:100%; border-collapse:collapse; font-size:12.5px; }
   th { text-align:left; color:var(--dim); font-weight:400; font-size:10.5px;
@@ -85,7 +91,7 @@
 
   section.wide { margin-bottom:16px; }
   table.wl td, table.wl th { padding:4px 0; }
-  table.wl tr:not(:first-child):hover { background:rgba(255,255,255,.03); }
+  table.wl tr:not(:first-child):hover { background:rgba(0,229,255,.05); }
   .donutwrap { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
   .legend { font-size:11.5px; flex:1; min-width:150px; }
   .legend div { display:flex; align-items:center; gap:6px; padding:1px 0; }
@@ -187,6 +193,71 @@
     return '<details class="read" open><summary><b>Read</b></summary><div>' +
            (text || na()) + "</div></details>";
   }
+  // ---------- dates and times: always Pacific, always AM/PM ----------
+  var PT = "America/Los_Angeles";
+  var MONTHS = ["January","February","March","April","May","June",
+                "July","August","September","October","November","December"];
+
+  // "2026-07-24" -> "July 24-2026".  Date-only strings are formatted from
+  // their parts on purpose: parsing them as UTC then shifting to Pacific
+  // would roll the date back a day.
+  function fmtDate(v) {
+    if (!has(v)) return na();
+    var str = String(v).trim();
+    var m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return MONTHS[+m[2] - 1] + " " + (+m[3]) + "-" + m[1];
+    m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);          // 7/24/2026
+    if (m) return MONTHS[+m[1] - 1] + " " + (+m[2]) + "-" + m[3];
+    var d = toDate(str);
+    if (!d) return esc(str);
+    var parts = ptParts(d);
+    return MONTHS[parts.month - 1] + " " + parts.day + "-" + parts.year;
+  }
+
+  function toDate(v) {
+    if (!has(v)) return null;
+    var str = String(v).trim();
+    // "2026-07-27 16:10:00" with no zone is a UTC stamp from the script
+    if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(str)) {
+      str = str.replace(" ", "T") + "Z";
+    }
+    var d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function ptParts(d) {
+    var f = d.toLocaleString("en-US", {
+      timeZone: PT, year: "numeric", month: "numeric", day: "numeric"
+    }).split("/");
+    return { month: +f[0], day: +f[1], year: +f[2] };
+  }
+
+  // -> "6:30 AM PT"
+  function fmtTime(v) {
+    var d = toDate(v);
+    if (!d) return has(v) ? esc(v) : na();
+    return d.toLocaleString("en-US", {
+      timeZone: PT, hour: "numeric", minute: "2-digit", hour12: true
+    }) + " PT";
+  }
+
+  // -> "July 24-2026 · 6:30 AM PT"
+  function fmtDateTime(v) {
+    var d = toDate(v);
+    if (!d) return has(v) ? esc(v) : na();
+    var p = ptParts(d);
+    return MONTHS[p.month - 1] + " " + p.day + "-" + p.year + " · " + fmtTime(v);
+  }
+
+  // dates that may carry a suffix like "2026-07-30 (fc)"
+  function fmtLoose(v) {
+    if (!has(v)) return na();
+    var str = String(v);
+    var m = str.match(/^(\d{4})-(\d{2})-(\d{2})(.*)$/);
+    if (!m) return esc(str);
+    return MONTHS[+m[2] - 1] + " " + (+m[3]) + "-" + m[1] + esc(m[4]);
+  }
+
   function get(o, path, dflt) {
     var cur = o;
     var parts = path.split(".");
@@ -234,7 +305,7 @@
     var ff = m.fed_funds, curve = m.curve_2s10s;
 
     body += row("Growth", ok(gdp)
-      ? num(gdp.latest, 1) + " <span class=k>(" + esc(gdp.latest_date) + ")</span> " + signed(gdp.change, 1)
+      ? num(gdp.latest, 1) + " <span class=k>(" + fmtLoose(gdp.latest_date) + ")</span> " + signed(gdp.change, 1)
       : na());
     body += row("Inflation (CPI)", ok(cpi) ? num(cpi.latest, 1) + " " + signed(cpi.change, 2) : na());
     body += row("Core PCE", ok(pce) ? num(pce.latest, 2) + " " + signed(pce.change, 2) : na());
@@ -249,7 +320,7 @@
       body += '<div style="margin-top:14px"><h2 style="margin-bottom:6px">Main catalysts</h2>';
       hi.slice(0, 8).forEach(function (ev) {
         body += '<div class="cat hi"><div>' + esc(ev.title) + "</div>" +
-          '<div class="when">' + esc(String(ev.date || "").slice(0, 16).replace("T", "  ")) + "</div>" +
+          '<div class="when">' + fmtDateTime(ev.date) + "</div>" +
           (has(ev.forecast)
             ? '<div class="fc">fc ' + esc(ev.forecast) + "  ·  prev " + esc(ev.previous) + "</div>"
             : "") + "</div>";
@@ -295,7 +366,7 @@
       body += '<div style="margin-top:12px"><h2 style="margin-bottom:6px">Main catalysts</h2>';
       hi.slice(0, 7).forEach(function (ev) {
         body += '<div class="cat hi"><div>' + esc(ev.title) + "</div>" +
-          '<div class="when">' + esc(String(ev.date || "").slice(0, 16).replace("T", "  ")) + "</div>" +
+          '<div class="when">' + fmtDateTime(ev.date) + "</div>" +
           (has(ev.forecast)
             ? '<div class="fc">fc ' + esc(ev.forecast) + "  ·  prev " + esc(ev.previous) + "</div>"
             : "") +
@@ -349,7 +420,7 @@
       body += row("Non-commercial net", signed(c.nonCommercialNet, 0));
       body += row("Commercial net", signed(c.commercialNet, 0));
       body += row("Weekly change", signed(c.nonCommercialNetChange, 0));
-      body += row("Report date", val(c.reportDate));
+      body += row("Report date", fmtDate(c.reportDate));
       if (c.read) readBits.push(k.replace(/_/g, " ") + ": " + c.read);
     });
 
@@ -373,13 +444,13 @@
     if (!has(p)) return "#30363d";
     var a = Math.min(Math.abs(p) / 1.6, 1);          // saturate around 1.6%
     if (p >= 0) {
-      if (a > 0.66) return "#1a7f37";
-      if (a > 0.33) return "#2ea043";
-      return "#4ac26b";
+      if (a > 0.66) return "#00e676";
+      if (a > 0.33) return "#00c853";
+      return "#69f0ae";
     }
-    if (a > 0.66) return "#b62324";
-    if (a > 0.33) return "#da3633";
-    return "#f4756f";
+    if (a > 0.66) return "#ff1744";
+    if (a > 0.33) return "#ff453a";
+    return "#ff8a80";
   }
 
   function donut(rows) {
@@ -412,7 +483,7 @@
 
       var col = perfColor(r.pct);
       svg += '<path class="slice" d="' + d + '" fill="' + col +
-             '" stroke="#0d1117" stroke-width="1.5"><title>' + esc(r.sector) +
+             '" stroke="#000000" stroke-width="1.5"><title>' + esc(r.sector) +
              "\n" + (r.pct > 0 ? "+" : "") + r.pct + "%   weight " +
              r.w.toFixed(2) + "%</title></path>";
 
@@ -427,9 +498,9 @@
                             .replace("Consumer Discretionary", "Cons Disc")
                             .replace("Consumer Staples", "Cons Staples");
         labels += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) +
-          '" text-anchor="' + anchor + '" font-size="9.5" fill="#8b949e">' + esc(short) +
+          '" text-anchor="' + anchor + '" font-size="9.5" fill="#8b8ba6">' + esc(short) +
           '<tspan x="' + lx.toFixed(1) + '" dy="11" fill="' +
-          (r.pct >= 0 ? "#3fb950" : "#f85149") + '">' +
+          (r.pct >= 0 ? "#00e676" : "#ff453a") + '">' +
           (r.pct > 0 ? "+" : "") + r.pct + "%</tspan></text>";
       }
 
@@ -443,9 +514,9 @@
 
     return '<div style="text-align:center"><svg width="330" height="272" viewBox="-40 -6 344 278">' +
       svg + labels +
-      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#8b949e" font-size="10">ALL SECTORS</text>' +
+      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#8b8ba6" font-size="10">ALL SECTORS</text>' +
       '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" fill="' +
-      (allSec >= 0 ? "#3fb950" : "#f85149") + '" font-size="19">' +
+      (allSec >= 0 ? "#00e676" : "#ff453a") + '" font-size="19">' +
       (allSec > 0 ? "+" : "") + allSec.toFixed(2) + "%</text></svg></div>" +
       '<div style="font-size:10.5px;color:var(--faint);margin:2px 0 10px;text-align:center">' +
       "slice size = S&amp;P weight · colour = today&rsquo;s move · centre = weighted average</div>" +
@@ -493,7 +564,7 @@
     body += row("SPX + SPXW P/C", num(o.spx_spxw_pc, 2));
     body += row("Volume", commas(o.total_volume));
     body += row("Open interest", commas(o.total_open_interest));
-    if (has(o.session_date)) body += row("Session", val(o.session_date));
+    if (has(o.session_date)) body += row("Session", fmtDate(o.session_date));
 
     var t = o.total_pc;
     var r = t >= 1.15 ? "put-heavy — fear bid / possible washout"
@@ -533,7 +604,7 @@
     body += tbl("Premium share", v.premium_share);
     if (has(v.total_volume)) body += row("Total matched volume", commas(v.total_volume));
     if (has(v.total_premium)) body += row("Total premium", "$" + commas(v.total_premium));
-    if (has(v.session_date)) body += row("Session", val(v.session_date));
+    if (has(v.session_date)) body += row("Session", fmtDate(v.session_date));
 
     // Read: is Cboe's share drifting vs its own 5-day?
     var c = (v.volume_share || []).filter(function (r) { return /cboe/i.test(r.venue); })[0];
@@ -549,7 +620,7 @@
   }
 
   // The eight that actually drive your read. Everything else is context.
-  var STARS = ["QQQ", "SPY", "UUP", "USO", "GLD", "VIX", "EWY", "TLT"];
+  var STARS = ["QQQ", "SPY", "DXY", "USO", "GLD", "VIX", "EWY", "TLT"];
 
   function dollarsFrom(last, pct) {
     if (!has(last) || !has(pct)) return null;
@@ -570,7 +641,8 @@
             '<th class="smhide" style="text-align:right">Day $</th>' +
             '<th style="text-align:right">Day %</th>';
 
-    h += '<th style="text-align:right">YTD $</th>' +
+    h += '<th style="text-align:right" title="distance from the 20-day normal">z20</th>' +
+         '<th class="smhide" style="text-align:right">YTD $</th>' +
          '<th style="text-align:right">YTD %</th></tr>';
 
     rows.forEach(function (r) {
@@ -585,15 +657,20 @@
         '<td class="num smhide">' + money(dollarsFrom(r.last, r.pct_change)) + "</td>" +
         '<td class="num">' + signed(r.pct_change, 2, "%") + "</td>";
 
-      h += '<td class="num smhide">' + money(dollarsFrom(r.last, r.ret_ytd)) + "</td>" +
+      // z-score: |z| >= 2 is genuinely stretched, which is a fade candidate
+      var zc = has(r.z20) ? (Math.abs(r.z20) >= 2 ? (r.z20 > 0 ? "up" : "down") : "flat") : "flat";
+      h += '<td class="num"><span class="' + zc + '"' +
+           (has(r.z20) && Math.abs(r.z20) >= 2 ? ' style="font-weight:500"' : "") + ">" +
+           (has(r.z20) ? (r.z20 > 0 ? "+" : "") + r.z20.toFixed(2) : "·") + "</span></td>" +
+           '<td class="num smhide">' + money(dollarsFrom(r.last, r.ret_ytd)) + "</td>" +
            '<td class="num">' + signed(r.ret_ytd, 1, "%") + "</td></tr>";
     });
     return h + "</table>";
   }
 
   var STAR_COLOR = {
-    QQQ:"#58a6ff", SPY:"#3fb950", UUP:"#d29922", USO:"#f85149",
-    GLD:"#bc8cff", VIX:"#39c5cf", EWY:"#ff7b72", TLT:"#7ee787"
+    QQQ:"#00e5ff", SPY:"#00e676", DXY:"#ffd600", USO:"#ff453a",
+    GLD:"#b388ff", VIX:"#ff00e5", EWY:"#ff9100", TLT:"#64ffda"
   };
 
   // Pull one field per star symbol out of every logged session.
@@ -653,9 +730,9 @@
 
     // 100 baseline
     lines += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + Y(100).toFixed(1) +
-             '" y2="' + Y(100).toFixed(1) + '" stroke="#272e38" stroke-dasharray="3 3"/>' +
+             '" y2="' + Y(100).toFixed(1) + '" stroke="#1e1e2a" stroke-dasharray="3 3"/>' +
              '<text x="' + (padL - 6) + '" y="' + (Y(100) + 4).toFixed(1) +
-             '" text-anchor="end" fill="#5a6371" font-size="9">100</text>';
+             '" text-anchor="end" fill="#55556b" font-size="9">100</text>';
 
     STARS.forEach(function (sym) {
       var seq = norm[sym], d = "", last = null, lastI = -1;
@@ -666,7 +743,7 @@
       }
       var pts = seq.filter(function (v) { return v !== null; }).length;
       if (!d || pts < 2) return;   // one dot is not a line
-      var col = STAR_COLOR[sym] || "#8b949e";
+      var col = STAR_COLOR[sym] || "#8b8ba6";
       lines += '<path d="' + d + '" fill="none" stroke="' + col +
                '" stroke-width="1.8" stroke-linejoin="round"/>';
       lines += '<circle cx="' + X(lastI).toFixed(1) + '" cy="' + Y(last).toFixed(1) +
@@ -680,10 +757,15 @@
     var drawn = STARS.filter(function (sym) {
       return norm[sym].filter(function (v) { return v !== null; }).length >= 2;
     });
-    lines += '<text x="' + padL + '" y="' + (Hh - 6) + '" fill="#5a6371" font-size="9">' +
-             esc(dates[0]) + "</text>" +
+    function shortDate(v) {                       // "Jul 14"
+      var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return m ? MONTHS[+m[2] - 1].slice(0, 3) + " " + (+m[3]) : String(v);
+    }
+    lines += '<text x="' + padL + '" y="' + (Hh - 6) + '" fill="#55556b" font-size="9">' +
+             esc(shortDate(dates[0])) + "</text>" +
              '<text x="' + (W - padR) + '" y="' + (Hh - 6) +
-             '" text-anchor="end" fill="#5a6371" font-size="9">' + esc(dates[n - 1]) + "</text>";
+             '" text-anchor="end" fill="#55556b" font-size="9">' +
+             esc(shortDate(dates[n - 1])) + "</text>";
 
     return '<svg viewBox="0 0 ' + W + " " + Hh + '" width="100%" height="' + Hh +
       '" style="display:block">' + lines + "</svg>" +
@@ -1042,14 +1124,15 @@
     var body = "";
     Object.keys(byDay).sort().forEach(function (d) {
       var dt = new Date(d + "T12:00:00");
-      body += '<h2 style="margin:12px 0 4px">' + DAYS[dt.getUTCDay()] + " " + esc(d) + "</h2>";
+      body += '<h2 style="margin:12px 0 4px">' + DAYS[dt.getUTCDay()] + " " +
+              fmtDate(d).replace(/<[^>]*>/g, "") + "</h2>";
       var whys = [];
       byDay[d].forEach(function (x) {
         var hi = x.impact === "High";
         body += '<div class="cat' + (hi ? " hi" : "") + '">' +
           '<div><span style="color:var(--dim)">' + esc(x.country) + "</span>  " +
           esc(x.title) + "</div>" +
-          '<div class="when">' + esc(String(x.date).slice(11, 16)) +
+          '<div class="when">' + fmtTime(x.date) +
           (has(x.forecast) ? "   fc " + esc(x.forecast) + "  ·  prev " + esc(x.previous) : "") +
           "</div></div>";
         var w = whyFor(x.title);
@@ -1057,7 +1140,7 @@
       });
 
       if (whys.length) {
-        body += '<div style="margin:6px 0 14px;padding:8px 10px;background:rgba(88,166,255,.05);' +
+        body += '<div style="margin:6px 0 14px;padding:8px 10px;background:rgba(0,229,255,.06);' +
                 'border-left:2px solid var(--accent);font-size:11.5px;color:var(--dim)">' +
                 '<b style="color:var(--dim);font-weight:400;letter-spacing:1px;font-size:10px;' +
                 'text-transform:uppercase;display:block;margin-bottom:4px">Why it matters</b>' +
@@ -1155,14 +1238,14 @@
     var bw = Math.max((W - padL - padR) / strikes.length - 1, 1.5);
 
     var svg = '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + zero.toFixed(1) +
-              '" y2="' + zero.toFixed(1) + '" stroke="#272e38"/>';
+              '" y2="' + zero.toFixed(1) + '" stroke="#1e1e2a"/>';
 
     strikes.forEach(function (s2) {
       var y = Y(s2.net_gex), h = Math.abs(y - zero);
       svg += '<rect x="' + (X(s2.strike) - bw / 2).toFixed(1) + '" y="' +
         Math.min(y, zero).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' +
         Math.max(h, 0.6).toFixed(1) + '" fill="' +
-        (s2.net_gex >= 0 ? "#3fb950" : "#f85149") + '" opacity=".85"><title>' +
+        (s2.net_gex >= 0 ? "#00e676" : "#ff453a") + '" opacity=".85"><title>' +
         s2.strike + "\ncall " + fmtBig(s2.call_gex).replace(/<[^>]*>/g, "") +
         "\nput " + fmtBig(s2.put_gex).replace(/<[^>]*>/g, "") +
         "\nnet " + fmtBig(s2.net_gex).replace(/<[^>]*>/g, "") +
@@ -1177,12 +1260,12 @@
         '<text x="' + x + '" y="' + (Hh - padB + 12) + '" text-anchor="middle" fill="' + col +
         '" font-size="9.5">' + label + " " + k + "</text>";
     }
-    svg += marker(get(g, "levels.put_wall"), "#f85149", "put wall", true);
-    svg += marker(get(g, "levels.call_wall"), "#3fb950", "call wall", true);
-    svg += marker(flip, "#d29922", "flip", false);
-    svg += marker(spot, "#58a6ff", "spot", false);
+    svg += marker(get(g, "levels.put_wall"), "#ff453a", "put wall", true);
+    svg += marker(get(g, "levels.call_wall"), "#00e676", "call wall", true);
+    svg += marker(flip, "#ffd600", "flip", false);
+    svg += marker(spot, "#00e5ff", "spot", false);
 
-    var body = '<div style="background:' + (pos ? "rgba(63,185,80,.07)" : "rgba(248,81,73,.07)") +
+    var body = '<div style="background:' + (pos ? "rgba(0,230,118,.10)" : "rgba(255,69,58,.10)") +
       ";border-left:3px solid " + (pos ? "var(--up)" : "var(--down)") +
       ';padding:10px 12px;margin-bottom:12px">' +
       '<div style="font-size:11px;color:var(--dim);letter-spacing:1.5px">REGIME</div>' +
@@ -1200,9 +1283,9 @@
     body += "<table><tr><th>Level</th><th style='text-align:right'>Strike</th>" +
             "<th style='text-align:right'>vs spot</th></tr>";
     var L = g.levels || {};
-    [["Gamma flip", flip, "#d29922"],
-     ["Call wall (resistance)", L.call_wall, "#3fb950"],
-     ["Put wall (support)", L.put_wall, "#f85149"],
+    [["Gamma flip", flip, "#ffd600"],
+     ["Call wall (resistance)", L.call_wall, "#00e676"],
+     ["Put wall (support)", L.put_wall, "#ff453a"],
      ["Max + gamma (pin)", L.max_positive_gamma, "var(--dim)"],
      ["Max − gamma (amplify)", L.max_negative_gamma, "var(--dim)"],
      ["Highest OI (magnet)", L.highest_oi_strike, "var(--dim)"]
@@ -1234,11 +1317,11 @@
         ? '<div style="margin-top:14px"><h2 style="margin-bottom:6px">G — gamma ratio</h2>' +
           '<div style="display:flex;height:16px;border-radius:3px;overflow:hidden;font-size:10px">' +
           '<div style="width:' + (g.gamma_ratio * 100).toFixed(1) +
-          '%;background:#3fb950;opacity:.8;display:flex;align-items:center;' +
-          'justify-content:center;color:#0d1117">' +
+          '%;background:#00e676;opacity:.85;display:flex;align-items:center;' +
+          'justify-content:center;color:#000">' +
           (g.gamma_ratio > 0.15 ? "calls " + (g.gamma_ratio * 100).toFixed(1) + "%" : "") + "</div>" +
-          '<div style="flex:1;background:#f85149;opacity:.8;display:flex;align-items:center;' +
-          'justify-content:center;color:#0d1117">' +
+          '<div style="flex:1;background:#ff453a;opacity:.85;display:flex;align-items:center;' +
+          'justify-content:center;color:#000">' +
           (g.gamma_ratio < 0.85 ? "puts " + (100 - g.gamma_ratio * 100).toFixed(1) + "%" : "") +
           "</div></div>" +
           '<div style="font-size:11px;color:var(--dim);margin-top:4px">' + num(g.gamma_ratio, 3) +
@@ -1281,12 +1364,98 @@
         "</b>. Gamma tells you the vol regime; delta tells you which way dealer " +
         "hedging leans. When GEX and DEX disagree, the pin is fighting a directional flow.</div>");
     }
+    lines.push("<div style='margin:6px 0;padding:7px 9px;background:rgba(255,214,0,.08);" +
+      "border-left:2px solid var(--warn);font-size:11.5px'>" +
+      "<b style='color:var(--warn)'>Caveat that matters.</b> Cboe's research desk measured the " +
+      "actual net gamma hedging load from 0DTE flow at roughly <b>0.2% of SPX daily liquidity</b> " +
+      "— over 95% of 0DTE trades are limited-risk and call/put flow is largely balanced, so it " +
+      "nets out. Read these levels as <b>where the crowd's contracts are stacked</b>, not as " +
+      "proof dealers are forced to defend them. Both usually point to the same strikes. When a " +
+      "wall breaks on balanced flow, the mechanical floor was thinner than the chart felt.</div>");
     lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>" +
       "Built from open interest and locally-solved Black-Scholes greeks. It assumes a " +
       "dealer positioning convention — if that assumption is wrong, the sign is wrong. " +
       "Treat levels as where flow concentrates, not as predictions.</div>");
 
     return secWide("GEX — gamma exposure (ours, not a vendor's)", body,
+      '<details class="read" open><summary><b>Read</b></summary><div>' +
+      lines.join("") + "</div></details>");
+  }
+
+  function secGeometry(e) {
+    var g = get(e, "quant.geometry");
+    if (!ok(g) || !has(g.diversification_volume)) return "";
+
+    var vol = g.diversification_volume;
+    var pct = Math.max(Math.min(vol, 1), 0) * 100;
+    var col = vol < 0.15 ? "var(--down)" : vol < 0.35 ? "var(--warn)" : "var(--up)";
+
+    var body = '<div style="margin-bottom:10px">' +
+      '<div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;' +
+      'color:var(--dim)">Diversification volume  √det(G)</div>' +
+      '<div style="font-size:23px;color:' + col + '">' + num(vol, 4) + "</div>" +
+      '<div style="height:10px;background:rgba(255,255,255,.05);border-radius:2px;' +
+      'margin-top:6px;overflow:hidden"><div style="height:10px;width:' + pct.toFixed(1) +
+      '%;background:' + col + ';opacity:.8"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:10px;' +
+      'color:var(--faint);margin-top:2px"><span>0 = one crowded trade</span>' +
+      "<span>1 = independent</span></div></div>";
+
+    body += row("Regime", '<span style="color:' + col + '">' + esc(g.regime) + "</span>") +
+      row("det G", num(g.det_G, 6)) +
+      row("Average correlation", num(g.avg_correlation, 3)) +
+      row("Assets × sessions", g.assets + " × " + g.observations);
+
+    body += '<div style="margin-top:14px"><h2 style="margin-bottom:6px">' +
+      "Marchenko–Pastur noise floor</h2>" +
+      row("λ₊ threshold", num(g.mp_lambda_plus, 3)) +
+      row("Real factors", g.real_factors + " of " + g.assets) +
+      row("Top eigenvalue share", num(g.top_eigen_share_pct, 1, "%")) + "</div>";
+
+    if (get(g, "eigenvalues", []).length) {
+      var mx = g.eigenvalues[0] || 1;
+      body += '<div style="margin-top:10px;font-size:10.5px;color:var(--dim)">eigenvalues ' +
+        "(bars above the dashed line are real factors, the rest is noise)</div>" +
+        '<div style="display:flex;align-items:flex-end;gap:3px;height:54px;margin-top:4px;' +
+        'position:relative">';
+      g.eigenvalues.forEach(function (ev) {
+        var real = ev > g.mp_lambda_plus;
+        body += '<div title="' + ev + '" style="flex:1;height:' +
+          Math.max(ev / mx * 100, 2).toFixed(1) + '%;background:' +
+          (real ? "var(--accent)" : "var(--line)") + ';border-radius:1px 1px 0 0"></div>';
+      });
+      body += '<div style="position:absolute;left:0;right:0;bottom:' +
+        (g.mp_lambda_plus / mx * 100).toFixed(1) +
+        '%;border-top:1px dashed var(--warn)"></div></div>';
+    }
+
+    var lines = [];
+    lines.push("<div style='margin:5px 0'>√det(G) is <b>" + num(vol, 4) + "</b>. " +
+      (vol < 0.15
+        ? "Correlations have collapsed toward one — diversification hasn't shrunk, it has " +
+          "<b>geometrically stopped existing</b>. This is the alarm that matters for a fader: " +
+          "your mechanical-reversion assumption is exactly what stops being true here."
+        : vol < 0.35
+        ? "Names are locking together. Dispersion is draining out of the tape."
+        : "Sectors are still moving with reasonable independence — dispersion intact, which " +
+          "is the environment mechanical reversion actually works in.") + "</div>");
+
+    lines.push("<div style='margin:5px 0'>Average correlation is <b>" + g.avg_correlation +
+      "</b>. The determinant matters more than that average: if two big index components " +
+      "quietly become near-identical, two rows of G align and det G craters while the average " +
+      "barely twitches. The determinant sees the dimensional collapse; the average doesn't.</div>");
+
+    lines.push("<div style='margin:5px 0'>Only <b>" + g.real_factors + " of " + g.assets +
+      "</b> eigenvalues clear the Marchenko–Pastur floor of " + g.mp_lambda_plus +
+      ", so the rest of that correlation structure is statistically indistinguishable from " +
+      "noise. Fewer real factors means fewer genuinely independent things moving.</div>");
+
+    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>" +
+      "Chosen over a hidden Markov regime model on purpose: HMMs flicker on single outliers, " +
+      "which is poison if decisions hang off the label. A real regime shift is a genuine " +
+      "collapse in det G, and a one-bar outlier isn't.</div>");
+
+    return sec("Regime geometry — √det(G)", body,
       '<details class="read" open><summary><b>Read</b></summary><div>' +
       lines.join("") + "</div></details>");
   }
@@ -1318,10 +1487,12 @@
     }
 
     // session decay: sigma shrinks with sqrt(time remaining)
-    var marks = [["09:30 open", 6.5], ["11:00", 5.0], ["13:00", 3.0], ["15:00", 1.0], ["15:55", 0.08]];
+    // Session anchors in PACIFIC. US cash session is 6:30 AM - 1:00 PM PT.
+    var marks = [["6:30 AM open", 6.5], ["8:00 AM", 5.0], ["10:00 AM", 3.0],
+                 ["12:00 PM", 1.0], ["12:55 PM", 0.08]];
     body += '<div style="margin-top:12px"><h2 style="margin-bottom:6px">' +
             "Implied range into the close</h2>" +
-            "<table><tr><th>Time (ET)</th><th style='text-align:right'>&sigma; left</th>" +
+            "<table><tr><th>Time (PT)</th><th style='text-align:right'>&sigma; left</th>" +
             "<th style='text-align:right'>68% band</th>" +
             "<th class='smhide' style='text-align:right'>95% band</th></tr>";
     marks.forEach(function (m) {
@@ -1333,6 +1504,37 @@
         " – " + (spot * (1 + 2 * sr)).toFixed(2) + "</td></tr>";
     });
     body += "</table></div>";
+
+    // ---- regime-conditioned vol (GARCH) — the fix for assuming normality ----
+    var g11 = get(e, "quant.garch");
+    if (ok(g11) && has(g11.conditional_vol_pct)) {
+      var cvol = g11.conditional_vol_pct;
+      var csig = cvol / Math.sqrt(252) / 100;
+      body += '<div style="margin-top:14px"><h2 style="margin-bottom:6px">' +
+        "Vol regime — GARCH(1,1)</h2>" +
+        row("Regime", '<span style="color:' +
+            (g11.regime === "HIGH VOL" ? "var(--down)" :
+             g11.regime === "LOW VOL" ? "var(--up)" : "var(--dim)") + '">' +
+            esc(g11.regime) + "</span>") +
+        row("Conditional vol", num(cvol, 2, "%")) +
+        row("Unconditional vol", num(g11.unconditional_vol_pct, 2, "%")) +
+        row("Persistence α+β", num(g11.persistence, 3)) +
+        row("Implied 1-day σ (GARCH)", num(csig * 100, 2, "%") +
+            "  <span class=k>±$" + (spot * csig).toFixed(2) + "</span>") +
+        row("68% band (GARCH)", (spot * (1 - csig)).toFixed(2) + " – " +
+            (spot * (1 + csig)).toFixed(2)) +
+        "</div>";
+    }
+
+    // ---- realized vs implied: the gamma-scalping number ----
+    var rvi = get(e, "quant.realized_vs_implied");
+    if (ok(rvi)) {
+      body += '<div style="margin-top:14px"><h2 style="margin-bottom:6px">' +
+        "Realized vs implied</h2>" +
+        row("Realized (" + rvi.window_days + "d)", num(rvi.realized_vol_pct, 2, "%")) +
+        row("Implied (VIX)", num(rvi.implied_vol_pct, 2, "%")) +
+        row("Spread", signed(rvi.spread_pct, 2, "pp")) + "</div>";
+    }
 
     // skew from the options tape
     var pc = get(e, "options.total_pc"), ipc = get(e, "options.index_pc"),
@@ -1372,6 +1574,38 @@
         "%. Dispersion is doing the work, not direction — the environment favours " +
         "relative-value over outright index bets.</div>");
     }
+
+    var rvi2 = get(e, "quant.realized_vs_implied");
+    if (ok(rvi2)) {
+      lines.push("<div style='margin:5px 0'>Realized vol is <b>" + rvi2.realized_vol_pct +
+        "%</b> against <b>" + rvi2.implied_vol_pct + "%</b> implied — a " +
+        (rvi2.spread_pct >= 0 ? "+" : "") + rvi2.spread_pct + "pp spread. " +
+        esc(rvi2.who_is_paid) + ". A short-gamma dealer earns " +
+        "½ΓS²(σ²real − σ²impl); you, long 0DTE, need that sign flipped.</div>");
+    }
+
+    var g2 = get(e, "quant.garch");
+    if (ok(g2) && has(g2.conditional_vol_pct)) {
+      lines.push("<div style='margin:5px 0'>GARCH puts you in a <b>" + esc(g2.regime) +
+        "</b> regime: conditional vol " + g2.conditional_vol_pct + "% against an " +
+        "unconditional " + g2.unconditional_vol_pct + "%. Persistence α+β = " +
+        g2.persistence + ", so shocks decay " +
+        (g2.persistence > 0.95 ? "very slowly — today's vol is tomorrow's vol"
+                               : "at a moderate rate") + ".</div>");
+    }
+
+    lines.push("<div style='margin:6px 0;padding:7px 9px;background:rgba(255,69,58,.08);" +
+      "border-left:2px solid var(--down);font-size:11.5px'>" +
+      "<b style='color:var(--down)'>Read the bands sceptically.</b> The 68/95% ranges above " +
+      "assume a normal distribution. Over 25 years SPY printed <b>19 moves beyond five sigma</b>, " +
+      "while a fitted normal says each should take about 7,000 years. The tails are far fatter " +
+      "than these bands imply. The GARCH regime block is the partial fix — conditioning on " +
+      "volatility state is what makes an observed crisis move possible under the model at all.</div>");
+
+    lines.push("<div style='margin:5px 0;color:var(--dim);font-size:11.5px'>" +
+      "<b>Retail 0DTE flow clusters on round clock minutes</b> — measured spikes at 7:00, 7:30 " +
+      "and 8:00 AM Pacific, plus 11:00 AM. Three of those sit inside your 7:17–8:30 window. " +
+      "Worth tagging in your own log to see whether your fills actually ride that fuel.</div>");
 
     lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>" +
       "These are option-implied distributions, not forecasts. They describe what the " +
@@ -1437,7 +1671,7 @@
     var e = FULL[idx];
     var opts = FULL.map(function (x, i) {
       return '<option value="' + i + '"' + (i === idx ? " selected" : "") + ">" +
-             esc(x.entry_date || "?") + "</option>";
+             fmtDate(x.entry_date).replace(/<[^>]*>/g, "") + "</option>";
     }).reverse().join("");
 
     var align = secAlignment(e);
@@ -1452,8 +1686,8 @@
 
     app.innerHTML =
       "<header><h1>M@rk3t D@$h</h1>" +
-      '<span class="stamp">session ' + esc(e.session_date || e.entry_date || "?") +
-      "  ·  fetched " + esc(e.fetched_utc || "?") + " UTC</span>" +
+      '<span class="stamp">session ' + fmtDate(e.session_date || e.entry_date) +
+      "  ·  fetched " + fmtDateTime(e.fetched_utc) + "</span>" +
       '<span style="flex:1"></span>' +
       '<select id="pick">' + opts + "</select>" +
       "</header>" +
@@ -1471,7 +1705,7 @@
       group("News", secWeek(e)) +
 
       // 4. where the money went today
-      group("Sectors", secInternals(e)) +
+      group("Sectors and regime", secInternals(e) + secGeometry(e)) +
 
       // 5. slow-moving context
       group("Macro and positioning", secMacro(e) + secPositioning(e)) +

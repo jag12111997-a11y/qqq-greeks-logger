@@ -494,39 +494,96 @@ def fetch_markets():
 # WATCHLIST — the 20 symbols, with every horizon
 # ============================================================
 
+# (fetch ticker, symbol shown on the dashboard, name)
+# DXY is the actual ICE dollar index — ticker DX-Y.NYB on Yahoo. UUP stays in
+# the list separately as the tradeable ETF that tracks it.
 WATCHLIST = [
-    ("QQQ",  "Invesco QQQ Trust"),          ("SPY",  "SPDR S&P 500 ETF"),
-    ("UUP",  "Invesco DB US Dollar Index"), ("IEF",  "iShares 7-10Y Treasury"),
-    ("USO",  "United States Oil Fund"),     ("GLD",  "SPDR Gold Shares"),
-    ("^VIX", "CBOE Volatility Index"),      ("BNO",  "United States Brent Oil"),
-    ("SLV",  "iShares Silver Trust"),       ("DIA",  "SPDR Dow Jones ETF"),
-    ("IWM",  "iShares Russell 2000"),       ("M",    "Macy's, Inc."),
-    ("MU",   "Micron Technology"),          ("SCHX", "Schwab U.S. Large-Cap"),
-    ("EWY",  "iShares MSCI South Korea"),   ("TLT",  "iShares 20+Y Treasury"),
-    ("IBIT", "iShares Bitcoin Trust"),      ("ETHA", "iShares Ethereum Trust"),
-    ("BSOL", "Bitwise Solana Staking"),     ("XRPR", "REX-Osprey XRP ETF"),
+    ("QQQ",       "QQQ",  "Invesco QQQ Trust"),
+    ("SPY",       "SPY",  "SPDR S&P 500 ETF"),
+    ("DX-Y.NYB",  "DXY",  "US Dollar Index (ICE)"),
+    ("IEF",       "IEF",  "iShares 7-10Y Treasury"),
+    ("USO",       "USO",  "United States Oil Fund"),
+    ("GLD",       "GLD",  "SPDR Gold Shares"),
+    ("^VIX",      "VIX",  "CBOE Volatility Index"),
+    ("EWY",       "EWY",  "iShares MSCI South Korea"),
+    ("TLT",       "TLT",  "iShares 20+Y Treasury"),
+    ("UUP",       "UUP",  "Invesco DB US Dollar (DXY tracker)"),
+    ("BNO",       "BNO",  "United States Brent Oil"),
+    ("SLV",       "SLV",  "iShares Silver Trust"),
+    ("DIA",       "DIA",  "SPDR Dow Jones ETF"),
+    ("IWM",       "IWM",  "iShares Russell 2000"),
+    ("M",         "M",    "Macy's, Inc."),
+    ("MU",        "MU",   "Micron Technology"),
+    ("SCHX",      "SCHX", "Schwab U.S. Large-Cap"),
+    ("IBIT",      "IBIT", "iShares Bitcoin Trust"),
+    ("ETHA",      "ETHA", "iShares Ethereum Trust"),
+    ("BSOL",      "BSOL", "Bitwise Solana Staking"),
+    ("XRPR",      "XRPR", "REX-Osprey XRP ETF"),
 ]
 
 
 def fetch_watchlist():
     rows = []
-    for ticker, name in WATCHLIST:
-        rec = {"symbol": ticker.lstrip("^"), "name": name, "ticker": ticker}
+    for ticker, symbol, name in WATCHLIST:
+        rec = {"symbol": symbol, "name": name, "ticker": ticker}
         try:
             last, prev, pct = pct_change_last_two(ticker)
             rec["last"] = round(last, 4) if last is not None else None
             rec["pct_change"] = round(pct, 2) if pct is not None else None
             rec.update(fetch_horizons(ticker))
 
-            # YTD from the same bars array — first close of this calendar year.
             closes = _daily_closes(ticker, count=260)
             if closes and len(closes) > 2:
                 rec["ret_ytd"] = round((closes[-1] / closes[0] - 1.0) * 100.0, 2)
+
+                # ---- white-paper metrics, all from the same closes ----
+                rec["z20"] = zscore(closes, 20)      # distance from recent normal
+                rec["z60"] = zscore(closes, 60)
+                rets = _returns(closes)
+                rec["realized_vol_pct"] = realized_vol(rets[-21:] if len(rets) > 21 else rets)
+                rec["sharpe"] = sharpe(rets)
+                rec["vol_drag"] = vol_drag(rets)
         except Exception as e:
             rec["error"] = str(e)
         rows.append(rec)
         time.sleep(0.2)
     return rows
+
+
+def fetch_quant_metrics():
+    """GARCH regimes, realized-vs-implied, and the crash geometry."""
+    out = {}
+
+    qqq = _daily_closes("QQQ", count=260)
+    rets = _returns(qqq) if qqq else []
+    if rets:
+        out["garch"] = garch11(rets)
+        out["qqq_realized_vol_21d_pct"] = realized_vol(rets[-21:])
+        out["qqq_vol_drag"] = vol_drag(rets)
+
+    # implied vol from VIX for the realized-vs-implied spread
+    vix = None
+    try:
+        vclose = _daily_closes("^VIX", count=5)
+        vix = vclose[-1] if vclose else None
+    except Exception:
+        pass
+    if rets and vix:
+        out["realized_vs_implied"] = realized_vs_implied(rets, vix)
+
+    # crash geometry across the sector ETFs
+    series, labels = [], []
+    for sector, tick in SECTOR_ETFS.items():
+        c = _daily_closes(tick, count=90)
+        r = _returns(c) if c else []
+        if len(r) > 20:
+            series.append(r)
+            labels.append(sector)
+        time.sleep(0.15)
+    if len(series) >= 3:
+        out["geometry"] = crash_geometry(series, labels)
+
+    return out
 
 
 def fetch_sectors():
@@ -636,6 +693,253 @@ def fetch_fred():
         pass
 
     return out
+
+
+# ============================================================
+# QUANT METRICS — from your white papers, only what daily data supports
+# ============================================================
+# Sources, so future-you knows where each number came from:
+#   z-score, OU, det(G)      The One Machine, ch.5 + ch.10
+#   Marchenko-Pastur         The One Machine, ch.10
+#   GARCH(1,1) regimes       Tail Risk / Regime Modelling (Quant Guild)
+#   realized vs implied      The One Machine, ch.3 (gamma scalping)
+#   volatility drag          The Only Video You Need (Quant Guild)
+#
+# Everything here runs on DAILY closes. Anything needing tick or
+# order-book data (VPIN, Roll, imbalance, micro price, Hawkes
+# calibration, Kalman) is deliberately absent — we don't have the inputs.
+
+try:
+    import numpy as _np
+except ImportError:
+    _np = None
+
+TRADING_DAYS = 252
+
+
+def _returns(closes):
+    """Simple daily returns from a newest-last close list."""
+    out = []
+    for i in range(1, len(closes)):
+        p = closes[i - 1]
+        if p:
+            out.append(closes[i] / p - 1.0)
+    return out
+
+
+def _mean(xs):
+    return sum(xs) / len(xs) if xs else None
+
+
+def _std(xs, ddof=1):
+    if not xs or len(xs) <= ddof:
+        return None
+    m = _mean(xs)
+    return (sum((x - m) ** 2 for x in xs) / (len(xs) - ddof)) ** 0.5
+
+
+def zscore(closes, n=20):
+    """
+    z = (x - mu) / sigma over the last n closes.  One Machine ch.10:
+    "the one piece of formal math you could put to work tomorrow."
+    This is the 'distance from recent normal' your handoff asked for.
+    """
+    if not closes or len(closes) < n + 1:
+        return None
+    window = closes[-n:]
+    mu, sd = _mean(window), _std(window)
+    if not sd:
+        return None
+    return round((closes[-1] - mu) / sd, 2)
+
+
+def realized_vol(returns, annualise=True):
+    sd = _std(returns)
+    if sd is None:
+        return None
+    return round(sd * (TRADING_DAYS ** 0.5 if annualise else 1) * 100, 2)
+
+
+def sharpe(returns):
+    """SR = sqrt(252) * mean / sd. Excess over zero — no risk-free subtracted."""
+    m, sd = _mean(returns), _std(returns)
+    if not sd or m is None:
+        return None
+    return round((TRADING_DAYS ** 0.5) * m / sd, 2)
+
+
+def vol_drag(returns):
+    """
+    g ~= mu - sigma^2/2. The gap between arithmetic and geometric return —
+    why a choppy +97% compounds worse than a steady one.
+    """
+    m, sd = _mean(returns), _std(returns)
+    if m is None or sd is None:
+        return None
+    arith = m * TRADING_DAYS
+    geo = arith - (sd ** 2 * TRADING_DAYS) / 2.0
+    return {"arithmetic_pct": round(arith * 100, 2),
+            "geometric_pct": round(geo * 100, 2),
+            "drag_pct": round((arith - geo) * 100, 2)}
+
+
+def garch11(returns, grid=None):
+    """
+    GARCH(1,1):  sigma^2_t = omega + alpha*e^2_(t-1) + beta*sigma^2_(t-1)
+
+    Fitted by coarse grid then local refine on the Gaussian log-likelihood.
+    No scipy dependency — this runs anywhere.
+
+    WHY THIS EXISTS: the tail-risk paper shows a single fitted normal is
+    indefensible (19 five-sigma SPY moves in 25 years against a ~7,000-year
+    expected wait each). Conditioning volatility on a regime is what makes
+    the observed data possible under the model at all.
+    """
+    if len(returns) < 60:
+        return {"error": "need at least 60 returns"}
+
+    r = [x - _mean(returns) for x in returns]
+    var0 = (_std(returns) or 0.01) ** 2
+    if not var0:
+        return {"error": "zero variance"}
+
+    def negll(omega, alpha, beta):
+        s2, ll = var0, 0.0
+        for e in r:
+            if s2 <= 1e-12:
+                return 1e18
+            ll += math.log(s2) + (e * e) / s2
+            s2 = omega + alpha * e * e + beta * s2
+        return ll
+
+    best, bestp = 1e18, None
+    if grid is None:
+        grid = [(a, b) for a in (0.02, 0.05, 0.08, 0.12, 0.18)
+                       for b in (0.70, 0.80, 0.86, 0.90, 0.94) if a + b < 0.999]
+    for a, b in grid:
+        om = max(var0 * (1 - a - b), 1e-12)
+        v = negll(om, a, b)
+        if v < best:
+            best, bestp = v, (om, a, b)
+
+    # local refine around the winner
+    if bestp:
+        om0, a0, b0 = bestp
+        for da in (-0.02, -0.01, 0, 0.01, 0.02):
+            for db in (-0.03, -0.015, 0, 0.015, 0.03):
+                a, b = a0 + da, b0 + db
+                if a <= 0 or b <= 0 or a + b >= 0.999:
+                    continue
+                om = max(var0 * (1 - a - b), 1e-12)
+                v = negll(om, a, b)
+                if v < best:
+                    best, bestp = v, (om, a, b)
+
+    om, a, b = bestp
+    # rebuild the conditional-vol path
+    s2, path = var0, []
+    for e in r:
+        path.append(s2)
+        s2 = om + a * e * e + b * s2
+    path.append(s2)                            # next-day forecast
+
+    ann = [(x ** 0.5) * (TRADING_DAYS ** 0.5) * 100 for x in path]
+    cur = ann[-1]
+    srt = sorted(ann)
+    lo, hi = srt[len(srt) // 3], srt[2 * len(srt) // 3]
+    regime = "LOW VOL" if cur <= lo else "HIGH VOL" if cur >= hi else "MID VOL"
+
+    return {
+        "omega": om, "alpha": round(a, 4), "beta": round(b, 4),
+        "persistence": round(a + b, 4),
+        "conditional_vol_pct": round(cur, 2),
+        "unconditional_vol_pct": round((_std(returns) or 0) * (TRADING_DAYS ** 0.5) * 100, 2),
+        "regime": regime,
+        "tercile_low_pct": round(lo, 2), "tercile_high_pct": round(hi, 2),
+        "obs": len(returns),
+        "note": "regime-conditioned vol; a single static normal understates tails badly",
+    }
+
+
+def crash_geometry(return_series, labels=None):
+    """
+    Vol = sqrt(det G) on the correlation matrix.  One Machine ch.5/10.
+
+    Near 1  = names moving independently, diversification intact.
+    Near 0  = everything correlating to one, diversification has geometrically
+              STOPPED EXISTING. The determinant catches a dimensional collapse
+              that an average correlation completely misses.
+
+    Also returns the Marchenko-Pastur noise floor: eigenvalues below
+    lambda_+ = (1 + sqrt(N/T))^2 are indistinguishable from randomness.
+    """
+    if _np is None:
+        return {"error": "numpy unavailable"}
+    series = [s for s in return_series if s and len(s) > 5]
+    if len(series) < 3:
+        return {"error": "need at least 3 usable return series"}
+
+    T = min(len(s) for s in series)
+    M = _np.array([s[-T:] for s in series], dtype=float)
+    if T < len(series) + 2:
+        return {"error": "not enough history for %d assets (T=%d)" % (len(series), T)}
+
+    C = _np.corrcoef(M)
+    if not _np.all(_np.isfinite(C)):
+        return {"error": "correlation matrix has non-finite entries"}
+
+    det = float(_np.linalg.det(C))
+    vol = float(det ** 0.5) if det > 0 else 0.0
+    eig = sorted([float(x) for x in _np.linalg.eigvalsh(C)], reverse=True)
+
+    N = len(series)
+    q = N / float(T)
+    lam_plus = (1 + q ** 0.5) ** 2
+    real_factors = sum(1 for e in eig if e > lam_plus)
+
+    iu = _np.triu_indices(N, 1)
+    avg_corr = float(_np.mean(C[iu]))
+
+    return {
+        "assets": N, "observations": T,
+        "det_G": round(det, 6),
+        "diversification_volume": round(vol, 4),
+        "avg_correlation": round(avg_corr, 3),
+        "eigenvalues": [round(e, 3) for e in eig],
+        "mp_lambda_plus": round(lam_plus, 3),
+        "real_factors": real_factors,
+        "top_eigen_share_pct": round(eig[0] / N * 100, 1) if eig else None,
+        "labels": labels or [],
+        "regime": ("RISK-OFF / CORRELATED" if vol < 0.15 else
+                   "STRESSED" if vol < 0.35 else
+                   "NORMAL DISPERSION"),
+        "note": "sqrt(det G): 1 = independent, 0 = one crowded trade. "
+                "Eigenvalues under lambda_+ are noise (Marchenko-Pastur).",
+    }
+
+
+def realized_vs_implied(returns, implied_vol_pct, window=21):
+    """
+    The gamma-scalping number.  dP&L ~= 1/2 * Gamma * S^2 * (sig_real^2 - sig_impl^2) * dt
+
+    Short-gamma dealers profit when realized comes in BELOW implied.
+    You, long 0DTE, need realized ABOVE implied. Same number, opposite sides.
+    """
+    if not returns or implied_vol_pct is None:
+        return None
+    rv = realized_vol(returns[-window:] if len(returns) > window else returns)
+    if rv is None:
+        return None
+    spread = rv - implied_vol_pct
+    return {
+        "realized_vol_pct": rv,
+        "implied_vol_pct": round(implied_vol_pct, 2),
+        "spread_pct": round(spread, 2),
+        "window_days": min(window, len(returns)),
+        "who_is_paid": ("option BUYERS — realized is running above implied"
+                        if spread > 0 else
+                        "option SELLERS — realized is coming in below implied"),
+    }
 
 
 # ============================================================
@@ -1010,6 +1314,7 @@ def build_entry():
         "markets": safe("market prices", fetch_markets),
         "watchlist": safe("watchlist + horizons", fetch_watchlist),
         "gex": safe("gex engine", fetch_gex),
+        "quant": safe("quant metrics", fetch_quant_metrics),
         "sectors": safe("sectors", fetch_sectors),
         "macro": safe("fred macro", fetch_fred),
         "venue_concentration": None,   # no free source yet — v1 gap, by design
