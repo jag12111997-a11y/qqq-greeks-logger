@@ -1302,12 +1302,33 @@ def safe(name, fn):
         return {"error": str(e), "traceback": traceback.format_exc()[-800:]}
 
 
+def pacific_now():
+    """
+    Everything session-related is decided in PACIFIC, not UTC.
+    AM = 12:00 AM - 11:59 AM PT.  PM = 12:00 PM - 11:59 PM PT.
+    Derived from the actual clock at runtime, so a late or manual run
+    still tags itself correctly instead of trusting the cron.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("America/Los_Angeles"))
+    except Exception:
+        # crude fallback: PDT is UTC-7
+        from datetime import timedelta
+        return datetime.now(timezone.utc) - timedelta(hours=7)
+
+
 def build_entry():
     now = datetime.now(timezone.utc)
+    pt = pacific_now()
+    session = "am" if pt.hour < 12 else "pm"
 
     entry = {
         "fetched_utc": now.strftime("%Y-%m-%d %H:%M:%S"),
-        "entry_date": now.strftime("%Y-%m-%d"),
+        "fetched_pt": pt.strftime("%Y-%m-%d %I:%M %p PT").lstrip("0"),
+        "entry_date": pt.strftime("%Y-%m-%d"),
+        "session": session,
+        "entry_key": pt.strftime("%Y-%m-%d") + "_" + session,
         "calendar": safe("calendar", fetch_calendar),
         "options": safe("cboe options", fetch_cboe),
         "positioning": safe("cftc cot", fetch_cot),
@@ -1335,9 +1356,10 @@ def build_entry():
 
 def write_dated_json(entry):
     date = entry["entry_date"]
-    folder = os.path.join(BASE_DIR, "data", date)
+    session = entry.get("session", "am")
+    folder = os.path.join(BASE_DIR, "data", date, session)
     os.makedirs(folder, exist_ok=True)
-    path = os.path.join(folder, f"market_dash_{date}.json")
+    path = os.path.join(folder, f"market_dash_{date}_{session}.json")
 
     with open(path, "w") as f:
         json.dump(entry, f, indent=2)
@@ -1355,16 +1377,33 @@ def append_history(entry):
     and not .json.
     """
     path = os.path.join(BASE_DIR, "history.js")
-    is_new = not os.path.exists(path)
+    key = entry.get("entry_key", entry["entry_date"])
+    line = ("window.MARKET_DASH_HISTORY.push("
+            + json.dumps(entry, separators=(",", ":")) + ");")
 
-    with open(path, "a") as f:
-        if is_new:
-            f.write("// Market Dash history. Appended to, never overwritten.\n")
+    if not os.path.exists(path):
+        with open(path, "w") as f:
+            f.write("// Market Dash history. One entry per session (am / pm).\n")
             f.write("window.MARKET_DASH_HISTORY = window.MARKET_DASH_HISTORY || [];\n\n")
-        f.write("window.MARKET_DASH_HISTORY.push(")
-        f.write(json.dumps(entry, separators=(",", ":")))
-        f.write(");\n")
+            f.write(line + "\n")
+        return path
 
+    # Re-running the SAME session replaces that session's line rather than
+    # stacking duplicates. A different session always appends. Other days
+    # are never touched — history stays append-only across sessions.
+    marker = '"entry_key":"%s"' % key
+    lines = open(path).read().rstrip("\n").split("\n")
+    replaced = False
+    for i, ln in enumerate(lines):
+        if marker in ln:
+            lines[i] = line
+            replaced = True
+            break
+    if not replaced:
+        lines.append(line)
+
+    with open(path, "w") as f:
+        f.write("\n".join(lines) + "\n")
     return path
 
 
@@ -1421,6 +1460,7 @@ def main():
     print_summary(entry)
 
     log("")
+    log(f"Session:  {entry.get('session','?').upper()}  ({entry.get('fetched_pt','?')})")
     log(f"Wrote:    {json_path}")
     log(f"Appended: {hist_path}")
     log("")

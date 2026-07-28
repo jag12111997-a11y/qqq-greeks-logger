@@ -281,9 +281,12 @@
     return;
   }
 
-  H.sort(function (a, b) {
-    return String(a.entry_date || "").localeCompare(String(b.entry_date || ""));
-  });
+  // Two entries per day now (am then pm), so sort on date + session.
+  function sortKey(x) {
+    return String(x.entry_date || "") + "_" +
+           (String(x.session || "am").toLowerCase() === "pm" ? "1" : "0");
+  }
+  H.sort(function (a, b) { return sortKey(a).localeCompare(sortKey(b)); });
 
   // Backfilled price-only entries feed the chart but aren't full sessions,
   // so they stay out of the date picker.
@@ -975,13 +978,27 @@
     return lines;
   }
 
+  // If a star symbol isn't in the data yet, fall back to a stand-in so the
+  // slot is never blank. DXY only appears once the script logs DX-Y.NYB;
+  // until then UUP (which tracks it) holds the seat.
+  var STAR_FALLBACK = { DXY: "UUP" };
+
   function secStars(e) {
     var all = get(e, "watchlist", []);
     if (!all.length) return "";
     var by = {};
     all.forEach(function (r) { by[r.symbol] = r; });
-    var rows = STARS.map(function (sym) { return by[sym]; })
-                    .filter(function (r) { return r; });
+    var rows = STARS.map(function (sym) {
+      var r = by[sym];
+      if (r && (has(r.pct_change) || has(r.last))) return r;
+      var alt = STAR_FALLBACK[sym];
+      if (alt && by[alt]) {
+        var c = JSON.parse(JSON.stringify(by[alt]));
+        c.name = (c.name || alt) + "  — standing in for " + sym;
+        return c;
+      }
+      return r;
+    }).filter(function (r) { return r; });
     if (!rows.length) return "";
 
     var q = by.QQQ, sp = by.SPY, vix = by.VIX, uso = by.USO, tlt = by.TLT, ewy = by.EWY;
@@ -1659,19 +1676,51 @@
     return sec(title, body, readHtml).replace("<section>", '<section class="wide">');
   }
 
+  // ---------- collapse state, remembered between visits ----------
+  function keyFor(title) {
+    return "md:" + String(title).replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+  }
+  function readStore() {
+    try { return JSON.parse(localStorage.getItem("md:collapsed") || "{}"); }
+    catch (err) { return {}; }
+  }
+  function writeStore(o) {
+    try { localStorage.setItem("md:collapsed", JSON.stringify(o)); }
+    catch (err) { /* private mode or file:// — just don't persist */ }
+  }
+  function applyCollapseState() {
+    var store = readStore();
+    var nodes = document.querySelectorAll("details[data-k]");
+    for (var i = 0; i < nodes.length; i++) {
+      var d = nodes[i], k = d.getAttribute("data-k");
+      if (store[k] === 1) d.removeAttribute("open");
+      d.addEventListener("toggle", function () {
+        var s2 = readStore();
+        if (this.open) delete s2[this.getAttribute("data-k")];
+        else s2[this.getAttribute("data-k")] = 1;
+        writeStore(s2);
+      });
+    }
+  }
+
   function sec(title, body, readHtml) {
     // body goes INSIDE <details> (collapsible).
     // readHtml sits OUTSIDE it, so folding the box keeps the read on screen.
-    return '<section><details open><summary><h2>' + esc(title) +
-           "</h2></summary>" + body + "</details>" + (readHtml || "") + "</section>";
+    var k = keyFor(title);
+    return '<section><details open data-k="' + k + '"><summary><h2>' + esc(title) +
+           "</h2></summary>" + body + "</details>" +
+           (readHtml || "").replace('<details class="read" open>',
+                                    '<details class="read" open data-k="' + k + ':read">') +
+           "</section>";
   }
 
   // ---------- render ----------
   function render() {
     var e = FULL[idx];
     var opts = FULL.map(function (x, i) {
+      var tag = x.session ? "  " + String(x.session).toUpperCase() : "";
       return '<option value="' + i + '"' + (i === idx ? " selected" : "") + ">" +
-             fmtDate(x.entry_date).replace(/<[^>]*>/g, "") + "</option>";
+             fmtDate(x.entry_date).replace(/<[^>]*>/g, "") + tag + "</option>";
     }).reverse().join("");
 
     var align = secAlignment(e);
@@ -1687,6 +1736,8 @@
     app.innerHTML =
       "<header><h1>M@rk3t D@$h</h1>" +
       '<span class="stamp">session ' + fmtDate(e.session_date || e.entry_date) +
+      (e.session ? '  <span style="color:var(--accent)">' +
+                   esc(String(e.session).toUpperCase()) + "</span>" : "") +
       "  ·  fetched " + fmtDateTime(e.fetched_utc) + "</span>" +
       '<span style="flex:1"></span>' +
       '<select id="pick">' + opts + "</select>" +
@@ -1713,7 +1764,7 @@
       // 6. everything else on the list
       group("Rest of watchlist", secWatchlist(e)) +
 
-      "<footer>" + FULL.length + " full session" + (FULL.length > 1 ? "s" : "") +
+      "<footer>" + FULL.length + " logged session" + (FULL.length > 1 ? "s" : "") +
       " · " + (H.length - FULL.length) + " backfilled" +
       " logged · append-only · history.js</footer>";
 
@@ -1721,6 +1772,8 @@
       idx = parseInt(this.value, 10);
       render();
     });
+
+    applyCollapseState();   // restore whatever you had folded last visit
   }
 
   render();
