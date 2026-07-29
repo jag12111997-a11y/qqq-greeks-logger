@@ -1834,7 +1834,8 @@
 
   // ---------- LIVE PRICES (client-side, browser-only) ----------
   // The twice-daily GitHub run writes a FROZEN snapshot of prices. This layer
-  // makes the Star Players ETF prices live: every time the page is open it pulls
+  // makes prices live everywhere they show — Star Players, the rest of the
+  // watchlist, and the sector donut: every time the page is open it pulls
   // real-time quotes from Finnhub (a browser-friendly free quote API) and
   // refreshes on a timer. PURELY ADDITIVE: if a fetch fails (offline, key over
   // quota, source down) the snapshot values stay exactly as they were. It never
@@ -1846,13 +1847,28 @@
     // it ever gets abused, regenerate a new one free at finnhub.io and paste it
     // here in place of this one.
     var FINNHUB_KEY = "d9l0n6hr01qoc1b3pu0gd9l0n6hr01qoc1b3pu10";
-    // Star symbols Finnhub's free tier covers (US ETFs). VIX and DXY are index
-    // products the free tier won't quote cleanly, so they stay on the snapshot.
-    var SYMS = ["QQQ", "SPY", "USO", "GLD", "EWY", "TLT", "UUP"];
     // --------------------
     var BASE = "https://finnhub.io/api/v1/quote?symbol=";
-    var LIVE = {};              // row symbol -> {last, pct, srcTime(ms)}
+    var LIVE = {};              // symbol -> {last, pct, srcTime(ms)}
     var everOk = false;
+
+    // Every symbol the latest session shows: the watchlist rows (stars + the
+    // rest) AND the sector-ETF tickers behind the donut. Index products like
+    // DXY and VIX are not on Finnhub's free tier — they come back empty and stay
+    // on the snapshot, no harm done.
+    function wantedSymbols() {
+      var set = {};
+      if (FULL.length) {
+        var latest = FULL[FULL.length - 1];
+        (latest.watchlist || []).forEach(function (r) {
+          if (r && r.symbol) set[r.symbol] = 1;
+        });
+        ((latest.sectors && latest.sectors.rows) || []).forEach(function (r) {
+          if (r && r.ticker) set[r.ticker] = 1;
+        });
+      }
+      return Object.keys(set);
+    }
 
     function fetchOne(sym) {
       return fetch(BASE + sym + "&token=" + FINNHUB_KEY, { cache: "no-store" })
@@ -1871,24 +1887,34 @@
     }
 
     function fetchAll() {
-      return Promise.all(SYMS.map(fetchOne));
+      return Promise.all(wantedSymbols().map(fetchOne));
     }
 
     // Paint live values onto the LATEST session's watchlist rows only. Older
     // sessions picked from the dropdown keep their true historical snapshot.
     function applyLive() {
       if (!FULL.length) return { painted: 0, newest: 0 };
-      var rowsArr = FULL[FULL.length - 1].watchlist;
-      if (!Array.isArray(rowsArr)) return { painted: 0, newest: 0 };
+      var latest = FULL[FULL.length - 1];
       var painted = 0, newest = 0;
-      rowsArr.forEach(function (r) {
+      function note(q) {
+        var t = (typeof q.srcTime === "number") ? q.srcTime : NaN;
+        if (!isNaN(t) && t > newest) newest = t;
+      }
+      // Star players + rest of watchlist (matched by symbol).
+      (Array.isArray(latest.watchlist) ? latest.watchlist : []).forEach(function (r) {
         var q = LIVE[r.symbol];
         if (!q) return;
         r.last = q.last;
         if (q.pct !== null) r.pct_change = q.pct;
-        painted++;
-        var t = (typeof q.srcTime === "number") ? q.srcTime : NaN;
-        if (!isNaN(t) && t > newest) newest = t;
+        painted++; note(q);
+      });
+      // Sector donut (matched by ETF ticker). Only the % move shows there.
+      ((latest.sectors && latest.sectors.rows) || []).forEach(function (r) {
+        var q = LIVE[r.ticker];
+        if (!q || q.pct === null) return;
+        r.pct_change = q.pct;
+        if (typeof q.last === "number") r.last = q.last;
+        painted++; note(q);
       });
       if (painted) everOk = true;
       return { painted: painted, newest: newest };
