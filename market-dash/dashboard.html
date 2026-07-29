@@ -324,10 +324,29 @@
     try { return JSON.stringify(e[key]) === JSON.stringify(am[key]); }
     catch (x) { return false; }
   }
-  function pendingPanel(title, labels, note) {
+  // When the next scheduled pull (3 AM / 3 PM Pacific) will land.
+  function nextRunPT() {
+    try {
+      var ptNow = new Date(new Date().toLocaleString("en-US", { timeZone: PT }));
+      var h = ptNow.getHours();
+      if (h < 3) return "3:00 AM PT today";
+      if (h < 15) return "3:00 PM PT today";
+      return "3:00 AM PT tomorrow";
+    } catch (e) { return "3 AM / 3 PM PT"; }
+  }
+  // Honest footer for a dimmed panel: when it was really last pulled, and when
+  // the next pull lands. If a panel ever bugs out, "last updated" gives it away.
+  function staleStamp(e) {
+    var am = amSibling(e);
+    var pulled = (am && am.fetched_pt) ? am.fetched_pt
+               : (e && e.fetched_pt) ? e.fetched_pt : "unknown";
+    return '<div style="font-size:10.5px;color:var(--faint);margin-top:8px">' +
+      "last updated " + esc(pulled) + " &middot; next pull " + esc(nextRunPT()) + "</div>";
+  }
+  function pendingPanel(title, labels, e) {
     var body = "";
     for (var i = 0; i < labels.length; i++) body += row(labels[i], na());
-    body += '<div style="color:var(--faint);font-size:11px;margin-top:8px">' + esc(note) + "</div>";
+    body += staleStamp(e);
     return sec(title, body, read(na()));
   }
 
@@ -347,8 +366,7 @@
     if (stale) {
       ["Growth", "Inflation (CPI)", "Core PCE", "Fed funds", "2s10s curve"]
         .forEach(function (lbl) { body += row(lbl, na()); });
-      body += '<div style="color:var(--faint);font-size:11px;margin-top:8px">' +
-        "No new macro release since this morning — refreshes when the data prints." + "</div>";
+      body += staleStamp(e);
     } else {
       gdp = m.real_gdp; cpi = m.cpi; pce = m.core_pce;
       ff = m.fed_funds; curve = m.curve_2s10s;
@@ -461,7 +479,7 @@
     if (unchanged(e, "positioning")) {      // COT is weekly — usually identical to the morning
       return pendingPanel("Positioning",
         ["Non-commercial net", "Commercial net", "Weekly change", "Report date"],
-        "COT posts weekly (Tuesday data, Friday release) — unchanged since this morning.");
+        e);
     }
     if (!ok(p)) return sec("Positioning", '<div class="err">' + esc(get(p, "error", "no COT data")) + "</div>", read(na()));
 
@@ -607,7 +625,7 @@
     if (unchanged(e, "options")) {          // same P/C the morning already logged — not a new close
       return pendingPanel("Options",
         ["Total P/C", "Index P/C", "ETP P/C", "Equity P/C", "VIX P/C", "SPX + SPXW P/C", "Volume", "Open interest"],
-        "No new Cboe close since this morning — the daily P/C posts after the market settles (evening PT).");
+        e);
     }
     if (!ok(o) || !has(o.total_pc)) {
       return sec("Options",
@@ -1246,11 +1264,10 @@
   }
 
   function secWeek(e) {
-    if (unchanged(e, "calendar")) {         // calendar identical to this morning — no new prints
+    if (unchanged(e, "calendar")) {         // calendar identical to the last pull
       return sec("Week ahead",
-        '<div style="color:var(--faint);font-size:12px">' +
-        "No calendar changes since this morning — the week ahead is unchanged." +
-        "</div>", read(na()));
+        '<div style="color:var(--faint);font-size:12px">No new economic prints since the last pull.</div>' +
+        staleStamp(e), read(na()));
     }
     var all = get(e, "calendar.all_events", []);
     if (!all.length) return "";
