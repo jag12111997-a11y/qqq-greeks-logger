@@ -162,8 +162,12 @@
 
   // Overlay-chart UI state. mode: "dxy" (everything vs the dollar) or "rebase".
   // hidden: symbols toggled off. big: fullscreen. Survives the 60s live redraw.
-  var CHART = { mode: "dxy", hidden: {}, big: false };
-  try { var _cm = localStorage.getItem("md:chartmode"); if (_cm) CHART.mode = _cm; } catch (e) {}
+  var CHART = { mode: "dxy", hidden: {}, big: false, height: 240 };
+  try {
+    var _cm = localStorage.getItem("md:chartmode"); if (_cm) CHART.mode = _cm;
+    var _ch = parseInt(localStorage.getItem("md:charth"), 10);
+    if (_ch) CHART.height = Math.min(Math.max(_ch, 160), 900);
+  } catch (e) {}
 
   // ---------- helpers ----------
   function esc(s) {
@@ -754,8 +758,10 @@
     return '<div style="margin-bottom:6px">' +
       '<span data-chart-mode role="button" style="' + b + '">' +
         (CHART.mode === "dxy" ? "base: vs DXY" : "base: rebase 100") + " &#8646;</span>" +
+      '<span data-chart-shorter role="button" style="' + b + '">&#9660; shorter</span>' +
+      '<span data-chart-taller role="button" style="' + b + '">&#9650; taller</span>' +
       '<span data-chart-expand role="button" style="' + b + '">' +
-        (CHART.big ? "&#10005; close" : "&#10530; expand") + "</span>" +
+        (CHART.big ? "&#10005; close" : "&#10530; full") + "</span>" +
       '<span style="font-size:10.5px;color:var(--faint)"> &middot; tap a symbol below to hide it</span>' +
       "</div>";
   }
@@ -778,7 +784,7 @@
   }
 
   function starChart(e) {
-    var Wd = 1080, Hh = 240, padL = 44, padR = 60, padT = 12, padB = 24;
+    var Wd = 1080, Hh = CHART.big ? 620 : CHART.height, padL = 44, padR = 60, padT = 12, padB = 24;
     var toolbar = starChartToolbar();
 
     // Snapshot as of the SELECTED session: only plot history up to and including
@@ -849,12 +855,16 @@
     function Y(v) { return padT + (1 - (v - lo) / span) * (Hh - padT - padB); }
 
     var lines = "";
+    var baseCol = (mode === "dxy") ? (STAR_COLOR.DXY || "#ffd600") : "#1e1e2a";
     lines += '<line x1="' + padL + '" x2="' + (Wd - padR) + '" y1="' + Y(100).toFixed(1) +
-             '" y2="' + Y(100).toFixed(1) + '" stroke="#1e1e2a" stroke-dasharray="3 3"/>' +
+             '" y2="' + Y(100).toFixed(1) + '" stroke="' + baseCol + '" stroke-width="' +
+             (mode === "dxy" ? "1.5" : "1") + '" stroke-dasharray="' + (mode === "dxy" ? "7 4" : "3 3") + '"/>' +
              '<text x="' + (padL - 6) + '" y="' + (Y(100) + 4).toFixed(1) +
-             '" text-anchor="end" fill="#55556b" font-size="9">100</text>';
+             '" text-anchor="end" fill="' + (mode === "dxy" ? baseCol : "#55556b") + '" font-size="9">' +
+             (mode === "dxy" ? "DXY 100" : "100") + "</text>";
 
     visible.forEach(function (sym) {
+      if (mode === "dxy" && sym === "DXY") return;   // DXY is the baseline itself
       var seq = norm[sym], d = "", last = null, lastI = -1, pts = 0;
       for (var i = 0; i < n; i++) {
         if (seq[i] === null) continue;
@@ -883,8 +893,8 @@
              esc(shortDate(dates[n - 1])) + "</text>";
 
     var svgAttr = CHART.big
-      ? 'style="width:100%;height:auto;max-height:80vh;display:block"'
-      : 'width="100%" height="' + Hh + '" style="display:block"';
+      ? 'style="width:100%;height:auto;max-height:82vh;display:block"'
+      : 'style="width:100%;height:auto;display:block"';
     var svg = '<svg viewBox="0 0 ' + Wd + ' ' + Hh + '" ' + svgAttr + '>' + lines + "</svg>";
 
     var caption = (mode === "dxy")
@@ -1267,8 +1277,13 @@
     var body = "";
     Object.keys(byDay).sort().forEach(function (d) {
       var dt = new Date(d + "T12:00:00");
-      body += '<h2 style="margin:12px 0 4px">' + DAYS[dt.getUTCDay()] + " " +
-              fmtDate(d).replace(/<[^>]*>/g, "") + "</h2>";
+      var isToday = (d === String(e.entry_date || "").slice(0, 10));
+      body += '<h2 style="margin:12px 0 4px' + (isToday
+        ? ';padding:3px 8px;border-left:3px solid var(--accent);background:rgba(0,229,255,.09)'
+        : "") + '">' + DAYS[dt.getUTCDay()] + " " +
+              fmtDate(d).replace(/<[^>]*>/g, "") +
+              (isToday ? ' <span style="color:var(--accent);font-size:10px;letter-spacing:1px">&#9679; THIS SESSION</span>' : "") +
+              "</h2>";
       var whys = [];
       byDay[d].forEach(function (x) {
         var hi = x.impact === "High";
@@ -1908,13 +1923,19 @@
   // Delegated on document so it survives every re-render.
   document.addEventListener("click", function (ev) {
     var t = (ev.target && ev.target.closest)
-      ? ev.target.closest("[data-chart-mode],[data-chart-expand],[data-series]") : null;
+      ? ev.target.closest("[data-chart-mode],[data-chart-expand],[data-chart-taller],[data-chart-shorter],[data-series]") : null;
     if (!t) return;
     if (t.hasAttribute("data-chart-mode")) {
       CHART.mode = (CHART.mode === "dxy") ? "rebase" : "dxy";
       try { localStorage.setItem("md:chartmode", CHART.mode); } catch (e2) {}
     } else if (t.hasAttribute("data-chart-expand")) {
       CHART.big = !CHART.big;
+    } else if (t.hasAttribute("data-chart-taller")) {
+      CHART.height = Math.min(CHART.height + 80, 900);
+      try { localStorage.setItem("md:charth", CHART.height); } catch (e3) {}
+    } else if (t.hasAttribute("data-chart-shorter")) {
+      CHART.height = Math.max(CHART.height - 80, 160);
+      try { localStorage.setItem("md:charth", CHART.height); } catch (e4) {}
     } else {
       var s = t.getAttribute("data-series");
       if (CHART.hidden[s]) delete CHART.hidden[s]; else CHART.hidden[s] = true;
