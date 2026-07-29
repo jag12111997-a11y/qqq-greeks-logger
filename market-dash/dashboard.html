@@ -294,28 +294,66 @@
   if (!FULL.length) FULL = H.slice();
   var idx = FULL.length - 1;
 
+  // ---------- freshness: blank slow daily sources when a PM session
+  //            re-fetched the SAME thing the morning already logged ----------
+  // Cboe P/C (posts after the close), FRED macro (posts on release), COT
+  // (weekly), and the calendar only carry NEW information some of the time.
+  // A PM number identical to the morning's is not news — showing it again as a
+  // fresh "PM" read is misleading. So we compare the shown session to that day's
+  // AM entry and, when nothing changed, dim the panel and say why. The history
+  // log still keeps every raw value; this only changes what your eye sees.
+  function amSibling(e) {
+    if (!e || e.session !== "pm") return null;   // only a PM/evening run can be "stale vs AM"
+    for (var i = 0; i < H.length; i++) {
+      if (H[i] && H[i].entry_date === e.entry_date && H[i].session === "am") return H[i];
+    }
+    return null;
+  }
+  function unchanged(e, key) {
+    var am = amSibling(e);
+    if (!am) return false;                        // no morning baseline -> can't prove stale -> show it
+    try { return JSON.stringify(e[key]) === JSON.stringify(am[key]); }
+    catch (x) { return false; }
+  }
+  function pendingPanel(title, labels, note) {
+    var body = "";
+    for (var i = 0; i < labels.length; i++) body += row(labels[i], na());
+    body += '<div style="color:var(--faint);font-size:11px;margin-top:8px">' + esc(note) + "</div>";
+    return sec(title, body, read(na()));
+  }
+
   // ================= SECTIONS =================
 
   function secMacro(e) {
     var m = e.macro;
     var body = "";
-    if (!ok(m)) {
+    var stale = unchanged(e, "macro");     // PM re-fetched the same macro the morning already logged
+    var gdp, cpi, pce, ff, curve;
+
+    if (!stale && !ok(m)) {
       body = '<div class="err">' + esc(get(m, "error", "no macro data")) + "</div>";
       return sec("Macro", body, read(na()));
     }
 
-    var gdp = m.real_gdp, cpi = m.cpi, pce = m.core_pce;
-    var ff = m.fed_funds, curve = m.curve_2s10s;
+    if (stale) {
+      ["Growth", "Inflation (CPI)", "Core PCE", "Fed funds", "2s10s curve"]
+        .forEach(function (lbl) { body += row(lbl, na()); });
+      body += '<div style="color:var(--faint);font-size:11px;margin-top:8px">' +
+        "No new macro release since this morning — refreshes when the data prints." + "</div>";
+    } else {
+      gdp = m.real_gdp; cpi = m.cpi; pce = m.core_pce;
+      ff = m.fed_funds; curve = m.curve_2s10s;
 
-    body += row("Growth", ok(gdp)
-      ? num(gdp.latest, 1) + " <span class=k>(" + fmtLoose(gdp.latest_date) + ")</span> " + signed(gdp.change, 1)
-      : na());
-    body += row("Inflation (CPI)", ok(cpi) ? num(cpi.latest, 1) + " " + signed(cpi.change, 2) : na());
-    body += row("Core PCE", ok(pce) ? num(pce.latest, 2) + " " + signed(pce.change, 2) : na());
-    body += row("Fed funds", ok(ff) ? num(ff.latest, 2, "%") + " " + signed(ff.change, 2) : na());
-    body += row("2s10s curve", ok(curve)
-      ? signed(curve.spread, 2) + " <span class=k>" + esc(curve.read) + "</span>"
-      : na());
+      body += row("Growth", ok(gdp)
+        ? num(gdp.latest, 1) + " <span class=k>(" + fmtLoose(gdp.latest_date) + ")</span> " + signed(gdp.change, 1)
+        : na());
+      body += row("Inflation (CPI)", ok(cpi) ? num(cpi.latest, 1) + " " + signed(cpi.change, 2) : na());
+      body += row("Core PCE", ok(pce) ? num(pce.latest, 2) + " " + signed(pce.change, 2) : na());
+      body += row("Fed funds", ok(ff) ? num(ff.latest, 2, "%") + " " + signed(ff.change, 2) : na());
+      body += row("2s10s curve", ok(curve)
+        ? signed(curve.spread, 2) + " <span class=k>" + esc(curve.read) + "</span>"
+        : na());
+    }
 
     // Main catalysts live here — they're macro events, not price action.
     var hi = get(e, "calendar.us_high_impact", []);
@@ -411,6 +449,11 @@
   function secPositioning(e) {
     var p = e.positioning;
     var body = "";
+    if (unchanged(e, "positioning")) {      // COT is weekly — usually identical to the morning
+      return pendingPanel("Positioning",
+        ["Non-commercial net", "Commercial net", "Weekly change", "Report date"],
+        "COT posts weekly (Tuesday data, Friday release) — unchanged since this morning.");
+    }
     if (!ok(p)) return sec("Positioning", '<div class="err">' + esc(get(p, "error", "no COT data")) + "</div>", read(na()));
 
     var keys = Object.keys(p);
@@ -552,6 +595,11 @@
 
   function secOptions(e) {
     var o = e.options;
+    if (unchanged(e, "options")) {          // same P/C the morning already logged — not a new close
+      return pendingPanel("Options",
+        ["Total P/C", "Index P/C", "ETP P/C", "Equity P/C", "VIX P/C", "SPX + SPXW P/C", "Volume", "Open interest"],
+        "No new Cboe close since this morning — the daily P/C posts after the market settles (evening PT).");
+    }
     if (!ok(o) || !has(o.total_pc)) {
       return sec("Options",
         '<div class="err">' + esc(get(o, "error", "Cboe table not parsed")) + "</div>" +
@@ -1116,6 +1164,12 @@
   }
 
   function secWeek(e) {
+    if (unchanged(e, "calendar")) {         // calendar identical to this morning — no new prints
+      return sec("Week ahead",
+        '<div style="color:var(--faint);font-size:12px">' +
+        "No calendar changes since this morning — the week ahead is unchanged." +
+        "</div>", read(na()));
+    }
     var all = get(e, "calendar.all_events", []);
     if (!all.length) return "";
 
