@@ -1831,6 +1831,109 @@
   }
 
   render();
+
+  // ---------- LIVE PRICES (client-side, browser-only) ----------
+  // The twice-daily GitHub run writes a FROZEN snapshot of prices. This layer
+  // makes the Star Players prices live: the page pulls quotes straight from
+  // Cboe's public delayed-quotes endpoint each time it's open, and refreshes on
+  // a timer. Cboe serves LIVE data to a browser (it hands the server-side robot
+  // only a cached copy), so this works here where the scheduled job cannot.
+  // PURELY ADDITIVE: if a fetch fails (offline, CORS, source down) the snapshot
+  // values stay exactly as they were. It never blanks and never shows NaN.
+  function startLivePrices() {
+    // Star symbol -> Cboe quote symbol. VIX is an index (_VIX). DXY is not a
+    // Cboe product so it stays on the snapshot; UUP (its live tracker) is here.
+    var CBOE = { QQQ:"QQQ", SPY:"SPY", USO:"USO", GLD:"GLD", EWY:"EWY",
+                 TLT:"TLT", VIX:"_VIX", UUP:"UUP" };
+    var BASE = "https://cdn.cboe.com/api/global/delayed_quotes/quotes/";
+    var LIVE = {};              // row symbol -> {last, pct, srcTime}
+    var everOk = false;
+
+    function fetchOne(rowSym, cboeSym) {
+      return fetch(BASE + cboeSym + ".json", { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          var d = j && j.data;
+          if (!d || typeof d.current_price !== "number") return;
+          LIVE[rowSym] = {
+            last: d.current_price,
+            pct:  (typeof d.price_change_percent === "number") ? d.price_change_percent : null,
+            srcTime: d.last_trade_time || j.timestamp || null
+          };
+        })
+        .catch(function () { /* offline / CORS / bad symbol -> keep snapshot */ });
+    }
+
+    function fetchAll() {
+      var jobs = [];
+      for (var s in CBOE) jobs.push(fetchOne(s, CBOE[s]));
+      return Promise.all(jobs);
+    }
+
+    // Paint live values onto the LATEST session's watchlist rows only. Older
+    // sessions picked from the dropdown keep their true historical snapshot.
+    function applyLive() {
+      if (!FULL.length) return { painted: 0, newest: 0 };
+      var rowsArr = FULL[FULL.length - 1].watchlist;
+      if (!Array.isArray(rowsArr)) return { painted: 0, newest: 0 };
+      var painted = 0, newest = 0;
+      rowsArr.forEach(function (r) {
+        var q = LIVE[r.symbol];
+        if (!q) return;
+        r.last = q.last;
+        if (q.pct !== null) r.pct_change = q.pct;
+        painted++;
+        var t = q.srcTime ? Date.parse(q.srcTime) : NaN;
+        if (!isNaN(t) && t > newest) newest = t;
+      });
+      if (painted) everOk = true;
+      return { painted: painted, newest: newest };
+    }
+
+    function badge(html, color) {
+      var b = document.getElementById("livebadge");
+      if (!b) {
+        b = document.createElement("div");
+        b.id = "livebadge";
+        b.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:9999;" +
+          "font:11px ui-monospace,Menlo,monospace;padding:5px 9px;border-radius:14px;" +
+          "background:rgba(0,0,0,.72);border:1px solid var(--line);color:var(--dim);" +
+          "-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);pointer-events:none";
+        document.body.appendChild(b);
+      }
+      b.innerHTML = html;
+      b.style.borderColor = color || "var(--line)";
+    }
+
+    function stamp(info) {
+      if (!everOk) {
+        badge('<span style="color:var(--faint)">&#9679;</span> live prices unavailable — showing last snapshot', "var(--line)");
+        return;
+      }
+      var t = new Date().toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit", second:"2-digit" });
+      // The quote carries its own trade time — if that is old, say so honestly.
+      var stale = "";
+      if (info && info.newest && (Date.now() - info.newest) / 3.6e6 > 12) {
+        stale = ' <span style="color:var(--warn)">(source may be delayed)</span>';
+      }
+      badge('<span style="color:var(--up)">&#9679;</span> live &middot; ' + t + stale, "var(--up)");
+    }
+
+    function cycle() {
+      fetchAll().then(function () {
+        var info = applyLive();
+        // Repaint without losing scroll or which session you are viewing.
+        if (info.painted && idx === FULL.length - 1) {
+          var y = window.scrollY; render(); window.scrollTo(0, y);
+        }
+        stamp(info);
+      });
+    }
+
+    cycle();                     // paint as soon as the page opens
+    setInterval(cycle, 60000);   // keep it fresh every 60s while the page is open
+  }
+  startLivePrices();
 })();
 </script>
 </body>
