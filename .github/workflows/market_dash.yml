@@ -2,26 +2,21 @@ name: Market Dash
 
 on:
   schedule:
-    # Two runs a day. The script decides am/pm from the PACIFIC clock at
-    # runtime, so it tags itself correctly even if a run fires late.
-    #   AM  = 12:00 AM - 11:59 AM PT
-    #   PM  = 12:00 PM - 11:59 PM PT
-    - cron: '30 13 * * 1-5'   # 6:30 AM PT  — pre-market read
-    - cron: '30 20 * * 1-5'   # 1:30 PM PT  — right after the close: fresh prices
-                              #               and sectors. The Cboe daily P/C
-                              #               has NOT posted yet at this hour, so
-                              #               the dashboard keeps P/C blank until
-                              #               the evening run below fills it in.
-    - cron: '30 1  * * 2-6'   # 6:30 PM PT  — evening run (01:30 UTC = 6:30 PM PT
-                              #               the PRIOR day, hence Tue-Sat UTC =
-                              #               Mon-Fri PT). This is late enough to
-                              #               catch the Cboe daily P/C drop. Both
-                              #               afternoon runs tag "pm", so this one
-                              #               REPLACES the 1:30 PM line with the
-                              #               version that has the settled P/C.
-                              #   If P/C is still blank some evenings, the drop is
-                              #   landing even later — push this hour back (e.g.
-                              #   '30 2 * * 2-6' = 7:30 PM PT).
+    # Two runs a day, on Eve's routine: 3 AM and 3 PM Pacific. The script
+    # decides am/pm from the PACIFIC clock at runtime, so each run tags itself.
+    #   AM = 12:00 AM - 11:59 AM PT   PM = 12:00 PM - 11:59 PM PT
+    #
+    # Times below are Pacific DAYLIGHT (UTC-7). GitHub cron is fixed UTC and does
+    # NOT follow daylight saving, so from ~Nov-Mar these fire an hour earlier
+    # (2 AM / 2 PM PST). To keep them exactly on 3 in winter, add 1 hour to each
+    # UTC value then ('0 11 ...' and '0 23 ...').
+    - cron: '0 10 * * 1-5'    # 3:00 AM PT  — overnight / pre-dawn snapshot
+    - cron: '0 22 * * 1-5'    # 3:00 PM PT  — after the close: fresh ETF prices.
+                              #   The Cboe daily P/C posts LATER in the evening,
+                              #   so it is NOT in this run. It gets picked up by
+                              #   the NEXT day's 3 AM run, which by then has the
+                              #   settled number. The dashboard keeps P/C dimmed
+                              #   until that fresh value lands.
   workflow_dispatch: {}
 
 permissions:
