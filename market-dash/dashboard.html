@@ -160,6 +160,11 @@
   var H = (window.MARKET_DASH_HISTORY || []).slice();
   var app = document.getElementById("app");
 
+  // Overlay-chart UI state. mode: "dxy" (everything vs the dollar) or "rebase".
+  // hidden: symbols toggled off. big: fullscreen. Survives the 60s live redraw.
+  var CHART = { mode: "dxy", hidden: {}, big: false };
+  try { var _cm = localStorage.getItem("md:chartmode"); if (_cm) CHART.mode = _cm; } catch (e) {}
+
   // ---------- helpers ----------
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
@@ -742,92 +747,159 @@
   // Overlay chart. Every symbol is rebased to 100 at the first session it has
   // a price for, so an $84 bond ETF and a $684 index sit on the same axis and
   // you're comparing SHAPE, not price.
-  function starChart() {
-    var px = starSeries("last");
-    var dates = H.map(function (x) { return x.entry_date || "?"; });
+  function starChartToolbar() {
+    var b = "display:inline-block;font:11px ui-monospace,Menlo,monospace;padding:4px 10px;" +
+            "margin:0 6px 8px 0;border:1px solid var(--line);border-radius:6px;color:var(--dim);" +
+            "cursor:pointer;background:rgba(255,255,255,.03);user-select:none";
+    return '<div style="margin-bottom:6px">' +
+      '<span data-chart-mode role="button" style="' + b + '">' +
+        (CHART.mode === "dxy" ? "base: vs DXY" : "base: rebase 100") + " &#8646;</span>" +
+      '<span data-chart-expand role="button" style="' + b + '">' +
+        (CHART.big ? "&#10005; close" : "&#10530; expand") + "</span>" +
+      '<span style="font-size:10.5px;color:var(--faint)"> &middot; tap a symbol below to hide it</span>' +
+      "</div>";
+  }
+
+  function starChartLegend(norm, mode) {
+    var out = "";
+    STARS.forEach(function (sym) {
+      var seq = norm[sym] || [], last = null;
+      for (var i = seq.length - 1; i >= 0; i--) { if (seq[i] !== null) { last = seq[i]; break; } }
+      var hidden = !!CHART.hidden[sym];
+      var col = STAR_COLOR[sym] || "#8b8ba6";
+      var label = (last === null) ? "&middot;"
+        : ((last - 100 >= 0 ? "+" : "") + (last - 100).toFixed(1) + "%");
+      out += '<span data-series="' + sym + '" role="button" title="click to hide / show" ' +
+        'style="cursor:pointer;margin-right:12px;color:' + col + ';opacity:' +
+        (hidden ? "0.3" : "1") + '">' + (hidden ? "&#9633;" : "&#9632;") + " " +
+        esc(sym) + " " + label + "</span>";
+    });
+    return out;
+  }
+
+  function starChart(e) {
+    var Wd = 1080, Hh = 240, padL = 44, padR = 60, padT = 12, padB = 24;
+    var toolbar = starChartToolbar();
+
+    // Snapshot as of the SELECTED session: only plot history up to and including
+    // the one you're viewing. Newer day from the dropdown = the line grows;
+    // older day = it truncates to that day.
+    var cut = H.indexOf(e);
+    var hist = (cut >= 0) ? H.slice(0, cut + 1) : H.slice();
+    var dates = hist.map(function (x) { return x.entry_date || "?"; });
     var n = dates.length;
 
+    var px = {};
+    STARS.forEach(function (sym) {
+      px[sym] = hist.map(function (entry) {
+        var found = null;
+        (entry.watchlist || []).forEach(function (w) { if (w.symbol === sym) found = w; });
+        return found && has(found.last) ? found.last : null;
+      });
+    });
+
     if (n < 2) {
-      return '<div style="padding:26px 14px;text-align:center;color:var(--faint);' +
+      return toolbar + '<div style="padding:26px 14px;text-align:center;color:var(--faint);' +
         'font-size:12px;border:1px dashed var(--line);border-radius:6px;margin-bottom:14px">' +
-        "Overlay chart needs at least 2 logged sessions. You have " + n + ".<br>" +
-        "It draws itself from history.js — nothing to fetch, it just needs days." +
-        "</div>";
+        "Overlay needs at least 2 sessions up to this day. This one has " + n + ".</div>";
     }
 
-    var W = 1080, Hh = 240, padL = 44, padR = 60, padT = 12, padB = 24;
-    var lines = "", legend = "", lo = Infinity, hi = -Infinity;
+    // Rebase each series to 100 at its first price.
     var norm = {};
-
     STARS.forEach(function (sym) {
       var v = px[sym], base = null, seq = [];
       for (var i = 0; i < n; i++) {
         if (v[i] === null) { seq.push(null); continue; }
         if (base === null) base = v[i];
-        var r = (v[i] / base) * 100;
-        seq.push(r);
-        if (r < lo) lo = r;
-        if (r > hi) hi = r;
+        seq.push(v[i] / base * 100);
       }
       norm[sym] = seq;
     });
 
-    if (!isFinite(lo)) return "";
+    // MODE "dxy": divide every rebased series by DXY's, so DXY is a flat 100
+    // reference and every other line shows its move RELATIVE TO THE DOLLAR.
+    var mode = CHART.mode;
+    if (mode === "dxy") {
+      var dref = norm.DXY;
+      if (dref && dref.some(function (v) { return v !== null; })) {
+        STARS.forEach(function (sym) {
+          norm[sym] = norm[sym].map(function (v, i) {
+            return (v === null || dref[i] === null || !dref[i]) ? null : v / dref[i] * 100;
+          });
+        });
+      } else { mode = "rebase"; }   // no DXY history yet -> plain rebase
+    }
+
+    var visible = STARS.filter(function (s) { return !CHART.hidden[s]; });
+
+    var lo = Infinity, hi = -Infinity;
+    visible.forEach(function (sym) {
+      norm[sym].forEach(function (v) { if (v !== null) { if (v < lo) lo = v; if (v > hi) hi = v; } });
+    });
+    if (!isFinite(lo)) {
+      return toolbar +
+        '<div style="padding:20px;text-align:center;color:var(--faint);font-size:12px">' +
+        "All lines hidden — tap a symbol to bring it back.</div>" +
+        '<div style="font-size:11px;margin:4px 0 10px">' + starChartLegend(norm, mode) + "</div>";
+    }
     var span = (hi - lo) || 1;
     lo -= span * 0.08; hi += span * 0.08; span = hi - lo;
 
-    function X(i) { return padL + (i / Math.max(n - 1, 1)) * (W - padL - padR); }
+    function X(i) { return padL + (i / Math.max(n - 1, 1)) * (Wd - padL - padR); }
     function Y(v) { return padT + (1 - (v - lo) / span) * (Hh - padT - padB); }
 
-    // 100 baseline
-    lines += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + Y(100).toFixed(1) +
+    var lines = "";
+    lines += '<line x1="' + padL + '" x2="' + (Wd - padR) + '" y1="' + Y(100).toFixed(1) +
              '" y2="' + Y(100).toFixed(1) + '" stroke="#1e1e2a" stroke-dasharray="3 3"/>' +
              '<text x="' + (padL - 6) + '" y="' + (Y(100) + 4).toFixed(1) +
              '" text-anchor="end" fill="#55556b" font-size="9">100</text>';
 
-    STARS.forEach(function (sym) {
-      var seq = norm[sym], d = "", last = null, lastI = -1;
+    visible.forEach(function (sym) {
+      var seq = norm[sym], d = "", last = null, lastI = -1, pts = 0;
       for (var i = 0; i < n; i++) {
         if (seq[i] === null) continue;
         d += (d ? "L" : "M") + X(i).toFixed(1) + " " + Y(seq[i]).toFixed(1) + " ";
-        last = seq[i]; lastI = i;
+        last = seq[i]; lastI = i; pts++;
       }
-      var pts = seq.filter(function (v) { return v !== null; }).length;
-      if (!d || pts < 2) return;   // one dot is not a line
+      if (!d || pts < 2) return;
       var col = STAR_COLOR[sym] || "#8b8ba6";
+      var dash = (mode === "dxy" && sym === "DXY") ? ' stroke-dasharray="4 3"' : "";
       lines += '<path d="' + d + '" fill="none" stroke="' + col +
-               '" stroke-width="1.8" stroke-linejoin="round"/>';
+               '" stroke-width="1.8" stroke-linejoin="round"' + dash + '/>';
       lines += '<circle cx="' + X(lastI).toFixed(1) + '" cy="' + Y(last).toFixed(1) +
                '" r="3" fill="' + col + '"/>';
       lines += '<text x="' + (X(lastI) + 7).toFixed(1) + '" y="' + (Y(last) + 3.5).toFixed(1) +
                '" fill="' + col + '" font-size="10">' + esc(sym) + "</text>";
-      legend += '<span style="color:' + col + ';margin-right:12px">&#9632; ' + esc(sym) +
-                " " + (last - 100 >= 0 ? "+" : "") + (last - 100).toFixed(1) + "%</span>";
     });
 
-    var drawn = STARS.filter(function (sym) {
-      return norm[sym].filter(function (v) { return v !== null; }).length >= 2;
-    });
-    function shortDate(v) {                       // "Jul 14"
+    function shortDate(v) {
       var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
       return m ? MONTHS[+m[2] - 1].slice(0, 3) + " " + (+m[3]) : String(v);
     }
     lines += '<text x="' + padL + '" y="' + (Hh - 6) + '" fill="#55556b" font-size="9">' +
              esc(shortDate(dates[0])) + "</text>" +
-             '<text x="' + (W - padR) + '" y="' + (Hh - 6) +
+             '<text x="' + (Wd - padR) + '" y="' + (Hh - 6) +
              '" text-anchor="end" fill="#55556b" font-size="9">' +
              esc(shortDate(dates[n - 1])) + "</text>";
 
-    return '<svg viewBox="0 0 ' + W + " " + Hh + '" width="100%" height="' + Hh +
-      '" style="display:block">' + lines + "</svg>" +
-      '<div style="font-size:11px;margin:4px 0 10px">' + legend + "</div>" +
-      '<div style="font-size:10.5px;color:var(--faint);margin-bottom:12px">' +
-      "rebased to 100 at first session — comparing shape, not price" +
-      (drawn.length < STARS.length
-        ? ".  " + drawn.join(", ") + " ha" + (drawn.length === 1 ? "s" : "ve") +
-          " history so far; the other " + (STARS.length - drawn.length) +
-          " start plotting once the script logs them."
-        : "") + "</div>";
+    var svgAttr = CHART.big
+      ? 'style="width:100%;height:auto;max-height:80vh;display:block"'
+      : 'width="100%" height="' + Hh + '" style="display:block"';
+    var svg = '<svg viewBox="0 0 ' + Wd + ' ' + Hh + '" ' + svgAttr + '>' + lines + "</svg>";
+
+    var caption = (mode === "dxy")
+      ? "each line relative to DXY (the dollar) &mdash; dashed line is DXY itself, flat at 100; above = beating the dollar"
+      : "rebased to 100 at first session &mdash; comparing shape, not price";
+
+    var inner = toolbar + svg +
+      '<div style="font-size:11px;margin:4px 0 10px">' + starChartLegend(norm, mode) + "</div>" +
+      '<div style="font-size:10.5px;color:var(--faint);margin-bottom:12px">' + caption + "</div>";
+
+    if (CHART.big) {
+      return '<div style="position:fixed;inset:0;background:#000;z-index:9998;' +
+        'padding:18px 22px;overflow:auto">' + inner + "</div>";
+    }
+    return inner;
   }
 
   // Pearson correlation of daily % moves. Needs real history; until then it
@@ -1100,7 +1172,7 @@
         bits.join(" · ") + "</div>" : "") + "</div></details>";
 
     return secWide("Star players",
-      starChart() + wlTable(rows, true) +
+      starChart(e) + wlTable(rows, true) +
       '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">' +
       starCorrel(e) + "</div>", readHtml);
   }
@@ -1831,6 +1903,26 @@
   }
 
   render();
+
+  // Overlay-chart controls: mode toggle, expand, and click-to-hide a line.
+  // Delegated on document so it survives every re-render.
+  document.addEventListener("click", function (ev) {
+    var t = (ev.target && ev.target.closest)
+      ? ev.target.closest("[data-chart-mode],[data-chart-expand],[data-series]") : null;
+    if (!t) return;
+    if (t.hasAttribute("data-chart-mode")) {
+      CHART.mode = (CHART.mode === "dxy") ? "rebase" : "dxy";
+      try { localStorage.setItem("md:chartmode", CHART.mode); } catch (e2) {}
+    } else if (t.hasAttribute("data-chart-expand")) {
+      CHART.big = !CHART.big;
+    } else {
+      var s = t.getAttribute("data-series");
+      if (CHART.hidden[s]) delete CHART.hidden[s]; else CHART.hidden[s] = true;
+    }
+    var y = window.scrollY;
+    render();
+    if (!CHART.big) window.scrollTo(0, y);
+  });
 
   // ---------- LIVE PRICES (client-side, browser-only) ----------
   // The twice-daily GitHub run writes a FROZEN snapshot of prices. This layer
