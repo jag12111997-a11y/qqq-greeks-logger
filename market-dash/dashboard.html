@@ -1834,40 +1834,44 @@
 
   // ---------- LIVE PRICES (client-side, browser-only) ----------
   // The twice-daily GitHub run writes a FROZEN snapshot of prices. This layer
-  // makes the Star Players prices live: the page pulls quotes straight from
-  // Cboe's public delayed-quotes endpoint each time it's open, and refreshes on
-  // a timer. Cboe serves LIVE data to a browser (it hands the server-side robot
-  // only a cached copy), so this works here where the scheduled job cannot.
-  // PURELY ADDITIVE: if a fetch fails (offline, CORS, source down) the snapshot
-  // values stay exactly as they were. It never blanks and never shows NaN.
+  // makes the Star Players ETF prices live: every time the page is open it pulls
+  // real-time quotes from Finnhub (a browser-friendly free quote API) and
+  // refreshes on a timer. PURELY ADDITIVE: if a fetch fails (offline, key over
+  // quota, source down) the snapshot values stay exactly as they were. It never
+  // blanks and never shows NaN.
   function startLivePrices() {
-    // Star symbol -> Cboe quote symbol. VIX is an index (_VIX). DXY is not a
-    // Cboe product so it stays on the snapshot; UUP (its live tracker) is here.
-    var CBOE = { QQQ:"QQQ", SPY:"SPY", USO:"USO", GLD:"GLD", EWY:"EWY",
-                 TLT:"TLT", VIX:"_VIX", UUP:"UUP" };
-    var BASE = "https://cdn.cboe.com/api/global/delayed_quotes/quotes/";
-    var LIVE = {};              // row symbol -> {last, pct, srcTime}
+    // ---- TWEAK ZONE ----
+    // Free Finnhub API key. Read-only stock/ETF quotes, rate-limited (60/min).
+    // It is PUBLIC in this file by design (client-side runs in your browser). If
+    // it ever gets abused, regenerate a new one free at finnhub.io and paste it
+    // here in place of this one.
+    var FINNHUB_KEY = "d9l0n6hr01qoc1b3pu0gd9l0n6hr01qoc1b3pu10";
+    // Star symbols Finnhub's free tier covers (US ETFs). VIX and DXY are index
+    // products the free tier won't quote cleanly, so they stay on the snapshot.
+    var SYMS = ["QQQ", "SPY", "USO", "GLD", "EWY", "TLT", "UUP"];
+    // --------------------
+    var BASE = "https://finnhub.io/api/v1/quote?symbol=";
+    var LIVE = {};              // row symbol -> {last, pct, srcTime(ms)}
     var everOk = false;
 
-    function fetchOne(rowSym, cboeSym) {
-      return fetch(BASE + cboeSym + ".json", { cache: "no-store" })
+    function fetchOne(sym) {
+      return fetch(BASE + sym + "&token=" + FINNHUB_KEY, { cache: "no-store" })
         .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (j) {
-          var d = j && j.data;
-          if (!d || typeof d.current_price !== "number") return;
-          LIVE[rowSym] = {
-            last: d.current_price,
-            pct:  (typeof d.price_change_percent === "number") ? d.price_change_percent : null,
-            srcTime: d.last_trade_time || j.timestamp || null
+        .then(function (q) {
+          // Finnhub quote: c=current, d=$ change, dp=% change, t=unix seconds.
+          // c is 0 for an unknown symbol or before the first print — skip those.
+          if (!q || typeof q.c !== "number" || q.c <= 0) return;
+          LIVE[sym] = {
+            last: q.c,
+            pct:  (typeof q.dp === "number") ? q.dp : null,
+            srcTime: (typeof q.t === "number" && q.t > 0) ? q.t * 1000 : null
           };
         })
-        .catch(function () { /* offline / CORS / bad symbol -> keep snapshot */ });
+        .catch(function () { /* offline / blocked / bad symbol -> keep snapshot */ });
     }
 
     function fetchAll() {
-      var jobs = [];
-      for (var s in CBOE) jobs.push(fetchOne(s, CBOE[s]));
-      return Promise.all(jobs);
+      return Promise.all(SYMS.map(fetchOne));
     }
 
     // Paint live values onto the LATEST session's watchlist rows only. Older
@@ -1883,7 +1887,7 @@
         r.last = q.last;
         if (q.pct !== null) r.pct_change = q.pct;
         painted++;
-        var t = q.srcTime ? Date.parse(q.srcTime) : NaN;
+        var t = (typeof q.srcTime === "number") ? q.srcTime : NaN;
         if (!isNaN(t) && t > newest) newest = t;
       });
       if (painted) everOk = true;
