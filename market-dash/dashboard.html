@@ -697,7 +697,6 @@
 
   function wlTable(rows, withHorizons) {
     var h = '<table class="wl"><tr><th>Symbol</th>' +
-            '<th style="text-align:right">Last</th>' +
             '<th class="smhide" style="text-align:right">Day $</th>' +
             '<th style="text-align:right">Day %</th>';
 
@@ -713,7 +712,6 @@
         "><b" + (r.child_of ? ' style="color:var(--dim);font-weight:400"' : "") + ">" +
         (r.child_of ? "&#8627; " : "") + esc(r.symbol) + "</b>" +
         '<div style="color:var(--faint);font-size:10px">' + esc(r.name || "") + "</div></td>" +
-        '<td class="num">' + (has(r.last) ? commas(r.last) : na()) + "</td>" +
         '<td class="num smhide">' + money(dollarsFrom(r.last, r.pct_change)) + "</td>" +
         '<td class="num">' + signed(r.pct_change, 2, "%") + "</td>";
 
@@ -1069,14 +1067,14 @@
       } else if (uso > 0.5 && gld > 0.5) {
         line("Commodities", "energy and metals both bid — reflation / inflation hedging");
       } else {
-        line("Commodities", "energy " + signed(uso, 2, "%") + ", gold " + signed(gld, 2, "%"));
+        line("Commodities", "energy " + money(dollarsFrom(by.USO.last, uso)) + ", gold " + money(dollarsFrom(by.GLD.last, gld)));
       }
     }
 
     // 5. Rates
     var ief = pc("IEF"), tlt = pc("TLT");
     if (ief !== null && tlt !== null) {
-      line("Rates", "IEF " + signed(ief, 2, "%") + " / TLT " + signed(tlt, 2, "%") + " — " +
+      line("Rates", "IEF " + money(dollarsFrom(by.IEF.last, ief)) + " / TLT " + money(dollarsFrom(by.TLT.last, tlt)) + " — " +
         (ief > 0 && tlt > 0 ? "duration bid, yields lower" :
          ief < 0 && tlt < 0 ? "duration sold, yields higher" : "curve mixed") +
         (ief - tlt > 0.05 ? "; belly outperforming the long end" : ""));
@@ -1095,13 +1093,13 @@
                 "what individual stocks are actually doing";
       }
       line("Vol", "VIX " + Number(vix).toFixed(2) + " (" + v + ")" +
-        (vixc !== null ? " " + signed(vixc, 2, "%") : "") + extra);
+        (vixc !== null ? " " + money(dollarsFrom(vix, vixc)) : "") + extra);
     }
 
     // 7. Movers
     if (movers.length) {
       line("Movers", movers.slice(0, 5).map(function (m) {
-        return m.symbol + " " + signed(m.pct_change, 2, "%");
+        return m.symbol + " " + money(dollarsFrom(m.last, m.pct_change));
       }).join("   "));
     }
 
@@ -1148,9 +1146,9 @@
                                              : "offered — long yields higher"));
     }
     if (ewy && has(ewy.pct_change) && ewy.pct_change < -2) {
-      bits.push("EWY " + ewy.pct_change.toFixed(2) + "% — Korea is your semis tell");
+      bits.push("EWY " + money(dollarsFrom(ewy.last, ewy.pct_change)) + " — Korea is your semis tell");
     }
-    if (uso && has(uso.ret_ytd)) bits.push("USO " + uso.ret_ytd.toFixed(0) + "% YTD");
+    if (uso && has(uso.ret_ytd)) bits.push("USO " + money(dollarsFrom(uso.last, uso.ret_ytd)) + " YTD");
 
     // cross-asset divergence note from today's moves
     function dv(sym) {
