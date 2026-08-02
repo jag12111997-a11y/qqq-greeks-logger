@@ -337,11 +337,9 @@
   // Honest footer for a dimmed panel: when it was really last pulled, and when
   // the next pull lands. If a panel ever bugs out, "last updated" gives it away.
   function staleStamp(e) {
-    var am = amSibling(e);
-    var pulled = (am && am.fetched_pt) ? am.fetched_pt
-               : (e && e.fetched_pt) ? e.fetched_pt : "unknown";
+    var pulled = (e && e.fetched_pt) ? e.fetched_pt : "unknown";
     return '<div style="font-size:10.5px;color:var(--faint);margin-top:8px">' +
-      "last updated " + esc(pulled) + " &middot; next pull " + esc(nextRunPT()) + "</div>";
+      "pulled " + esc(pulled) + " &middot; next pull " + esc(nextRunPT()) + "</div>";
   }
   function pendingPanel(title, labels, e) {
     var body = "";
@@ -355,32 +353,24 @@
   function secMacro(e) {
     var m = e.macro;
     var body = "";
-    var stale = unchanged(e, "macro");     // PM re-fetched the same macro the morning already logged
-    var gdp, cpi, pce, ff, curve;
-
-    if (!stale && !ok(m)) {
+    if (!ok(m)) {
       body = '<div class="err">' + esc(get(m, "error", "no macro data")) + "</div>";
       return sec("Macro", body, read(na()));
     }
 
-    if (stale) {
-      ["Growth", "Inflation (CPI)", "Core PCE", "Fed funds", "2s10s curve"]
-        .forEach(function (lbl) { body += row(lbl, na()); });
-      body += staleStamp(e);
-    } else {
-      gdp = m.real_gdp; cpi = m.cpi; pce = m.core_pce;
-      ff = m.fed_funds; curve = m.curve_2s10s;
+    var gdp = m.real_gdp, cpi = m.cpi, pce = m.core_pce;
+    var ff = m.fed_funds, curve = m.curve_2s10s;
 
-      body += row("Growth", ok(gdp)
-        ? num(gdp.latest, 1) + " <span class=k>(" + fmtLoose(gdp.latest_date) + ")</span> " + signed(gdp.change, 1)
-        : na());
-      body += row("Inflation (CPI)", ok(cpi) ? num(cpi.latest, 1) + " " + signed(cpi.change, 2) : na());
-      body += row("Core PCE", ok(pce) ? num(pce.latest, 2) + " " + signed(pce.change, 2) : na());
-      body += row("Fed funds", ok(ff) ? num(ff.latest, 2, "%") + " " + signed(ff.change, 2) : na());
-      body += row("2s10s curve", ok(curve)
-        ? signed(curve.spread, 2) + " <span class=k>" + esc(curve.read) + "</span>"
-        : na());
-    }
+    body += row("Growth", ok(gdp)
+      ? num(gdp.latest, 1) + " <span class=k>(" + fmtLoose(gdp.latest_date) + ")</span> " + signed(gdp.change, 1)
+      : na());
+    body += row("Inflation (CPI)", ok(cpi) ? num(cpi.latest, 1) + " " + signed(cpi.change, 2) : na());
+    body += row("Core PCE", ok(pce) ? num(pce.latest, 2) + " " + signed(pce.change, 2) : na());
+    body += row("Fed funds", ok(ff) ? num(ff.latest, 2, "%") + " " + signed(ff.change, 2) : na());
+    body += row("2s10s curve", ok(curve)
+      ? signed(curve.spread, 2) + " <span class=k>" + esc(curve.read) + "</span>"
+      : na());
+    body += staleStamp(e);
 
     // Main catalysts live here — they're macro events, not price action.
     var hi = get(e, "calendar.us_high_impact", []);
@@ -476,11 +466,6 @@
   function secPositioning(e) {
     var p = e.positioning;
     var body = "";
-    if (unchanged(e, "positioning")) {      // COT is weekly — usually identical to the morning
-      return pendingPanel("Positioning",
-        ["Non-commercial net", "Commercial net", "Weekly change", "Report date"],
-        e);
-    }
     if (!ok(p)) return sec("Positioning", '<div class="err">' + esc(get(p, "error", "no COT data")) + "</div>", read(na()));
 
     var keys = Object.keys(p);
@@ -499,6 +484,7 @@
 
     body += '<div style="color:var(--faint);font-size:11px;margin-top:10px">' +
             "COT is Tuesday data released Friday — stale by design." + "</div>";
+    body += staleStamp(e);
 
     return sec("Positioning", body, read(readBits.length ? readBits.join("<br>") : null));
   }
@@ -622,11 +608,6 @@
 
   function secOptions(e) {
     var o = e.options;
-    if (unchanged(e, "options")) {          // same P/C the morning already logged — not a new close
-      return pendingPanel("Options",
-        ["Total P/C", "Index P/C", "ETP P/C", "Equity P/C", "VIX P/C", "SPX + SPXW P/C", "Volume", "Open interest"],
-        e);
-    }
     if (!ok(o) || !has(o.total_pc)) {
       return sec("Options",
         '<div class="err">' + esc(get(o, "error", "Cboe table not parsed")) + "</div>" +
@@ -643,6 +624,7 @@
     body += row("Volume", commas(o.total_volume));
     body += row("Open interest", commas(o.total_open_interest));
     if (has(o.session_date)) body += row("Session", fmtDate(o.session_date));
+    body += staleStamp(e);
 
     var t = o.total_pc;
     var r = t >= 1.15 ? "put-heavy — fear bid / possible washout"
@@ -1264,11 +1246,6 @@
   }
 
   function secWeek(e) {
-    if (unchanged(e, "calendar")) {         // calendar identical to the last pull
-      return sec("Week ahead",
-        '<div style="color:var(--faint);font-size:12px">No new economic prints since the last pull.</div>' +
-        staleStamp(e), read(na()));
-    }
     var all = get(e, "calendar.all_events", []);
     if (!all.length) return "";
 
@@ -1324,6 +1301,7 @@
     });
 
     var hidden = all.length - keep.length;
+    body += staleStamp(e);
     return sec("Week ahead — US + central banks (" + keep.length + " shown, " +
                hidden + " filtered out)", body);
   }
