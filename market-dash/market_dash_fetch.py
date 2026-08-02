@@ -391,8 +391,48 @@ def fetch_cot():
 # SOURCE 4 — MARKET PRICES + SECTORS (yfinance)
 # ============================================================
 
+# ETFs that actually trade overnight / pre- & post-market. For these we show
+# the freshest extended-hours print instead of yesterday's regular close.
+# VIX and DXY are indexes (not tradeable), so they have NO overnight quote and
+# stay on their last regular close.
+OVERNIGHT_TICKERS = {"QQQ", "SPY", "GLD", "USO", "EWY", "TLT"}
+
+
+def _overnight_last_prev(ticker):
+    """Freshest print incl. pre/post-market, plus the prior regular-session
+    close to measure the move against. Returns (last, prev) or (None, None)."""
+    daily = yf.Ticker(ticker).history(period="7d", interval="1d")
+    if daily is None or daily.empty:
+        return None, None
+    intr = yf.Ticker(ticker).history(period="2d", interval="1m", prepost=True)
+    if intr is None or intr.empty:
+        if len(daily) < 2:
+            return None, None
+        return float(daily["Close"].iloc[-1]), float(daily["Close"].iloc[-2])
+    last = float(intr["Close"].iloc[-1])
+    last_day = intr.index[-1].normalize()
+    # previous close = most recent daily close on an earlier calendar day than
+    # the freshest print (so pre-market compares to yesterday, after-hours to
+    # today's close's prior day = full-day+AH move).
+    prior = daily[daily.index.normalize() < last_day]
+    if not prior.empty:
+        prev = float(prior["Close"].iloc[-1])
+    elif len(daily) >= 2:
+        prev = float(daily["Close"].iloc[-2])
+    else:
+        prev = None
+    return last, prev
+
+
 def pct_change_last_two(ticker):
     """Returns (last_close, prev_close, pct_change)."""
+    if ticker in OVERNIGHT_TICKERS:
+        try:
+            last, prev = _overnight_last_prev(ticker)
+            if last is not None and prev:
+                return last, prev, ((last - prev) / prev) * 100.0
+        except Exception:
+            pass  # fall back to plain daily close below
     data = yf.Ticker(ticker).history(period="5d", interval="1d")
     if data is None or data.empty or len(data) < 2:
         return None, None, None

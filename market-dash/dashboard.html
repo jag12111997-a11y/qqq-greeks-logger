@@ -702,7 +702,8 @@
 
     h += '<th style="text-align:right" title="distance from the 20-day normal">z20</th>' +
          '<th class="smhide" style="text-align:right">YTD $</th>' +
-         '<th style="text-align:right">YTD %</th></tr>';
+         '<th style="text-align:right">YTD %</th>' +
+         '<th style="text-align:right">Last</th></tr>';
 
     rows.forEach(function (r) {
       var big = has(r.pct_change) && Math.abs(r.pct_change) >= 2;
@@ -721,7 +722,8 @@
            (has(r.z20) && Math.abs(r.z20) >= 2 ? ' style="font-weight:500"' : "") + ">" +
            (has(r.z20) ? (r.z20 > 0 ? "+" : "") + r.z20.toFixed(2) : "·") + "</span></td>" +
            '<td class="num smhide">' + money(dollarsFrom(r.last, r.ret_ytd)) + "</td>" +
-           '<td class="num">' + signed(r.ret_ytd, 1, "%") + "</td></tr>";
+           '<td class="num">' + signed(r.ret_ytd, 1, "%") + "</td>" +
+           '<td class="num">' + (has(r.last) ? commas(r.last) : na()) + "</td></tr>";
     });
     return h + "</table>";
   }
