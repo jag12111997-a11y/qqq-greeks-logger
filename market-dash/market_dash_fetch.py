@@ -601,11 +601,14 @@ def fetch_quant_metrics():
         out["qqq_realized_vol_21d_pct"] = realized_vol(rets[-21:])
         out["qqq_vol_drag"] = vol_drag(rets)
 
-    # implied vol from VIX for the realized-vs-implied spread
+    # implied vol from VIX for the realized-vs-implied spread.
+    # Use the SAME Yahoo source as the rest of the dashboard. Webull does not
+    # recognise the "^VIX" symbol format (that caret is Yahoo syntax), so its
+    # lookup returns a wrong value that contradicts VIX's own prev-close and
+    # daily change. pct_change_last_two("^VIX") gives the consistent level.
     vix = None
     try:
-        vclose = _daily_closes("^VIX", count=5)
-        vix = vclose[-1] if vclose else None
+        vix, _prev, _pct = pct_change_last_two("^VIX")
     except Exception:
         pass
     if rets and vix:
