@@ -697,13 +697,13 @@
 
   function wlTable(rows, withHorizons) {
     var h = '<table class="wl"><tr><th>Symbol</th>' +
+            '<th style="text-align:right">Last</th>' +
             '<th class="smhide" style="text-align:right">Day $</th>' +
             '<th style="text-align:right">Day %</th>';
 
     h += '<th style="text-align:right" title="distance from the 20-day normal">z20</th>' +
          '<th class="smhide" style="text-align:right">YTD $</th>' +
-         '<th style="text-align:right">YTD %</th>' +
-         '<th style="text-align:right">Last</th></tr>';
+         '<th style="text-align:right">YTD %</th></tr>';
 
     rows.forEach(function (r) {
       var big = has(r.pct_change) && Math.abs(r.pct_change) >= 2;
@@ -713,6 +713,7 @@
         "><b" + (r.child_of ? ' style="color:var(--dim);font-weight:400"' : "") + ">" +
         (r.child_of ? "&#8627; " : "") + esc(r.symbol) + "</b>" +
         '<div style="color:var(--faint);font-size:10px">' + esc(r.name || "") + "</div></td>" +
+        '<td class="num">' + (has(r.last) ? commas(r.last) : na()) + "</td>" +
         '<td class="num smhide">' + money(dollarsFrom(r.last, r.pct_change)) + "</td>" +
         '<td class="num">' + signed(r.pct_change, 2, "%") + "</td>";
 
@@ -722,8 +723,7 @@
            (has(r.z20) && Math.abs(r.z20) >= 2 ? ' style="font-weight:500"' : "") + ">" +
            (has(r.z20) ? (r.z20 > 0 ? "+" : "") + r.z20.toFixed(2) : "·") + "</span></td>" +
            '<td class="num smhide">' + money(dollarsFrom(r.last, r.ret_ytd)) + "</td>" +
-           '<td class="num">' + signed(r.ret_ytd, 1, "%") + "</td>" +
-           '<td class="num">' + (has(r.last) ? commas(r.last) : na()) + "</td></tr>";
+           '<td class="num">' + signed(r.ret_ytd, 1, "%") + "</td></tr>";
     });
     return h + "</table>";
   }
@@ -1069,14 +1069,14 @@
       } else if (uso > 0.5 && gld > 0.5) {
         line("Commodities", "energy and metals both bid — reflation / inflation hedging");
       } else {
-        line("Commodities", "energy " + money(dollarsFrom(by.USO.last, uso)) + ", gold " + money(dollarsFrom(by.GLD.last, gld)));
+        line("Commodities", "energy " + signed(uso, 2, "%") + ", gold " + signed(gld, 2, "%"));
       }
     }
 
     // 5. Rates
     var ief = pc("IEF"), tlt = pc("TLT");
     if (ief !== null && tlt !== null) {
-      line("Rates", "IEF " + money(dollarsFrom(by.IEF.last, ief)) + " / TLT " + money(dollarsFrom(by.TLT.last, tlt)) + " — " +
+      line("Rates", "IEF " + signed(ief, 2, "%") + " / TLT " + signed(tlt, 2, "%") + " — " +
         (ief > 0 && tlt > 0 ? "duration bid, yields lower" :
          ief < 0 && tlt < 0 ? "duration sold, yields higher" : "curve mixed") +
         (ief - tlt > 0.05 ? "; belly outperforming the long end" : ""));
@@ -1095,13 +1095,13 @@
                 "what individual stocks are actually doing";
       }
       line("Vol", "VIX " + Number(vix).toFixed(2) + " (" + v + ")" +
-        (vixc !== null ? " " + money(dollarsFrom(vix, vixc)) : "") + extra);
+        (vixc !== null ? " " + signed(vixc, 2, "%") : "") + extra);
     }
 
     // 7. Movers
     if (movers.length) {
       line("Movers", movers.slice(0, 5).map(function (m) {
-        return m.symbol + " " + money(dollarsFrom(m.last, m.pct_change));
+        return m.symbol + " " + signed(m.pct_change, 2, "%");
       }).join("   "));
     }
 
@@ -1148,9 +1148,9 @@
                                              : "offered — long yields higher"));
     }
     if (ewy && has(ewy.pct_change) && ewy.pct_change < -2) {
-      bits.push("EWY " + money(dollarsFrom(ewy.last, ewy.pct_change)) + " — Korea is your semis tell");
+      bits.push("EWY " + ewy.pct_change.toFixed(2) + "% — Korea is your semis tell");
     }
-    if (uso && has(uso.ret_ytd)) bits.push("USO " + money(dollarsFrom(uso.last, uso.ret_ytd)) + " YTD");
+    if (uso && has(uso.ret_ytd)) bits.push("USO " + uso.ret_ytd.toFixed(0) + "% YTD");
 
     // cross-asset divergence note from today's moves
     function dv(sym) {
@@ -1851,226 +1851,6 @@
   }
 
   // ---------- render ----------
-  function secTouchFlow(e) {
-    // spot + 1-day implied sigma, same source secQuant uses
-    var mk = {};
-    (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
-    var vix = get(mk, "VIX.last");
-    var q = mk.QQQ;
-    var g = e.gex;
-    if (!has(vix) || !q || !has(q.last) || !ok(g)) return "";
-
-    var spot = q.last;
-    var sig = vix / Math.sqrt(252) / 100;      // 1-day implied sigma (a fraction)
-    var L = g.levels || {};
-
-    // Probability price TOUCHES level K by the close, driftless GBM:
-    //   P(touch) ~= 2 * N( -|ln(K/spot)| / sigma )   (reflection principle)
-    function touch(K) {
-      if (!has(K) || !(K > 0) || sig <= 0) return null;
-      return Math.min(1, 2 * cdf(-Math.abs(Math.log(K / spot)) / sig));
-    }
-
-    var levels = [
-      ["Gamma flip", g.gamma_flip_method === "zero crossing" ? g.gamma_flip : null],
-      ["Call wall",  L.call_wall],
-      ["Put wall",   L.put_wall],
-      ["OI magnet",  L.highest_oi_strike]
-    ];
-
-    var rows = "";
-    levels.forEach(function (lv) {
-      var K = lv[1], p = touch(K);
-      if (p === null) return;
-      var dist = ((K - spot) / spot) * 100;
-      rows += "<tr><td>" + esc(lv[0]) + "</td>" +
-        '<td class="num">' + num(K, 2) + "</td>" +
-        '<td class="num">' + signed(dist, 2, "%") + "</td>" +
-        '<td class="num">' + (p * 100).toFixed(0) + "%</td></tr>";
-    });
-    if (!rows) return "";
-
-    var body =
-      '<table><tr><th>Level</th><th style="text-align:right">Strike</th>' +
-      '<th style="text-align:right">vs spot</th>' +
-      '<th style="text-align:right">touch odds</th></tr>' + rows + "</table>";
-
-    var pos = g.regime === "POSITIVE GAMMA";
-    var lines = [];
-    lines.push("<div style='margin:5px 0'>Touch odds are the chance price <b>tags</b> each " +
-      "level at some point today (about 2&times; the odds it <i>closes</i> beyond it), from " +
-      "the VIX 1-day &sigma; of <b>" + (sig * 100).toFixed(2) + "%</b>. A wall is far more " +
-      "likely to be <b>touched</b> than <b>broken</b> &mdash; size fades toward it, and expect " +
-      "stops parked at high-touch levels to get run even on a day that ultimately reverts. " +
-      "(Full-session estimate; it shrinks with &radic;(time left).)</div>");
-    lines.push("<div style='margin:5px 0'>Second-order dealer flow (vanna / charm): in <b>" +
-      (pos ? "positive gamma" : "negative gamma") + "</b>, " +
-      (pos
-        ? "charm quietly bleeds dealer delta toward the pins as the day ages &mdash; the slow " +
-          "grind into the close &mdash; and a vol spike adds mild vanna selling into downside " +
-          "puts. Both are mechanical and tend to revert."
-        : "charm and vanna both push <b>with</b> the move &mdash; the grind becomes a slide and " +
-          "a vol spike accelerates it. Fades into strength are dangerous here.") +
-      "</div>");
-
-    return sec("Touch odds & dealer-flow tilt", body,
-      '<details class="read"><summary><b>Read</b></summary><div>' +
-      lines.join("") + "</div></details>");
-  }
-
-  function secFadeRegime(e) {
-    // QQQ daily % returns across the logged history, up to the viewed session
-    var series = starSeries("pct_change").QQQ || [];
-    var cut = H.indexOf(e);
-    var upto = (cut >= 0) ? series.slice(0, cut + 1) : series;
-    var r = upto.filter(function (v) { return has(v); })
-                .map(function (v) { return v / 100; });
-    var n = r.length;
-    if (n < 20) return "";                      // need a real sample first
-
-    function mean(a) { var s = 0; a.forEach(function (v) { s += v; }); return s / a.length; }
-    var mu = mean(r);
-    function varK(k) {                          // variance of overlapping k-day sums
-      var m = n - k + 1, acc = 0;
-      for (var i = 0; i < m; i++) {
-        var s = 0; for (var j = 0; j < k; j++) s += r[i + j];
-        acc += (s - k * mu) * (s - k * mu);
-      }
-      return acc / m;
-    }
-    var v1 = varK(1);
-    if (v1 <= 0) return "";
-    function VR(k) { return varK(k) / (k * v1); }
-    var vr2 = VR(2), vr5 = VR(5);
-    var Hurst = 0.5 + 0.5 * (Math.log(vr2) / Math.log(2));
-
-    var label, col, tone;
-    if (vr2 < 0.9)      { label = "MEAN-REVERTING"; col = "var(--up)";
-      tone = "fades are in season &mdash; mechanical stretch tends to snap back."; }
-    else if (vr2 > 1.1) { label = "TRENDING";       col = "var(--down)";
-      tone = "moves feed on themselves &mdash; fades get run over; wait for the second push."; }
-    else                { label = "RANDOM WALK";    col = "var(--dim)";
-      tone = "no memory either way &mdash; no reversion edge to lean on today."; }
-
-    var body =
-      row("Regime", '<span style="color:' + col + '">' + label + "</span>") +
-      row("Variance ratio VR(2)", num(vr2, 3)) +
-      row("Variance ratio VR(5)", num(vr5, 3)) +
-      row("Hurst H", num(Hurst, 3) + " <span class=k>" +
-          (Hurst < 0.5 ? "&lt;0.5 anti-persistent" :
-           Hurst > 0.5 ? "&gt;0.5 persistent" : "random") + "</span>") +
-      row("Sample", n + " sessions");
-
-    var lines = [];
-    lines.push("<div style='margin:5px 0'>Variance ratio compares the variance of multi-day " +
-      "returns against a random walk. <b>VR &lt; 1</b> means QQQ returns fight themselves " +
-      "(mean-reverting, fade-friendly); <b>VR &gt; 1</b> means they feed on themselves " +
-      "(trending, fade-hostile). Hurst is the same read as one number, " +
-      "H = 0.5 + &frac12;&middot;log&#8322;(VR(2)).</div>");
-    lines.push("<div style='margin:5px 0'>Now VR(2) = <b>" + num(vr2, 3) + "</b> &rarr; <b>" +
-      label + "</b>: " + tone + " Pair it with the OU half-life before committing a fade &mdash; " +
-      "stretch <i>and</i> a short reversion clock, not either alone.</div>");
-    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Computed on <b>daily</b> " +
-      "closes, so it reads the multi-day backdrop, not the intraday tape. Feed it a per-minute QQQ " +
-      "series and the identical formula becomes a live intraday fade light.</div>");
-
-    return sec("Fade regime — variance ratio / Hurst", body,
-      '<details class="read"><summary><b>Read</b></summary><div>' +
-      lines.join("") + "</div></details>");
-  }
-
-  function secRangeUsed(e) {
-    var mk = {};
-    (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
-    var vix = get(mk, "VIX.last");
-    var q = mk.QQQ;
-    if (!has(vix) || !q || !has(q.last) || !has(q.pct_change)) return "";
-
-    var spot = q.last;
-    var sig = vix / Math.sqrt(252) / 100;        // expected 1-day move (fraction)
-    var expPct = sig * 100;                       // expected 1-day move in %
-    var movePct = Math.abs(q.pct_change);         // move used so far today (%)
-    var used = expPct > 0 ? movePct / expPct : 0; // fraction of the day's range spent
-
-    var col = used < 0.5 ? "var(--up)" : used < 1 ? "var(--warn)" : "var(--down)";
-    var bar =
-      '<div style="height:10px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden">' +
-      '<div style="height:100%;width:' + (Math.min(used, 1) * 100).toFixed(0) +
-      '%;background:' + col + '"></div></div>';
-
-    var body =
-      row("Expected 1-day move", "&plusmn;" + expPct.toFixed(2) + "%  <span class=k>$" +
-          (spot * sig).toFixed(2) + "</span>") +
-      row("Move so far today", signed(q.pct_change, 2, "%")) +
-      row("Range used", (used * 100).toFixed(0) + "%") +
-      '<div style="margin-top:8px">' + bar + "</div>";
-
-    var lines = [];
-    lines.push("<div style='margin:5px 0'>Price has spent <b>" + (used * 100).toFixed(0) +
-      "%</b> of the &plusmn;" + expPct.toFixed(2) + "% the options market priced for today. " +
-      (used < 0.5
-        ? "Plenty of range left &mdash; a fade has room to work toward the mean."
-        : used < 1
-        ? "More than half the expected range is gone &mdash; reversion is likelier than fresh " +
-          "continuation, but size for chop."
-        : "The day has already <b>exceeded</b> its 1&sigma; range &mdash; either real information " +
-          "is driving it (don't fade) or it's badly overstretched (prime fade, but confirm the " +
-          "regime first).") + "</div>");
-    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Uses the VIX 1-day " +
-      "&sigma; and QQQ's move so far. Pair a high 'range used' with the Fade-regime card: " +
-      "overstretched AND mean-reverting is the fade; overstretched AND trending is the trap.</div>");
-
-    return sec("Range used — how much of today's move is spent", body,
-      '<details class="read"><summary><b>Read</b></summary><div>' +
-      lines.join("") + "</div></details>");
-  }
-
-  function secPlan(e) {
-    // ---- TWEAK ZONE: your rules. Edit these strings only. ----
-    var PLAN = {
-      window_pt:  "7:17 – 8:30 AM PT (no entries after 8:30)",
-      instrument: "QQQ 0DTE call, 3 strikes BELOW spot (ITM)",
-      signal:     "x3n_combo capitulation BUY, gated by QQQ ADL z-score > 0",
-      size:       "60% of capital · whole contracts, round down · skip if can't afford 1",
-      stop:       "entry − $0.30",
-      target:     "entry + $0.82",
-      time_stop:  "flat if not green in 15 min",
-      hard_flat:  "12:45 PM PT — flatten everything",
-      one_job:    "log MAE/MFE every trade — the signal is NOT validated yet; you're building the dataset"
-    };
-    // ----------------------------------------------------------
-
-    function line(k, v) {
-      return '<tr><td style="color:var(--dim);white-space:nowrap;padding-right:14px">' +
-        esc(k) + "</td><td>" + esc(v) + "</td></tr>";
-    }
-    var body =
-      "<table>" +
-      line("Window", PLAN.window_pt) +
-      line("Instrument", PLAN.instrument) +
-      line("Signal", PLAN.signal) +
-      line("Size", PLAN.size) +
-      line("Stop", PLAN.stop) +
-      line("Target", PLAN.target) +
-      line("Time stop", PLAN.time_stop) +
-      line("Hard flatten", PLAN.hard_flat) +
-      line("The one job", PLAN.one_job) +
-      "</table>";
-
-    var lines = [];
-    lines.push("<div style='margin:5px 0'>Decided in the calm, on purpose, so they're not " +
-      "re-decided in the heat. A constraint is a <b>no</b> made in advance. The edge isn't the " +
-      "entry &mdash; it's the box: the stop, the size cap, the window, the flatten. Change them " +
-      "here on a quiet weekend, never mid-session.</div>");
-    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Satisfice everything " +
-      "that isn't the read: same setup, same size, same checklist &mdash; so the whole budget goes " +
-      "to the one judgment that's yours: is this flow mechanical or informed, right now.</div>");
-
-    return sec("Plan & discipline — the box", body,
-      '<details class="read" open><summary><b>Read</b></summary><div>' +
-      lines.join("") + "</div></details>");
-  }
-
   function render() {
     var e = FULL[idx];
     var opts = FULL.map(function (x, i) {
@@ -2101,21 +1881,18 @@
 
       finalRegime(e, align) +
 
-      // 0. the box you decided in the calm
-      group("Plan and discipline", secPlan(e)) +
-
       // 1. the eight you actually trade
       group("Price", secStars(e)) +
 
       // 2. the whole options story in one place — gamma, ratios, venue, and
       //    the distribution those option prices imply
-      group("Options", secGex(e) + secOptions(e) + secVenue(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
+      group("Options", secGex(e) + secOptions(e) + secVenue(e) + secQuant(e)) +
 
       // 3. what's coming
       group("News", secWeek(e)) +
 
       // 4. where the money went today
-      group("Sectors and regime", secInternals(e) + secGeometry(e) + secFadeRegime(e)) +
+      group("Sectors and regime", secInternals(e) + secGeometry(e)) +
 
       // 5. slow-moving context
       group("Macro and positioning", secMacro(e) + secPositioning(e)) +

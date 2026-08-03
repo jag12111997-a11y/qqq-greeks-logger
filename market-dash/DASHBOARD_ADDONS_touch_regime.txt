@@ -1,0 +1,202 @@
+================================================================================
+MARKET DASH — TWO PASTE-IN ADD-ONS  (touch odds + fade regime)
+================================================================================
+Copy-paste only. Nothing here deletes or changes existing code — you ADD two
+functions and change TWO existing lines to switch them on.
+
+WHY ONLY TWO (not four):
+Your dashboard ALREADY has the other two you picked:
+  • GEX + zero-gamma flip  -> that's your secGex() card (gamma_flip, walls,
+    distance_to_flip, gamma_ratio). Already there. Nothing to add.
+  • Expected move          -> that's your secQuant() card (implied 1-day sigma,
+    "range into the close", GARCH band, realized-vs-implied). Already there.
+So rebuilding them would just duplicate what you have. Instead these two add the
+pieces you DON'T have yet:
+  • Touch odds + dealer-flow (vanna/charm) tilt   -> new card in the Options band
+  • Fade regime (variance ratio / Hurst)          -> new card in the regime band
+
+Both use data you already load. Both were checked numerically before shipping.
+
+================================================================================
+STEP 1 — PASTE THESE TWO FUNCTIONS
+================================================================================
+Open dashboard.html. Scroll to the line that reads:
+
+        function render() {
+
+Paste BOTH functions below on the empty line JUST ABOVE that `function render()`
+line. (Any spot among the other secXxx functions works; above render() is easy
+to find.)
+
+-------------------------- FUNCTION 1 : TOUCH ODDS -----------------------------
+  function secTouchFlow(e) {
+    // spot + 1-day implied sigma, same source secQuant uses
+    var mk = {};
+    (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
+    var vix = get(mk, "VIX.last");
+    var q = mk.QQQ;
+    var g = e.gex;
+    if (!has(vix) || !q || !has(q.last) || !ok(g)) return "";
+
+    var spot = q.last;
+    var sig = vix / Math.sqrt(252) / 100;      // 1-day implied sigma (a fraction)
+    var L = g.levels || {};
+
+    // Probability price TOUCHES level K by the close, driftless GBM:
+    //   P(touch) ~= 2 * N( -|ln(K/spot)| / sigma )   (reflection principle)
+    function touch(K) {
+      if (!has(K) || !(K > 0) || sig <= 0) return null;
+      return Math.min(1, 2 * cdf(-Math.abs(Math.log(K / spot)) / sig));
+    }
+
+    var levels = [
+      ["Gamma flip", g.gamma_flip_method === "zero crossing" ? g.gamma_flip : null],
+      ["Call wall",  L.call_wall],
+      ["Put wall",   L.put_wall],
+      ["OI magnet",  L.highest_oi_strike]
+    ];
+
+    var rows = "";
+    levels.forEach(function (lv) {
+      var K = lv[1], p = touch(K);
+      if (p === null) return;
+      var dist = ((K - spot) / spot) * 100;
+      rows += "<tr><td>" + esc(lv[0]) + "</td>" +
+        '<td class="num">' + num(K, 2) + "</td>" +
+        '<td class="num">' + signed(dist, 2, "%") + "</td>" +
+        '<td class="num">' + (p * 100).toFixed(0) + "%</td></tr>";
+    });
+    if (!rows) return "";
+
+    var body =
+      '<table><tr><th>Level</th><th style="text-align:right">Strike</th>' +
+      '<th style="text-align:right">vs spot</th>' +
+      '<th style="text-align:right">touch odds</th></tr>' + rows + "</table>";
+
+    var pos = g.regime === "POSITIVE GAMMA";
+    var lines = [];
+    lines.push("<div style='margin:5px 0'>Touch odds are the chance price <b>tags</b> each " +
+      "level at some point today (about 2&times; the odds it <i>closes</i> beyond it), from " +
+      "the VIX 1-day &sigma; of <b>" + (sig * 100).toFixed(2) + "%</b>. A wall is far more " +
+      "likely to be <b>touched</b> than <b>broken</b> &mdash; size fades toward it, and expect " +
+      "stops parked at high-touch levels to get run even on a day that ultimately reverts. " +
+      "(Full-session estimate; it shrinks with &radic;(time left).)</div>");
+    lines.push("<div style='margin:5px 0'>Second-order dealer flow (vanna / charm): in <b>" +
+      (pos ? "positive gamma" : "negative gamma") + "</b>, " +
+      (pos
+        ? "charm quietly bleeds dealer delta toward the pins as the day ages &mdash; the slow " +
+          "grind into the close &mdash; and a vol spike adds mild vanna selling into downside " +
+          "puts. Both are mechanical and tend to revert."
+        : "charm and vanna both push <b>with</b> the move &mdash; the grind becomes a slide and " +
+          "a vol spike accelerates it. Fades into strength are dangerous here.") +
+      "</div>");
+
+    return sec("Touch odds & dealer-flow tilt", body,
+      '<details class="read"><summary><b>Read</b></summary><div>' +
+      lines.join("") + "</div></details>");
+  }
+
+------------------------- FUNCTION 2 : FADE REGIME -----------------------------
+  function secFadeRegime(e) {
+    // QQQ daily % returns across the logged history, up to the viewed session
+    var series = starSeries("pct_change").QQQ || [];
+    var cut = H.indexOf(e);
+    var upto = (cut >= 0) ? series.slice(0, cut + 1) : series;
+    var r = upto.filter(function (v) { return has(v); })
+                .map(function (v) { return v / 100; });
+    var n = r.length;
+    if (n < 20) return "";                      // need a real sample first
+
+    function mean(a) { var s = 0; a.forEach(function (v) { s += v; }); return s / a.length; }
+    var mu = mean(r);
+    function varK(k) {                          // variance of overlapping k-day sums
+      var m = n - k + 1, acc = 0;
+      for (var i = 0; i < m; i++) {
+        var s = 0; for (var j = 0; j < k; j++) s += r[i + j];
+        acc += (s - k * mu) * (s - k * mu);
+      }
+      return acc / m;
+    }
+    var v1 = varK(1);
+    if (v1 <= 0) return "";
+    function VR(k) { return varK(k) / (k * v1); }
+    var vr2 = VR(2), vr5 = VR(5);
+    var Hurst = 0.5 + 0.5 * (Math.log(vr2) / Math.log(2));
+
+    var label, col, tone;
+    if (vr2 < 0.9)      { label = "MEAN-REVERTING"; col = "var(--up)";
+      tone = "fades are in season &mdash; mechanical stretch tends to snap back."; }
+    else if (vr2 > 1.1) { label = "TRENDING";       col = "var(--down)";
+      tone = "moves feed on themselves &mdash; fades get run over; wait for the second push."; }
+    else                { label = "RANDOM WALK";    col = "var(--dim)";
+      tone = "no memory either way &mdash; no reversion edge to lean on today."; }
+
+    var body =
+      row("Regime", '<span style="color:' + col + '">' + label + "</span>") +
+      row("Variance ratio VR(2)", num(vr2, 3)) +
+      row("Variance ratio VR(5)", num(vr5, 3)) +
+      row("Hurst H", num(Hurst, 3) + " <span class=k>" +
+          (Hurst < 0.5 ? "&lt;0.5 anti-persistent" :
+           Hurst > 0.5 ? "&gt;0.5 persistent" : "random") + "</span>") +
+      row("Sample", n + " sessions");
+
+    var lines = [];
+    lines.push("<div style='margin:5px 0'>Variance ratio compares the variance of multi-day " +
+      "returns against a random walk. <b>VR &lt; 1</b> means QQQ returns fight themselves " +
+      "(mean-reverting, fade-friendly); <b>VR &gt; 1</b> means they feed on themselves " +
+      "(trending, fade-hostile). Hurst is the same read as one number, " +
+      "H = 0.5 + &frac12;&middot;log&#8322;(VR(2)).</div>");
+    lines.push("<div style='margin:5px 0'>Now VR(2) = <b>" + num(vr2, 3) + "</b> &rarr; <b>" +
+      label + "</b>: " + tone + " Pair it with the OU half-life before committing a fade &mdash; " +
+      "stretch <i>and</i> a short reversion clock, not either alone.</div>");
+    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Computed on <b>daily</b> " +
+      "closes, so it reads the multi-day backdrop, not the intraday tape. Feed it a per-minute QQQ " +
+      "series and the identical formula becomes a live intraday fade light.</div>");
+
+    return sec("Fade regime — variance ratio / Hurst", body,
+      '<details class="read"><summary><b>Read</b></summary><div>' +
+      lines.join("") + "</div></details>");
+  }
+
+================================================================================
+STEP 2 — SWITCH THEM ON  (change TWO existing lines in render())
+================================================================================
+Inside function render(), find these two lines and add the new calls.
+
+(A) The Options band. FIND this line:
+
+        group("Options", secGex(e) + secOptions(e) + secVenue(e) + secQuant(e)) +
+
+    REPLACE it with (only the end changed — added " + secTouchFlow(e)"):
+
+        group("Options", secGex(e) + secOptions(e) + secVenue(e) + secQuant(e) + secTouchFlow(e)) +
+
+(B) The regime band. FIND this line:
+
+        group("Sectors and regime", secInternals(e) + secGeometry(e)) +
+
+    REPLACE it with (added " + secFadeRegime(e)"):
+
+        group("Sectors and regime", secInternals(e) + secGeometry(e) + secFadeRegime(e)) +
+
+That's it. Save, reload the dashboard.
+
+================================================================================
+WHAT YOU'LL SEE / GOTCHAS
+================================================================================
+• Touch card shows automatically whenever the gamma card and VIX+QQQ quotes are
+  present (same data those cards already use). If a level is missing it just
+  skips that row.
+• Fade-regime card needs at least 20 logged sessions of QQQ history; before that
+  it stays hidden on purpose (too small a sample to trust).
+• Touch odds use the VIX 1-day sigma as a full-session estimate; early in the
+  day the real odds are a touch higher and late in the day lower (scales with
+  sqrt of time remaining) — noted in the card's Read.
+• Nothing here calls the network or changes your data files. Pure display.
+
+MATH, verified:
+• Touch odds  P(touch K) ~= 2*N(-|ln(K/S)|/sigma)  — reflection principle,
+  checked against a Monte-Carlo barrier sim.
+• Hurst link  H = 0.5 + 0.5*log2(VR(2))  — exact from Var(k) ~ k^(2H); a random
+  walk returns VR=1, H=0.5 as it should.
+================================================================================
