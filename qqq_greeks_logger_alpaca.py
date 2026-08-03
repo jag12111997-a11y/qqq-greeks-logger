@@ -2,16 +2,19 @@
 # QQQ 0DTE CALLS Greeks Logger — Alpaca version
 # ============================================================
 # WHAT IT DOES
-#   - CALLS ONLY (puts skipped), today's expiration (0DTE)
+#   - CALLS AND PUTS (each written to its OWN file, never mixed),
+#     today's expiration (0DTE)
 #   - Strike window: spot +/- WINDOW dollars (set per session)
 #   - Logs bid/ask/last, volume, open interest, and computed
 #     Greeks (iv/delta/gamma/theta/vega) for each strike
-#   - Appends one timestamped snapshot per capture to a CSV
+#   - Appends one timestamped snapshot per capture to each CSV
 #
-# OUTPUT LAYOUT (organized by day and session):
-#   data/YYYY-MM-DD/am/qqq_greeks_YYYY-MM-DD_am.csv   (morning)
-#   data/YYYY-MM-DD/pm/qqq_greeks_YYYY-MM-DD_pm.csv   (midday)
-#   Each session writes its own dated file into its am/ or pm/
+# OUTPUT LAYOUT (organized by day and session; calls and puts SEPARATE):
+#   data/YYYY-MM-DD/am/qqq_greeks_calls_YYYY-MM-DD_am.csv   (morning calls)
+#   data/YYYY-MM-DD/am/qqq_greeks_puts_YYYY-MM-DD_am.csv    (morning puts)
+#   data/YYYY-MM-DD/pm/qqq_greeks_calls_YYYY-MM-DD_pm.csv   (midday calls)
+#   data/YYYY-MM-DD/pm/qqq_greeks_puts_YYYY-MM-DD_pm.csv    (midday puts)
+#   Each session writes its own dated files into its am/ or pm/
 #   folder, so history stays sorted by date instead of one big file.
 #
 # SESSION / LOOP MODE (set via environment variables):
@@ -122,6 +125,46 @@ def _call_greeks(S, K, T, r, q, sigma):
     return delta, gamma, theta, vega
 
 
+def _bs_put_price(S, K, T, r, q, sigma):
+    if sigma <= 0 or T <= 0:
+        return max(K * math.exp(-r * T) - S * math.exp(-q * T), 0.0)
+    d1 = (math.log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * math.sqrt(T))
+    d2 = d1 - sigma * math.sqrt(T)
+    return K * math.exp(-r * T) * _norm_cdf(-d2) - S * math.exp(-q * T) * _norm_cdf(-d1)
+
+
+def _implied_vol_put(price, S, K, T, r, q):
+    upper = K * math.exp(-r * T)                       # a European put can't exceed K discounted
+    intrinsic = max(upper - S * math.exp(-q * T), 0.0)
+    if price is None or T <= 0 or price <= intrinsic + 1e-6 or price >= upper:
+        return None
+    lo, hi = 1e-4, 5.0
+    if _bs_put_price(S, K, T, r, q, hi) < price:
+        return None
+    for _ in range(100):
+        mid = 0.5 * (lo + hi)
+        if _bs_put_price(S, K, T, r, q, mid) < price:
+            lo = mid
+        else:
+            hi = mid
+        if hi - lo < 1e-6:
+            break
+    return 0.5 * (lo + hi)
+
+
+def _put_greeks(S, K, T, r, q, sigma):
+    sqrtT = math.sqrt(T)
+    d1 = (math.log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrtT)
+    # Put delta = call delta - e^{-qT}; gamma and vega are identical to the call.
+    delta = math.exp(-q * T) * (_norm_cdf(d1) - 1.0)
+    gamma = math.exp(-q * T) * _norm_pdf(d1) / (S * sigma * sqrtT)
+    vega = S * math.exp(-q * T) * _norm_pdf(d1) * sqrtT / 100.0
+    # Broker "1-calendar-day" theta, same convention as the call.
+    T_next = max(T - 1.0 / 365.0, 0.0)
+    theta = _bs_put_price(S, K, T_next, r, q, sigma) - _bs_put_price(S, K, T, r, q, sigma)
+    return delta, gamma, theta, vega
+
+
 # ---------- Alpaca data ----------
 
 def get_spot_price():
@@ -130,10 +173,10 @@ def get_spot_price():
     return float(r.json()["trade"]["p"])
 
 
-def get_option_chain(low, high, today):
+def get_option_chain(low, high, today, opt_type="call"):
     params = {
         "feed": "indicative",
-        "type": "call",
+        "type": opt_type,
         "expiration_date": today,
         "strike_price_gte": low,
         "strike_price_lte": high,
@@ -145,13 +188,13 @@ def get_option_chain(low, high, today):
     return r.json().get("snapshots", {})
 
 
-def get_open_interest(low, high, today):
+def get_open_interest(low, high, today, opt_type="call"):
     # Open interest lives on the trading API's contracts endpoint (OCC EOD).
     oi = {}
     try:
         params = {
             "underlying_symbols": SYMBOL,
-            "type": "call",
+            "type": opt_type,
             "expiration_date": today,
             "strike_price_gte": low,
             "strike_price_lte": high,
@@ -191,24 +234,30 @@ def _round_or_blank(value, digits):
 
 # ---------- Snapshot + CSV ----------
 
-def build_snapshot_rows():
+def build_snapshot_rows(opt_type="call", spot=None):
+    """Build rows for ONE option type ("call" or "put").
+
+    Calls and puts are fetched and written separately (own CSV each), never
+    mixed. Pass a shared `spot` so both types are priced off the same underlying.
+    """
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     today = datetime.date.today().isoformat()
-    spot = get_spot_price()
+    if spot is None:
+        spot = get_spot_price()
     low, high = spot - WINDOW, spot + WINDOW
-    snapshots = get_option_chain(low, high, today)
+    snapshots = get_option_chain(low, high, today, opt_type)
     if not snapshots:
-        print(f"{now_utc.strftime('%H:%M:%S')} UTC: no contracts near spot "
+        print(f"{now_utc.strftime('%H:%M:%S')} UTC: no {opt_type} contracts near spot "
               f"{spot:.2f} (market closed or no 0DTE). Skipping.")
         return None
 
-    oi_map = get_open_interest(low, high, today)
+    oi_map = get_open_interest(low, high, today, opt_type)
     T = time_to_expiry_years(now_utc, today)
     r, q = RISK_FREE_RATE, DIVIDEND_YIELD
 
     rows = []
     for symbol, data in snapshots.items():
-        exp_date, opt_type, strike = parse_symbol(symbol)
+        exp_date, _sym_cp, strike = parse_symbol(symbol)
         quote = data.get("latestQuote") or {}
         trade = data.get("latestTrade") or {}
         daily_bar = data.get("dailyBar") or {}
@@ -222,10 +271,16 @@ def build_snapshot_rows():
 
         iv = delta = gamma = theta = vega = None
         try:
-            sigma = _implied_vol_call(price, spot, strike, T, r, q)
+            if opt_type == "call":
+                sigma = _implied_vol_call(price, spot, strike, T, r, q)
+            else:
+                sigma = _implied_vol_put(price, spot, strike, T, r, q)
             if sigma is not None:
                 iv = sigma
-                delta, gamma, theta, vega = _call_greeks(spot, strike, T, r, q, sigma)
+                if opt_type == "call":
+                    delta, gamma, theta, vega = _call_greeks(spot, strike, T, r, q, sigma)
+                else:
+                    delta, gamma, theta, vega = _put_greeks(spot, strike, T, r, q, sigma)
         except (ValueError, ZeroDivisionError):
             pass
 
@@ -248,23 +303,25 @@ def build_snapshot_rows():
 
     rows.sort(key=lambda x: x["strike"])
     filled = sum(1 for x in rows if x["delta"] != "")
-    print(f"{now_utc.strftime('%H:%M:%S')} UTC: logged {len(rows)} rows "
+    print(f"{now_utc.strftime('%H:%M:%S')} UTC: logged {len(rows)} {opt_type} rows "
           f"(spot {spot:.2f}, window +/-{WINDOW:g}, Greeks on {filled}/{len(rows)})")
     return rows
 
 
-def output_path():
-    # data/<trading date>/<am|pm>/qqq_greeks_<date>_<session>.csv
+def output_path(opt_type="call"):
+    # data/<trading date>/<am|pm>/qqq_greeks_<calls|puts>_<date>_<session>.csv
+    # Calls and puts ALWAYS go to separate files — never the same CSV.
     et = ZoneInfo("America/New_York")
     now_et = datetime.datetime.now(et)
     date = now_et.date().isoformat()
     session = SESSION if SESSION in ("am", "pm") else ("am" if now_et.hour < 12 else "pm")
-    return os.path.join(BASE_DIR, date, session, f"qqq_greeks_{date}_{session}.csv")
+    kind = "calls" if opt_type == "call" else "puts"
+    return os.path.join(BASE_DIR, date, session, f"qqq_greeks_{kind}_{date}_{session}.csv")
 
 
-def write_rows(new_rows):
-    # Each day+session has its own file; create with a header, else append.
-    path = output_path()
+def write_rows(new_rows, opt_type="call"):
+    # Each day+session+type has its own file; create with a header, else append.
+    path = output_path(opt_type)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     is_new = not os.path.exists(path)
     with open(path, "a", newline="") as f:
@@ -279,30 +336,34 @@ def main():
         print("STOP: ALPACA_API_KEY / ALPACA_API_SECRET not set.")
         return
 
-    # Single snapshot mode.
+    # Single snapshot mode. Calls AND puts, each to its own file.
     if INTERVAL_SECONDS <= 0 or DURATION_SECONDS <= 0:
-        rows = build_snapshot_rows()
-        if rows:
-            write_rows(rows)
+        spot = get_spot_price()
+        for t in ("call", "put"):
+            rows = build_snapshot_rows(t, spot=spot)
+            if rows:
+                write_rows(rows, t)
         return
 
     # Session / loop mode: snapshot every INTERVAL for DURATION.
     print(f"Session start: every {INTERVAL_SECONDS}s for {DURATION_SECONDS}s "
-          f"(window +/-{WINDOW:g}).")
+          f"(window +/-{WINDOW:g}, calls + puts to separate files).")
     start = time.monotonic()
     count = 0
     while time.monotonic() - start < DURATION_SECONDS:
         try:
-            rows = build_snapshot_rows()
-            if rows:
-                write_rows(rows)
-                count += 1
+            spot = get_spot_price()                 # one spot, shared by both types
+            for t in ("call", "put"):
+                rows = build_snapshot_rows(t, spot=spot)
+                if rows:
+                    write_rows(rows, t)
+            count += 1
         except Exception as e:
             print(f"Snapshot error (continuing): {e}")
         if time.monotonic() - start >= DURATION_SECONDS:
             break
         time.sleep(INTERVAL_SECONDS)
-    print(f"Session done: {count} snapshots written.")
+    print(f"Session done: {count} snapshots written (calls + puts, separate files).")
 
 
 if __name__ == "__main__":
