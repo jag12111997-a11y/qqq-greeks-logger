@@ -2127,6 +2127,57 @@
       lines.join("") + "</div></details>");
   }
 
+  // Live GEX from the 5-min greeks logger (market-dash/gex_live.json), fetched
+  // client-side. Fully guarded: if the file is missing/unreadable, the card just
+  // hides — it can never break the page.
+  var LIVE_GEX = null;
+  function loadLiveGex() {
+    return fetch("gex_live.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (j && !j.error) {
+          var changed = !LIVE_GEX || LIVE_GEX.generated_utc !== j.generated_utc;
+          LIVE_GEX = j;
+          if (changed && idx === FULL.length - 1) {
+            var y = window.scrollY; render(); window.scrollTo(0, y);
+          }
+        }
+      })
+      .catch(function () {});
+  }
+
+  function secGexLive(e) {
+    // Only on the latest session (it's a live, right-now read), only if we have data.
+    if (!LIVE_GEX || idx !== FULL.length - 1 || !has(LIVE_GEX.net_gex)) return "";
+    var g = LIVE_GEX, L = g.levels || {}, flip = g.gamma_flip;
+    var pos = g.regime === "POSITIVE GAMMA";
+    var body =
+      row("As of", esc(g.generated_utc || "—") + " UTC") +
+      (has(g.spot) ? row("Spot (logger)", num(g.spot, 2)) : "") +
+      row("Regime", '<span style="color:' + (pos ? "var(--up)" : "var(--down)") + '">' +
+          esc(g.regime || "—") + "</span>") +
+      row("Net GEX", fmtBig(g.net_gex)) +
+      (has(flip) ? row("Gamma flip", num(flip, 2) +
+          (has(g.distance_to_flip_pct) ? '  <span class=k>' +
+           signed(g.distance_to_flip_pct, 2, "%") + " from spot</span>" : "")) : "") +
+      (has(L.call_wall) ? row("Call wall", num(L.call_wall, 0)) : "") +
+      (has(L.put_wall) ? row("Put wall", num(L.put_wall, 0)) : "") +
+      (has(g.gamma_ratio) ? row("Gamma ratio (G)", num(g.gamma_ratio, 3)) : "") +
+      row("Net vanna / theta", fmtBig(g.net_vex) + " / " + fmtBig(g.net_tex));
+
+    var lines = [];
+    lines.push("<div style='margin:5px 0'>Live GEX straight from your <b>5-min greeks logger</b> " +
+      "(calls + puts), independent of the twice-daily API pull. If the API GEX card above is " +
+      "missing or stale, this is your backup read of the same machine.</div>");
+    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>" +
+      esc(g.source || "logger") + ". OI is end-of-day; intraday moves come from spot + greeks. " +
+      "Refreshes while the logger is running (mornings & midday PT).</div>");
+
+    return sec("GEX — LIVE (5-min logger, calls + puts)", body,
+      '<details class="read" open><summary><b>Read</b></summary><div>' +
+      lines.join("") + "</div></details>");
+  }
+
   function render() {
     var e = FULL[idx];
     var opts = FULL.map(function (x, i) {
@@ -2165,7 +2216,7 @@
 
       // 2. the whole options story in one place — gamma, ratios, venue, and
       //    the distribution those option prices imply
-      group("Options", secGex(e) + secVanna(e) + secOptions(e) + secVenue(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
+      group("Options", secGexLive(e) + secGex(e) + secVanna(e) + secOptions(e) + secVenue(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
 
       // 3. what's coming
       group("News", secWeek(e)) +
@@ -2337,6 +2388,7 @@
     }
 
     function cycle() {
+      loadLiveGex();
       fetchAll().then(function () {
         var info = applyLive();
         // Repaint without losing scroll or which session you are viewing.

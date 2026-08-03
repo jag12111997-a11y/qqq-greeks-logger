@@ -45,6 +45,7 @@
 # ============================================================
 
 import csv
+import json
 import os
 import math
 import time
@@ -61,6 +62,13 @@ TRADING_BASE = os.environ.get("ALPACA_TRADING_BASE", "https://paper-api.alpaca.m
 
 RISK_FREE_RATE = 0.043
 DIVIDEND_YIELD = 0.0
+
+# LIVE GEX — dealer convention: long call gamma, short put gamma (SqueezeMetrics).
+# The logger now computes a full calls+puts GEX each cycle and writes it here,
+# so the dashboard has a 5-min live source independent of the twice-daily API pull.
+CONTRACT_MULTIPLIER = 100
+GEX_DEALER_SIGN = 1
+GEX_LIVE_PATH = os.path.join("market-dash", "gex_live.json")
 
 WINDOW = float(os.environ.get("WINDOW", "15"))
 INTERVAL_SECONDS = int(os.environ.get("INTERVAL_SECONDS", "0"))
@@ -331,18 +339,132 @@ def write_rows(new_rows, opt_type="call"):
         w.writerows(new_rows)
 
 
+def compute_gex_live(call_rows, put_rows, spot):
+    """Full calls+puts GEX from the just-captured rows. Same shape/convention as
+    market_dash_fetch.compute_gex, so the dashboard renders it identically."""
+    def num(v):
+        try:
+            if v in (None, ""):
+                return None
+            return float(v)
+        except (TypeError, ValueError):
+            return None
+
+    unit = CONTRACT_MULTIPLIER * (spot ** 2) * 0.01
+    by = {}
+
+    def add(rows, is_call):
+        for r in rows:
+            k = num(r.get("strike"))
+            g = num(r.get("gamma"))
+            oi = num(r.get("open_interest"))
+            if k is None or g is None or not oi:
+                continue
+            oi = int(oi)
+            d = by.setdefault(k, {"strike": k, "call_gex": 0.0, "put_gex": 0.0,
+                                  "call_oi": 0, "put_oi": 0, "dex": 0.0, "vex": 0.0,
+                                  "tex": 0.0, "call_g": 0.0, "put_g": 0.0})
+            dollars = g * oi * unit
+            if is_call:
+                d["call_gex"] += dollars; d["call_oi"] += oi; d["call_g"] += g * oi
+            else:
+                d["put_gex"] -= dollars; d["put_oi"] += oi; d["put_g"] += g * oi
+            de, ve, th = num(r.get("delta")), num(r.get("vega")), num(r.get("theta"))
+            if de is not None:
+                d["dex"] += de * oi * CONTRACT_MULTIPLIER * spot
+            if ve is not None:
+                d["vex"] += ve * oi * CONTRACT_MULTIPLIER
+            if th is not None:
+                d["tex"] += th * oi * CONTRACT_MULTIPLIER
+
+    add(call_rows, True)
+    add(put_rows, False)
+    if not by:
+        return {"error": "no usable rows for live GEX"}
+
+    strikes = sorted(by.values(), key=lambda x: x["strike"])
+    for s in strikes:
+        s["net_gex"] = (s["call_gex"] + s["put_gex"]) * GEX_DEALER_SIGN
+        for key in ("call_gex", "put_gex", "net_gex", "dex", "vex", "tex"):
+            s[key] = round(s[key], 2)
+
+    net = round(sum(s["net_gex"] for s in strikes), 2)
+    net_dex = round(sum(s["dex"] for s in strikes), 2)
+    net_vex = round(sum(s["vex"] for s in strikes), 2)
+    net_tex = round(sum(s["tex"] for s in strikes), 2)
+    cg = sum(s["call_g"] for s in strikes)
+    pg = sum(s["put_g"] for s in strikes)
+    gamma_ratio = round(cg / (cg + pg), 4) if (cg + pg) else None
+
+    flip, run, method, cum = None, 0.0, None, []
+    for i, s in enumerate(strikes):
+        prev = run
+        run += s["net_gex"]
+        cum.append((s["strike"], run))
+        if i and ((prev < 0 <= run) or (prev > 0 >= run)):
+            a, b = strikes[i - 1]["strike"], s["strike"]
+            frac = abs(prev) / (abs(prev) + abs(run)) if (prev or run) else 0.5
+            flip = round(a + (b - a) * frac, 2)
+            method = "zero crossing"
+    if flip is None and cum:
+        k, _ = min(cum, key=lambda t: abs(t[1]))
+        flip = round(k, 2)
+        method = "nearest-to-zero (no crossing in window)"
+
+    call_wall = max(strikes, key=lambda s: s["call_gex"])["strike"]
+    put_wall = min(strikes, key=lambda s: s["put_gex"])["strike"]
+    top_oi = max(strikes, key=lambda s: s["call_oi"] + s["put_oi"])["strike"]
+
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    return {
+        "symbol": SYMBOL, "spot": round(spot, 2),
+        "net_gex": net, "net_dex": net_dex, "net_vex": net_vex, "net_tex": net_tex,
+        "gamma_ratio": gamma_ratio,
+        "gamma_flip": flip, "gamma_flip_method": method,
+        "regime": ("POSITIVE GAMMA"
+                   if (spot > flip if method == "zero crossing" else net > 0)
+                   else "NEGATIVE GAMMA"),
+        "distance_to_flip_pct": round((spot - flip) / spot * 100, 2) if flip else None,
+        "levels": {"call_wall": call_wall, "put_wall": put_wall, "highest_oi_strike": top_oi},
+        "strikes": [{"strike": s["strike"], "call_gex": s["call_gex"], "put_gex": s["put_gex"],
+                     "net_gex": s["net_gex"], "call_oi": s["call_oi"], "put_oi": s["put_oi"],
+                     "dex": s["dex"], "vex": s["vex"], "tex": s["tex"]} for s in strikes],
+        "contracts_used": len(call_rows) + len(put_rows),
+        "dealer_convention": "dealers long call gamma, short put gamma",
+        "source": "5-min greeks logger (calls + puts, 0DTE)",
+        "generated_utc": now_utc.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+
+def write_gex_live(gx):
+    os.makedirs(os.path.dirname(GEX_LIVE_PATH), exist_ok=True)
+    with open(GEX_LIVE_PATH, "w") as f:
+        json.dump(gx, f, indent=2)
+
+
+def snapshot_and_write(spot):
+    """Capture calls + puts (separate CSVs) and write the live GEX json."""
+    got = {}
+    for t in ("call", "put"):
+        rows = build_snapshot_rows(t, spot=spot)
+        if rows:
+            write_rows(rows, t)
+            got[t] = rows
+    try:
+        if got.get("call") or got.get("put"):
+            write_gex_live(compute_gex_live(got.get("call", []), got.get("put", []), spot))
+    except Exception as e:
+        print(f"live GEX skipped (continuing): {e}")
+
+
 def main():
     if not API_KEY or not API_SECRET:
         print("STOP: ALPACA_API_KEY / ALPACA_API_SECRET not set.")
         return
 
-    # Single snapshot mode. Calls AND puts, each to its own file.
+    # Single snapshot mode. Calls AND puts (separate files) + live GEX.
     if INTERVAL_SECONDS <= 0 or DURATION_SECONDS <= 0:
-        spot = get_spot_price()
-        for t in ("call", "put"):
-            rows = build_snapshot_rows(t, spot=spot)
-            if rows:
-                write_rows(rows, t)
+        snapshot_and_write(get_spot_price())
         return
 
     # Session / loop mode: snapshot every INTERVAL for DURATION.
@@ -352,11 +474,7 @@ def main():
     count = 0
     while time.monotonic() - start < DURATION_SECONDS:
         try:
-            spot = get_spot_price()                 # one spot, shared by both types
-            for t in ("call", "put"):
-                rows = build_snapshot_rows(t, spot=spot)
-                if rows:
-                    write_rows(rows, t)
+            snapshot_and_write(get_spot_price())    # calls + puts (separate files) + live GEX
             count += 1
         except Exception as e:
             print(f"Snapshot error (continuing): {e}")
