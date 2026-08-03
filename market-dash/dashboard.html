@@ -2071,6 +2071,62 @@
       lines.join("") + "</div></details>");
   }
 
+  function secVanna(e) {
+    var g = e.gex;
+    if (!ok(g) || (g.symbol && g.symbol !== "QQQ") || !has(g.net_vex)) return "";
+
+    function colr(v) { return v > 0 ? "var(--up)" : v < 0 ? "var(--down)" : "var(--dim)"; }
+    function big(v) { return '<span style="color:' + colr(v) + '">' + fmtBig(v) + "</span>"; }
+
+    // where each 2nd-order exposure concentrates across QQQ strikes
+    var vwall = null, vmax = -1, twall = null, tmax = -1;
+    (g.strikes || []).forEach(function (s2) {
+      var av = Math.abs(s2.vex || 0); if (av > vmax) { vmax = av; vwall = s2.strike; }
+      var at = Math.abs(s2.tex || 0); if (at > tmax) { tmax = at; twall = s2.strike; }
+    });
+
+    var pos = g.regime === "POSITIVE GAMMA";
+    var vex = g.net_vex;
+
+    var body =
+      row("Underlying", "QQQ  <span class=k>" + esc(g.gamma_flip_method ? "0DTE greeks" : "") + "</span>") +
+      row("Regime", '<span style="color:' + (pos ? "var(--up)" : "var(--down)") + '">' +
+          esc(g.regime || "—") + "</span>") +
+      row("Net delta exposure (dex)", big(g.net_dex)) +
+      row("Net vanna exposure (vex)", big(g.net_vex)) +
+      row("Net theta exposure (tex)", big(g.net_tex)) +
+      (has(vwall) ? row("Vanna concentrated at", num(vwall, 0) + " strike") : "") +
+      (has(twall) ? row("Theta concentrated at", num(twall, 0) + " strike") : "");
+
+    var lines = [];
+    lines.push("<div style='margin:5px 0'><b>Vanna (vex)</b> is how much dealer delta shifts when " +
+      "implied vol moves &mdash; hedging flow that fires on a <b>vol</b> change with no price catalyst. " +
+      "Net vex is <b>" + fmtBig(vex) + "</b>: a rise in IV pushes aggregate dealer delta " +
+      (vex > 0 ? "<b>up</b>, so staying hedged means <b>selling</b> QQQ into rising vol and buying it " +
+                 "back as vol falls"
+               : "<b>down</b>, so staying hedged means <b>buying</b> QQQ into rising vol and selling as " +
+                 "vol falls") +
+      ". Sign follows your logger's convention (" + esc(g.dealer_convention || "—") +
+      "), so read it as direction-of-tilt.</div>");
+    lines.push("<div style='margin:5px 0'><b>Theta (tex)</b> is the book's aggregate time-decay tilt. " +
+      "In <b>" + (pos ? "positive gamma" : "negative gamma") + "</b> this is the charm effect: as the " +
+      "session ages, dealer delta drifts " + (pos
+        ? "toward the pins and they hedge along it &mdash; the quiet low-vol grind into the close."
+        : "with the move and they hedge into it &mdash; time-drift <i>adds</i> to directional pushes, so " +
+          "fades into strength are more dangerous.") + "</div>");
+    if (has(g.exposure_note)) {
+      lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>" +
+        esc(g.exposure_note) + "</div>");
+    }
+    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Second-order companions to " +
+      "the gamma card above: gamma = delta vs <i>price</i>, vanna = delta vs <i>vol</i>, charm/theta = " +
+      "delta vs <i>time</i>. All QQQ, from the same 0DTE greeks snapshot.</div>");
+
+    return sec("Vanna / charm exposure — QQQ 2nd-order", body,
+      '<details class="read"><summary><b>Read</b></summary><div>' +
+      lines.join("") + "</div></details>");
+  }
+
   function render() {
     var e = FULL[idx];
     var opts = FULL.map(function (x, i) {
@@ -2109,7 +2165,7 @@
 
       // 2. the whole options story in one place — gamma, ratios, venue, and
       //    the distribution those option prices imply
-      group("Options", secGex(e) + secOptions(e) + secVenue(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
+      group("Options", secGex(e) + secVanna(e) + secOptions(e) + secVenue(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
 
       // 3. what's coming
       group("News", secWeek(e)) +
