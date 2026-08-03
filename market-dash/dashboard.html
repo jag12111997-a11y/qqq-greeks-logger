@@ -1924,7 +1924,7 @@
     var cut = H.indexOf(e);
     var upto = (cut >= 0) ? series.slice(0, cut + 1) : series;
     var r = upto.filter(function (v) { return typeof v === "number" && isFinite(v); })
-                .map(function (v) { return v / 100; });
+                .map(function (v) { return Math.log(1 + v / 100); });   // LOG returns
     var n = r.length;
     if (n < 12) return "";                      // need a real sample first (NaN/nulls dropped)
 
@@ -1943,6 +1943,8 @@
     function VR(k) { return varK(k) / (k * v1); }
     var vr2 = VR(2), vr5 = VR(5);
     var Hurst = 0.5 + 0.5 * (Math.log(vr2) / Math.log(2));
+    // Hurst is unreliable on short samples: needs ~500+ obs; non-stationarity biases H toward 1.
+    var conf = n >= 500 ? "solid" : n >= 250 ? "moderate" : n >= 60 ? "low" : "very low (illustrative)";
 
     var label, col, tone;
     if (vr2 < 0.9)      { label = "MEAN-REVERTING"; col = "var(--up)";
@@ -1959,7 +1961,9 @@
       row("Hurst H", num(Hurst, 3) + " <span class=k>" +
           (Hurst < 0.5 ? "&lt;0.5 anti-persistent" :
            Hurst > 0.5 ? "&gt;0.5 persistent" : "random") + "</span>") +
-      row("Sample", n + " sessions");
+      row("Sample", n + " sessions") +
+      row("Confidence", '<span style="color:' + (n >= 250 ? "var(--dim)" : "var(--warn)") + '">' +
+          conf + "</span> <span class=k>Hurst wants ~500+ obs</span>");
 
     var lines = [];
     lines.push("<div style='margin:5px 0'>Variance ratio compares the variance of multi-day " +
@@ -1970,9 +1974,13 @@
     lines.push("<div style='margin:5px 0'>Now VR(2) = <b>" + num(vr2, 3) + "</b> &rarr; <b>" +
       label + "</b>: " + tone + " Pair it with the OU half-life before committing a fade &mdash; " +
       "stretch <i>and</i> a short reversion clock, not either alone.</div>");
+    lines.push("<div style='margin:5px 0;color:var(--warn);font-size:11px'><b>Confidence: " + conf +
+      ".</b> Hurst is unreliable below ~500 observations, and non-stationarity biases it toward 1 " +
+      "(trending) &mdash; with " + n + " points this is a <b>weak prior</b>, not a verdict. Treat the " +
+      "label as a lean, and lean harder only as the sample grows.</div>");
     lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Computed on <b>daily</b> " +
-      "closes, so it reads the multi-day backdrop, not the intraday tape. Feed it a per-minute QQQ " +
-      "series and the identical formula becomes a live intraday fade light.</div>");
+      "closes (log returns), so it reads the multi-day backdrop, not the intraday tape. Feed it a " +
+      "per-minute QQQ series and the identical formula becomes a live intraday fade light.</div>");
 
     return sec("Fade regime — variance ratio / Hurst", body,
       '<details class="read"><summary><b>Read</b></summary><div>' +
