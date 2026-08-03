@@ -1005,6 +1005,9 @@ GEX_DEALER_SIGN = 1
 CONTRACT_MULTIPLIER = 100
 
 ALPACA_DATA = "https://data.alpaca.markets"
+# Open interest is NOT on the data/snapshots feed — it lives on the trading
+# API's contracts endpoint (OCC end-of-day). Same source qqq_greeks_logger_alpaca.py uses.
+ALPACA_TRADING = os.environ.get("ALPACA_TRADING_BASE", "https://paper-api.alpaca.markets")
 
 
 def _alpaca_headers():
@@ -1113,6 +1116,50 @@ def _parse_occ(sym):
     return exp, ("call" if cp == "C" else "put"), int(strike) / 1000.0
 
 
+def fetch_open_interest(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
+    """Open interest per contract, keyed by OCC symbol.
+
+    Alpaca does NOT return open interest on the options *snapshots* feed — it
+    lives on the *contracts* endpoint (OCC end-of-day, ~1-day lag). This mirrors
+    get_open_interest() in qqq_greeks_logger_alpaca.py, but for calls AND puts
+    across the whole GEX expiry window. Returns {occ_symbol: open_interest}.
+    """
+    headers = _alpaca_headers()
+    if not headers:
+        return {}
+    from datetime import date, timedelta
+    today = date.today()
+    params = {
+        "underlying_symbols": symbol,
+        "expiration_date_gte": today.isoformat(),
+        "expiration_date_lte": (today + timedelta(days=days_out)).isoformat(),
+        "limit": 1000,
+    }
+    if spot:
+        params["strike_price_gte"] = round(spot * (1 - GEX_STRIKE_WINDOW), 2)
+        params["strike_price_lte"] = round(spot * (1 + GEX_STRIKE_WINDOW), 2)
+
+    oi, page = {}, None
+    for _ in range(20):                        # paginate defensively
+        if page:
+            params["page_token"] = page
+        try:
+            r = requests.get(f"{ALPACA_TRADING}/v2/options/contracts",
+                             headers=headers, params=params, timeout=30)
+            r.raise_for_status()
+            j = r.json()
+        except Exception:
+            break                              # OI is best-effort; never break the run
+        for c in (j.get("option_contracts") or []):
+            val = c.get("open_interest")
+            if val not in (None, ""):
+                oi[c.get("symbol")] = int(val)
+        page = j.get("next_page_token")
+        if not page:
+            break
+    return oi
+
+
 def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
     """Full chain — calls AND puts — across the next N days of expiries."""
     _CHAIN_SPOT[0] = spot
@@ -1142,6 +1189,10 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
         if not page:
             break
 
+    # Open interest is not on the snapshots feed — pull it from the contracts
+    # endpoint (same source qqq_greeks_logger_alpaca.py uses) and merge by symbol.
+    oi_map = fetch_open_interest(symbol, days_out, spot=spot)
+
     from datetime import datetime as _dt
     now = _dt.now()
 
@@ -1152,7 +1203,8 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
             continue
         snap = snap or {}
 
-        oi = snap.get("openInterest") or snap.get("open_interest") or 0
+        oi = (oi_map.get(occ)
+              or snap.get("openInterest") or snap.get("open_interest") or 0)
         if not oi:
             continue                       # no OI = no exposure, skip early
 

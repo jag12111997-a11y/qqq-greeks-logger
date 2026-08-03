@@ -1923,10 +1923,10 @@
     var series = starSeries("pct_change").QQQ || [];
     var cut = H.indexOf(e);
     var upto = (cut >= 0) ? series.slice(0, cut + 1) : series;
-    var r = upto.filter(function (v) { return has(v); })
+    var r = upto.filter(function (v) { return typeof v === "number" && isFinite(v); })
                 .map(function (v) { return v / 100; });
     var n = r.length;
-    if (n < 20) return "";                      // need a real sample first
+    if (n < 12) return "";                      // need a real sample first (NaN/nulls dropped)
 
     function mean(a) { var s = 0; a.forEach(function (v) { s += v; }); return s / a.length; }
     var mu = mean(r);
