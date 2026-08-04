@@ -1423,7 +1423,10 @@ def build_entry():
         "fetched_pt": pt.strftime("%Y-%m-%d %I:%M %p PT").lstrip("0"),
         "entry_date": pt.strftime("%Y-%m-%d"),
         "session": session,
-        "entry_key": pt.strftime("%Y-%m-%d") + "_" + session,
+        # ONE ROW PER DAY: key on the date only, so each run upserts the same
+        # day's row. The AM (pre-market, stale-ETF) run gets overwritten by the
+        # PM close; fetched_pt is the timestamp of the last price written.
+        "entry_key": pt.strftime("%Y-%m-%d"),
         "calendar": safe("calendar", fetch_calendar),
         "options": safe("cboe options", fetch_cboe),
         "positioning": safe("cftc cot", fetch_cot),
@@ -1478,27 +1481,25 @@ def append_history(entry):
 
     if not os.path.exists(path):
         with open(path, "w") as f:
-            f.write("// Market Dash history. One entry per session (am / pm).\n")
+            f.write("// Market Dash history. One entry per DAY (upserted; AM refreshes into the PM close).\n")
             f.write("window.MARKET_DASH_HISTORY = window.MARKET_DASH_HISTORY || [];\n\n")
             f.write(line + "\n")
         return path
 
-    # Re-running the SAME session replaces that session's line rather than
-    # stacking duplicates. A different session always appends. Other days
-    # are never touched — history stays append-only across sessions.
-    marker = '"entry_key":"%s"' % key
-    lines = open(path).read().rstrip("\n").split("\n")
-    replaced = False
-    for i, ln in enumerate(lines):
-        if marker in ln:
-            lines[i] = line
-            replaced = True
-            break
-    if not replaced:
-        lines.append(line)
+    # ONE ROW PER DAY. Drop any existing rows for today's date (am / pm / legacy
+    # "date_session" keys) and append the freshest one. Every earlier day is left
+    # untouched, so history stays append-only across days while today's row is
+    # upserted in place — no more stale AM duplicate that breaks the correlation.
+    daymark = '"entry_date":"%s"' % entry["entry_date"]
+    kept = []
+    for ln in open(path).read().rstrip("\n").split("\n"):
+        if ln.lstrip().startswith("window.MARKET_DASH_HISTORY.push(") and daymark in ln:
+            continue                      # today's existing row(s) — re-added below
+        kept.append(ln)
+    kept.append(line)
 
     with open(path, "w") as f:
-        f.write("\n".join(lines) + "\n")
+        f.write("\n".join(kept) + "\n")
     return path
 
 
