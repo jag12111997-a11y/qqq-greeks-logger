@@ -2301,27 +2301,27 @@
       '<select id="pick">' + opts + "</select>" +
       "</header>";
 
+    // NASDAQ (really QQQ) tab — your trading cockpit. Every card here reads QQQ:
+    // secGex/secGexLive/secVanna use e.gex + the QQQ gex_live.json logger, and
+    // secQuant/secTouchFlow/secRangeUsed key off mk.QQQ spot. Same data, new home.
+    var _qqqBody =
+      group("Plan and discipline", secPlan(e)) +
+      group("QQQ options & flow", secGexLive(e) + secGex(e) + secVanna(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e));
+
+    // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
     var _dashBody =
       finalRegime(e, align) +
-      // 0. the box you decided in the calm
-      group("Plan and discipline", secPlan(e)) +
-      // 1. the eight you actually trade
       group("Price", secStars(e)) +
-      // 2. the whole options story in one place
-      group("Options", secGexLive(e) + secGex(e) + secVanna(e) + secOptions(e) + secVenue(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
-      // 3. what's coming
+      group("Options", secOptions(e) + secVenue(e)) +
       group("News", secWeek(e)) +
-      // 4. where the money went today
       group("Sectors and regime", secInternals(e) + secGeometry(e) + secFadeRegime(e)) +
-      // 5. slow-moving context
       group("Macro and positioning", secMacro(e) + secPositioning(e)) +
-      // 6. everything else on the list
       group("Rest of watchlist", secWatchlist(e)) +
       "<footer>" + FULL.length + " logged session" + (FULL.length > 1 ? "s" : "") +
       " · " + (H.length - FULL.length) + " backfilled" +
       " logged · append-only · history.js</footer>";
 
-    app.innerHTML = _header + tabBar() + (TAB === "nasdaq" ? nasdaqPanel() : _dashBody);
+    app.innerHTML = _header + tabBar() + (TAB === "nasdaq" ? _qqqBody : _dashBody);
 
     document.getElementById("pick").addEventListener("change", function () {
       idx = parseInt(this.value, 10);
