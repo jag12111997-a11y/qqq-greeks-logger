@@ -1490,8 +1490,14 @@
 
     var lines = [];
     lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
-      ? "Fade-friendly &mdash; dealers dampen moves (pinning, mean-reversion)"
-      : "Fade-hostile &mdash; dealers amplify moves", "GEX regime"));
+      ? "<b>Positive gamma.</b> Net GEX " + fmtBig(g.net_gex) + " with spot " +
+        (realFlip ? (g.distance_to_flip_pct >= 0 ? "above" : "below") + " the " + flip + " flip"
+                  : "one-sided across the window") +
+        ", so dealers are <b>dampening</b> &mdash; rallies get sold, dips bought, and realised vol tends to come in under implied. That's the containment backdrop your fades want; treat the " +
+        (has(L.put_wall) ? L.put_wall : "?") + "&ndash;" + (has(L.call_wall) ? L.call_wall : "?") +
+        " walls as magnets and lean on reversion."
+      : "<b>Negative gamma.</b> Net GEX " + fmtBig(g.net_gex) + " with spot below the " + flip +
+        " flip, so dealers <b>amplify</b> &mdash; they sell weakness and buy strength, moves accelerate, and reversion is unreliable. Fades into strength are the trap here; wait for exhaustion, not just stretch."));
     lines.push("<div style='margin:5px 0'>Net GEX is <b>" + fmtBig(g.net_gex) +
       "</b>. " + (realFlip
         ? "Spot sits " + (g.distance_to_flip_pct >= 0 ? "<b>above</b>" : "<b>below</b>") +
@@ -1588,9 +1594,10 @@
     var lines = [];
     var _gcol = vol < 0.15 ? "var(--down)" : vol < 0.4 ? "var(--warn)" : "var(--up)";
     lines.push(verdict(_gcol, vol < 0.15
-      ? "Diversification collapsed &mdash; stand fades down"
-      : vol < 0.4 ? "Correlations elevated &mdash; trade smaller"
-      : "Diversification intact &mdash; normal fading", "&radic;det(G) " + num(vol, 3)));
+      ? "Cross-asset diversification has <b>geometrically collapsed</b> (&radic;det(G) " + num(vol, 3) +
+        ", near zero) &mdash; everything is moving as one trade. This is exactly when mechanical reversion stops being true, so <b>stand your fades down</b> until it re-expands."
+      : vol < 0.4 ? "&radic;det(G) is <b>" + num(vol, 3) + "</b> &mdash; correlations are elevated and diversification is thin, so trade smaller and treat reversion signals with more suspicion than usual."
+      : "&radic;det(G) is <b>" + num(vol, 3) + "</b> &mdash; assets are moving fairly independently, so the mechanical-reversion assumption your fades rely on is intact. Normal conditions."));
     lines.push("<div style='margin:5px 0'>√det(G) is <b>" + num(vol, 4) + "</b>. " +
       (vol < 0.15
         ? "Correlations have collapsed toward one — diversification hasn't shrunk, it has " +
@@ -1713,11 +1720,12 @@
     var lines = [];
     lines.push((ok(rvi) && has(rvi.spread_pct))
       ? verdict(rvi.spread_pct > 0 ? "var(--up)" : "var(--down)", rvi.spread_pct > 0
-          ? "Buyer's edge &mdash; realized running above implied"
-          : "Seller's market &mdash; you're overpaying for movement",
-          "Realized vs implied " + signed(rvi.spread_pct, 1, "pp"))
-      : verdict("var(--dim)", "Expected move &plusmn;" + (sig * 100).toFixed(2) + "% today",
-          "no realized-vs-implied this run"));
+          ? "Realised vol is running <b>above</b> implied (spread " + signed(rvi.spread_pct, 1, "pp") +
+            ") &mdash; the market is underpricing movement, which is the <b>buyer's</b> side you sit on. Your long-0DTE gamma is being paid, and today's &plusmn;" + (sig * 100).toFixed(2) + "% expected move is probably too tight."
+          : "Realised vol is coming in <b>below</b> implied (spread " + signed(rvi.spread_pct, 1, "pp") +
+            ") &mdash; the short-gamma dealer's edge, and the wrong side for a long-0DTE buyer. You're overpaying for movement, so demand a bigger stretch before paying up for premium.")
+      : verdict("var(--dim)", "Options are pricing a <b>&plusmn;" + (sig * 100).toFixed(2) + "%</b> day (about $" +
+          (spot * sig).toFixed(2) + "), but there's no realised-vs-implied read this run &mdash; lean on the range and GARCH blocks below."));
     lines.push("<div style='margin:5px 0'>Option markets are pricing a <b>&plusmn;" +
       (sig * 100).toFixed(2) + "%</b> one-day move in QQQ — about <b>$" +
       (spot * sig).toFixed(2) + "</b>. Two-thirds of sessions should close inside " +
@@ -1912,10 +1920,11 @@
 
     var pos = g.regime === "POSITIVE GAMMA";
     var lines = [];
-    lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
-      ? "Positive-gamma tilt &mdash; fade toward the walls"
-      : "Negative-gamma tilt &mdash; fades into strength are dangerous",
-      "walls likelier touched than broken"));
+    lines.push(verdict(pos ? "var(--up)" : "var(--down)",
+      "At today's &plusmn;" + (sig * 100).toFixed(2) + "% &sigma;, your flip and walls are far likelier to be <b>touched</b> than <b>broken</b> &mdash; " +
+      (pos ? "and with positive gamma you can fade toward them and let the pin do the work"
+           : "but with negative gamma a touch can flip into a break, so tighten up") +
+      ". The practical rule: don't park stops on high-touch levels, or they'll get run on a day that still reverts."));
     lines.push("<div style='margin:5px 0'>Touch odds are the chance price <b>tags</b> each " +
       "level at some point today (about 2&times; the odds it <i>closes</i> beyond it), from " +
       "the VIX 1-day &sigma; of <b>" + (sig * 100).toFixed(2) + "%</b>. A wall is far more " +
@@ -1985,9 +1994,12 @@
           conf + "</span> <span class=k>Hurst wants ~500+ obs</span>");
 
     var lines = [];
-    lines.push(verdict(col, label + (vr2 < 0.9 ? " &mdash; fades in season" :
-      vr2 > 1.1 ? " &mdash; fades get run over" : " &mdash; no reversion edge"),
-      "Confidence: " + conf));
+    lines.push(verdict(col, "QQQ's recent tape reads <b>" + label + "</b> (VR(2) " + num(vr2, 2) +
+      ", Hurst " + num(Hurst, 2) + ") &mdash; " +
+      (vr2 < 0.9 ? "returns fight themselves, so mechanical stretch tends to snap back and fades are in season"
+       : vr2 > 1.1 ? "moves feed on themselves, so fades get run over &mdash; wait for the second push"
+       : "no memory either way, so there's no reversion edge to lean on") +
+      ". But <b>confidence is " + conf + "</b>: Hurst wants ~500+ observations and you have a handful, so treat this as a lean, not a verdict."));
     lines.push("<div style='margin:5px 0'>Variance ratio compares the variance of multi-day " +
       "returns against a random walk. <b>VR &lt; 1</b> means QQQ returns fight themselves " +
       "(mean-reverting, fade-friendly); <b>VR &gt; 1</b> means they feed on themselves " +
@@ -2036,10 +2048,11 @@
       '<div style="margin-top:8px">' + bar + "</div>";
 
     var lines = [];
-    lines.push(verdict(col, used < 0.5 ? "Room to fade toward the mean" :
-      used < 1 ? "Half the day's range spent &mdash; size for chop" :
-      "Overstretched &mdash; day blew past its expected move",
-      (used * 100).toFixed(0) + "% of expected move used"));
+    lines.push(verdict(col, "Price has spent <b>" + (used * 100).toFixed(0) + "%</b> of today's &plusmn;" +
+      expPct.toFixed(2) + "% expected move. " +
+      (used < 0.5 ? "Plenty of range left &mdash; a fade has room to work toward the mean."
+       : used < 1 ? "More than half the range is gone &mdash; reversion beats fresh continuation, but size for chop."
+       : "The day has <b>blown past</b> its 1&sigma; range &mdash; either real information is driving it (don't fade) or it's badly overstretched (a prime fade, but confirm the regime first).")));
     lines.push("<div style='margin:5px 0'>Price has spent <b>" + (used * 100).toFixed(0) +
       "%</b> of the &plusmn;" + expPct.toFixed(2) + "% the options market priced for today. " +
       (used < 0.5
@@ -2134,8 +2147,10 @@
 
     var lines = [];
     lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
-      ? "Charm grinds delta toward the pins &mdash; quiet drift into the close"
-      : "Charm/vanna push with the move &mdash; fades into strength risky", "2nd-order flow"));
+      ? "With the book in <b>positive gamma</b>, the second-order flow is a quiet <b>charm grind</b>: as the session ages, dealer delta drifts toward the pins" +
+        (has(vwall) ? " (heaviest near " + num(vwall, 0) + ")" : "") +
+        " and they hedge along it &mdash; the low-vol drift into the close &mdash; while a vol spike adds only mild vanna selling. All mechanical, all reverting."
+      : "In <b>negative gamma</b>, charm and vanna push <b>with</b> the move: time-drift and any vol spike add to the direction instead of fading it, so the grind becomes a slide. Fading into strength is the trap here."));
     lines.push("<div style='margin:5px 0'><b>Vanna (vex)</b> is how much dealer delta shifts when " +
       "implied vol moves &mdash; hedging flow that fires on a <b>vol</b> change with no price catalyst. " +
       "Net vex is <b>" + fmtBig(vex) + "</b>: a rise in IV pushes aggregate dealer delta " +
@@ -2204,8 +2219,11 @@
 
     var lines = [];
     lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
-      ? "Live: fade-friendly &mdash; dealers dampen"
-      : "Live: fade-hostile &mdash; dealers amplify", "5-min logger"));
+      ? "<b>Live &mdash; positive gamma.</b> Net GEX " + fmtBig(g.net_gex) +
+        (has(g.distance_to_flip_pct) ? ", spot " + signed(g.distance_to_flip_pct, 2, "%") + " from the " + num(g.gamma_flip, 0) + " flip" : "") +
+        ". Dealers are damping intraday &mdash; the fade-friendly, mean-reverting state, refreshed every 5 minutes as a real-time check on the twice-daily map above."
+      : "<b>Live &mdash; negative gamma.</b> Net GEX " + fmtBig(g.net_gex) +
+        ". Dealers are amplifying moves right now, so reversion is unreliable &mdash; stand fades down or wait for a clean flush before leaning on the mean."));
     lines.push("<div style='margin:5px 0'>Live GEX straight from your <b>5-min greeks logger</b> " +
       "(calls + puts), independent of the twice-daily API pull. If the API GEX card above is " +
       "missing or stale, this is your backup read of the same machine.</div>");
@@ -2220,11 +2238,10 @@
 
   // The "answer" line that leads each card's Read: colored dot + plain-English
   // verdict + a short confidence/context tag. Turns a number into a decision.
-  function verdict(color, headline, sub) {
-    return "<div style='margin:0 0 9px;padding:6px 10px;border-left:3px solid " + color +
-      ";background:rgba(255,255,255,.04);border-radius:4px;font-size:13px'>" +
-      "<span style='color:" + color + "'>&#9679;</span> <b>" + headline + "</b>" +
-      (sub ? " <span class=k>&middot; " + sub + "</span>" : "") + "</div>";
+  function verdict(color, html) {
+    return "<div style='margin:0 0 10px;padding:8px 12px;border-left:3px solid " + color +
+      ";background:rgba(255,255,255,.035);border-radius:5px;line-height:1.55'>" +
+      "<span style='color:" + color + ";vertical-align:1px'>&#9679;</span> " + html + "</div>";
   }
 
   function render() {
