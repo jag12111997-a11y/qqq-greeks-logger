@@ -163,6 +163,8 @@
   // Overlay-chart UI state. mode: "dxy" (everything vs the dollar) or "rebase".
   // hidden: symbols toggled off. big: fullscreen. Survives the 60s live redraw.
   var CHART = { mode: "dxy", hidden: {}, big: false, height: 240 };
+  var TAB = "dash";   // in-page tab: "dash" (the whole dashboard) or "nasdaq" (scaffold)
+  try { if (localStorage.getItem("md:tab") === "nasdaq") TAB = "nasdaq"; } catch (eTab) {}
   try {
     var _cm = localStorage.getItem("md:chartmode"); if (_cm) CHART.mode = _cm;
     var _ch = parseInt(localStorage.getItem("md:charth"), 10);
@@ -2244,6 +2246,33 @@
       "<span style='color:" + color + ";vertical-align:1px'>&#9679;</span> " + html + "</div>";
   }
 
+  // In-page tab bar. Market Dash = the whole dashboard; Nasdaq = empty scaffold.
+  function tabBar() {
+    function tab(id, label) {
+      var on = TAB === id;
+      return '<span data-tab="' + id + '" role="button" style="cursor:pointer;' +
+        'padding:8px 18px;margin-right:6px;border:1px solid var(--line);border-bottom:none;' +
+        'border-radius:9px 9px 0 0;font:600 13px ui-monospace,Menlo,monospace;' +
+        'color:' + (on ? "var(--accent)" : "var(--dim)") + ';' +
+        'background:' + (on ? "rgba(255,255,255,.06)" : "transparent") + '">' +
+        esc(label) + "</span>";
+    }
+    return '<div style="display:flex;align-items:flex-end;' +
+      'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
+      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + "</div>";
+  }
+
+  function nasdaqPanel() {
+    return '<div style="border:1px dashed var(--line);border-radius:12px;' +
+      'padding:48px 24px;text-align:center;margin-top:6px">' +
+      '<div style="font-size:24px;color:var(--accent);letter-spacing:1px;margin-bottom:10px">NASDAQ</div>' +
+      '<div style="color:var(--dim);font-size:14px;line-height:1.7;max-width:560px;margin:0 auto">' +
+      "Empty tab &mdash; ready to plan. Nothing lives here yet.<br>" +
+      "Tell me what you want in it (breadth &amp; internals, leaders / laggards, " +
+      "Composite vs Nasdaq-100&hellip;) and I'll build it into this space." +
+      "</div></div>";
+  }
+
   function render() {
     var e = FULL[idx];
     var opts = FULL.map(function (x, i) {
@@ -2262,7 +2291,7 @@
       return band(label) + '<div class="grid">' + html + "</div>";
     }
 
-    app.innerHTML =
+    var _header =
       "<header><h1>M@rk3t D@$h</h1>" +
       '<span class="stamp">session ' + fmtDate(e.session_date || e.entry_date) +
       (e.session ? '  <span style="color:var(--accent)">' +
@@ -2270,35 +2299,29 @@
       "  ·  fetched " + fmtDateTime(e.fetched_utc) + "</span>" +
       '<span style="flex:1"></span>' +
       '<select id="pick">' + opts + "</select>" +
-      "</header>" +
+      "</header>";
 
+    var _dashBody =
       finalRegime(e, align) +
-
       // 0. the box you decided in the calm
       group("Plan and discipline", secPlan(e)) +
-
       // 1. the eight you actually trade
       group("Price", secStars(e)) +
-
-      // 2. the whole options story in one place — gamma, ratios, venue, and
-      //    the distribution those option prices imply
+      // 2. the whole options story in one place
       group("Options", secGexLive(e) + secGex(e) + secVanna(e) + secOptions(e) + secVenue(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
-
       // 3. what's coming
       group("News", secWeek(e)) +
-
       // 4. where the money went today
       group("Sectors and regime", secInternals(e) + secGeometry(e) + secFadeRegime(e)) +
-
       // 5. slow-moving context
       group("Macro and positioning", secMacro(e) + secPositioning(e)) +
-
       // 6. everything else on the list
       group("Rest of watchlist", secWatchlist(e)) +
-
       "<footer>" + FULL.length + " logged session" + (FULL.length > 1 ? "s" : "") +
       " · " + (H.length - FULL.length) + " backfilled" +
       " logged · append-only · history.js</footer>";
+
+    app.innerHTML = _header + tabBar() + (TAB === "nasdaq" ? nasdaqPanel() : _dashBody);
 
     document.getElementById("pick").addEventListener("change", function () {
       idx = parseInt(this.value, 10);
@@ -2334,6 +2357,19 @@
     var y = window.scrollY;
     render();
     if (!CHART.big) window.scrollTo(0, y);
+  });
+
+  // Tab switching (Market Dash / Nasdaq), delegated so it survives re-renders.
+  document.addEventListener("click", function (ev) {
+    var t = (ev.target && ev.target.closest) ? ev.target.closest("[data-tab]") : null;
+    if (!t) return;
+    var id = t.getAttribute("data-tab");
+    if (id && id !== TAB) {
+      TAB = id;
+      try { localStorage.setItem("md:tab", id); } catch (e5) {}
+      window.scrollTo(0, 0);
+      render();
+    }
   });
 
   // ---------- LIVE PRICES (client-side, browser-only) ----------
