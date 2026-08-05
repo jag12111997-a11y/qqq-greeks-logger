@@ -1489,6 +1489,9 @@
       (has(g.exposure_note) ? "<br>" + esc(g.exposure_note) : "") + "</div>";
 
     var lines = [];
+    lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
+      ? "Fade-friendly &mdash; dealers dampen moves (pinning, mean-reversion)"
+      : "Fade-hostile &mdash; dealers amplify moves", "GEX regime"));
     lines.push("<div style='margin:5px 0'>Net GEX is <b>" + fmtBig(g.net_gex) +
       "</b>. " + (realFlip
         ? "Spot sits " + (g.distance_to_flip_pct >= 0 ? "<b>above</b>" : "<b>below</b>") +
@@ -1583,6 +1586,11 @@
     }
 
     var lines = [];
+    var _gcol = vol < 0.15 ? "var(--down)" : vol < 0.4 ? "var(--warn)" : "var(--up)";
+    lines.push(verdict(_gcol, vol < 0.15
+      ? "Diversification collapsed &mdash; stand fades down"
+      : vol < 0.4 ? "Correlations elevated &mdash; trade smaller"
+      : "Diversification intact &mdash; normal fading", "&radic;det(G) " + num(vol, 3)));
     lines.push("<div style='margin:5px 0'>√det(G) is <b>" + num(vol, 4) + "</b>. " +
       (vol < 0.15
         ? "Correlations have collapsed toward one — diversification hasn't shrunk, it has " +
@@ -1703,6 +1711,13 @@
     }
 
     var lines = [];
+    lines.push((ok(rvi) && has(rvi.spread_pct))
+      ? verdict(rvi.spread_pct > 0 ? "var(--up)" : "var(--down)", rvi.spread_pct > 0
+          ? "Buyer's edge &mdash; realized running above implied"
+          : "Seller's market &mdash; you're overpaying for movement",
+          "Realized vs implied " + signed(rvi.spread_pct, 1, "pp"))
+      : verdict("var(--dim)", "Expected move &plusmn;" + (sig * 100).toFixed(2) + "% today",
+          "no realized-vs-implied this run"));
     lines.push("<div style='margin:5px 0'>Option markets are pricing a <b>&plusmn;" +
       (sig * 100).toFixed(2) + "%</b> one-day move in QQQ — about <b>$" +
       (spot * sig).toFixed(2) + "</b>. Two-thirds of sessions should close inside " +
@@ -1897,6 +1912,10 @@
 
     var pos = g.regime === "POSITIVE GAMMA";
     var lines = [];
+    lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
+      ? "Positive-gamma tilt &mdash; fade toward the walls"
+      : "Negative-gamma tilt &mdash; fades into strength are dangerous",
+      "walls likelier touched than broken"));
     lines.push("<div style='margin:5px 0'>Touch odds are the chance price <b>tags</b> each " +
       "level at some point today (about 2&times; the odds it <i>closes</i> beyond it), from " +
       "the VIX 1-day &sigma; of <b>" + (sig * 100).toFixed(2) + "%</b>. A wall is far more " +
@@ -1966,6 +1985,9 @@
           conf + "</span> <span class=k>Hurst wants ~500+ obs</span>");
 
     var lines = [];
+    lines.push(verdict(col, label + (vr2 < 0.9 ? " &mdash; fades in season" :
+      vr2 > 1.1 ? " &mdash; fades get run over" : " &mdash; no reversion edge"),
+      "Confidence: " + conf));
     lines.push("<div style='margin:5px 0'>Variance ratio compares the variance of multi-day " +
       "returns against a random walk. <b>VR &lt; 1</b> means QQQ returns fight themselves " +
       "(mean-reverting, fade-friendly); <b>VR &gt; 1</b> means they feed on themselves " +
@@ -2014,6 +2036,10 @@
       '<div style="margin-top:8px">' + bar + "</div>";
 
     var lines = [];
+    lines.push(verdict(col, used < 0.5 ? "Room to fade toward the mean" :
+      used < 1 ? "Half the day's range spent &mdash; size for chop" :
+      "Overstretched &mdash; day blew past its expected move",
+      (used * 100).toFixed(0) + "% of expected move used"));
     lines.push("<div style='margin:5px 0'>Price has spent <b>" + (used * 100).toFixed(0) +
       "%</b> of the &plusmn;" + expPct.toFixed(2) + "% the options market priced for today. " +
       (used < 0.5
@@ -2107,6 +2133,9 @@
       (has(twall) ? row("Theta concentrated at", num(twall, 0) + " strike") : "");
 
     var lines = [];
+    lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
+      ? "Charm grinds delta toward the pins &mdash; quiet drift into the close"
+      : "Charm/vanna push with the move &mdash; fades into strength risky", "2nd-order flow"));
     lines.push("<div style='margin:5px 0'><b>Vanna (vex)</b> is how much dealer delta shifts when " +
       "implied vol moves &mdash; hedging flow that fires on a <b>vol</b> change with no price catalyst. " +
       "Net vex is <b>" + fmtBig(vex) + "</b>: a rise in IV pushes aggregate dealer delta " +
@@ -2174,6 +2203,9 @@
       row("Net vanna / theta", fmtBig(g.net_vex) + " / " + fmtBig(g.net_tex));
 
     var lines = [];
+    lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
+      ? "Live: fade-friendly &mdash; dealers dampen"
+      : "Live: fade-hostile &mdash; dealers amplify", "5-min logger"));
     lines.push("<div style='margin:5px 0'>Live GEX straight from your <b>5-min greeks logger</b> " +
       "(calls + puts), independent of the twice-daily API pull. If the API GEX card above is " +
       "missing or stale, this is your backup read of the same machine.</div>");
@@ -2184,6 +2216,15 @@
     return sec("GEX — LIVE (5-min logger, calls + puts)", body,
       '<details class="read" open><summary><b>Read</b></summary><div>' +
       lines.join("") + "</div></details>");
+  }
+
+  // The "answer" line that leads each card's Read: colored dot + plain-English
+  // verdict + a short confidence/context tag. Turns a number into a decision.
+  function verdict(color, headline, sub) {
+    return "<div style='margin:0 0 9px;padding:6px 10px;border-left:3px solid " + color +
+      ";background:rgba(255,255,255,.04);border-radius:4px;font-size:13px'>" +
+      "<span style='color:" + color + "'>&#9679;</span> <b>" + headline + "</b>" +
+      (sub ? " <span class=k>&middot; " + sub + "</span>" : "") + "</div>";
   }
 
   function render() {
