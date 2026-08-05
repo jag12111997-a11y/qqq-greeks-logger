@@ -539,6 +539,10 @@ def fetch_markets():
 # the list separately as the tradeable ETF that tracks it.
 WATCHLIST = [
     ("QQQ",       "QQQ",  "Invesco QQQ Trust"),
+    ("^NDX",      "NDX",  "Nasdaq-100 Index"),
+    ("QQQM",      "QQQM", "Invesco Nasdaq-100 (QQQM)"),
+    ("TQQQ",      "TQQQ", "ProShares UltraPro QQQ (3x)"),
+    ("SQQQ",      "SQQQ", "ProShares UltraPro Short QQQ (-3x)"),
     ("SPY",       "SPY",  "SPDR S&P 500 ETF"),
     ("DX-Y.NYB",  "DXY",  "US Dollar Index (ICE)"),
     ("IEF",       "IEF",  "iShares 7-10Y Treasury"),

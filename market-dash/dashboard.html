@@ -735,6 +735,10 @@
     GLD:"#b388ff", VIX:"#ff00e5", EWY:"#ff9100", TLT:"#64ffda"
   };
 
+  // Nasdaq-100 leverage family for the QQQ tab's own Star Players card.
+  var NASDAQ_STARS = ["NDX", "QQQ", "QQQM", "TQQQ", "SQQQ"];
+  var NASDAQ_COLOR = { NDX:"#00e5ff", QQQ:"#00e676", QQQM:"#ffd600", TQQQ:"#b388ff", SQQQ:"#ff453a" };
+
   // Pull one field per star symbol out of every logged session.
   function starSeries(field) {
     var out = {};
@@ -1187,6 +1191,53 @@
       starChart(e) + wlTable(rows, true) +
       '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">' +
       starCorrel(e) + "</div>", readHtml);
+  }
+
+  // Same Star-Players card, on the Nasdaq-100 leverage family (QQQ tab). Reuses
+  // the exact chart + correlation logic by swapping STARS/STAR_COLOR for the
+  // synchronous render, then restoring them.
+  function secNasdaqStars(e) {
+    var all = get(e, "watchlist", []);
+    if (!all.length) return "";
+    var by = {};
+    all.forEach(function (r) { by[r.symbol] = r; });
+    var rows = NASDAQ_STARS.map(function (sym) { return by[sym]; })
+      .filter(function (r) { return r && (has(r.pct_change) || has(r.last)); });
+    if (!rows.length) return "";
+
+    var _S = STARS, _C = STAR_COLOR;
+    STARS = NASDAQ_STARS; STAR_COLOR = NASDAQ_COLOR;
+    var chart, correl;
+    try {
+      chart = starChart(e);
+      correl = starCorrel(e);
+    } finally {
+      STARS = _S; STAR_COLOR = _C;
+    }
+
+    var lines = [];
+    var q = by.QQQ, tq = by.TQQQ, sq = by.SQQQ;
+    if (q && has(q.pct_change)) {
+      lines.push("<div style='margin:5px 0'>QQQ is " + signed(q.pct_change, 2, "%") + " today. " +
+        "<b>TQQQ</b> is 3&times; long and <b>SQQQ</b> is 3&times; short QQQ &mdash; expect about " +
+        signed(q.pct_change * 3, 1, "%") + " and " + signed(-q.pct_change * 3, 1, "%") +
+        ((tq && has(tq.pct_change) && sq && has(sq.pct_change))
+          ? " (actual TQQQ " + signed(tq.pct_change, 2, "%") + ", SQQQ " + signed(sq.pct_change, 2, "%") + ")"
+          : "") +
+        ". NDX and QQQM are the same Nasdaq-100 &mdash; drift between them and QQQ is a tracking / data tell.</div>");
+    }
+    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Same Star-Players logic on the " +
+      "Nasdaq-100 leverage family. The overlay rebases each to 100, so leverage shows up as slope: TQQQ swings " +
+      "~3&times; the QQQ line and SQQQ mirrors it. Correlations sit near &plusmn;1 by construction &mdash; the " +
+      "value is the spread and the leverage, not the sign. New symbols fill in as sessions log.</div>");
+
+    var readHtml = '<details class="read" open><summary><b>Read</b></summary><div>' +
+      lines.join("") + "</div></details>";
+
+    return secWide("Nasdaq — QQQ leverage family",
+      chart + wlTable(rows, true) +
+      '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">' +
+      correl + "</div>", readHtml);
   }
 
   function secWatchlist(e) {
@@ -2305,6 +2356,7 @@
     // secGex/secGexLive/secVanna use e.gex + the QQQ gex_live.json logger, and
     // secQuant/secTouchFlow/secRangeUsed key off mk.QQQ spot. Same data, new home.
     var _qqqBody =
+      group("Price", secNasdaqStars(e)) +
       group("Plan and discipline", secPlan(e)) +
       group("QQQ options & flow", secGexLive(e) + secGex(e) + secVanna(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e));
 
