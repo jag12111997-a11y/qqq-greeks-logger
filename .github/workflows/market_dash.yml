@@ -11,6 +11,8 @@ on:
     # (2 AM / 2 PM PST). To keep them exactly on 3 in winter, add 1 hour to each
     # UTC value then ('0 11 ...' and '0 23 ...').
     - cron: '0 10 * * 1-5'    # 3:00 AM PT  — overnight / pre-dawn snapshot
+    - cron: '25 10 * * 1-5'   # 3:25 AM PT  — BACKUP: GitHub cron can silently drop a run
+    - cron: '25 22 * * 1-5'   # 3:25 PM PT  — BACKUP: upsert-per-day makes reruns harmless
     - cron: '0 22 * * 1-5'    # 3:00 PM PT  — after the close: fresh ETF prices.
                               #   The Cboe daily P/C posts LATER in the evening,
                               #   so it is NOT in this run. It gets picked up by
