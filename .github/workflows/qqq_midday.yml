@@ -13,11 +13,14 @@
 
 name: QQQ Greeks Logger - Midday
 
-# Started by cron-job.org at 12:15 PM Pacific (weekdays), which fires on time
-# via workflow_dispatch. GitHub's own cron is intentionally NOT used here
-# (it runs late/unreliably and would cause duplicate sessions).
+# Primary trigger is cron-job.org at 12:15 PM Pacific (weekdays) via workflow_dispatch.
+# GitHub cron is added as a LATER BACKUP only: the guard step below skips it whenever
+# the midday session already logged, so the two triggers never double-log — the backup
+# only actually runs when the primary was missed (self-healing, no human needed).
 on:
   workflow_dispatch: {}
+  schedule:
+    - cron: '45 19 * * 1-5'   # ~12:45 PM PDT / 11:45 AM PST — BACKUP, guarded below
 
 concurrency:
   group: qqq-midday
@@ -39,7 +42,21 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Skip if this midday already logged (makes the cron backup safe)
+        id: guard
+        run: |
+          DATE=$(TZ=America/Los_Angeles date +%F)
+          F="data/$DATE/pm/qqq_greeks_calls_${DATE}_pm.csv"
+          if [ -f "$F" ] && [ "$(wc -l < "$F")" -gt 6 ]; then
+            echo "Already logged: $F ($(wc -l < "$F") lines). Skipping this run."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "No midday data yet for $DATE — running the logger."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run logger (12:15-1:30 PT, every 1 min, +/-$7)
+        if: steps.guard.outputs.run == 'true'
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
@@ -50,7 +67,7 @@ jobs:
         run: python qqq_greeks_logger_alpaca.py
 
       - name: Commit updated data back to repo
-        if: always()
+        if: always() && steps.guard.outputs.run == 'true'
         run: |
           git config user.name "qqq-logger-bot"
           git config user.email "actions@github.com"
