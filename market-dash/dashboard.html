@@ -514,7 +514,7 @@
     return "#ff8a80";
   }
 
-  function donut(rows) {
+  function donut(rows, mini) {
     if (!rows || !rows.length) return "";
 
     var wr = rows.map(function (r) {
@@ -573,12 +573,20 @@
       ang = a2;
     });
 
-    return '<div style="text-align:center"><svg width="330" height="272" viewBox="-40 -6 344 278">' +
-      svg + labels +
+    var centre =
       '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#8b8ba6" font-size="10">ALL SECTORS</text>' +
       '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" fill="' +
       (allSec >= 0 ? "#00e676" : "#ff453a") + '" font-size="19">' +
-      (allSec > 0 ? "+" : "") + allSec.toFixed(2) + "%</text></svg></div>" +
+      (allSec > 0 ? "+" : "") + allSec.toFixed(2) + "%</text>";
+
+    // Compact ring only (no caption, no legend) for the cockpit glance view.
+    if (mini) {
+      return '<div style="text-align:center"><svg width="230" height="192" viewBox="-40 -6 344 278">' +
+        svg + labels + centre + "</svg></div>";
+    }
+
+    return '<div style="text-align:center"><svg width="330" height="272" viewBox="-40 -6 344 278">' +
+      svg + labels + centre + "</svg></div>" +
       '<div style="font-size:10.5px;color:var(--faint);margin:2px 0 10px;text-align:center">' +
       "slice size = S&amp;P weight · colour = today&rsquo;s move · centre = weighted average</div>" +
       '<table>' + legend + "</table>";
@@ -1268,7 +1276,11 @@
   function secWatchlist(e) {
     var all = get(e, "watchlist", []);
     if (!all.length) return "";
-    var w = all.filter(function (r) { return STARS.indexOf(r.symbol) === -1; });
+    // Hide both the market Star Players AND the Nasdaq family (NDX/QQQM/TQQQ/SQQQ)
+    // — they each have their own dedicated card, so listing them here duplicates.
+    var w = all.filter(function (r) {
+      return STARS.indexOf(r.symbol) === -1 && NASDAQ_STARS.indexOf(r.symbol) === -1;
+    });
 
     var body = wlTable(w, false);
 
@@ -2395,14 +2407,66 @@
         up:   ["var(--up)",   "rgba(0,230,118,.13)"],
         down: ["var(--down)", "rgba(255,69,58,.13)"],
         warn: ["var(--warn)", "rgba(255,214,0,.12)"],
-        dim:  ["var(--dim)",  "rgba(139,139,166,.10)"]
+        dim:  ["var(--dim)",  "rgba(139,139,166,.10)"],
+        flat: ["var(--txt)",  "rgba(255,255,255,.045)"]   // neutral context tile
       };
       var c = map[cn] || map.dim;
+      var subCol = cn === "flat" ? "var(--dim)" : c[0];
       return '<div style="background:' + c[1] + ';border-radius:12px;padding:14px 16px;min-height:98px">' +
         '<div style="font-size:11px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase">' + esc(label) + "</div>" +
         '<div style="font-size:30px;font-weight:700;line-height:1.15;color:' + c[0] + ';margin-top:4px">' + big + "</div>" +
-        '<div style="font-size:12.5px;color:' + c[0] + ';opacity:.9;margin-top:3px">' + sub + "</div>" +
+        '<div style="font-size:12.5px;color:' + subCol + ';opacity:.9;margin-top:3px">' + sub + "</div>" +
         "</div>";
+    }
+
+    // Compact pairwise-correlation table for any symbol set (glance version of
+    // the Market Dash correlation card). Same Pearson math, no dollar-move bars.
+    function corrPanel(symbols, title) {
+      var nH = H.length;
+      var ser = {};
+      symbols.forEach(function (s) { ser[s] = []; });
+      H.forEach(function (entry) {
+        var by = {};
+        (entry.watchlist || []).forEach(function (w) { by[w.symbol] = w; });
+        symbols.forEach(function (s) { var w = by[s]; ser[s].push(w && has(w.pct_change) ? w.pct_change : null); });
+      });
+      var pairs = [];
+      for (var a = 0; a < symbols.length; a++) {
+        for (var b = a + 1; b < symbols.length; b++) {
+          var xs = [], ys = [];
+          for (var i = 0; i < nH; i++) {
+            if (ser[symbols[a]][i] !== null && ser[symbols[b]][i] !== null) {
+              xs.push(ser[symbols[a]][i]); ys.push(ser[symbols[b]][i]);
+            }
+          }
+          if (xs.length < 5) continue;
+          var mx = xs.reduce(function (p, c2) { return p + c2; }, 0) / xs.length;
+          var my = ys.reduce(function (p, c2) { return p + c2; }, 0) / ys.length;
+          var sxy = 0, sxx = 0, syy = 0;
+          for (var k = 0; k < xs.length; k++) {
+            var dx = xs[k] - mx, dy = ys[k] - my;
+            sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+          }
+          if (!sxx || !syy) continue;
+          pairs.push({ a: symbols[a], b: symbols[b], r: sxy / Math.sqrt(sxx * syy), n: xs.length });
+        }
+      }
+      if (!pairs.length) {
+        return '<div style="font-size:11px;color:var(--faint);margin:2px 0 10px">' + esc(title) +
+          " &mdash; needs ~5 shared sessions per pair; filling in as the logger runs.</div>";
+      }
+      pairs.sort(function (p1, p2) { return Math.abs(p2.r) - Math.abs(p1.r); });
+      var out = '<div style="font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:6px">' + esc(title) + "</div>" +
+        "<table><tr><th>Pair</th><th style='text-align:right'>Correlation</th>" +
+        "<th style='text-align:right'>Sessions</th></tr>";
+      pairs.slice(0, 10).forEach(function (p) {
+        var col = p.r > 0.5 ? "var(--up)" : p.r < -0.5 ? "var(--down)" : "var(--dim)";
+        out += "<tr><td>" + p.a + " / " + p.b + "</td>" +
+          '<td class="num" style="color:' + col + '">' + p.r.toFixed(2) + "</td>" +
+          '<td class="num" style="color:var(--faint)">' + p.n + "</td></tr>";
+      });
+      return out + '</table><div style="height:12px"></div>';
     }
 
     var tiles = "";
@@ -2484,7 +2548,48 @@
       '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--down);vertical-align:-1px"></span> fade-hostile</span>' +
       '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--dim);vertical-align:-1px"></span> stale/off</span></div>';
 
-    return stamp + banner + grid + legend;
+    // ── Context tiles (neutral): the quant card, condensed to a glance ──
+    var ctiles = "";
+    var g2 = get(e, "quant.garch");
+    if (ok(g2) && has(g2.regime) && has(g2.conditional_vol_pct)) {
+      ctiles += tile("Vol regime (GARCH)", num(g2.conditional_vol_pct, 1, "%"),
+        String(g2.regime).toLowerCase() +
+        (has(g2.unconditional_vol_pct) ? " · uncond " + num(g2.unconditional_vol_pct, 1, "%") : ""),
+        /HIGH/i.test(g2.regime) ? "warn" : "flat");
+    }
+    if (has(vix) && q && has(q.last)) {
+      var em = vix / Math.sqrt(252) / 100;
+      ctiles += tile("Expected move", "±" + (em * 100).toFixed(2) + "%",
+        "$" + (q.last * em).toFixed(2) + " · into close", "flat");
+    }
+    var o2 = e.options;
+    if (ok(o2) && has(o2.total_pc)) {
+      var t = o2.total_pc;
+      var lean = t >= 1.15 ? "put-heavy" : t >= 0.95 ? "balanced" : t >= 0.75 ? "call-lean" : "very call-heavy";
+      var ieTxt = (has(o2.index_pc) && has(o2.equity_pc))
+        ? " · " + signed(o2.index_pc - o2.equity_pc, 2) + " idx−eq" : "";
+      ctiles += tile("P/C skew", num(t, 2), lean + ieTxt, "flat");
+    }
+    var ctxBlk = ctiles
+      ? '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:6px">Context</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
+        ctiles + "</div>"
+      : "";
+
+    // ── Mini sectors donut ──
+    var sec2 = get(e, "sectors");
+    var sectorsBlk = (ok(sec2) && get(sec2, "rows", []).length)
+      ? '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
+      : "";
+
+    // ── Correlation panels ──
+    var corrBlk = '<div style="margin-top:14px">' +
+      corrPanel(NASDAQ_STARS, "Nasdaq family — correlation") +
+      corrPanel(STARS, "Star players — correlation") + "</div>";
+
+    return stamp + banner + grid + legend + ctxBlk + sectorsBlk + corrBlk;
   }
 
   function render() {
