@@ -2359,6 +2359,7 @@
       group("Price", secNasdaqStars(e)) +
       group("Plan and discipline", secPlan(e)) +
       group("QQQ options & flow", secGexLive(e) + secGex(e) + secVanna(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
+      group("Regime and fade", secGeometry(e) + secFadeRegime(e)) +
       group("Options", secOptions(e) + secVenue(e));
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
@@ -2366,7 +2367,7 @@
       finalRegime(e, align) +
       group("Price", secStars(e)) +
       group("News", secWeek(e)) +
-      group("Sectors and regime", secInternals(e) + secGeometry(e) + secFadeRegime(e)) +
+      group("Sectors and regime", secInternals(e)) +
       group("Macro and positioning", secMacro(e) + secPositioning(e)) +
       group("Rest of watchlist", secWatchlist(e)) +
       "<footer>" + FULL.length + " logged session" + (FULL.length > 1 ? "s" : "") +
