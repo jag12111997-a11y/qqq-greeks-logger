@@ -1273,6 +1273,56 @@
       correl + "</div>", readHtml);
   }
 
+  // Reusable pairwise-correlation table for any symbol list (same Pearson math
+  // as the Star Players card). Used by the cockpit and the watchlist card.
+  function corrTable(symbols, title) {
+    var nH = H.length;
+    var ser = {};
+    symbols.forEach(function (s) { ser[s] = []; });
+    H.forEach(function (entry) {
+      var by = {};
+      (entry.watchlist || []).forEach(function (w2) { by[w2.symbol] = w2; });
+      symbols.forEach(function (s) { var w2 = by[s]; ser[s].push(w2 && has(w2.pct_change) ? w2.pct_change : null); });
+    });
+    var pairs = [];
+    for (var a = 0; a < symbols.length; a++) {
+      for (var b = a + 1; b < symbols.length; b++) {
+        var xs = [], ys = [];
+        for (var i = 0; i < nH; i++) {
+          if (ser[symbols[a]][i] !== null && ser[symbols[b]][i] !== null) {
+            xs.push(ser[symbols[a]][i]); ys.push(ser[symbols[b]][i]);
+          }
+        }
+        if (xs.length < 5) continue;
+        var mx = xs.reduce(function (p, c2) { return p + c2; }, 0) / xs.length;
+        var my = ys.reduce(function (p, c2) { return p + c2; }, 0) / ys.length;
+        var sxy = 0, sxx = 0, syy = 0;
+        for (var k = 0; k < xs.length; k++) {
+          var dx = xs[k] - mx, dy = ys[k] - my;
+          sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+        }
+        if (!sxx || !syy) continue;
+        pairs.push({ a: symbols[a], b: symbols[b], r: sxy / Math.sqrt(sxx * syy), n: xs.length });
+      }
+    }
+    if (!pairs.length) {
+      return '<div style="font-size:11px;color:var(--faint);margin:2px 0 10px">' + esc(title) +
+        " &mdash; needs ~5 shared sessions per pair; filling in as the logger runs.</div>";
+    }
+    pairs.sort(function (p1, p2) { return Math.abs(p2.r) - Math.abs(p1.r); });
+    var out = '<div style="font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      'text-transform:uppercase;margin-bottom:6px">' + esc(title) + "</div>" +
+      "<table><tr><th>Pair</th><th style='text-align:right'>Correlation</th>" +
+      "<th style='text-align:right'>Sessions</th></tr>";
+    pairs.slice(0, 12).forEach(function (p) {
+      var col = p.r > 0.5 ? "var(--up)" : p.r < -0.5 ? "var(--down)" : "var(--dim)";
+      out += "<tr><td>" + p.a + " / " + p.b + "</td>" +
+        '<td class="num" style="color:' + col + '">' + p.r.toFixed(2) + "</td>" +
+        '<td class="num" style="color:var(--faint)">' + p.n + "</td></tr>";
+    });
+    return out + '</table><div style="height:14px"></div>';
+  }
+
   function secWatchlist(e) {
     var all = get(e, "watchlist", []);
     if (!all.length) return "";
@@ -1282,13 +1332,9 @@
       return STARS.indexOf(r.symbol) === -1 && NASDAQ_STARS.indexOf(r.symbol) === -1;
     });
 
-    var body = wlTable(w, false);
+    var body = corrTable(w.map(function (r) { return r.symbol; }),
+      "Correlation of daily moves") + wlTable(w, false);
 
-    var movers = all.filter(function (r) {
-      return has(r.pct_change) && Math.abs(r.pct_change) >= 2;
-    }).sort(function (a, b) { return Math.abs(b.pct_change) - Math.abs(a.pct_change); });
-
-    var body = wlTable(w, false);
     var live = w.filter(function (r) { return has(r.pct_change); });
     var grn = live.filter(function (r) { return r.pct_change > 0; }).length;
     var mv = w.filter(function (r) { return has(r.pct_change) && Math.abs(r.pct_change) >= 2; })
