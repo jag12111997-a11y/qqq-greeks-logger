@@ -2358,13 +2358,13 @@
     var _qqqBody =
       group("Price", secNasdaqStars(e)) +
       group("Plan and discipline", secPlan(e)) +
-      group("QQQ options & flow", secGexLive(e) + secGex(e) + secVanna(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e));
+      group("QQQ options & flow", secGexLive(e) + secGex(e) + secVanna(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
+      group("Options", secOptions(e) + secVenue(e));
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
     var _dashBody =
       finalRegime(e, align) +
       group("Price", secStars(e)) +
-      group("Options", secOptions(e) + secVenue(e)) +
       group("News", secWeek(e)) +
       group("Sectors and regime", secInternals(e) + secGeometry(e) + secFadeRegime(e)) +
       group("Macro and positioning", secMacro(e) + secPositioning(e)) +
