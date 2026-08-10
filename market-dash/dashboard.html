@@ -2357,9 +2357,9 @@
     // secQuant/secTouchFlow/secRangeUsed key off mk.QQQ spot. Same data, new home.
     var _qqqBody =
       group("Price", secNasdaqStars(e)) +
-      group("Plan and discipline", secPlan(e)) +
-      group("QQQ options & flow", secGexLive(e) + secGex(e) + secVanna(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
       group("Regime and fade", secGeometry(e) + secFadeRegime(e)) +
+      group("QQQ options & flow", secGexLive(e) + secGex(e) + secVanna(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
+      group("Plan and discipline", secPlan(e)) +
       group("Options", secOptions(e) + secVenue(e));
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
