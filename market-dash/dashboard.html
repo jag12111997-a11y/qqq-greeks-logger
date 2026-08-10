@@ -1460,18 +1460,29 @@
         "\nOI  c" + s2.call_oi + " / p" + s2.put_oi + "</title></rect>";
     });
 
-    function marker(k, col, label, dash) {
+    // Labels get their own vertical LANE so close strikes (spot / flip / call
+    // wall often within a point of each other) never overprint into garble.
+    var laneH = 12;
+    function marker(k, col, label, dash, lane) {
       if (!has(k) || k < kMin || k > kMax) return "";
-      var x = X(k).toFixed(1);
-      return '<line x1="' + x + '" x2="' + x + '" y1="' + padT + '" y2="' + (Hh - padB) +
+      var xn = X(k), x = xn.toFixed(1);
+      var lineBot = Hh - padB;
+      var ly = lineBot + 11 + lane * laneH;            // this label's baseline
+      var anchor = xn > W - 55 ? "end" : xn < 55 ? "start" : "middle";
+      return '<line x1="' + x + '" x2="' + x + '" y1="' + padT + '" y2="' + lineBot +
         '" stroke="' + col + '" stroke-width="1.6"' + (dash ? ' stroke-dasharray="4 3"' : "") + "/>" +
-        '<text x="' + x + '" y="' + (Hh - padB + 12) + '" text-anchor="middle" fill="' + col +
+        // faint tick tying the staggered label back to its line
+        '<line x1="' + x + '" x2="' + x + '" y1="' + lineBot + '" y2="' + (ly - 8).toFixed(1) +
+        '" stroke="' + col + '" stroke-width="1" opacity=".35"/>' +
+        '<text x="' + x + '" y="' + ly.toFixed(1) + '" text-anchor="' + anchor + '" fill="' + col +
         '" font-size="9.5">' + label + " " + k + "</text>";
     }
-    svg += marker(get(g, "levels.put_wall"), "#ff453a", "put wall", true);
-    svg += marker(get(g, "levels.call_wall"), "#00e676", "call wall", true);
-    svg += marker(flip, "#ffd600", "flip", false);
-    svg += marker(spot, "#00e5ff", "spot", false);
+    // Distinct lanes: put wall (far left, isolated) on lane 0; the right-side
+    // cluster spot/flip/call each on its own lane so they stack, not collide.
+    svg += marker(get(g, "levels.put_wall"), "#ff453a", "put wall", true, 0);
+    svg += marker(spot, "#00e5ff", "spot", false, 0);
+    svg += marker(flip, "#ffd600", "flip", false, 1);
+    svg += marker(get(g, "levels.call_wall"), "#00e676", "call wall", true, 2);
 
     var body = '<div style="background:' + (pos ? "rgba(0,230,118,.10)" : "rgba(255,69,58,.10)") +
       ";border-left:3px solid " + (pos ? "var(--up)" : "var(--down)") +
@@ -1485,7 +1496,8 @@
       (realFlip ? "" : "<br><span style='color:var(--faint)'>No flip level in range — " +
        "one-sided gamma across every strike.</span>") + "</div></div>";
 
-    body += '<svg viewBox="0 0 ' + W + " " + Hh + '" width="100%" height="' + Hh +
+    var Ht = Hh + 30;   // extra room below the plot for the stacked label lanes
+    body += '<svg viewBox="0 0 ' + W + " " + Ht + '" width="100%" height="' + Ht +
             '" style="display:block">' + svg + "</svg>";
 
     body += "<table><tr><th>Level</th><th style='text-align:right'>Strike</th>" +
