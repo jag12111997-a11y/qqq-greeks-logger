@@ -871,6 +871,7 @@
              '" text-anchor="end" fill="' + (mode === "dxy" ? baseCol : "#55556b") + '" font-size="9">' +
              (mode === "dxy" ? "DXY 100" : "100") + "</text>";
 
+    var endLabels = [];
     visible.forEach(function (sym) {
       if (mode === "dxy" && sym === "DXY") return;   // DXY is the baseline itself
       var seq = norm[sym], d = "", last = null, lastI = -1, pts = 0;
@@ -886,8 +887,30 @@
                '" stroke-width="1.8" stroke-linejoin="round"' + dash + '/>';
       lines += '<circle cx="' + X(lastI).toFixed(1) + '" cy="' + Y(last).toFixed(1) +
                '" r="3" fill="' + col + '"/>';
-      lines += '<text x="' + (X(lastI) + 7).toFixed(1) + '" y="' + (Y(last) + 3.5).toFixed(1) +
-               '" fill="' + col + '" font-size="10">' + esc(sym) + "</text>";
+      endLabels.push({ sym: sym, cx: X(lastI), cy: Y(last), col: col });
+    });
+
+    // Declutter the right-edge symbol labels. Lines that land on the same value
+    // (e.g. NDX and QQQM are the SAME index) would print on top of each other
+    // into garble. Sort by height and nudge any that are too close downward,
+    // with a faint tick tying each label back to its dot.
+    endLabels.sort(function (a, b) { return a.cy - b.cy; });
+    var minGap = 11, prevY = -Infinity;
+    endLabels.forEach(function (L) {
+      var ly = L.cy + 3.5;
+      if (ly < prevY + minGap) ly = prevY + minGap;
+      ly = Math.min(ly, Hh - padB);
+      prevY = ly;
+      L.ly = ly;
+    });
+    endLabels.forEach(function (L) {
+      var lx = L.cx + 7;
+      if (Math.abs(L.ly - (L.cy + 3.5)) > 1.5)
+        lines += '<line x1="' + L.cx.toFixed(1) + '" y1="' + L.cy.toFixed(1) +
+                 '" x2="' + lx.toFixed(1) + '" y2="' + (L.ly - 3).toFixed(1) +
+                 '" stroke="' + L.col + '" stroke-width="1" opacity=".35"/>';
+      lines += '<text x="' + lx.toFixed(1) + '" y="' + L.ly.toFixed(1) +
+               '" fill="' + L.col + '" font-size="10">' + esc(L.sym) + "</text>";
     });
 
     function shortDate(v) {
