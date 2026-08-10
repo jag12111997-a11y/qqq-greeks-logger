@@ -672,8 +672,10 @@
     var c = (v.volume_share || []).filter(function (r) { return /cboe/i.test(r.venue); })[0];
     var p = (v.premium_share || []).filter(function (r) { return /cboe/i.test(r.venue); })[0];
     var bits = [];
-    if (c) bits.push("Cboe volume " + c.today.toFixed(2) + "% vs " + c.avg5.toFixed(2) + "% 5d");
-    if (p) bits.push("premium " + p.today.toFixed(2) + "% vs " + p.avg5.toFixed(2) + "% 5d");
+    if (c) bits.push("Cboe volume " + c.today.toFixed(2) + "%" +
+        (has(c.avg5) ? " vs " + c.avg5.toFixed(2) + "% 5d" : ""));
+    if (p) bits.push("premium " + p.today.toFixed(2) + "%" +
+        (has(p.avg5) ? " vs " + p.avg5.toFixed(2) + "% 5d" : ""));
     if (c && p && p.today - c.today > 10) {
       bits.push("premium share >> volume share — Cboe carries the big-ticket index flow");
     }

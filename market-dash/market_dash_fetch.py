@@ -282,6 +282,119 @@ def fetch_cboe():
 
 
 # ============================================================
+# SOURCE 2b — CBOE VENUE / MARKET-SHARE CONCENTRATION
+# ============================================================
+# Matched-VOLUME and NET-PREMIUM share by exchange group — the same
+# data as the Market Statistics page's "Volume Summary" and "Net Option
+# Premium Summary" tabs. Public JSON, no key. This is the feed that
+# replaced the old scrape that stopped pulling.
+#
+#   endpoint returns share as a FRACTION (0.2892) -> we store PERCENT (28.92).
+#   "today" = the newest completed session; "avg5" = a REAL trailing average
+#   built by pulling the last few completed sessions and averaging per venue.
+#   Nothing here is fabricated: if a day has no data we skip it, and if we
+#   somehow get zero sessions we return None so the card just says "not sourced".
+
+CBOE_SHARE_URL = "https://ww2.cboe.com/us/options/market_share/market/data/"
+
+# Pretty-print the long official name to match the rest of the dashboard.
+_VENUE_RENAME = {
+    "Chicago Board Options Exchange (C,W,E,Z)": "Cboe (C,W,E,Z)",
+}
+
+
+def _cboe_share_day(bias, dt):
+    """One session, one bias ('Volume' or 'Premium').
+    Returns (rows, total). rows = [{'venue', 'share'(fraction), 'value'}].
+    total is that day's grand total (0.0 means no data / not a trading day)."""
+    params = {
+        "bias": bias, "limit": 6, "dt": dt,
+        "auctions": "y", "subdollars": "y", "expanded": "", "oddLots": "y",
+    }
+    r = requests.get(CBOE_SHARE_URL, params=params, headers=HEADERS, timeout=HTTP_TIMEOUT)
+    r.raise_for_status()
+    j = r.json() or {}
+    data = j.get("data") or {}
+    stats = (data.get("stats") or {}).get("integrated") or []
+    try:
+        total = float((data.get("total") or {}).get("normal", [0])[0])
+    except Exception:
+        total = 0.0
+    rows = []
+    for s in stats:
+        name = s.get("mkthtml")
+        rows.append({
+            "venue": _VENUE_RENAME.get(name, name),
+            "share": float(s.get("mktshare") or 0.0),
+            "value": float(s.get("value") or 0.0),
+        })
+    return rows, total
+
+
+def fetch_venue_concentration():
+    from datetime import timedelta
+    try:
+        from zoneinfo import ZoneInfo
+        today = datetime.now(ZoneInfo("America/New_York")).date()
+    except Exception:
+        today = (datetime.now(timezone.utc) - timedelta(hours=4)).date()
+
+    # Walk back from today to collect up to 5 completed sessions (total > 0).
+    # This naturally skips weekends/holidays (they return zero totals).
+    sessions = []   # each: (iso, vol_rows, prem_rows, vol_total, prem_total)
+    d = today
+    for _ in range(12):
+        if len(sessions) >= 5:
+            break
+        iso = d.strftime("%Y-%m-%d")
+        vol_rows, vol_total = _cboe_share_day("Volume", iso)
+        if vol_total > 0 and vol_rows:
+            prem_rows, prem_total = _cboe_share_day("Premium", iso)
+            sessions.append((iso, vol_rows, prem_rows, vol_total, prem_total))
+        d = d - timedelta(days=1)
+
+    if not sessions:
+        return None
+
+    # Trailing average share (%) per venue, across every session we pulled.
+    def _avg_by_venue(pick):
+        acc, cnt = {}, {}
+        for sess in sessions:
+            for row in pick(sess):
+                v = row["venue"]
+                acc[v] = acc.get(v, 0.0) + row["share"] * 100.0
+                cnt[v] = cnt.get(v, 0) + 1
+        return {v: acc[v] / cnt[v] for v in acc}
+
+    vol_avg = _avg_by_venue(lambda s: s[1])
+    prem_avg = _avg_by_venue(lambda s: s[2])
+
+    # Newest session is the "today" column.
+    newest_iso, newest_vol, newest_prem, newest_voltot, newest_premtot = sessions[0]
+
+    def _build(today_rows, avg_map):
+        out = []
+        for row in today_rows:
+            v = row["venue"]
+            out.append({
+                "venue": v,
+                "today": round(row["share"] * 100.0, 2),
+                "avg5": round(avg_map[v], 2) if v in avg_map else None,
+            })
+        out.sort(key=lambda x: x["today"], reverse=True)   # biggest share first
+        return out
+
+    return {
+        "volume_share": _build(newest_vol, vol_avg),
+        "premium_share": _build(newest_prem, prem_avg),
+        "total_volume": int(newest_voltot),
+        "total_premium": int(newest_premtot),
+        "session_date": newest_iso,
+        "sessions_in_avg": len(sessions),
+    }
+
+
+# ============================================================
 # SOURCE 3 — CFTC COMMITMENTS OF TRADERS
 # ============================================================
 
@@ -1440,7 +1553,7 @@ def build_entry():
         "quant": safe("quant metrics", fetch_quant_metrics),
         "sectors": safe("sectors", fetch_sectors),
         "macro": safe("fred macro", fetch_fred),
-        "venue_concentration": None,   # no free source yet — v1 gap, by design
+        "venue_concentration": safe("cboe venue share", fetch_venue_concentration),
     }
 
     # Stamp with Cboe's session date when we got one; it's more honest
