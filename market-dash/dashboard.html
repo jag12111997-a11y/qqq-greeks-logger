@@ -164,7 +164,7 @@
   // hidden: symbols toggled off. big: fullscreen. Survives the 60s live redraw.
   var CHART = { mode: "dxy", hidden: {}, big: false, height: 240 };
   var TAB = "dash";   // in-page tab: "dash" (the whole dashboard) or "nasdaq" (scaffold)
-  try { if (localStorage.getItem("md:tab") === "nasdaq") TAB = "nasdaq"; } catch (eTab) {}
+  try { var _st = localStorage.getItem("md:tab"); if (_st === "nasdaq" || _st === "cockpit") TAB = _st; } catch (eTab) {}
   try {
     var _cm = localStorage.getItem("md:chartmode"); if (_cm) CHART.mode = _cm;
     var _ch = parseInt(localStorage.getItem("md:charth"), 10);
@@ -2347,7 +2347,8 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + "</div>";
+      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") +
+      tab("cockpit", "Trading Cockpit") + "</div>";
   }
 
   function nasdaqPanel() {
@@ -2359,6 +2360,131 @@
       "Tell me what you want in it (breadth &amp; internals, leaders / laggards, " +
       "Composite vs Nasdaq-100&hellip;) and I'll build it into this space." +
       "</div></div>";
+  }
+
+  // ── TRADING COCKPIT ─────────────────────────────────────────────────────
+  // A KDS-style glance board: every signal becomes a colour-coded ticket you
+  // read in half a second (green = fade-friendly, amber = caution, red =
+  // fade-hostile, grey = stale/off). Same real data the detailed cards use —
+  // nothing new is invented here, it's the same numbers, just plated to glance.
+  function cockpitVR(e) {                 // VR(2) for the fade-regime ticket
+    var series = starSeries("pct_change").QQQ || [];
+    var cut = H.indexOf(e);
+    var upto = (cut >= 0) ? series.slice(0, cut + 1) : series;
+    var r = upto.filter(function (v) { return typeof v === "number" && isFinite(v); })
+                .map(function (v) { return Math.log(1 + v / 100); });
+    var n = r.length;
+    if (n < 12) return null;
+    var mu = r.reduce(function (s, v) { return s + v; }, 0) / n;
+    function varK(k) {
+      var m = n - k + 1, acc = 0;
+      for (var i = 0; i < m; i++) {
+        var s = 0; for (var j = 0; j < k; j++) s += r[i + j];
+        acc += (s - k * mu) * (s - k * mu);
+      }
+      return acc / m;
+    }
+    var v1 = varK(1);
+    if (v1 <= 0) return null;
+    return varK(2) / (2 * v1);
+  }
+
+  function secCockpit(e) {
+    function tile(label, big, sub, cn) {
+      var map = {
+        up:   ["var(--up)",   "rgba(0,230,118,.13)"],
+        down: ["var(--down)", "rgba(255,69,58,.13)"],
+        warn: ["var(--warn)", "rgba(255,214,0,.12)"],
+        dim:  ["var(--dim)",  "rgba(139,139,166,.10)"]
+      };
+      var c = map[cn] || map.dim;
+      return '<div style="background:' + c[1] + ';border-radius:12px;padding:14px 16px;min-height:98px">' +
+        '<div style="font-size:11px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase">' + esc(label) + "</div>" +
+        '<div style="font-size:30px;font-weight:700;line-height:1.15;color:' + c[0] + ';margin-top:4px">' + big + "</div>" +
+        '<div style="font-size:12.5px;color:' + c[0] + ';opacity:.9;margin-top:3px">' + sub + "</div>" +
+        "</div>";
+    }
+
+    var tiles = "";
+
+    var g = get(e, "quant.geometry");
+    if (ok(g) && has(g.diversification_volume)) {
+      var vol = g.diversification_volume;
+      tiles += tile("Regime √det(G)", num(vol, 3),
+        vol < 0.15 ? "collapsed · stand down" : vol < 0.35 ? "thin · trade small" : "healthy · fades ok",
+        vol < 0.15 ? "down" : vol < 0.35 ? "warn" : "up");
+    }
+
+    var vr2 = cockpitVR(e);
+    if (vr2 !== null) {
+      tiles += tile("Fade regime VR(2)", num(vr2, 2),
+        vr2 < 0.9 ? "mean-revert · fade" : vr2 > 1.1 ? "trending · hostile" : "random · no edge",
+        vr2 < 0.9 ? "up" : vr2 > 1.1 ? "down" : "dim");
+    }
+
+    var gx = e.gex;
+    if (ok(gx) && has(gx.regime)) {
+      var pos = gx.regime === "POSITIVE GAMMA";
+      tiles += tile("Gamma regime", pos ? "+γ" : "−γ",
+        (pos ? "dampen · fade ok" : "amplify · hostile") +
+        (has(gx.gamma_flip) ? " · flip " + num(gx.gamma_flip, 0) : ""),
+        pos ? "up" : "down");
+    }
+
+    var ri = get(e, "quant.realized_vs_implied");
+    if (ok(ri) && has(ri.spread_pct)) {
+      var sp = ri.spread_pct;
+      tiles += tile("Realized − implied", signed(sp, 1, "pp"),
+        sp > 0 ? "your edge · long γ paid" : "seller's tape",
+        sp > 0 ? "up" : "down");
+    }
+
+    var mk = {};
+    (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
+    var vix = get(mk, "VIX.last"), q = mk.QQQ;
+    if (has(vix) && q && has(q.last) && has(q.pct_change)) {
+      var exp = vix / Math.sqrt(252) / 100;
+      var used = exp > 0 ? Math.abs(q.pct_change) / (exp * 100) : 0;
+      tiles += tile("Range used", (used * 100).toFixed(0) + "%",
+        used < 0.5 ? "room left" : used < 1 ? "half spent" : "blown 1σ",
+        used < 0.5 ? "up" : used < 1 ? "warn" : "down");
+    }
+
+    if (LIVE_GEX && has(LIVE_GEX.net_gex)) {
+      var ts = Date.parse(String(LIVE_GEX.generated_utc || "").replace(" ", "T") + "Z");
+      var ageMin = isFinite(ts) ? (Date.now() - ts) / 60000 : 1e9;
+      if (ageMin > 30) {
+        tiles += tile("Live GEX", "STALE",
+          "logger off · " + (isFinite(ts) ? Math.round(ageMin / 60) + "h old" : "no stamp"), "dim");
+      } else {
+        var lpos = LIVE_GEX.regime === "POSITIVE GAMMA";
+        tiles += tile("Live GEX", lpos ? "+γ" : "−γ",
+          (lpos ? "dampen" : "amplify") + " · live now", lpos ? "up" : "down");
+      }
+    }
+
+    if (!tiles) tiles = '<div style="color:var(--faint);font-size:13px;padding:20px">No live signals for this session yet.</div>';
+
+    var stamp = '<div style="display:flex;justify-content:space-between;align-items:baseline;' +
+      'font-size:12px;color:var(--dim);margin:2px 0 10px">' +
+      '<span style="letter-spacing:2px">NASDAQ COCKPIT</span>' +
+      '<span>' + (q && has(q.last) ? "QQQ " + num(q.last, 2) + "  ·  " : "") + "entry window 7:17 PT</span></div>";
+
+    // Reserved for "the call" — left blank on purpose; we wire the verdict later.
+    var banner = '<div style="border:1px dashed var(--line);border-radius:12px;padding:18px;' +
+      'margin-bottom:12px;text-align:center;color:var(--faint);font-size:12px;letter-spacing:2.5px">' +
+      "THE CALL &mdash; reserved</div>";
+
+    var grid = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
+      tiles + "</div>";
+
+    var legend = '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:11.5px;color:var(--dim)">' +
+      '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--up);vertical-align:-1px"></span> fade-friendly</span>' +
+      '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--warn);vertical-align:-1px"></span> caution</span>' +
+      '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--down);vertical-align:-1px"></span> fade-hostile</span>' +
+      '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--dim);vertical-align:-1px"></span> stale/off</span></div>';
+
+    return stamp + banner + grid + legend;
   }
 
   function render() {
@@ -2411,7 +2537,9 @@
       " · " + (H.length - FULL.length) + " backfilled" +
       " logged · append-only · history.js</footer>";
 
-    app.innerHTML = _header + tabBar() + (TAB === "nasdaq" ? _qqqBody : _dashBody);
+    var _cockpitBody = secCockpit(e);
+    app.innerHTML = _header + tabBar() +
+      (TAB === "cockpit" ? _cockpitBody : TAB === "nasdaq" ? _qqqBody : _dashBody);
 
     document.getElementById("pick").addEventListener("change", function () {
       idx = parseInt(this.value, 10);
