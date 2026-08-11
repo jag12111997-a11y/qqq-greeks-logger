@@ -597,10 +597,10 @@
   // (NDX) dominate size by design — that was the chosen encoding.
   function moveWheel(rows) {
     if (!rows || !rows.length) return "";
-    var wr = rows.filter(function (r) { return has(r.last) && has(r.pct_change); })
+    var wr = rows.filter(function (r) { return has(r.last) && has(r.pct_change) && has(r.z20); })
       .map(function (r) {
         var dMove = r.last - r.last / (1 + r.pct_change / 100);
-        return { sym: r.symbol, pct: r.pct_change, d: dMove, w: Math.abs(dMove) };
+        return { sym: r.symbol, pct: r.pct_change, z: r.z20, d: dMove, w: Math.abs(r.z20) };
       }).filter(function (r) { return r.w > 0; })
       .sort(function (a, b) { return b.w - a.w; });
     if (!wr.length) return "";
@@ -620,11 +620,11 @@
         "L", cx + rIn * Math.cos(a2), cy + rIn * Math.sin(a2),
         "A", rIn, rIn, 0, large, 0, cx + rIn * Math.cos(ang), cy + rIn * Math.sin(ang), "Z"].join(" ");
       svg += '<path d="' + d + '" fill="' + perfColor(r.pct) + '" stroke="#000000" stroke-width="1.2">' +
-        "<title>" + esc(r.sym) + "\n" + (r.d > 0 ? "+" : "") + "$" + r.d.toFixed(2) +
-        "   " + (r.pct > 0 ? "+" : "") + r.pct + "%</title></path>";
+        "<title>" + esc(r.sym) + "\nz " + (r.z > 0 ? "+" : "") + r.z.toFixed(2) +
+        "   " + (r.pct > 0 ? "+" : "") + r.pct + "%   " + (r.d > 0 ? "+" : "") + "$" + r.d.toFixed(2) + "</title></path>";
       if (frac > 0.028) {
         var mid = (ang + a2) / 2;
-        labs.push({ sym: r.sym, pct: r.pct,
+        labs.push({ sym: r.sym, z: r.z, pct: r.pct,
           lx: cx + (rOut + 13) * Math.cos(mid), ly: cy + (rOut + 13) * Math.sin(mid),
           anchor: Math.cos(mid) < -0.15 ? "end" : Math.cos(mid) > 0.15 ? "start" : "middle" });
       }
@@ -642,16 +642,16 @@
       labels += '<text x="' + L.lx.toFixed(1) + '" y="' + L.ly.toFixed(1) + '" text-anchor="' + L.anchor +
         '" font-size="9.5" fill="#8b8ba6">' + esc(L.sym) +
         '<tspan x="' + L.lx.toFixed(1) + '" dy="11" fill="' + (L.pct >= 0 ? "#00e676" : "#ff453a") + '">' +
-        (L.pct > 0 ? "+" : "") + L.pct + "%</tspan></text>";
+        "z" + (L.z > 0 ? "+" : "") + L.z.toFixed(2) + "</tspan></text>";
     });
     return '<div style="text-align:center"><svg width="330" height="272" viewBox="-40 -6 344 278">' +
       svg + labels +
-      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#8b8ba6" font-size="10">WATCHLIST · $ MOVE</text>' +
+      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#8b8ba6" font-size="10">WATCHLIST · STRETCH</text>' +
       '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" fill="#8b8ba6" font-size="15">' +
       '<tspan fill="#00e676">' + greens + '&#9650;</tspan>  <tspan fill="#ff453a">' + reds + '&#9660;</tspan></text>' +
       "</svg></div>" +
       '<div style="font-size:10.5px;color:var(--faint);margin:2px 0 10px;text-align:center">' +
-      "slice size = today&rsquo;s $ move · colour = % move · hover for exact</div>";
+      "slice size = |z20| stretch · colour = % move · hover for z / % / $</div>";
   }
 
   function secInternals(e) {
@@ -2622,26 +2622,43 @@
         used < 0.5 ? "up" : used < 1 ? "warn" : "down");
     }
 
+    // Rich detail line from a GEX snapshot: net · flip(+dist) · walls · spot.
+    function gexDetail(G) {
+      var L = G.levels || {};
+      var bits = [];
+      if (has(G.net_gex)) bits.push("net " + fmtBig(G.net_gex));
+      if (has(G.gamma_flip)) bits.push("flip " + num(G.gamma_flip, 0) +
+        (has(G.distance_to_flip_pct) ? " " + signed(G.distance_to_flip_pct, 2, "%") : ""));
+      var walls = [];
+      if (has(L.call_wall)) walls.push(num(L.call_wall, 0));
+      if (has(L.put_wall)) walls.push(num(L.put_wall, 0));
+      var line2 = [];
+      if (walls.length) line2.push("walls " + walls.join(" / "));
+      if (has(G.spot)) line2.push("spot " + num(G.spot, 2));
+      return bits.join(" · ") + (line2.length ? "<br>" + line2.join(" · ") : "");
+    }
     if (LIVE_GEX && has(LIVE_GEX.net_gex)) {
       var ts = Date.parse(String(LIVE_GEX.generated_utc || "").replace(" ", "T") + "Z");
       var ageMin = isFinite(ts) ? (Date.now() - ts) / 60000 : 1e9;
       var lpos = LIVE_GEX.regime === "POSITIVE GAMMA";
       if (ageMin > 30) {
-        // Logger off (after hours). Still show the last REAL reading, greyed,
-        // with its age — never a dead "STALE".
+        // Logger off (after hours) — still show the last REAL reading, greyed,
+        // with its age and detail — never a dead "STALE".
         var ageTxt = !isFinite(ts) ? "no stamp"
           : ageMin >= 120 ? Math.round(ageMin / 60) + "h ago"
           : Math.round(ageMin) + "m ago";
-        tiles += tile("Live GEX", lpos ? "+γ" : "−γ", "last logged · " + ageTxt, "dim");
+        tiles += tile("Live GEX", lpos ? "+γ" : "−γ",
+          "last logged · " + ageTxt + "<br>" + gexDetail(LIVE_GEX), "dim");
       } else {
         tiles += tile("Live GEX", lpos ? "+γ" : "−γ",
-          (lpos ? "dampen" : "amplify") + " · live now", lpos ? "up" : "down");
+          (lpos ? "dampen" : "amplify") + " · live now<br>" + gexDetail(LIVE_GEX),
+          lpos ? "up" : "down");
       }
     } else if (ok(gx) && has(gx.regime)) {
       // No live snapshot at all — fall back to the twice-daily API GEX (close).
       var fpos = gx.regime === "POSITIVE GAMMA";
       tiles += tile("Live GEX", fpos ? "+γ" : "−γ",
-        (fpos ? "dampen" : "amplify") + " · last close", "dim");
+        "last close<br>" + gexDetail(gx), "dim");
     }
 
     if (!tiles) tiles = '<div style="color:var(--faint);font-size:13px;padding:20px">No live signals for this session yet.</div>';
@@ -2651,10 +2668,47 @@
       '<span style="letter-spacing:2px">𝜎u𝜎 — NASDAQ COCKPIT</span>' +
       '<span>' + (q && has(q.last) ? "QQQ " + num(q.last, 2) + "  ·  " : "") + "entry window 7:17 PT</span></div>";
 
-    // Reserved for "the call" — left blank on purpose; we wire the verdict later.
-    var banner = '<div style="border:1px dashed var(--line);border-radius:12px;padding:18px;' +
-      'margin-bottom:12px;text-align:center;color:var(--faint);font-size:12px;letter-spacing:2.5px">' +
-      "THE CALL &mdash; reserved</div>";
+    // ── THE CALL — synthesis read (a LEAN, not a command; signal not validated) ──
+    var hostile = [], friendly = [];
+    if (ok(g) && has(g.diversification_volume)) {
+      if (g.diversification_volume < 0.15) hostile.push("regime collapsed");
+      else if (g.diversification_volume >= 0.35) friendly.push("regime healthy");
+    }
+    if (ok(gx) && has(gx.regime)) {
+      if (gx.regime === "POSITIVE GAMMA") friendly.push("positive gamma");
+      else hostile.push("negative gamma");
+    }
+    if (vr2 !== null) {
+      if (vr2 > 1.1) hostile.push("trending");
+      else if (vr2 < 0.9) friendly.push("mean-reverting");
+    }
+    var banner;
+    if (!hostile.length && !friendly.length) {
+      banner = '<div style="border:1px dashed var(--line);border-radius:12px;padding:18px;' +
+        'margin-bottom:12px;text-align:center;color:var(--faint);font-size:12px;letter-spacing:2.5px">' +
+        "THE CALL &mdash; waiting on signals</div>";
+    } else {
+      var lean, ccol;
+      if (hostile.length >= 2) { lean = "Stand down"; ccol = "var(--down)"; }
+      else if (friendly.length >= 2 && hostile.length === 0) { lean = "Lean fade"; ccol = "var(--up)"; }
+      else { lean = "Mixed"; ccol = "var(--warn)"; }
+      var drivers = (hostile.length ? hostile : friendly).slice(0, 3).join(" + ");
+      var caveat = "";
+      if (ok(ri) && has(ri.spread_pct)) {
+        caveat = ri.spread_pct > 0
+          ? "realized > implied — your long gamma is paid"
+          : "implied ≥ realized — theta works against you";
+      }
+      banner = '<div style="border-left:4px solid ' + ccol + ';background:rgba(255,255,255,.05);' +
+        'border-radius:12px;padding:15px 20px;margin-bottom:12px">' +
+        '<div style="font-size:10.5px;letter-spacing:2px;color:var(--dim);text-transform:uppercase">The call</div>' +
+        '<div style="font-size:22px;font-weight:700;color:' + ccol + ';margin-top:2px;line-height:1.15">' +
+        '<span style="vertical-align:1px">&#9679;</span> ' + lean + "</div>" +
+        '<div style="font-size:13px;color:var(--dim);margin-top:5px">' + drivers +
+        (caveat ? '. <span style="color:var(--faint)">' + caveat + "</span>" : "") +
+        '</div><div style="font-size:10.5px;color:var(--faint);margin-top:3px;letter-spacing:1px">' +
+        "a lean, not a command &mdash; signal still validating</div></div>";
+    }
 
     var grid = '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
       'text-transform:uppercase;margin-bottom:6px">Signals</div>' +
@@ -2791,7 +2845,7 @@
 
     // ── Watchlist dollar-move wheel ──
     var wheelBlk = '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-      'text-transform:uppercase;margin-bottom:2px">Watchlist — dollar moves</div>' +
+      'text-transform:uppercase;margin-bottom:2px">Watchlist — stretch (z20)</div>' +
       moveWheel(e.watchlist || []);
 
     // Order: the call → box → leverage → signals → context → catalysts → the two donuts.
