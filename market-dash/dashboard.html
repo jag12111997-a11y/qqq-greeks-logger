@@ -1405,11 +1405,13 @@
     wlSyms.forEach(function (s, i) { wlColor[s] = WL_PALETTE[i % WL_PALETTE.length]; });
     var _S = STARS, _C = STAR_COLOR;
     STARS = wlSyms; STAR_COLOR = wlColor;
-    var wlChart;
-    try { wlChart = starChart(e); } finally { STARS = _S; STAR_COLOR = _C; }
+    var wlChart, wlCorrel;
+    // starCorrel gives BOTH the top-10 correlation table AND the dollar-move bars
+    // (biggest |$| first, green/red, +$ and % labels) — same engine as Star
+    // Players. It replaces the plain corrTable so the watchlist card matches.
+    try { wlChart = starChart(e); wlCorrel = starCorrel(e); } finally { STARS = _S; STAR_COLOR = _C; }
 
-    var body = wlChart +
-      corrTable(wlSyms, "Correlation of daily moves") + wlTable(w, false);
+    var body = wlChart + wlCorrel + wlTable(w, false);
 
     var live = w.filter(function (r) { return has(r.pct_change); });
     var grn = live.filter(function (r) { return r.pct_change > 0; }).length;
@@ -1430,6 +1432,12 @@
      "Rate decision and tone. QQQ is the most duration-sensitive major index — hawkish surprises hit long-duration tech hardest."],
     [/Core PCE/i,
      "The Fed's preferred inflation gauge. Cool print supports cuts and helps growth stocks; hot print revives higher-for-longer."],
+    [/CPI/i,
+     "Headline inflation. Hot CPI revives higher-for-longer and hits long-duration tech (QQQ) hardest; cool CPI supports cuts and bids growth."],
+    [/PPI/i,
+     "Producer prices — the pipeline feeding into CPI. Hot PPI flags sticky inflation ahead; cool PPI eases rate-cut worries."],
+    [/Non-Farm|Nonfarm|Payroll|Average Hourly/i,
+     "The jobs report. Strong payrolls argue against cuts and lift yields; weak payrolls soften the Fed but raise recession fear."],
     [/Advance GDP|GDP q\/q|GDP m\/m/i,
      "Growth print. Strong reads risk-on but argues against cuts; weak reads recession and bids duration."],
     [/Unemployment Claims/i,
@@ -2804,14 +2812,15 @@
       : "";
 
     // ── Leverage family (price) ──
-    // Sorted by |z20| (distance from the 20-day normal) — most STRETCHED first,
-    // since |z| >= 2 is a fade candidate. Tile shows z20, then $ move, then price.
+    // Set: NDX / QQQ / VIX / TQQQ / SQQQ (QQQM dropped, VIX added). ALWAYS sorted
+    // from LOWEST z20 to HIGHEST (signed, not absolute) so the strip reads left→
+    // right most-oversold to most-overbought. |z| >= 2 is a fade candidate.
     var levArr = [];
-    NASDAQ_STARS.forEach(function (s) {
+    ["NDX", "QQQ", "VIX", "TQQQ", "SQQQ"].forEach(function (s) {
       var r = mk[s];
       if (r && has(r.last) && has(r.z20)) levArr.push(r);
     });
-    levArr.sort(function (a, b) { return Math.abs(b.z20) - Math.abs(a.z20); });
+    levArr.sort(function (a, b) { return a.z20 - b.z20; });
     var levTiles = "";
     levArr.forEach(function (r) {
       var dMove = has(r.pct_change) ? r.last - r.last / (1 + r.pct_change / 100) : null;
@@ -2822,7 +2831,7 @@
     });
     var levBlk = levTiles
       ? '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Leverage family — by z20 (stretch)</div>' +
+        'text-transform:uppercase;margin-bottom:6px">Leverage family — z20 low → high</div>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">' +
         levTiles + "</div>"
       : "";
@@ -2835,35 +2844,63 @@
       'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
       '15-min time-stop · flat 12:45 PT</div>';
 
-    // ── Next catalysts (from the economic calendar you already pull) ──
+    // ── Next catalyst — condensed to ONE glance box (cockpit tile aesthetic),
+    //    a quick daily read: the soonest event, its real forecasts, a plain-
+    //    English takeaway, and a short "then:" strip of what follows. ──
     var catAll = get(e, "calendar.us_high_impact", []);
     var newsBlk = "";
     if (catAll && catAll.length) {
       var todayD = String(e.entry_date || "").slice(0, 10);
-      var up = catAll.filter(function (ev) { return String(ev.date || "").slice(0, 10) >= todayD; })
-                     .sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
-      if (!up.length) up = catAll.slice(0, 4);
-      up = up.slice(0, 4);
-      var crows = "";
-      up.forEach(function (ev) {
-        crows += '<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px">' +
-          '<span style="color:var(--txt)">' + esc(ev.title || "") + "</span>  " +
-          '<span style="color:var(--faint);font-size:11px">' +
-          fmtDate(String(ev.date).slice(0, 10)).replace(/<[^>]*>/g, "") + " " + fmtTime(ev.date) +
-          (has(ev.forecast) ? "  ·  fc " + esc(ev.forecast) + " / prev " + esc(ev.previous) : "") +
-          "</span></div>";
+      var upC = catAll.filter(function (ev) { return String(ev.date || "").slice(0, 10) >= todayD; })
+                      .sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+      if (!upC.length) upC = catAll.slice();
+      var nx = upC[0];
+      var nxDay = String(nx.date || "").slice(0, 10);
+      var sameDay = upC.filter(function (ev) { return String(ev.date || "").slice(0, 10) === nxDay; });
+      var isToday = nxDay === todayD;
+      var whenTxt = (isToday ? "TODAY" : fmtDate(nxDay).replace(/<[^>]*>/g, "")) + " · " + fmtTime(nx.date);
+      // family headline — drop the m/m · y/y suffixes so the glance is one phrase
+      function famName(t) {
+        return String(t || "").replace(/\s*[—-]\s.*$/, "")
+          .replace(/\b(m\/m|y\/y|q\/q)\b/ig, " ").replace(/\s+/g, " ").trim() || "event";
+      }
+      var head = famName(nx.title);
+      // real forecasts only (golden rule: never invent a number)
+      var prints = sameDay.filter(function (ev) { return has(ev.forecast); }).map(function (ev) {
+        return esc(ev.title) + " fc " + esc(ev.forecast) +
+          (has(ev.previous) ? " / prev " + esc(ev.previous) : "");
       });
-      newsBlk = '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:4px">Next catalysts</div>' + crows;
+      var why = whyFor(nx.title);
+      var later = upC.filter(function (ev) { return String(ev.date || "").slice(0, 10) !== nxDay; })
+        .filter(function (ev, i, a) {            // one row per family name
+          return a.findIndex(function (x) { return famName(x.title) === famName(ev.title) &&
+            String(x.date).slice(0, 10) === String(ev.date).slice(0, 10); }) === i;
+        }).slice(0, 3);
+      var accent = isToday ? "var(--warn)" : "var(--txt)";
+      var bg = isToday ? "rgba(255,214,0,.12)" : "rgba(255,255,255,.045)";
+      newsBlk =
+        '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:6px">Next catalyst</div>' +
+        '<div style="background:' + bg + ';border-radius:12px;padding:14px 16px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">' +
+            '<div style="font-size:22px;font-weight:700;line-height:1.15;color:' + accent + '">' + esc(head) + '</div>' +
+            '<div style="font-size:11px;letter-spacing:1px;white-space:nowrap;color:' +
+              (isToday ? "var(--warn)" : "var(--dim)") + '">' + whenTxt + '</div>' +
+          '</div>' +
+          (prints.length ? '<div style="font-size:12px;color:var(--dim);margin-top:7px;line-height:1.5">' +
+            prints.join("  ·  ") + '</div>' : "") +
+          (why ? '<div style="font-size:11.5px;color:var(--faint);margin-top:7px;line-height:1.5">' + esc(why) + '</div>' : "") +
+          (later.length ? '<div style="font-size:10.5px;color:var(--faint);margin-top:8px;padding-top:8px;' +
+            'border-top:1px solid var(--line)">then · ' + later.map(function (ev) {
+              return esc(famName(ev.title)) + " " + fmtDate(String(ev.date).slice(0, 10)).replace(/<[^>]*>/g, "");
+            }).join("  ·  ") + '</div>' : "") +
+        '</div>';
     }
 
-    // ── Watchlist dollar-move wheel ──
-    var wheelBlk = '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-      'text-transform:uppercase;margin-bottom:2px">Watchlist — stretch (z20)</div>' +
-      moveWheel(e.watchlist || []);
+    // (The STRETCH z20 wheel used to live here — moved to the Market Dash tab.)
 
-    // Order: the call → box → leverage → signals → context → catalysts → the two donuts.
-    return stamp + banner + planBlk + levBlk + grid + legend + ctxBlk + newsBlk + sectorsBlk + wheelBlk;
+    // Order: the call → box → leverage → signals → context → catalysts → sectors donut.
+    return stamp + banner + planBlk + levBlk + grid + legend + ctxBlk + newsBlk + sectorsBlk;
   }
 
   function render() {
@@ -2905,6 +2942,8 @@
       group("Options", secOptions(e) + secVenue(e));
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
+    // The STRETCH (z20) wheel now lives here, under the watchlist.
+    var _stretchWheel = moveWheel(e.watchlist || []);
     var _dashBody =
       finalRegime(e, align) +
       group("Price", secStars(e)) +
@@ -2912,6 +2951,7 @@
       group("Sectors and regime", secInternals(e)) +
       group("Macro and positioning", secMacro(e) + secPositioning(e)) +
       group("Rest of watchlist", secWatchlist(e)) +
+      (_stretchWheel ? group("Watchlist stretch", secWide("Stretch — |z20|", _stretchWheel)) : "") +
       "<footer>" + FULL.length + " logged session" + (FULL.length > 1 ? "s" : "") +
       " · " + (H.length - FULL.length) + " backfilled" +
       " logged · append-only · history.js</footer>";
