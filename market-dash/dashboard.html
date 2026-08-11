@@ -592,6 +592,68 @@
       '<table>' + legend + "</table>";
   }
 
+  // Watchlist "move wheel" — the sector donut, but for the watchlist. Slice SIZE
+  // = today's dollar move (|$|), slice COLOUR = % move, centre = breadth. Indices
+  // (NDX) dominate size by design — that was the chosen encoding.
+  function moveWheel(rows) {
+    if (!rows || !rows.length) return "";
+    var wr = rows.filter(function (r) { return has(r.last) && has(r.pct_change); })
+      .map(function (r) {
+        var dMove = r.last - r.last / (1 + r.pct_change / 100);
+        return { sym: r.symbol, pct: r.pct_change, d: dMove, w: Math.abs(dMove) };
+      }).filter(function (r) { return r.w > 0; })
+      .sort(function (a, b) { return b.w - a.w; });
+    if (!wr.length) return "";
+    var tot = wr.reduce(function (s, r) { return s + r.w; }, 0);
+    if (!tot) return "";
+    var greens = wr.filter(function (r) { return r.pct > 0; }).length;
+    var reds = wr.filter(function (r) { return r.pct < 0; }).length;
+
+    var cx = 132, cy = 132, rOut = 118, rIn = 66, ang = -Math.PI / 2;
+    var svg = "", labs = [];
+    wr.forEach(function (r) {
+      var frac = r.w / tot;
+      var a2 = ang + frac * Math.PI * 2;
+      var large = frac > 0.5 ? 1 : 0;
+      var d = ["M", cx + rOut * Math.cos(ang), cy + rOut * Math.sin(ang),
+        "A", rOut, rOut, 0, large, 1, cx + rOut * Math.cos(a2), cy + rOut * Math.sin(a2),
+        "L", cx + rIn * Math.cos(a2), cy + rIn * Math.sin(a2),
+        "A", rIn, rIn, 0, large, 0, cx + rIn * Math.cos(ang), cy + rIn * Math.sin(ang), "Z"].join(" ");
+      svg += '<path d="' + d + '" fill="' + perfColor(r.pct) + '" stroke="#000000" stroke-width="1.2">' +
+        "<title>" + esc(r.sym) + "\n" + (r.d > 0 ? "+" : "") + "$" + r.d.toFixed(2) +
+        "   " + (r.pct > 0 ? "+" : "") + r.pct + "%</title></path>";
+      if (frac > 0.028) {
+        var mid = (ang + a2) / 2;
+        labs.push({ sym: r.sym, pct: r.pct,
+          lx: cx + (rOut + 13) * Math.cos(mid), ly: cy + (rOut + 13) * Math.sin(mid),
+          anchor: Math.cos(mid) < -0.15 ? "end" : Math.cos(mid) > 0.15 ? "start" : "middle" });
+      }
+      ang = a2;
+    });
+    function declutter(list) {                 // keep labels from stacking
+      list.sort(function (a, b) { return a.ly - b.ly; });
+      var prev = -1e9;
+      list.forEach(function (L) { if (L.ly < prev + 12) L.ly = prev + 12; prev = L.ly; });
+    }
+    declutter(labs.filter(function (L) { return L.anchor === "start"; }));
+    declutter(labs.filter(function (L) { return L.anchor !== "start"; }));
+    var labels = "";
+    labs.forEach(function (L) {
+      labels += '<text x="' + L.lx.toFixed(1) + '" y="' + L.ly.toFixed(1) + '" text-anchor="' + L.anchor +
+        '" font-size="9.5" fill="#8b8ba6">' + esc(L.sym) +
+        '<tspan x="' + L.lx.toFixed(1) + '" dy="11" fill="' + (L.pct >= 0 ? "#00e676" : "#ff453a") + '">' +
+        (L.pct > 0 ? "+" : "") + L.pct + "%</tspan></text>";
+    });
+    return '<div style="text-align:center"><svg width="330" height="272" viewBox="-40 -6 344 278">' +
+      svg + labels +
+      '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#8b8ba6" font-size="10">WATCHLIST · $ MOVE</text>' +
+      '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" fill="#8b8ba6" font-size="15">' +
+      '<tspan fill="#00e676">' + greens + '&#9650;</tspan>  <tspan fill="#ff453a">' + reds + '&#9660;</tspan></text>' +
+      "</svg></div>" +
+      '<div style="font-size:10.5px;color:var(--faint);margin:2px 0 10px;text-align:center">' +
+      "slice size = today&rsquo;s $ move · colour = % move · hover for exact</div>";
+  }
+
   function secInternals(e) {
     var s = e.sectors;
     if (!ok(s) || !get(s, "rows", []).length) {
@@ -2616,6 +2678,38 @@
         ? " · " + signed(o2.index_pc - o2.equity_pc, 2) + " idx−eq" : "";
       ctiles += tile("P/C skew", num(t, 2), lean + ieTxt, "flat");
     }
+    // VIX — the fear gauge (amber when elevated)
+    var vxr = mk.VIX;
+    if (vxr && has(vxr.last)) {
+      ctiles += tile("VIX (fear gauge)", num(vxr.last, 2),
+        (has(vxr.pct_change) ? signed(vxr.pct_change, 2, "%") + " today" : "level"),
+        vxr.last >= 20 ? "warn" : "flat");
+    }
+    // Vanna / charm — 2nd-order dealer flow
+    if (ok(gx) && has(gx.net_vex)) {
+      ctiles += tile("Vanna / charm", fmtBig(gx.net_vex),
+        "θ " + (has(gx.net_tex) ? fmtBig(gx.net_tex) : na()) + " · 2nd-order", "flat");
+    }
+    // Touch odds — chance price tags the gamma flip today
+    if (ok(gx) && has(gx.gamma_flip) && has(vix) && q && has(q.last) && q.last > 0) {
+      var sigT = vix / Math.sqrt(252) / 100;
+      var kf = gx.gamma_flip;
+      var pTouch = sigT > 0 ? Math.min(1, 2 * cdf(-Math.abs(Math.log(kf / q.last)) / sigT)) : null;
+      if (pTouch !== null) {
+        ctiles += tile("Touch odds — flip", (pTouch * 100).toFixed(0) + "%",
+          "flip " + num(kf, 0) + " · " + signed((kf - q.last) / q.last * 100, 2, "%"), "flat");
+      }
+    }
+    // Venue concentration — Cboe share (fills in after the fetcher's next run)
+    var vc = e.venue_concentration;
+    if (ok(vc) && vc.volume_share && vc.volume_share.length) {
+      var cbV = vc.volume_share.filter(function (r) { return /cboe/i.test(r.venue); })[0];
+      var cbP = (vc.premium_share || []).filter(function (r) { return /cboe/i.test(r.venue); })[0];
+      if (cbV && has(cbV.today)) {
+        ctiles += tile("Venue — Cboe", num(cbV.today, 1, "%"),
+          "vol share" + (cbP && has(cbP.today) ? " · prem " + num(cbP.today, 1, "%") : ""), "flat");
+      }
+    }
     var ctxBlk = ctiles
       ? '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:6px">Context</div>' +
@@ -2630,12 +2724,36 @@
         'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
       : "";
 
-    // ── Correlation panels ──
-    var corrBlk = '<div style="margin-top:14px">' +
-      corrPanel(NASDAQ_STARS, "Nasdaq family — correlation") +
-      corrPanel(STARS, "Star players — correlation") + "</div>";
+    // ── Leverage family (price) ──
+    var levTiles = "";
+    NASDAQ_STARS.forEach(function (s) {
+      var r = mk[s];
+      if (r && has(r.pct_change) && has(r.last)) {
+        levTiles += tile(s, signed(r.pct_change, 2, "%"), num(r.last, 2),
+          r.pct_change > 0 ? "up" : r.pct_change < 0 ? "down" : "dim");
+      }
+    });
+    var levBlk = levTiles
+      ? '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:6px">Leverage family</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">' +
+        levTiles + "</div>"
+      : "";
 
-    return stamp + banner + grid + legend + ctxBlk + sectorsBlk + corrBlk;
+    // ── Plan & discipline — the box, condensed ──
+    var planBlk = '<div style="margin-top:16px;background:rgba(255,255,255,.04);border-radius:12px;' +
+      'padding:12px 16px;font-size:12.5px;color:var(--dim);line-height:1.7">' +
+      '<span style="letter-spacing:1px;text-transform:uppercase;font-size:10.5px">The box</span><br>' +
+      '<span style="color:var(--txt)">7:17–8:30 PT</span> · QQQ 0DTE call 3 ITM · size 60% · ' +
+      'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
+      '15-min time-stop · flat 12:45 PT</div>';
+
+    // ── Watchlist dollar-move wheel ──
+    var wheelBlk = '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      'text-transform:uppercase;margin-bottom:2px">Watchlist — dollar moves</div>' +
+      moveWheel(e.watchlist || []);
+
+    return stamp + banner + grid + legend + levBlk + ctxBlk + planBlk + sectorsBlk + wheelBlk;
   }
 
   function render() {
