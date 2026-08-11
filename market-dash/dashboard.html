@@ -1053,7 +1053,7 @@
                'text-transform:uppercase;margin-bottom:6px">Correlation of daily moves</div>';
         out += "<table><tr><th>Pair</th><th style='text-align:right'>Correlation</th>" +
                "<th style='text-align:right'>Sessions</th></tr>";
-        pairs.slice(0, 10).forEach(function (p2) {
+        pairs.forEach(function (p2) {
           var col = p2.r > 0.5 ? "var(--up)" : p2.r < -0.5 ? "var(--down)" : "var(--dim)";
           out += "<tr><td>" + p2.a + " / " + p2.b + "</td>" +
                  '<td class="num" style="color:' + col + '">' + p2.r.toFixed(2) + "</td>" +
@@ -1376,7 +1376,7 @@
       'text-transform:uppercase;margin-bottom:6px">' + esc(title) + "</div>" +
       "<table><tr><th>Pair</th><th style='text-align:right'>Correlation</th>" +
       "<th style='text-align:right'>Sessions</th></tr>";
-    pairs.slice(0, 12).forEach(function (p) {
+    pairs.forEach(function (p) {
       var col = p.r > 0.5 ? "var(--up)" : p.r < -0.5 ? "var(--down)" : "var(--dim)";
       out += "<tr><td>" + p.a + " / " + p.b + "</td>" +
         '<td class="num" style="color:' + col + '">' + p.r.toFixed(2) + "</td>" +
@@ -2625,14 +2625,23 @@
     if (LIVE_GEX && has(LIVE_GEX.net_gex)) {
       var ts = Date.parse(String(LIVE_GEX.generated_utc || "").replace(" ", "T") + "Z");
       var ageMin = isFinite(ts) ? (Date.now() - ts) / 60000 : 1e9;
+      var lpos = LIVE_GEX.regime === "POSITIVE GAMMA";
       if (ageMin > 30) {
-        tiles += tile("Live GEX", "STALE",
-          "logger off · " + (isFinite(ts) ? Math.round(ageMin / 60) + "h old" : "no stamp"), "dim");
+        // Logger off (after hours). Still show the last REAL reading, greyed,
+        // with its age — never a dead "STALE".
+        var ageTxt = !isFinite(ts) ? "no stamp"
+          : ageMin >= 120 ? Math.round(ageMin / 60) + "h ago"
+          : Math.round(ageMin) + "m ago";
+        tiles += tile("Live GEX", lpos ? "+γ" : "−γ", "last logged · " + ageTxt, "dim");
       } else {
-        var lpos = LIVE_GEX.regime === "POSITIVE GAMMA";
         tiles += tile("Live GEX", lpos ? "+γ" : "−γ",
           (lpos ? "dampen" : "amplify") + " · live now", lpos ? "up" : "down");
       }
+    } else if (ok(gx) && has(gx.regime)) {
+      // No live snapshot at all — fall back to the twice-daily API GEX (close).
+      var fpos = gx.regime === "POSITIVE GAMMA";
+      tiles += tile("Live GEX", fpos ? "+γ" : "−γ",
+        (fpos ? "dampen" : "amplify") + " · last close", "dim");
     }
 
     if (!tiles) tiles = '<div style="color:var(--faint);font-size:13px;padding:20px">No live signals for this session yet.</div>';
@@ -2727,17 +2736,25 @@
       : "";
 
     // ── Leverage family (price) ──
-    var levTiles = "";
+    // Sorted by |z20| (distance from the 20-day normal) — most STRETCHED first,
+    // since |z| >= 2 is a fade candidate. Tile shows z20, then $ move, then price.
+    var levArr = [];
     NASDAQ_STARS.forEach(function (s) {
       var r = mk[s];
-      if (r && has(r.pct_change) && has(r.last)) {
-        levTiles += tile(s, signed(r.pct_change, 2, "%"), num(r.last, 2),
-          r.pct_change > 0 ? "up" : r.pct_change < 0 ? "down" : "dim");
-      }
+      if (r && has(r.last) && has(r.z20)) levArr.push(r);
+    });
+    levArr.sort(function (a, b) { return Math.abs(b.z20) - Math.abs(a.z20); });
+    var levTiles = "";
+    levArr.forEach(function (r) {
+      var dMove = has(r.pct_change) ? r.last - r.last / (1 + r.pct_change / 100) : null;
+      var moveTxt = dMove === null ? "" :
+        (dMove >= 0 ? "+$" : "−$") + Math.abs(dMove).toFixed(2) + " · ";
+      var cn = Math.abs(r.z20) >= 2 ? (r.z20 > 0 ? "up" : "down") : "dim";
+      levTiles += tile(r.symbol, "z " + signed(r.z20, 2), moveTxt + num(r.last, 2), cn);
     });
     var levBlk = levTiles
       ? '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Leverage family</div>' +
+        'text-transform:uppercase;margin-bottom:6px">Leverage family — by z20 (stretch)</div>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">' +
         levTiles + "</div>"
       : "";
@@ -2750,14 +2767,35 @@
       'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
       '15-min time-stop · flat 12:45 PT</div>';
 
+    // ── Next catalysts (from the economic calendar you already pull) ──
+    var catAll = get(e, "calendar.us_high_impact", []);
+    var newsBlk = "";
+    if (catAll && catAll.length) {
+      var todayD = String(e.entry_date || "").slice(0, 10);
+      var up = catAll.filter(function (ev) { return String(ev.date || "").slice(0, 10) >= todayD; })
+                     .sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+      if (!up.length) up = catAll.slice(0, 4);
+      up = up.slice(0, 4);
+      var crows = "";
+      up.forEach(function (ev) {
+        crows += '<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px">' +
+          '<span style="color:var(--txt)">' + esc(ev.title || "") + "</span>  " +
+          '<span style="color:var(--faint);font-size:11px">' +
+          fmtDate(String(ev.date).slice(0, 10)).replace(/<[^>]*>/g, "") + " " + fmtTime(ev.date) +
+          (has(ev.forecast) ? "  ·  fc " + esc(ev.forecast) + " / prev " + esc(ev.previous) : "") +
+          "</span></div>";
+      });
+      newsBlk = '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:4px">Next catalysts</div>' + crows;
+    }
+
     // ── Watchlist dollar-move wheel ──
     var wheelBlk = '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
       'text-transform:uppercase;margin-bottom:2px">Watchlist — dollar moves</div>' +
       moveWheel(e.watchlist || []);
 
-    // Order: the call → the box (discipline anchor) → leverage family (price) →
-    // urgent signal tiles → less-urgent context tiles → the two donuts last.
-    return stamp + banner + planBlk + levBlk + grid + legend + ctxBlk + sectorsBlk + wheelBlk;
+    // Order: the call → box → leverage → signals → context → catalysts → the two donuts.
+    return stamp + banner + planBlk + levBlk + grid + legend + ctxBlk + newsBlk + sectorsBlk + wheelBlk;
   }
 
   function render() {

@@ -1,7 +1,7 @@
 # ============================================================
 # QQQ Greeks Logger — MORNING burst
 # ============================================================
-# 6:45-8:45 AM Pacific: one snapshot every 5 minutes, window +/-$15.
+# 6:45-8:45 AM Pacific: one snapshot every 60 seconds, window +/-$15.
 #
 # GitHub cron runs on UTC and can't schedule faster than every 5 min,
 # so this ONE job starts at 6:45 and loops internally for 2 hours.
@@ -61,7 +61,7 @@ jobs:
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
           SESSION: 'am'
           WINDOW: '15'
-          INTERVAL_SECONDS: '300'
+          INTERVAL_SECONDS: '60'
           DURATION_SECONDS: '7200'
         run: python qqq_greeks_logger_alpaca.py
 
