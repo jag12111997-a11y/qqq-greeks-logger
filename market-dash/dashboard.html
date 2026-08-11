@@ -2932,28 +2932,37 @@
         'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
       : "";
 
-    // ── Leverage family (price) ──
-    // Set: NDX / QQQ / VIX / TQQQ / SQQQ (QQQM dropped, VIX added). ALWAYS sorted
-    // from LOWEST z20 to HIGHEST (signed, not absolute) so the strip reads left→
-    // right most-oversold to most-overbought. |z| >= 2 is a fade candidate.
-    var levArr = [];
-    ["NDX", "QQQ", "VIX", "TQQQ", "SQQQ"].forEach(function (s) {
-      var r = mk[s];
-      if (r && has(r.last) && has(r.z20)) levArr.push(r);
-    });
-    levArr.sort(function (a, b) { return a.z20 - b.z20; });
+    // ── Leverage — QQQ + the 3× twins' bull/bear imbalance ──
+    // QQQ shows its own z / $ move. TQQQ (3× long) and SQQQ (3× short) are
+    // COMBINED into one "lean" square: TQQQ z is bull-signed (+ = QQQ up), SQQQ z
+    // is bear-signed (+ = QQQ down), so the average bullish stretch = (TQQQ.z −
+    // SQQQ.z)/2 → >0 callish, <0 bearish, ~0 balanced. NDX and VIX z removed
+    // (VIX is covered by its own tile / eve's separate fix).
     var levTiles = "";
-    levArr.forEach(function (r) {
-      var dMove = has(r.pct_change) ? r.last - r.last / (1 + r.pct_change / 100) : null;
-      var moveTxt = dMove === null ? "" :
-        (dMove >= 0 ? "+$" : "−$") + Math.abs(dMove).toFixed(2) + " · ";
-      var cn = Math.abs(r.z20) >= 2 ? (r.z20 > 0 ? "up" : "down") : "dim";
-      levTiles += tile(r.symbol, "z " + signed(r.z20, 2), moveTxt + num(r.last, 2), cn);
-    });
+    var _q = mk.QQQ;
+    if (_q && has(_q.last) && has(_q.z20)) {
+      var qMove = has(_q.pct_change) ? _q.last - _q.last / (1 + _q.pct_change / 100) : null;
+      var qMoveTxt = qMove === null ? "" : (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · ";
+      var qcn = Math.abs(_q.z20) >= 2 ? (_q.z20 > 0 ? "up" : "down") : "dim";
+      levTiles += tile("QQQ", "z " + signed(_q.z20, 2), qMoveTxt + num(_q.last, 2), qcn);
+    }
+    var _tq = mk.TQQQ, _sq = mk.SQQQ;
+    if (_tq && has(_tq.z20) && _sq && has(_sq.z20)) {
+      var lean = (_tq.z20 - _sq.z20) / 2;
+      var leanWord = lean >= 0.5 ? "callish" : lean <= -0.5 ? "bearish" : "balanced";
+      // Neutral square so bull/bear colour never clashes with the fade legend
+      // (green=fade-friendly). The signed value + accent word carry direction.
+      levTiles += '<div style="background:rgba(255,255,255,.045);border-radius:12px;padding:14px 16px;min-height:98px">' +
+        '<div style="font-size:11px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase">TQQQ / SQQQ lean</div>' +
+        '<div style="font-size:30px;font-weight:700;line-height:1.15;color:var(--txt);margin-top:4px">' + signed(lean, 2) + "</div>" +
+        '<div style="font-size:12.5px;margin-top:3px;color:var(--dim);opacity:.9">' +
+        '<span style="color:var(--accent)">' + leanWord + "</span> · TQQQ " + signed(_tq.z20, 2) +
+        " / SQQQ " + signed(_sq.z20, 2) + "</div></div>";
+    }
     var levBlk = levTiles
       ? '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Leverage family — z20 low → high</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">' +
+        'text-transform:uppercase;margin-bottom:6px">Leverage — QQQ &amp; 3× lean</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
         levTiles + "</div>"
       : "";
 
@@ -3022,7 +3031,7 @@
 
     // Order: the call → box → leverage → signals → auction → context → catalysts → sectors → time footprint (bottom).
     var tfBlk = secTimeFootprint(get(e, "time_footprint"));
-    return stamp + banner + planBlk + levBlk + grid + legend + auctBlk + ctxBlk + newsBlk + sectorsBlk + tfBlk;
+    return stamp + banner + levBlk + planBlk + grid + legend + auctBlk + ctxBlk + newsBlk + sectorsBlk + tfBlk;
   }
 
   function render() {
