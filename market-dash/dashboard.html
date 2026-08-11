@@ -1053,7 +1053,7 @@
                'text-transform:uppercase;margin-bottom:6px">Correlation of daily moves</div>';
         out += "<table><tr><th>Pair</th><th style='text-align:right'>Correlation</th>" +
                "<th style='text-align:right'>Sessions</th></tr>";
-        pairs.forEach(function (p2) {
+        pairs.slice(0, 10).forEach(function (p2) {
           var col = p2.r > 0.5 ? "var(--up)" : p2.r < -0.5 ? "var(--down)" : "var(--dim)";
           out += "<tr><td>" + p2.a + " / " + p2.b + "</td>" +
                  '<td class="num" style="color:' + col + '">' + p2.r.toFixed(2) + "</td>" +
@@ -1376,7 +1376,7 @@
       'text-transform:uppercase;margin-bottom:6px">' + esc(title) + "</div>" +
       "<table><tr><th>Pair</th><th style='text-align:right'>Correlation</th>" +
       "<th style='text-align:right'>Sessions</th></tr>";
-    pairs.forEach(function (p) {
+    pairs.slice(0, 10).forEach(function (p) {
       var col = p.r > 0.5 ? "var(--up)" : p.r < -0.5 ? "var(--down)" : "var(--dim)";
       out += "<tr><td>" + p.a + " / " + p.b + "</td>" +
         '<td class="num" style="color:' + col + '">' + p.r.toFixed(2) + "</td>" +
