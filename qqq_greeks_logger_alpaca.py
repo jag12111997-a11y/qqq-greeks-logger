@@ -69,6 +69,7 @@ DIVIDEND_YIELD = 0.0
 CONTRACT_MULTIPLIER = 100
 GEX_DEALER_SIGN = 1
 GEX_LIVE_PATH = os.path.join("market-dash", "gex_live.json")
+AUCTION_LIVE_PATH = os.path.join("market-dash", "auction_live.json")
 
 WINDOW = float(os.environ.get("WINDOW", "15"))
 INTERVAL_SECONDS = int(os.environ.get("INTERVAL_SECONDS", "0"))
@@ -442,6 +443,118 @@ def write_gex_live(gx):
         json.dump(gx, f, indent=2)
 
 
+# ---------- Auction metrics (VWAP, A/D line, opening range, volume) ----------
+# All computed from QQQ 1-minute bars on Alpaca's FREE IEX feed. IEX is a SUBSET
+# of the consolidated tape, so VWAP/volume here are IEX-only reads, not the exact
+# tape numbers a broker screen shows — the dashboard labels them "IEX" honestly.
+# Fully isolated: any failure is swallowed so it can NEVER break greeks logging.
+def get_qqq_minute_bars():
+    """Today's RTH 1-minute bars for QQQ (IEX). Returns a list of bar dicts."""
+    ny = ZoneInfo("America/New_York")
+    now_ny = datetime.datetime.now(ny)
+    session_open = now_ny.replace(hour=9, minute=30, second=0, microsecond=0)
+    start_iso = session_open.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    bars, page_token = [], None
+    for _ in range(12):                       # hard cap on pagination (safety)
+        params = {"timeframe": "1Min", "start": start_iso,
+                  "feed": "iex", "limit": 10000, "adjustment": "raw", "sort": "asc"}
+        if page_token:
+            params["page_token"] = page_token
+        r = requests.get(f"{DATA_BASE}/v2/stocks/{SYMBOL}/bars",
+                         headers=HEADERS, params=params, timeout=15)
+        r.raise_for_status()
+        j = r.json()
+        bars.extend(j.get("bars") or [])
+        page_token = j.get("next_page_token")
+        if not page_token:
+            break
+    return bars, session_open.strftime("%Y-%m-%d")
+
+
+def compute_auction(bars, session_date, spot):
+    """VWAP, Accumulation/Distribution line + z, opening range, volume pace.
+    Returns None if there aren't enough bars to say anything real."""
+    rows = []
+    for b in bars:
+        try:
+            o, h, l, c, v = float(b["o"]), float(b["h"]), float(b["l"]), float(b["c"]), float(b["v"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if v <= 0 or h < l:
+            continue
+        vw = b.get("vw")
+        try:
+            vw = float(vw)
+        except (TypeError, ValueError):
+            vw = (h + l + c) / 3.0            # typical-price fallback
+        rows.append({"o": o, "h": h, "l": l, "c": c, "v": v, "vw": vw})
+    n = len(rows)
+    if n < 5:
+        return None
+
+    # VWAP (cumulative, IEX) — Σ(bar_vwap · vol) / Σvol
+    pv = sum(r["vw"] * r["v"] for r in rows)
+    tv = sum(r["v"] for r in rows)
+    vwap = pv / tv if tv else None
+
+    # Accumulation/Distribution line (Chaikin): cumulative Σ CLV·vol
+    ad, ad_series = 0.0, []
+    for r in rows:
+        rng = r["h"] - r["l"]
+        clv = (((r["c"] - r["l"]) - (r["h"] - r["c"])) / rng) if rng > 0 else 0.0
+        ad += clv * r["v"]
+        ad_series.append(ad)
+    mean_ad = sum(ad_series) / n
+    var_ad = sum((x - mean_ad) ** 2 for x in ad_series) / n
+    std_ad = math.sqrt(var_ad)
+    ad_z = ((ad_series[-1] - mean_ad) / std_ad) if std_ad > 0 else 0.0
+
+    # Opening range — first 15 and 30 one-minute bars of the session
+    or15 = rows[:15]
+    or30 = rows[:30]
+    or15_hi, or15_lo = max(r["h"] for r in or15), min(r["l"] for r in or15)
+    or30_hi, or30_lo = max(r["h"] for r in or30), min(r["l"] for r in or30)
+    if spot is None:
+        spot_vs_or = None
+    elif spot > or30_hi:
+        spot_vs_or = "above"
+    elif spot < or30_lo:
+        spot_vs_or = "below"
+    else:
+        spot_vs_or = "inside"
+
+    # Volume pace — recent 5-min avg per-minute vs whole-session avg per-minute
+    recent = rows[-5:]
+    per_min = tv / n
+    recent_per_min = sum(r["v"] for r in recent) / len(recent)
+    vol_pace = (recent_per_min / per_min) if per_min > 0 else None
+
+    dist = ((spot - vwap) / vwap * 100.0) if (spot and vwap) else None
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return {
+        "generated_utc": stamp,
+        "session_date": session_date,
+        "feed": "iex",
+        "bars": n,
+        "spot": round(spot, 2) if spot else None,
+        "vwap": round(vwap, 2) if vwap else None,
+        "vwap_dist_pct": round(dist, 2) if dist is not None else None,
+        "ad_z": round(ad_z, 2),
+        "ad_last": round(ad_series[-1], 0),
+        "or15_high": round(or15_hi, 2), "or15_low": round(or15_lo, 2),
+        "or30_high": round(or30_hi, 2), "or30_low": round(or30_lo, 2),
+        "spot_vs_or": spot_vs_or,
+        "vol_total": round(tv, 0),
+        "vol_pace": round(vol_pace, 2) if vol_pace is not None else None,
+    }
+
+
+def write_auction_live(a):
+    os.makedirs(os.path.dirname(AUCTION_LIVE_PATH), exist_ok=True)
+    with open(AUCTION_LIVE_PATH, "w") as f:
+        json.dump(a, f, indent=2)
+
+
 def snapshot_and_write(spot):
     """Capture calls + puts (separate CSVs) and write the live GEX json."""
     got = {}
@@ -455,6 +568,15 @@ def snapshot_and_write(spot):
             write_gex_live(compute_gex_live(got.get("call", []), got.get("put", []), spot))
     except Exception as e:
         print(f"live GEX skipped (continuing): {e}")
+
+    # Auction metrics — fully isolated; a failure here must not affect anything above.
+    try:
+        bars, sess_date = get_qqq_minute_bars()
+        a = compute_auction(bars, sess_date, spot)
+        if a:
+            write_auction_live(a)
+    except Exception as e:
+        print(f"auction metrics skipped (continuing): {e}")
 
 
 def main():

@@ -2430,6 +2430,25 @@
       .catch(function () {});
   }
 
+  // Live auction metrics (VWAP, A/D line, opening range, volume) from the 60s
+  // logger's QQQ 1-min IEX bars (market-dash/auction_live.json). Same guarded
+  // pattern as Live GEX — missing file just hides the tiles, never breaks the page.
+  var LIVE_AUCTION = null;
+  function loadAuction() {
+    return fetch("auction_live.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (j && !j.error) {
+          var changed = !LIVE_AUCTION || LIVE_AUCTION.generated_utc !== j.generated_utc;
+          LIVE_AUCTION = j;
+          if (changed && idx === FULL.length - 1) {
+            var y = window.scrollY; render(); window.scrollTo(0, y);
+          }
+        }
+      })
+      .catch(function () {});
+  }
+
   function secGexLive(e) {
     // Only on the latest session (it's a live, right-now read), only if we have data.
     if (!LIVE_GEX || idx !== FULL.length - 1 || !has(LIVE_GEX.net_gex)) return "";
@@ -2743,6 +2762,49 @@
       '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--down);vertical-align:-1px"></span> fade-hostile</span>' +
       '<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--dim);vertical-align:-1px"></span> stale/off</span></div>';
 
+    // ── Auction (IEX) — VWAP, A/D gate, opening range, volume pace ──
+    // Live from the 60s logger's QQQ 1-min IEX bars (auction_live.json). IEX is a
+    // tape SUBSET, so every tile is labeled IEX — not the exact consolidated tape.
+    var auctBlk = "";
+    if (LIVE_AUCTION && idx === FULL.length - 1) {
+      var A = LIVE_AUCTION;
+      var ats = Date.parse(String(A.generated_utc || "").replace(" ", "T") + "Z");
+      var aAge = isFinite(ats) ? (Date.now() - ats) / 60000 : 1e9;
+      var aStale = aAge > 30;
+      var aAgeTxt = !isFinite(ats) ? "no stamp"
+        : aAge >= 120 ? Math.round(aAge / 60) + "h ago"
+        : Math.round(aAge) + "m ago";
+      var aTag = aStale ? " · " + aAgeTxt : "";
+      var at = "";
+      if (has(A.vwap)) {
+        at += tile("VWAP (IEX)", num(A.vwap, 2),
+          (has(A.vwap_dist_pct) ? signed(A.vwap_dist_pct, 2, "%") + " from spot" : "session mean") + aTag,
+          "flat");
+      }
+      if (has(A.ad_z)) {
+        at += tile("A/D line z — gate", signed(A.ad_z, 2),
+          (A.ad_z > 0 ? "accum · gate open" : "distrib · gate shut") + " · IEX" + aTag,
+          aStale ? "dim" : (A.ad_z > 0 ? "up" : "down"));
+      }
+      if (has(A.or30_high) && has(A.or30_low)) {
+        var orLabel = A.spot_vs_or ? String(A.spot_vs_or).toUpperCase() : "OR30";
+        at += tile("Opening range", orLabel,
+          "OR30 " + num(A.or30_low, 2) + "–" + num(A.or30_high, 2) + " · IEX" + aTag, "flat");
+      }
+      if (has(A.vol_pace)) {
+        at += tile("Volume pace", num(A.vol_pace, 2) + "×",
+          "recent vs session avg · IEX" + aTag,
+          aStale ? "dim" : (A.vol_pace >= 1.3 ? "warn" : A.vol_pace <= 0.7 ? "dim" : "flat"));
+      }
+      if (at) {
+        auctBlk = '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+          'text-transform:uppercase;margin-bottom:6px">Auction — IEX' +
+          (aStale ? ' <span style="color:var(--faint);letter-spacing:0">· last logged ' + aAgeTxt + '</span>' : '') +
+          '</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
+          at + "</div>";
+      }
+    }
+
     // ── Context tiles (neutral): the quant card, condensed to a glance ──
     var ctiles = "";
     var g2 = get(e, "quant.garch");
@@ -2899,8 +2961,8 @@
 
     // (The STRETCH z20 wheel used to live here — moved to the Market Dash tab.)
 
-    // Order: the call → box → leverage → signals → context → catalysts → sectors donut.
-    return stamp + banner + planBlk + levBlk + grid + legend + ctxBlk + newsBlk + sectorsBlk;
+    // Order: the call → box → leverage → signals → auction → context → catalysts → sectors donut.
+    return stamp + banner + planBlk + levBlk + grid + legend + auctBlk + ctxBlk + newsBlk + sectorsBlk;
   }
 
   function render() {
@@ -3128,6 +3190,7 @@
 
     function cycle() {
       loadLiveGex();
+      loadAuction();
       fetchAll().then(function () {
         var info = applyLive();
         // Repaint without losing scroll or which session you are viewing.
