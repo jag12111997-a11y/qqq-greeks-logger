@@ -2468,7 +2468,7 @@
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
       tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") +
-      tab("cockpit", "Trading Cockpit") + "</div>";
+      tab("cockpit", "𝜎u𝜎") + "</div>";
   }
 
   function nasdaqPanel() {
@@ -2639,7 +2639,7 @@
 
     var stamp = '<div style="display:flex;justify-content:space-between;align-items:baseline;' +
       'font-size:12px;color:var(--dim);margin:2px 0 10px">' +
-      '<span style="letter-spacing:2px">NASDAQ COCKPIT</span>' +
+      '<span style="letter-spacing:2px">𝜎u𝜎 — NASDAQ COCKPIT</span>' +
       '<span>' + (q && has(q.last) ? "QQQ " + num(q.last, 2) + "  ·  " : "") + "entry window 7:17 PT</span></div>";
 
     // Reserved for "the call" — left blank on purpose; we wire the verdict later.
@@ -2647,7 +2647,9 @@
       'margin-bottom:12px;text-align:center;color:var(--faint);font-size:12px;letter-spacing:2.5px">' +
       "THE CALL &mdash; reserved</div>";
 
-    var grid = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
+    var grid = '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      'text-transform:uppercase;margin-bottom:6px">Signals</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
       tiles + "</div>";
 
     var legend = '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:11.5px;color:var(--dim)">' +
@@ -2753,7 +2755,9 @@
       'text-transform:uppercase;margin-bottom:2px">Watchlist — dollar moves</div>' +
       moveWheel(e.watchlist || []);
 
-    return stamp + banner + grid + legend + levBlk + ctxBlk + planBlk + sectorsBlk + wheelBlk;
+    // Order: the call → the box (discipline anchor) → leverage family (price) →
+    // urgent signal tiles → less-urgent context tiles → the two donuts last.
+    return stamp + banner + planBlk + levBlk + grid + legend + ctxBlk + sectorsBlk + wheelBlk;
   }
 
   function render() {
