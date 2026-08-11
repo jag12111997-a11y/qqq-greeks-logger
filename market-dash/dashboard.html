@@ -3031,7 +3031,7 @@
 
     // Order: the call → box → leverage → signals → auction → context → catalysts → sectors → time footprint (bottom).
     var tfBlk = secTimeFootprint(get(e, "time_footprint"));
-    return stamp + banner + levBlk + planBlk + grid + legend + auctBlk + ctxBlk + newsBlk + sectorsBlk + tfBlk;
+    return stamp + banner + planBlk + auctBlk + levBlk + grid + legend + ctxBlk + newsBlk + sectorsBlk + tfBlk;
   }
 
   function render() {
