@@ -1499,6 +1499,162 @@ def fetch_gex():
 
 
 # ============================================================
+# TIME FOOTPRINT — options flow bucketed by expiry horizon
+# ============================================================
+# "Who owns the flow": short-dated = fast/mechanical (gamma, scalpers) which is
+# fade-FRIENDLY; long-dated = informed/directional (institutions, allocators)
+# which is fade-HOSTILE. Per bucket we sum today's VOLUME, OPEN INTEREST and
+# PREMIUM ($). Near-money (±20%) keeps the pull bounded; all expiries 0DTE..~13mo.
+TF_STRIKE_WINDOW = 0.20
+TF_DAYS_OUT = 400
+# Contiguous DTE buckets — no gaps. The last is "3mo+" (a literal "6mo+" would
+# leave 3–6mo unbucketed and misstate the totals).
+TF_BUCKETS = [("0DTE", 0, 0), ("Weeklies", 1, 7), ("1-4wk", 8, 30),
+              ("1-3mo", 31, 90), ("3mo+", 91, 10 ** 9)]
+
+
+def _tf_bucket(dte):
+    for name, lo, hi in TF_BUCKETS:
+        if lo <= dte <= hi:
+            return name
+    return None
+
+
+def fetch_time_footprint():
+    """Per-bucket volume / open interest / premium for QQQ options, split by
+    expiry horizon. Best-effort: returns an error dict on failure so build_entry
+    never breaks. Volume/premium ride the indicative feed's dailyBar — if that
+    feed doesn't carry volume, those totals come back 0 and the dashboard simply
+    hides that metric rather than showing a fake distribution."""
+    headers = _alpaca_headers()
+    if not headers:
+        return {"error": "ALPACA creds not found"}
+    from datetime import date, datetime as _dt, timedelta
+
+    spot = None
+    if yf is not None:
+        try:
+            spot = float(yf.Ticker(GEX_SYMBOL).history(period="1d")["Close"].iloc[-1])
+        except Exception:
+            pass
+    if spot is None:
+        closes = _daily_closes(GEX_SYMBOL, count=3)
+        spot = closes[-1] if closes else None
+    if spot is None:
+        return {"error": "could not determine spot price"}
+
+    today = date.today()
+    lo_k = round(spot * (1 - TF_STRIKE_WINDOW), 2)
+    hi_k = round(spot * (1 + TF_STRIKE_WINDOW), 2)
+    exp_lte = (today + timedelta(days=TF_DAYS_OUT)).isoformat()
+    acc = {name: {"vol": 0.0, "oi": 0, "prem": 0.0, "contracts": 0}
+           for name, _, _ in TF_BUCKETS}
+
+    def dte_of(exp_str):
+        try:
+            return (_dt.strptime(exp_str, "%Y-%m-%d").date() - today).days
+        except Exception:
+            return None
+
+    # 1) Open interest — contracts endpoint (OCC end-of-day)
+    params = {"underlying_symbols": GEX_SYMBOL, "expiration_date_gte": today.isoformat(),
+              "expiration_date_lte": exp_lte, "strike_price_gte": lo_k,
+              "strike_price_lte": hi_k, "limit": 1000}
+    page = None
+    for _ in range(40):
+        if page:
+            params["page_token"] = page
+        try:
+            r = requests.get(f"{ALPACA_TRADING}/v2/options/contracts",
+                             headers=headers, params=params, timeout=30)
+            r.raise_for_status()
+            j = r.json()
+        except Exception:
+            break
+        for c in (j.get("option_contracts") or []):
+            dte = dte_of(c.get("expiration_date", ""))
+            if dte is None or dte < 0:
+                continue
+            b = _tf_bucket(dte)
+            if not b:
+                continue
+            oi = c.get("open_interest")
+            if oi not in (None, ""):
+                try:
+                    acc[b]["oi"] += int(oi)
+                except (TypeError, ValueError):
+                    pass
+            acc[b]["contracts"] += 1
+        page = j.get("next_page_token")
+        if not page:
+            break
+
+    # 2) Volume + premium — snapshots endpoint (dailyBar)
+    sparams = {"feed": "indicative", "limit": 1000,
+               "expiration_date_gte": today.isoformat(), "expiration_date_lte": exp_lte,
+               "strike_price_gte": lo_k, "strike_price_lte": hi_k}
+    page = None
+    for _ in range(40):
+        if page:
+            sparams["page_token"] = page
+        try:
+            r = requests.get(f"{ALPACA_DATA}/v1beta1/options/snapshots/{GEX_SYMBOL}",
+                             headers=headers, params=sparams, timeout=30)
+            r.raise_for_status()
+            j = r.json()
+        except Exception:
+            break
+        for occ, snap in (j.get("snapshots", {}) or {}).items():
+            exp, cp, strike = _parse_occ(occ)
+            if not exp:
+                continue
+            dte = dte_of(exp)
+            if dte is None or dte < 0:
+                continue
+            b = _tf_bucket(dte)
+            if not b:
+                continue
+            snap = snap or {}
+            db = snap.get("dailyBar") or {}
+            v = db.get("v") or 0
+            px = db.get("vw") or db.get("c") or (snap.get("latestTrade") or {}).get("p") or 0
+            try:
+                v = float(v); px = float(px)
+            except (TypeError, ValueError):
+                v, px = 0.0, 0.0
+            acc[b]["vol"] += v
+            acc[b]["prem"] += v * px * 100.0
+        page = j.get("next_page_token")
+        if not page:
+            break
+
+    buckets, tot = [], {"vol": 0.0, "oi": 0, "prem": 0.0}
+    for name, _, _ in TF_BUCKETS:
+        a = acc[name]
+        buckets.append({"name": name, "vol": round(a["vol"]), "oi": a["oi"],
+                        "prem": round(a["prem"]), "contracts": a["contracts"]})
+        tot["vol"] += a["vol"]; tot["oi"] += a["oi"]; tot["prem"] += a["prem"]
+
+    def share(pred):
+        out = {}
+        for m in ("vol", "oi", "prem"):
+            t = tot[m]
+            s = sum(acc[n][m] for n, lo, hi in TF_BUCKETS if pred(lo, hi))
+            out[m] = round(s / t * 100, 1) if t else None
+        return out
+
+    return {
+        "generated_utc": _dt.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        "feed": "indicative", "near_money_pct": int(TF_STRIKE_WINDOW * 100),
+        "days_out": TF_DAYS_OUT, "spot": round(spot, 2),
+        "buckets": buckets,
+        "totals": {"vol": round(tot["vol"]), "oi": tot["oi"], "prem": round(tot["prem"])},
+        "short_share": share(lambda lo, hi: hi <= 7),     # 0DTE + weeklies
+        "long_share": share(lambda lo, hi: lo >= 31),     # 1-3mo + 3mo+
+    }
+
+
+# ============================================================
 # BUILD + WRITE
 # ============================================================
 
@@ -1550,6 +1706,7 @@ def build_entry():
         "markets": safe("market prices", fetch_markets),
         "watchlist": safe("watchlist + horizons", fetch_watchlist),
         "gex": safe("gex engine", fetch_gex),
+        "time_footprint": safe("time footprint", fetch_time_footprint),
         "quant": safe("quant metrics", fetch_quant_metrics),
         "sectors": safe("sectors", fetch_sectors),
         "macro": safe("fred macro", fetch_fred),

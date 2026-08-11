@@ -654,6 +654,62 @@
       "slice size = |z20| stretch · colour = % move · hover for z / % / $</div>";
   }
 
+  // ── Time footprint — options flow by expiry horizon ──
+  // Three 100%-stacked bars (volume · open interest · premium), each split into
+  // the 5 expiry buckets. Colour encodes the thesis: short-dated = fast/
+  // mechanical = fade-friendly (green) → long-dated = informed = hostile (red).
+  // A metric's bar is drawn ONLY if its total > 0, so an empty feed never fakes
+  // a distribution. Data from market_dash_fetch.fetch_time_footprint (e.time_footprint).
+  function secTimeFootprint(tf) {
+    if (!tf || tf.error || !tf.buckets || !tf.buckets.length) return "";
+    var BK = tf.buckets;
+    var COL = { "0DTE": "#00e676", "Weeklies": "#7ed957", "1-4wk": "#ffd600",
+                "1-3mo": "#ff9f0a", "3mo+": "#ff453a" };
+    var METRICS = [ { k: "vol", label: "Volume (today)" },
+                    { k: "oi", label: "Open interest" },
+                    { k: "prem", label: "Premium $" } ];
+    function bar(metric) {
+      var tot = 0; BK.forEach(function (b) { tot += (b[metric.k] || 0); });
+      if (tot <= 0) return "";                 // empty metric — don't invent a split
+      var segs = "";
+      BK.forEach(function (b) {
+        var v = b[metric.k] || 0; if (v <= 0) return;
+        var pct = v / tot * 100;
+        var lab = pct >= 9 ? (b.name + " " + pct.toFixed(0) + "%") : "";
+        segs += '<span title="' + esc(b.name) + " " + pct.toFixed(1) + '%" style="display:inline-block;' +
+          "height:100%;width:" + pct.toFixed(2) + "%;background:" + (COL[b.name] || "#8b8ba6") +
+          ';color:#0a0a12;font-size:9.5px;line-height:22px;text-align:center;overflow:hidden;' +
+          'white-space:nowrap;opacity:.92">' + lab + "</span>";
+      });
+      return '<div style="font-size:10.5px;color:var(--dim);margin:8px 0 3px">' + metric.label + "</div>" +
+        '<div style="display:flex;height:22px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.04)">' +
+        segs + "</div>";
+    }
+    var bars = METRICS.map(bar).join("");
+    if (!bars) return "";
+    // headline short-vs-long read — prefer volume, fall back to OI then premium
+    var sh = tf.short_share || {}, lg = tf.long_share || {};
+    var m = has(sh.vol) ? "vol" : has(sh.oi) ? "oi" : has(sh.prem) ? "prem" : null;
+    var mName = { vol: "volume", oi: "OI", prem: "premium" }[m];
+    var head = "";
+    if (m && has(sh[m]) && has(lg[m])) {
+      var read = sh[m] >= 55 ? "short-dated heavy — mechanical / gamma flow · fade-friendly"
+               : lg[m] >= 40 ? "long-dated heavy — informed / directional · careful"
+               : "balanced across horizons";
+      var hcol = sh[m] >= 55 ? "var(--up)" : lg[m] >= 40 ? "var(--down)" : "var(--dim)";
+      head = '<div style="font-size:12.5px;color:var(--dim);margin-bottom:2px">' +
+        '<span style="color:' + hcol + '">' + sh[m].toFixed(0) + "% short</span> vs " +
+        lg[m].toFixed(0) + "% long (" + mName + ") — " +
+        '<span style="color:' + hcol + '">' + read + "</span></div>";
+    }
+    var note = '<div style="font-size:10px;color:var(--faint);margin-top:6px">near-money ±' +
+      (tf.near_money_pct || 20) + "% · " + esc(tf.feed || "indicative") + " feed" +
+      (tf.generated_utc ? " · " + esc(tf.generated_utc) + " UTC" : "") + "</div>";
+    return '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      'text-transform:uppercase;margin-bottom:6px">Time footprint — flow by expiry</div>' +
+      head + bars + note;
+  }
+
   function secInternals(e) {
     var s = e.sectors;
     if (!ok(s) || !get(s, "rows", []).length) {
@@ -2961,8 +3017,9 @@
 
     // (The STRETCH z20 wheel used to live here — moved to the Market Dash tab.)
 
-    // Order: the call → box → leverage → signals → auction → context → catalysts → sectors donut.
-    return stamp + banner + planBlk + levBlk + grid + legend + auctBlk + ctxBlk + newsBlk + sectorsBlk;
+    // Order: the call → box → leverage → signals → auction → context → catalysts → sectors → time footprint (bottom).
+    var tfBlk = secTimeFootprint(get(e, "time_footprint"));
+    return stamp + banner + planBlk + levBlk + grid + legend + auctBlk + ctxBlk + newsBlk + sectorsBlk + tfBlk;
   }
 
   function render() {
