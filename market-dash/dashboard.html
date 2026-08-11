@@ -811,6 +811,10 @@
   var NASDAQ_STARS = ["NDX", "QQQ", "QQQM", "TQQQ", "SQQQ"];
   var NASDAQ_COLOR = { NDX:"#00e5ff", QQQ:"#00e676", QQQM:"#ffd600", TQQQ:"#b388ff", SQQQ:"#ff453a" };
 
+  // Distinct line colours for the rest-of-watchlist overlay chart (cycled).
+  var WL_PALETTE = ["#00e5ff","#00e676","#ffd600","#ff453a","#b388ff","#ff00e5",
+    "#ff9100","#64ffda","#40c4ff","#69f0ae","#ffab40","#e040fb","#a1887f"];
+
   // Pull one field per star symbol out of every logged session.
   function starSeries(field) {
     var out = {};
@@ -1394,8 +1398,18 @@
       return STARS.indexOf(r.symbol) === -1 && NASDAQ_STARS.indexOf(r.symbol) === -1;
     });
 
-    var body = corrTable(w.map(function (r) { return r.symbol; }),
-      "Correlation of daily moves") + wlTable(w, false);
+    // Its own rebased overlay chart — same engine as Star Players, via a
+    // temporary swap of the STARS / STAR_COLOR globals to the watchlist set.
+    var wlSyms = w.map(function (r) { return r.symbol; });
+    var wlColor = {};
+    wlSyms.forEach(function (s, i) { wlColor[s] = WL_PALETTE[i % WL_PALETTE.length]; });
+    var _S = STARS, _C = STAR_COLOR;
+    STARS = wlSyms; STAR_COLOR = wlColor;
+    var wlChart;
+    try { wlChart = starChart(e); } finally { STARS = _S; STAR_COLOR = _C; }
+
+    var body = wlChart +
+      corrTable(wlSyms, "Correlation of daily moves") + wlTable(w, false);
 
     var live = w.filter(function (r) { return has(r.pct_change); });
     var grn = live.filter(function (r) { return r.pct_change > 0; }).length;
