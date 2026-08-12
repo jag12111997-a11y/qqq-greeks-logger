@@ -90,6 +90,19 @@
   .hi { border-left:2px solid var(--warn); padding-left:8px; }
 
   section.wide { margin-bottom:16px; }
+
+  /* Nasdaq tab — read as ONE flowing entity, not separate boxes. Scoped to .flow
+     so the cockpit and Market Dash tabs keep their cards. Nothing deleted — the
+     boxing is just dissolved into a continuous page with hairline dividers. */
+  .flow .grid { grid-template-columns:1fr; gap:0; }
+  .flow section, .flow section.wide {
+    background:transparent; border:none; border-radius:0; margin:0;
+    padding:16px 2px; border-top:1px solid rgba(255,255,255,.06);
+  }
+  .flow .grid > section:first-child { border-top:none; }
+  .flow .band { margin:26px 0 2px; }
+  .flow .band i { opacity:.45; }
+  .flow details.read { margin-top:6px; }
   table.wl td, table.wl th { padding:4px 0; }
   table.wl tr:not(:first-child):hover { background:rgba(0,229,255,.05); }
   .donutwrap { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
@@ -622,7 +635,7 @@
       svg += '<path d="' + d + '" fill="' + perfColor(r.pct) + '" stroke="#000000" stroke-width="1.2">' +
         "<title>" + esc(r.sym) + "\nz " + (r.z > 0 ? "+" : "") + r.z.toFixed(2) +
         "   " + (r.pct > 0 ? "+" : "") + r.pct + "%   " + (r.d > 0 ? "+" : "") + "$" + r.d.toFixed(2) + "</title></path>";
-      if (frac > 0.028) {
+      if (frac > 0.03) {
         var mid = (ang + a2) / 2;
         labs.push({ sym: r.sym, z: r.z, pct: r.pct,
           lx: cx + (rOut + 13) * Math.cos(mid), ly: cy + (rOut + 13) * Math.sin(mid),
@@ -630,13 +643,16 @@
       }
       ang = a2;
     });
-    function declutter(list) {                 // keep labels from stacking
+    function declutter(list, gap) {            // keep two-line labels (symbol + z) from stacking
       list.sort(function (a, b) { return a.ly - b.ly; });
       var prev = -1e9;
-      list.forEach(function (L) { if (L.ly < prev + 12) L.ly = prev + 12; prev = L.ly; });
+      list.forEach(function (L) { if (L.ly < prev + gap) L.ly = prev + gap; prev = L.ly; });
     }
-    declutter(labs.filter(function (L) { return L.anchor === "start"; }));
-    declutter(labs.filter(function (L) { return L.anchor !== "start"; }));
+    var GAP = 22;                              // each label is two lines tall
+    declutter(labs.filter(function (L) { return L.anchor === "start"; }), GAP);                    // right side
+    declutter(labs.filter(function (L) { return L.anchor === "end"; }), GAP);                      // left side
+    declutter(labs.filter(function (L) { return L.anchor === "middle" && L.ly < cy; }), GAP);      // top (don't space vs bottom)
+    declutter(labs.filter(function (L) { return L.anchor === "middle" && L.ly >= cy; }), GAP);     // bottom
     var labels = "";
     labs.forEach(function (L) {
       labels += '<text x="' + L.lx.toFixed(1) + '" y="' + L.ly.toFixed(1) + '" text-anchor="' + L.anchor +
@@ -644,7 +660,7 @@
         '<tspan x="' + L.lx.toFixed(1) + '" dy="11" fill="' + (L.pct >= 0 ? "#00e676" : "#ff453a") + '">' +
         "z" + (L.z > 0 ? "+" : "") + L.z.toFixed(2) + "</tspan></text>";
     });
-    return '<div style="text-align:center"><svg width="330" height="272" viewBox="-40 -6 344 278">' +
+    return '<div style="text-align:center"><svg width="340" height="280" viewBox="-52 -20 384 316">' +
       svg + labels +
       '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" fill="#8b8ba6" font-size="10">WATCHLIST · STRETCH</text>' +
       '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" fill="#8b8ba6" font-size="15">' +
@@ -3118,7 +3134,7 @@
 
     var _cockpitBody = secCockpit(e);
     app.innerHTML = _header + tabBar() +
-      (TAB === "cockpit" ? _cockpitBody : TAB === "nasdaq" ? _qqqBody : _dashBody);
+      (TAB === "cockpit" ? _cockpitBody : TAB === "nasdaq" ? ('<div class="flow">' + _qqqBody + "</div>") : _dashBody);
 
     document.getElementById("pick").addEventListener("change", function () {
       idx = parseInt(this.value, 10);
