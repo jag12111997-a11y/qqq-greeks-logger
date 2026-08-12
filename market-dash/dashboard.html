@@ -702,12 +702,41 @@
         lg[m].toFixed(0) + "% long (" + mName + ") — " +
         '<span style="color:' + hcol + '">' + read + "</span></div>";
     }
+    // ── the story — where the ACTIVITY (volume) sits vs where the MONEY (OI + premium) sits ──
+    var ssh = tf.short_share || {}, slg = tf.long_share || {};
+    function horizon(k) {
+      if (!has(ssh[k])) return null;
+      return ssh[k] >= 55 ? "short" : (has(slg[k]) && slg[k] >= 45) ? "long" : "mixed";
+    }
+    var vH = horizon("vol"), moneyH = horizon("prem") || horizon("oi");
+    var txt = "";
+    if (vH && moneyH) {
+      if (vH === "short" && moneyH === "long")
+        txt = "The <b>flow</b> is short-dated — fast, mechanical, gamma-driven (fade-friendly) — but the <b>money</b> (open interest + premium) sits long-dated. Intraday is fadeable; the standing positioning is directional. Respect the trend behind the fade.";
+      else if (vH === "short")
+        txt = "Both today's flow and the money lean short-dated — a fast-money, gamma-driven tape. Most fade-friendly, thin directional conviction underneath.";
+      else if (vH === "long")
+        txt = "Even the flow skews long-dated — informed / directional players are doing the trading. Fades are lower-confidence here.";
+      else
+        txt = "Flow and positioning are spread across horizons — no clean short-vs-long tell today.";
+    } else if (vH) {
+      txt = vH === "short" ? "Today's flow is short-dated — fast, mechanical, gamma-driven (fade-friendly)."
+          : vH === "long" ? "Today's flow skews long-dated — informed / directional."
+          : "Flow is spread across horizons today.";
+    }
+    var story = txt
+      ? '<div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.04);' +
+        'border-radius:8px;font-size:12px;color:var(--dim);line-height:1.55">' +
+        '<span style="color:var(--faint);text-transform:uppercase;letter-spacing:1px;font-size:10px">the story</span><br>' +
+        txt + "</div>"
+      : "";
+
     var note = '<div style="font-size:10px;color:var(--faint);margin-top:6px">near-money ±' +
       (tf.near_money_pct || 20) + "% · " + esc(tf.feed || "indicative") + " feed" +
       (tf.generated_utc ? " · " + esc(tf.generated_utc) + " UTC" : "") + "</div>";
     return '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
       'text-transform:uppercase;margin-bottom:6px">Time footprint — flow by expiry</div>' +
-      head + bars + note;
+      head + bars + story + note;
   }
 
   function secInternals(e) {
@@ -1362,10 +1391,9 @@
 
     var _S = STARS, _C = STAR_COLOR;
     STARS = NASDAQ_STARS; STAR_COLOR = NASDAQ_COLOR;
-    var chart, correl;
+    var chart;
     try {
-      chart = starChart(e);
-      correl = starCorrel(e);
+      chart = starChart(e);   // correlation dropped — leveraged twins are ±1 by construction
     } finally {
       STARS = _S; STAR_COLOR = _C;
     }
@@ -1390,9 +1418,7 @@
       lines.join("") + "</div></details>";
 
     return secWide("Nasdaq — QQQ leverage family",
-      chart + wlTable(rows, true) +
-      '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">' +
-      correl + "</div>", readHtml);
+      chart + wlTable(rows, true), readHtml);
   }
 
   // Reusable pairwise-correlation table for any symbol list (same Pearson math
@@ -1827,7 +1853,7 @@
       "dealer positioning convention — if that assumption is wrong, the sign is wrong. " +
       "Treat levels as where flow concentrates, not as predictions.</div>");
 
-    return secWide("GEX — gamma exposure (ours, not a vendor's)", body,
+    return secWide("GEX map — ≤30d · ±10% strikes · twice-daily (ours, not a vendor's)", body,
       '<details class="read" open><summary><b>Read</b></summary><div>' +
       lines.join("") + "</div></details>");
   }
@@ -2538,7 +2564,7 @@
       esc(g.source || "logger") + ". OI is end-of-day; intraday moves come from spot + greeks. " +
       "Refreshes while the logger is running (mornings & midday PT).</div>");
 
-    return sec("GEX — LIVE (5-min logger, calls + puts)", body,
+    return sec("GEX — LIVE · 0DTE · ±$15 strikes · 5-min logger", body,
       '<details class="read" open><summary><b>Read</b></summary><div>' +
       lines.join("") + "</div></details>");
   }
@@ -2745,17 +2771,17 @@
           : ageMin >= 120 ? Math.round(ageMin / 60) + "h ago"
           : Math.round(ageMin) + "m ago";
         tiles += tile("Live GEX", lpos ? "+γ" : "−γ",
-          "last logged · " + ageTxt + "<br>" + gexDetail(LIVE_GEX), "dim");
+          "0DTE ±$15 · last logged " + ageTxt + "<br>" + gexDetail(LIVE_GEX), "dim");
       } else {
         tiles += tile("Live GEX", lpos ? "+γ" : "−γ",
-          (lpos ? "dampen" : "amplify") + " · live now<br>" + gexDetail(LIVE_GEX),
+          "0DTE ±$15 · " + (lpos ? "dampen" : "amplify") + " · live<br>" + gexDetail(LIVE_GEX),
           lpos ? "up" : "down");
       }
     } else if (ok(gx) && has(gx.regime)) {
-      // No live snapshot at all — fall back to the twice-daily API GEX (close).
+      // No live snapshot — fall back to the twice-daily API GEX (≤30d ±10%, different engine).
       var fpos = gx.regime === "POSITIVE GAMMA";
       tiles += tile("Live GEX", fpos ? "+γ" : "−γ",
-        "last close<br>" + gexDetail(gx), "dim");
+        "≤30d ±10% · last close<br>" + gexDetail(gx), "dim");
     }
 
     if (!tiles) tiles = '<div style="color:var(--faint);font-size:13px;padding:20px">No live signals for this session yet.</div>';
@@ -3031,7 +3057,7 @@
 
     // Order: the call → box → leverage → signals → auction → context → catalysts → sectors → time footprint (bottom).
     var tfBlk = secTimeFootprint(get(e, "time_footprint"));
-    return stamp + banner + planBlk + auctBlk + levBlk + grid + legend + ctxBlk + newsBlk + sectorsBlk + tfBlk;
+    return stamp + banner + sectorsBlk + planBlk + auctBlk + levBlk + grid + legend + ctxBlk + newsBlk + tfBlk;
   }
 
   function render() {
@@ -3065,24 +3091,27 @@
     // NASDAQ (really QQQ) tab — your trading cockpit. Every card here reads QQQ:
     // secGex/secGexLive/secVanna use e.gex + the QQQ gex_live.json logger, and
     // secQuant/secTouchFlow/secRangeUsed key off mk.QQQ spot. Same data, new home.
+    // Narrative arc for a fader: where's price → what regime / is there an edge →
+    // what are dealers doing → where can price go & the odds → the plan → flow.
     var _qqqBody =
       group("Price", secNasdaqStars(e)) +
-      group("Regime and fade", secGeometry(e) + secFadeRegime(e)) +
-      group("QQQ options & flow", secGexLive(e) + secGex(e) + secVanna(e) + secQuant(e) + secTouchFlow(e) + secRangeUsed(e)) +
+      group("Regime & fade edge", secGeometry(e) + secFadeRegime(e) + secRangeUsed(e)) +
+      group("Dealer positioning", secGexLive(e) + secGex(e) + secVanna(e)) +
+      group("Odds & flow", secTouchFlow(e) + secQuant(e)) +
       group("Plan and discipline", secPlan(e)) +
-      group("Options", secOptions(e) + secVenue(e));
+      group("Options & venue", secOptions(e) + secVenue(e));
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
-    // The STRETCH (z20) wheel now lives here, under the watchlist.
+    // STRETCH wheel sits right under the regime banner (first card).
     var _stretchWheel = moveWheel(e.watchlist || []);
     var _dashBody =
       finalRegime(e, align) +
+      (_stretchWheel ? group("Watchlist stretch", secWide("Stretch — |z20|", _stretchWheel)) : "") +
       group("Price", secStars(e)) +
       group("News", secWeek(e)) +
       group("Sectors and regime", secInternals(e)) +
       group("Macro and positioning", secMacro(e) + secPositioning(e)) +
       group("Rest of watchlist", secWatchlist(e)) +
-      (_stretchWheel ? group("Watchlist stretch", secWide("Stretch — |z20|", _stretchWheel)) : "") +
       "<footer>" + FULL.length + " logged session" + (FULL.length > 1 ? "s" : "") +
       " · " + (H.length - FULL.length) + " backfilled" +
       " logged · append-only · history.js</footer>";
@@ -3194,8 +3223,28 @@
         .catch(function () { /* offline / blocked / bad symbol -> keep snapshot */ });
     }
 
+    // VIX isn't on Finnhub's free tier — pull it live (~15-min delayed) from
+    // Cboe's public delayed-quote CDN so the VIX tile AND everything keyed off it
+    // (range used, expected move, touch odds) refresh every minute. Fails silently
+    // if the CDN blocks cross-origin, in which case VIX just keeps the snapshot.
+    function fetchVix() {
+      return fetch("https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json?t=" + Date.now(),
+                   { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          var d = j && j.data;
+          if (!d || typeof d.current_price !== "number" || d.current_price <= 0) return;
+          LIVE["VIX"] = {
+            last: d.current_price,
+            pct: (typeof d.price_change_percent === "number") ? d.price_change_percent : null,
+            srcTime: Date.parse(String(d.last_trade_time || "")) || Date.now()
+          };
+        })
+        .catch(function () { /* CORS / offline -> keep the snapshot VIX */ });
+    }
+
     function fetchAll() {
-      return Promise.all(wantedSymbols().map(fetchOne));
+      return Promise.all([fetchVix()].concat(wantedSymbols().map(fetchOne)));
     }
 
     // Paint live values onto the LATEST session's watchlist rows only. Older
