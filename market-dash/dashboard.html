@@ -968,7 +968,28 @@
     return out;
   }
 
+  // Catmull-Rom → cubic-bezier smoothing so the overlay reads as flowing curves,
+  // not jagged polylines. Low tension = gentle, no overshoot.
+  function smoothPath(pts) {
+    if (!pts.length) return "";
+    if (pts.length < 3) {
+      var s = "M" + pts[0].x.toFixed(1) + " " + pts[0].y.toFixed(1);
+      for (var k = 1; k < pts.length; k++) s += " L" + pts[k].x.toFixed(1) + " " + pts[k].y.toFixed(1);
+      return s;
+    }
+    var d = "M" + pts[0].x.toFixed(1) + " " + pts[0].y.toFixed(1), t = 0.16;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      var c1x = p1.x + (p2.x - p0.x) * t, c1y = p1.y + (p2.y - p0.y) * t;
+      var c2x = p2.x - (p3.x - p1.x) * t, c2y = p2.y - (p3.y - p1.y) * t;
+      d += " C" + c1x.toFixed(1) + " " + c1y.toFixed(1) + " " + c2x.toFixed(1) + " " +
+           c2y.toFixed(1) + " " + p2.x.toFixed(1) + " " + p2.y.toFixed(1);
+    }
+    return d;
+  }
+
   function starChart(e) {
+    var scId = (window.__scN = (window.__scN || 0) + 1);   // unique id per chart on the page
     var Wd = 1080, Hh = CHART.big ? 620 : CHART.height, padL = 44, padR = 60, padT = 12, padB = 24;
     var toolbar = starChartToolbar();
 
@@ -1048,24 +1069,36 @@
              '" text-anchor="end" fill="' + (mode === "dxy" ? baseCol : "#55556b") + '" font-size="9">' +
              (mode === "dxy" ? "DXY 100" : "100") + "</text>";
 
-    var endLabels = [];
-    visible.forEach(function (sym) {
+    var endLabels = [], gradDefs = "", areas = "", strokes = "";
+    var glowId = "glow" + scId;
+    visible.forEach(function (sym, gi) {
       if (mode === "dxy" && sym === "DXY") return;   // DXY is the baseline itself
-      var seq = norm[sym], d = "", last = null, lastI = -1, pts = 0;
+      var seq = norm[sym], ppts = [], last = null, lastI = -1;
       for (var i = 0; i < n; i++) {
         if (seq[i] === null) continue;
-        d += (d ? "L" : "M") + X(i).toFixed(1) + " " + Y(seq[i]).toFixed(1) + " ";
-        last = seq[i]; lastI = i; pts++;
+        ppts.push({ x: X(i), y: Y(seq[i]) });
+        last = seq[i]; lastI = i;
       }
-      if (!d || pts < 2) return;
+      if (ppts.length < 2) return;
       var col = STAR_COLOR[sym] || "#8b8ba6";
+      var gid = "gf" + scId + "_" + gi;
+      var lp = smoothPath(ppts);
+      var yBase = (Hh - padB).toFixed(1);
+      // soft gradient area under the line (renders behind all strokes)
+      areas += '<path d="' + lp + " L" + ppts[ppts.length - 1].x.toFixed(1) + " " + yBase +
+        " L" + ppts[0].x.toFixed(1) + " " + yBase + ' Z" fill="url(#' + gid + ')" stroke="none"/>';
+      gradDefs += '<linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="' + col + '" stop-opacity="0.20"/>' +
+        '<stop offset="1" stop-color="' + col + '" stop-opacity="0"/></linearGradient>';
       var dash = (mode === "dxy" && sym === "DXY") ? ' stroke-dasharray="4 3"' : "";
-      lines += '<path d="' + d + '" fill="none" stroke="' + col +
-               '" stroke-width="1.8" stroke-linejoin="round"' + dash + '/>';
-      lines += '<circle cx="' + X(lastI).toFixed(1) + '" cy="' + Y(last).toFixed(1) +
-               '" r="3" fill="' + col + '"/>';
+      strokes += '<path d="' + lp + '" fill="none" stroke="' + col +
+        '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"' + dash +
+        ' filter="url(#' + glowId + ')"/>';
+      strokes += '<circle cx="' + X(lastI).toFixed(1) + '" cy="' + Y(last).toFixed(1) +
+        '" r="3.4" fill="' + col + '" filter="url(#' + glowId + ')"/>';
       endLabels.push({ sym: sym, cx: X(lastI), cy: Y(last), col: col });
     });
+    lines += areas + strokes;   // areas behind, smooth strokes on top
 
     // Declutter the right-edge symbol labels. Lines that land on the same value
     // (e.g. NDX and QQQM are the SAME index) would print on top of each other
@@ -1103,7 +1136,16 @@
     var svgAttr = CHART.big
       ? 'style="width:100%;height:auto;max-height:82vh;display:block"'
       : 'style="width:100%;height:auto;display:block"';
-    var svg = '<svg viewBox="0 0 ' + Wd + ' ' + Hh + '" ' + svgAttr + '>' + lines + "</svg>";
+    var defs = '<defs><filter id="' + glowId + '" x="-20%" y="-20%" width="140%" height="140%">' +
+      '<feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/>' +
+      '<feMergeNode in="SourceGraphic"/></feMerge></filter>' + gradDefs + "</defs>";
+    var grid = "";
+    for (var gk = 1; gk <= 4; gk++) {
+      var gy = (padT + (gk / 5) * (Hh - padT - padB)).toFixed(1);
+      grid += '<line x1="' + padL + '" x2="' + (Wd - padR) + '" y1="' + gy + '" y2="' + gy +
+        '" stroke="#15151f" stroke-width="1"/>';
+    }
+    var svg = '<svg viewBox="0 0 ' + Wd + ' ' + Hh + '" ' + svgAttr + '>' + defs + grid + lines + "</svg>";
 
     var caption = (mode === "dxy")
       ? "each line relative to DXY (the dollar) &mdash; dashed line is DXY itself, flat at 100; above = beating the dollar"
