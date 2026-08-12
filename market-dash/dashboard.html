@@ -91,18 +91,20 @@
 
   section.wide { margin-bottom:16px; }
 
-  /* Nasdaq tab — read as ONE flowing entity, not separate boxes. Scoped to .flow
-     so the cockpit and Market Dash tabs keep their cards. Nothing deleted — the
-     boxing is just dissolved into a continuous page with hairline dividers. */
-  .flow .grid { grid-template-columns:1fr; gap:0; }
+  /* Nasdaq tab — the whole tab wears the game-HUD skin so it matches the command
+     board up top: dark panels, cyan-accent section titles, everything visible
+     (nothing collapsed, nothing deleted). Scoped to .flow so the other tabs are
+     untouched. */
+  .flow .grid { grid-template-columns:1fr; gap:12px; }
   .flow section, .flow section.wide {
-    background:transparent; border:none; border-radius:0; margin:0;
-    padding:16px 2px; border-top:1px solid rgba(255,255,255,.06);
+    background:#0c0c14; border:1px solid #1c1c28; border-radius:12px;
+    margin:0; padding:15px 17px;
   }
-  .flow .grid > section:first-child { border-top:none; }
-  .flow .band { margin:26px 0 2px; }
-  .flow .band i { opacity:.45; }
-  .flow details.read { margin-top:6px; }
+  .flow .band { margin:24px 0 8px; }
+  .flow .band span { color:#00e5ff; }
+  .flow .band i { opacity:.35; background:#1c2b30; }
+  .flow section h2 { color:#00e5ff; }
+  .flow details.read { margin-top:8px; }
   table.wl td, table.wl th { padding:4px 0; }
   table.wl tr:not(:first-child):hover { background:rgba(0,229,255,.05); }
   .donutwrap { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
@@ -3226,7 +3228,7 @@
         group("Odds & flow", secTouchFlow(e) + secQuant(e)) +
         group("Plan and discipline", secPlan(e)) +
         group("Options & venue", secOptions(e) + secVenue(e))
-      ).replace(/<details open /g, "<details ");   // collapse detail panels — tap to expand
+      );   // panels stay OPEN — charts/tables visible, styled as HUD cards
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
     // STRETCH wheel sits right under the regime banner (first card).
