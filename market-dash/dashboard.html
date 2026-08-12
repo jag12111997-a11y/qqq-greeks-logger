@@ -1396,6 +1396,114 @@
   // Same Star-Players card, on the Nasdaq-100 leverage family (QQQ tab). Reuses
   // the exact chart + correlation logic by swapping STARS/STAR_COLOR for the
   // synchronous render, then restoring them.
+  // Game-HUD command board for the Nasdaq tab — a glance dashboard (hero score,
+  // gauges, status lights, compact leverage bars) built from the same live data
+  // the cockpit uses. The heavy charts/tables live in the collapsed panels below.
+  function secNasdaqHUD(e) {
+    var mk = {};
+    (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
+    var q = mk.QQQ, vix = get(mk, "VIX.last"), gx = e.gex;
+    var g = get(e, "quant.geometry");
+    var dv = ok(g) && has(g.diversification_volume) ? g.diversification_volume : null;
+    var vr2 = cockpitVR(e);
+    var ri = get(e, "quant.realized_vs_implied");
+    var sp = ok(ri) && has(ri.spread_pct) ? ri.spread_pct : null;
+    var gpos = ok(gx) && gx.regime === "POSITIVE GAMMA";
+
+    var hostile = 0, friendly = 0;
+    if (dv !== null) { if (dv < 0.15) hostile++; else if (dv >= 0.35) friendly++; }
+    if (ok(gx) && has(gx.regime)) { if (gpos) friendly++; else hostile++; }
+    if (vr2 !== null) { if (vr2 > 1.1) hostile++; else if (vr2 < 0.9) friendly++; }
+    var call, callCol, callBrd;
+    if (hostile >= 2) { call = "STAND DOWN"; callCol = "#ff453a"; callBrd = "#45201f"; }
+    else if (friendly >= 2 && !hostile) { call = "LEAN FADE"; callCol = "#00e676"; callBrd = "#14432b"; }
+    else { call = "MIXED"; callCol = "#ffd600"; callBrd = "#454020"; }
+    function C(v) { return v >= 0 ? "#00e676" : "#ff453a"; }
+
+    var qz = q && has(q.z20) ? q.z20 : null;
+    var qMove = q && has(q.last) && has(q.pct_change) ? q.last - q.last / (1 + q.pct_change / 100) : null;
+    var hero =
+      '<div style="display:flex;gap:12px;margin-bottom:12px">' +
+        '<div style="flex:2;background:#0d1a12;border:1px solid #14432b;border-radius:12px;padding:14px 16px">' +
+          '<div style="font-size:10.5px;letter-spacing:1.5px;color:#8b8ba6">QQQ STRETCH</div>' +
+          '<div style="font-size:38px;font-weight:800;line-height:1;color:' + (qz !== null ? (qz >= 0 ? "#00e676" : "#ff453a") : "#8b8ba6") + '">' +
+            (qz !== null ? "z " + signed(qz, 2) : "&mdash;") + '</div>' +
+          '<div style="font-size:12px;color:#8b8ba6;margin-top:5px">' +
+            (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
+            (q && has(q.last) ? num(q.last, 2) : "") + '</div>' +
+        '</div>' +
+        '<div style="flex:1.4;background:#120c0c;border:1px solid ' + callBrd + ';border-radius:12px;padding:14px 16px">' +
+          '<div style="font-size:10.5px;letter-spacing:1.5px;color:#8b8ba6">THE CALL</div>' +
+          '<div style="font-size:20px;font-weight:800;line-height:1.15;margin-top:5px;color:' + callCol + '">● ' + call + '</div>' +
+          '<div style="font-size:11px;color:#8b8ba6;margin-top:5px">' + hostile + ' hostile · ' + friendly + ' friendly</div>' +
+        '</div>' +
+      '</div>';
+
+    var _tq = mk.TQQQ, _sq = mk.SQQQ;
+    var lv = (_tq && has(_tq.z20) && _sq && has(_sq.z20)) ? (_tq.z20 - _sq.z20) / 2 : null;
+    var lvWord = lv === null ? "—" : lv >= 0.5 ? "callish" : lv <= -0.5 ? "bearish" : "balanced";
+    var lvClamp = lv === null ? 0 : Math.max(-1, Math.min(1, lv / 2.5));
+    var em = (has(vix) && q && has(q.last)) ? vix / Math.sqrt(252) / 100 : null;
+    var used = (em && q && has(q.pct_change)) ? Math.abs(q.pct_change) / (em * 100) : null;
+    var usedPct = used === null ? 0 : Math.min(1, used);
+    var usedCol = used === null ? "#8b8ba6" : used < 0.5 ? "#00e676" : used < 1 ? "#ffd600" : "#ff453a";
+    var gauges =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+        '<div style="background:#0c0c14;border:1px solid #1c1c28;border-radius:10px;padding:11px 13px">' +
+          '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#8b8ba6"><span>LEVERAGE LEAN</span><span style="color:#00e5ff">' +
+            (lv === null ? "—" : lvWord + " " + signed(lv, 2)) + '</span></div>' +
+          '<div style="position:relative;height:10px;background:#17171f;border-radius:6px;margin-top:8px">' +
+            '<div style="position:absolute;left:50%;top:-2px;width:1px;height:14px;background:#3a3a48"></div>' +
+            (lv === null ? "" : '<div style="position:absolute;' +
+              (lvClamp >= 0 ? "left:50%;width:" + (lvClamp * 50).toFixed(0) : "right:50%;width:" + (-lvClamp * 50).toFixed(0)) +
+              '%;height:10px;background:' + (lv >= 0 ? "#00e676" : "#ff453a") + ';border-radius:6px"></div>') +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:9.5px;color:#5a5a6a;margin-top:5px"><span>bear</span><span>bull</span></div>' +
+        '</div>' +
+        '<div style="background:#0c0c14;border:1px solid #1c1c28;border-radius:10px;padding:11px 13px">' +
+          '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#8b8ba6"><span>RANGE USED</span><span style="color:' + usedCol + '">' +
+            (used === null ? "—" : (usedPct * 100).toFixed(0) + "%") + '</span></div>' +
+          '<div style="height:10px;background:#17171f;border-radius:6px;margin-top:8px;overflow:hidden"><div style="width:' +
+            (usedPct * 100).toFixed(0) + '%;height:10px;background:' + usedCol + '"></div></div>' +
+          '<div style="font-size:9.5px;color:#5a5a6a;margin-top:5px">vs 1σ range</div>' +
+        '</div>' +
+      '</div>';
+
+    function light(txt, cn) {
+      var m = cn === "down" ? ["#120c0c", "#45201f", "#ff453a"] : cn === "up" ? ["#0d1a12", "#14432b", "#00e676"]
+        : cn === "warn" ? ["#14120c", "#454020", "#ffd600"] : ["#0c0c14", "#2a2a38", "#8b8ba6"];
+      return '<span style="font-size:11px;background:' + m[0] + ';border:1px solid ' + m[1] + ';color:' + m[2] +
+        ';border-radius:8px;padding:4px 9px">' + (cn === "dim" ? "" : "● ") + txt + "</span>";
+    }
+    var lights = '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">';
+    if (dv !== null) lights += light("regime " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
+    if (vr2 !== null) lights += light("VR(2) " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
+    if (ok(gx) && has(gx.regime)) lights += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
+    if (sp !== null) lights += light("edge " + signed(sp, 1, "pp"), sp > 0 ? "up" : "down");
+    if (has(vix)) lights += light("VIX " + num(vix, 2), vix >= 20 ? "warn" : "dim");
+    lights += "</div>";
+
+    var LEV = [["TQQQ", "#b388ff"], ["NDX", "#00e5ff"], ["QQQM", "#ffd600"], ["QQQ", "#00e676"], ["SQQQ", "#ff453a"]];
+    var maxAbs = 0.1;
+    LEV.forEach(function (p) { var r = mk[p[0]]; if (r && has(r.pct_change)) maxAbs = Math.max(maxAbs, Math.abs(r.pct_change)); });
+    var lb = "";
+    LEV.forEach(function (p) {
+      var r = mk[p[0]]; if (!r || !has(r.pct_change)) return;
+      var w = Math.max(3, Math.abs(r.pct_change) / maxAbs * 100);
+      lb += '<div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:52px;color:' + p[1] + '">' + p[0] + "</span>" +
+        '<span style="flex:1;height:9px;background:#17171f;border-radius:5px;overflow:hidden"><span style="display:block;width:' + w.toFixed(0) + '%;height:9px;background:' + p[1] + '"></span></span>' +
+        '<span style="width:58px;text-align:right;color:' + C(r.pct_change) + '">' + signed(r.pct_change, 2, "%") + "</span></div>";
+    });
+    var levBars = lb ? '<div style="font-size:10.5px;letter-spacing:1.5px;color:#8b8ba6;margin-bottom:8px">LEVERAGE FAMILY · TODAY</div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px">' + lb + "</div>" : "";
+
+    return '<div style="background:#07070d;border:1px solid #1c1c28;border-radius:14px;padding:16px;margin:2px 0 8px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
+        '<div style="letter-spacing:2px;font-size:13px;color:#00e5ff">NASDAQ · QQQ COMMAND</div>' +
+        '<div style="font-size:10.5px;color:#5a5a6a">tap the panels below for full charts &amp; tables</div>' +
+      "</div>" + hero + gauges + lights + levBars + "</div>";
+  }
+
   function secNasdaqStars(e) {
     var all = get(e, "watchlist", []);
     if (!all.length) return "";
@@ -3110,12 +3218,15 @@
     // Narrative arc for a fader: where's price → what regime / is there an edge →
     // what are dealers doing → where can price go & the odds → the plan → flow.
     var _qqqBody =
-      group("Price", secNasdaqStars(e)) +
-      group("Regime & fade edge", secGeometry(e) + secFadeRegime(e) + secRangeUsed(e)) +
-      group("Dealer positioning", secGexLive(e) + secGex(e) + secVanna(e)) +
-      group("Odds & flow", secTouchFlow(e) + secQuant(e)) +
-      group("Plan and discipline", secPlan(e)) +
-      group("Options & venue", secOptions(e) + secVenue(e));
+      secNasdaqHUD(e) +
+      (
+        group("Price", secNasdaqStars(e)) +
+        group("Regime & fade edge", secGeometry(e) + secFadeRegime(e) + secRangeUsed(e)) +
+        group("Dealer positioning", secGexLive(e) + secGex(e) + secVanna(e)) +
+        group("Odds & flow", secTouchFlow(e) + secQuant(e)) +
+        group("Plan and discipline", secPlan(e)) +
+        group("Options & venue", secOptions(e) + secVenue(e))
+      ).replace(/<details open /g, "<details ");   // collapse detail panels — tap to expand
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
     // STRETCH wheel sits right under the regime banner (first card).
