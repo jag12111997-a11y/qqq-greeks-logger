@@ -50,6 +50,7 @@ import os
 import math
 import time
 import datetime
+import subprocess
 from zoneinfo import ZoneInfo
 
 import requests
@@ -70,6 +71,12 @@ CONTRACT_MULTIPLIER = 100
 GEX_DEALER_SIGN = 1
 GEX_LIVE_PATH = os.path.join("market-dash", "gex_live.json")
 AUCTION_LIVE_PATH = os.path.join("market-dash", "auction_live.json")
+
+# Intraday live-push: on GitHub Actions, push the live JSONs every few minutes
+# DURING the session so the dashboard updates in eve's 7:17-8:30 window instead
+# of only when the 2-hour run ends. ~5 min because GitHub Pages rebuilds ~10x/hr.
+CI_PUSH = os.environ.get("GITHUB_ACTIONS") == "true"
+LIVE_PUSH_SECONDS = int(os.environ.get("LIVE_PUSH_SECONDS", "300"))
 
 WINDOW = float(os.environ.get("WINDOW", "15"))
 INTERVAL_SECONDS = int(os.environ.get("INTERVAL_SECONDS", "0"))
@@ -555,6 +562,39 @@ def write_auction_live(a):
         json.dump(a, f, indent=2)
 
 
+_git_ready = [False]
+
+
+def _git(*args):
+    return subprocess.run(["git", *args], capture_output=True, text=True, timeout=120)
+
+
+def push_live_snapshots():
+    """CI only: commit + push JUST the live JSONs so the dashboard refreshes every
+    few minutes during the session. Best-effort — pulls-with-rebase before pushing
+    so it never collides with the other bots, and never raises (a failed push must
+    not stop logging). The end-of-run workflow commit still catches everything."""
+    if not CI_PUSH:
+        return
+    try:
+        if not _git_ready[0]:
+            _git("config", "user.name", "qqq-logger-bot")
+            _git("config", "user.email", "actions@github.com")
+            _git_ready[0] = True
+        _git("add", GEX_LIVE_PATH, AUCTION_LIVE_PATH)
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%SZ")
+        c = _git("commit", "-m", f"live snapshot {stamp}")
+        if "nothing to commit" in (c.stdout + c.stderr).lower():
+            return
+        _git("pull", "--rebase", "--autostash", "origin", "main")
+        p = _git("push")
+        if p.returncode != 0:                       # one retry after another rebase
+            _git("pull", "--rebase", "--autostash", "origin", "main")
+            _git("push")
+    except Exception as e:
+        print(f"live push skipped (continuing): {e}")
+
+
 def snapshot_and_write(spot):
     """Capture calls + puts (separate CSVs) and write the live GEX json."""
     got = {}
@@ -593,6 +633,7 @@ def main():
     print(f"Session start: every {INTERVAL_SECONDS}s for {DURATION_SECONDS}s "
           f"(window +/-{WINDOW:g}, calls + puts to separate files).")
     start = time.monotonic()
+    last_push = start
     count = 0
     while time.monotonic() - start < DURATION_SECONDS:
         try:
@@ -600,6 +641,10 @@ def main():
             count += 1
         except Exception as e:
             print(f"Snapshot error (continuing): {e}")
+        # Push the live JSONs mid-run so the dashboard is fresh DURING the window.
+        if CI_PUSH and time.monotonic() - last_push >= LIVE_PUSH_SECONDS:
+            push_live_snapshots()
+            last_push = time.monotonic()
         if time.monotonic() - start >= DURATION_SECONDS:
             break
         time.sleep(INTERVAL_SECONDS)
