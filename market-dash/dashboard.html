@@ -111,6 +111,28 @@
                     color:var(--dim); font-size:10.5px; margin:2px 0 10px; }
   .qqq-chart-meta .tv-credit { margin-left:auto; color:var(--faint); }
   .qqq-chart-meta .tv-credit a { color:var(--dim); text-decoration:none; }
+  .qqq-chart-status { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 10px; }
+  .qqq-chart-chip { display:inline-flex; align-items:center; min-height:25px; padding:4px 8px;
+                    border:1px solid var(--line); border-radius:6px; background:rgba(255,255,255,.025);
+                    color:var(--dim); font-size:10.5px; letter-spacing:.35px; }
+  .qqq-chart-chip.up { color:var(--up); border-color:rgba(0,230,118,.35); }
+  .qqq-chart-chip.down { color:var(--down); border-color:rgba(255,69,58,.35); }
+  .qqq-chart-chip.warn { color:var(--warn); border-color:rgba(255,214,0,.35); }
+  .qqq-chart-controls { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 10px; }
+  .qqq-chart-controls .label { color:var(--faint); font-size:10px; letter-spacing:1px;
+                              text-transform:uppercase; margin-right:2px; }
+  .qqq-layer { appearance:none; border:1px solid var(--line); border-radius:6px;
+               background:#101019; color:var(--faint); padding:5px 9px; font:10.5px/1.2 inherit;
+               cursor:pointer; }
+  .qqq-layer[aria-pressed="true"] { color:var(--accent); border-color:rgba(0,229,255,.5);
+                                     background:rgba(0,229,255,.07); }
+  .qqq-chart-exposure { display:grid; grid-template-columns:repeat(5,minmax(100px,1fr));
+                        gap:1px; margin:0 0 10px; overflow:hidden; border:1px solid var(--line);
+                        border-radius:7px; background:var(--line); }
+  .qqq-chart-exposure > span { background:#0c0c14; padding:7px 9px; color:var(--dim);
+                               font-size:10px; white-space:nowrap; overflow:hidden;
+                               text-overflow:ellipsis; }
+  .qqq-chart-exposure b { color:var(--txt); font-weight:500; }
   .qqq-chart-key { display:flex; flex-wrap:wrap; gap:7px 16px; margin-top:9px;
                    color:var(--dim); font-size:10.5px; }
   .qqq-chart-key i { display:inline-block; width:13px; height:2px; margin-right:6px;
@@ -161,6 +183,8 @@
     .qqq-chart-shell { min-height:350px; }
     .qqq-chart-canvas { height:350px; }
     .qqq-chart-meta .tv-credit { width:100%; margin-left:0; }
+    .qqq-chart-exposure { grid-template-columns:repeat(2,minmax(110px,1fr)); }
+    .qqq-chart-controls { margin-bottom:7px; }
   }
 
   @media (max-width: 420px) {
@@ -2719,26 +2743,183 @@
   // snapshot includes candles, the same chart falls back to real logged QQQ
   // session prices instead of inventing OHLC bars.
   var QQQ_TV = null;
+  var QQQ_LAYERS = { core: true, ranges: true, flow: true };
+  try {
+    var _ql = JSON.parse(localStorage.getItem("md:qqq-layers") || "{}");
+    ["core", "ranges", "flow"].forEach(function (k) {
+      if (typeof _ql[k] === "boolean") QQQ_LAYERS[k] = _ql[k];
+    });
+  } catch (eQqqLayers) {}
+
+  function qqqChartModel(e) {
+    var latest = idx === FULL.length - 1;
+    var g = (latest && LIVE_GEX) ? LIVE_GEX : get(e, "gex", {});
+    var L = (g && g.levels) || {};
+    var mk = {};
+    (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
+    var q = mk.QQQ || {};
+    var spot = Number((latest && LIVE_AUCTION && LIVE_AUCTION.spot) ||
+                      (g && g.spot) || q.last);
+    var vix = Number(get(mk, "VIX.last"));
+    var sig = isFinite(vix) && vix > 0 ? vix / Math.sqrt(252) / 100 : null;
+
+    // Current-session implied range shrinks with the square root of time left.
+    // Historical sessions use the full-day range because there is no live clock.
+    var hoursLeft = 6.5;
+    if (latest) {
+      try {
+        var parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: PT, hour: "numeric", minute: "numeric", hour12: false
+        }).formatToParts(new Date());
+        var hm = {};
+        parts.forEach(function (p) { hm[p.type] = p.value; });
+        var nowHour = Number(hm.hour) + Number(hm.minute || 0) / 60;
+        if (isFinite(nowHour)) hoursLeft = Math.max(0.08, Math.min(6.5, 13 - nowHour));
+      } catch (err) {}
+    }
+    var sigLeft = sig === null ? null : sig * Math.sqrt(hoursLeft / 6.5);
+
+    function touch(price) {
+      var p = Number(price);
+      if (!isFinite(p) || !isFinite(spot) || !(spot > 0) || !(sigLeft > 0)) return null;
+      return Math.min(1, 2 * cdf(-Math.abs(Math.log(p / spot)) / sigLeft));
+    }
+    function touchTitle(label, price) {
+      var p = touch(price);
+      return label + (p === null ? "" : " " + Math.round(p * 100) + "%");
+    }
+    function extreme(test, pick) {
+      var out = null;
+      (get(g, "strikes", []) || []).forEach(function (s) {
+        var n = Number(s.net_gex);
+        if (!isFinite(n) || !test(n) || (out && !pick(n, out.value))) return;
+        out = { price: Number(s.strike), value: n };
+      });
+      return out;
+    }
+    function concentration(key) {
+      var out = null;
+      (get(g, "strikes", []) || []).forEach(function (s) {
+        var n = Math.abs(Number(s[key]));
+        if (!isFinite(n) || (out && n <= out.value)) return;
+        out = { price: Number(s.strike), value: n };
+      });
+      return out;
+    }
+
+    var maxPos = extreme(function (n) { return n > 0; }, function (n, old) { return n > old; });
+    var maxNeg = extreme(function (n) { return n < 0; }, function (n, old) { return n < old; });
+    var vanna = concentration("vex"), theta = concentration("tex");
+    var levels = [];
+    function add(group, price, color, title, style, width, priority) {
+      var p = Number(price);
+      if (!isFinite(p)) return;
+      levels.push({ group: group, price: p, color: color, title: title,
+                    style: style, width: width || 1, priority: priority || 50 });
+    }
+
+    if (g && (!g.gamma_flip_method || g.gamma_flip_method === "zero crossing"))
+      add("core", g.gamma_flip, "#ffd600", touchTitle("Flip", g.gamma_flip), "dashed", 2, 10);
+    add("core", L.call_wall, "#00e676", touchTitle("Call wall", L.call_wall), "solid", 2, 20);
+    add("core", L.put_wall, "#ff453a", touchTitle("Put wall", L.put_wall), "solid", 2, 21);
+    add("core", L.highest_oi_strike, "#b388ff", touchTitle("OI magnet", L.highest_oi_strike), "dotted", 1, 30);
+    if (maxPos) add("core", maxPos.price, "#64ffda", touchTitle("Max +gamma", maxPos.price), "dashed", 1, 35);
+    if (maxNeg) add("core", maxNeg.price, "#ff9100", touchTitle("Max -gamma", maxNeg.price), "dashed", 1, 36);
+
+    if (isFinite(spot) && sigLeft !== null) {
+      add("ranges", spot * (1 + sigLeft), "#29b6f6", "+68% close", "dashed", 1, 60);
+      add("ranges", spot * (1 - sigLeft), "#29b6f6", "-68% close", "dashed", 1, 61);
+      add("ranges", spot * (1 + 2 * sigLeft), "#5c6bc0", "+95% close", "dotted", 1, 62);
+      add("ranges", spot * (1 - 2 * sigLeft), "#5c6bc0", "-95% close", "dotted", 1, 63);
+    }
+    var cvol = Number(get(e, "quant.garch.conditional_vol_pct"));
+    if (isFinite(spot) && isFinite(cvol) && cvol > 0) {
+      var gsig = cvol / Math.sqrt(252) / 100 * Math.sqrt(hoursLeft / 6.5);
+      add("ranges", spot * (1 + gsig), "#ff00e5", "+GARCH 68%", "dashed", 1, 70);
+      add("ranges", spot * (1 - gsig), "#ff00e5", "-GARCH 68%", "dashed", 1, 71);
+    }
+    if (vanna) add("flow", vanna.price, "#00bfa5", touchTitle("Vanna", vanna.price), "dotted", 1, 80);
+    if (theta) add("flow", theta.price, "#ff6d00", touchTitle("Theta", theta.price), "dotted", 1, 81);
+    add("spot", spot, "#00e5ff", "Spot", "dotted", 1, 1);
+
+    var vr2 = cockpitVR(e);
+    var geometry = Number(get(e, "quant.geometry.diversification_volume"));
+    var used = (sig && has(q.pct_change)) ? Math.abs(Number(q.pct_change)) / (sig * 100) : null;
+    var statuses = [];
+    function chip(text, tone) { statuses.push({ text: text, tone: tone || "" }); }
+    var hostile = 0;
+    if (g && g.regime) {
+      var positive = g.regime === "POSITIVE GAMMA";
+      chip(positive ? "POSITIVE GAMMA" : "NEGATIVE GAMMA", positive ? "up" : "down");
+      if (!positive) hostile++;
+    }
+    if (vr2 !== null) {
+      chip(vr2 > 1.1 ? "TRENDING" : vr2 < 0.9 ? "MEAN-REVERTING" : "RANDOM WALK",
+           vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "");
+      if (vr2 > 1.1) hostile++;
+    }
+    if (isFinite(geometry)) {
+      chip(geometry < 0.15 ? "REGIME COLLAPSED" : geometry < 0.35 ? "REGIME THIN" : "REGIME HEALTHY",
+           geometry < 0.15 ? "down" : geometry < 0.35 ? "warn" : "up");
+      if (geometry < 0.15) hostile++;
+    }
+    var garchRegime = get(e, "quant.garch.regime");
+    if (garchRegime) chip(String(garchRegime), garchRegime === "HIGH VOL" ? "down" : garchRegime === "LOW VOL" ? "up" : "");
+    if (used !== null && isFinite(used)) chip("RANGE " + Math.round(used * 100) + "% USED", used >= 1 ? "down" : used >= .5 ? "warn" : "up");
+    if (hostile >= 2) statuses.unshift({ text: "STAND DOWN", tone: "down" });
+
+    var stamp = (latest && LIVE_AUCTION && LIVE_AUCTION.generated_utc) ||
+                (latest && LIVE_GEX && LIVE_GEX.generated_utc) || e.fetched_utc;
+    var age = toDate(stamp);
+    var ageMin = age ? Math.max(0, Math.round((Date.now() - age.getTime()) / 60000)) : null;
+    return { latest: latest, g: g || {}, spot: spot, sig: sig, sigLeft: sigLeft,
+             hoursLeft: hoursLeft, levels: levels, statuses: statuses, used: used,
+             stamp: stamp, ageMin: ageMin };
+  }
 
   function secQqqTradingChart(e) {
-    var liveBars = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
+    var M = qqqChartModel(e);
+    var liveBars = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
       ? LIVE_AUCTION.candles.length : 0;
     var source = liveBars
       ? "QQQ · 1-minute · Alpaca IEX · " + liveBars + " bars"
-      : "QQQ · logged sessions · live candles join on the next logger snapshot";
+      : "QQQ · logged sessions · waiting for the next live candle refresh";
+    if (M.ageMin !== null) source += " · " + (M.ageMin <= 1 ? "updated now" : M.ageMin + "m old");
+    var chips = M.statuses.map(function (s) {
+      return '<span class="qqq-chart-chip ' + s.tone + '">' + esc(s.text) + "</span>";
+    }).join("");
+    var g = M.g || {};
+    var exposure = [
+      ["GEX", g.net_gex], ["DEX", g.net_dex], ["VEX", g.net_vex],
+      ["TEX", g.net_tex], ["G ratio", g.gamma_ratio]
+    ].map(function (x) {
+      var shown = x[0] === "G ratio" ? (has(x[1]) ? Number(x[1]).toFixed(3) : "—") :
+                  (has(x[1]) ? fmtBig(Number(x[1])) : "—");
+      return "<span>" + esc(x[0]) + " <b>" + shown + "</b></span>";
+    }).join("");
+    function layerButton(id, label) {
+      return '<button type="button" class="qqq-layer" data-qqq-layer="' + id +
+        '" aria-pressed="' + (QQQ_LAYERS[id] ? "true" : "false") + '">' + esc(label) + "</button>";
+    }
     var body =
       '<div class="qqq-chart-meta"><span>' + esc(source) + '</span>' +
       '<span class="tv-credit">Includes <a href="https://www.tradingview.com/" target="_blank" rel="noopener">' +
       'Lightweight Charts&trade; by TradingView, Inc.</a></span></div>' +
+      '<div class="qqq-chart-status">' + chips + "</div>" +
+      '<div class="qqq-chart-exposure">' + exposure + "</div>" +
+      '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
+        layerButton("core", "GEX levels + odds") + layerButton("ranges", "Expected ranges") +
+        layerButton("flow", "Vanna / theta") + "</div>" +
       '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
-      'role="img" aria-label="Interactive QQQ price chart with live gamma exposure levels"></div></div>' +
+      'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna and theta overlays"></div></div>' +
       '<div class="qqq-chart-key">' +
-        '<span style="color:#ffd600"><i></i>gamma flip</span>' +
-        '<span style="color:#00e676"><i></i>call wall</span>' +
-        '<span style="color:#ff453a"><i></i>put wall</span>' +
+        '<span style="color:#ffd600"><i></i>flip / walls / OI / max &plusmn;gamma</span>' +
+        '<span style="color:#29b6f6"><i></i>68% / 95% into close</span>' +
+        '<span style="color:#ff00e5"><i></i>GARCH 68%</span>' +
+        '<span style="color:#00bfa5"><i></i>vanna / theta concentration</span>' +
         '<span style="color:#00e5ff"><i></i>spot</span>' +
       '</div>';
-    return secWide("QQQ · price + live GEX levels", body);
+    return secWide("QQQ · live price + dealer map", body);
   }
 
   function destroyQqqChart() {
@@ -2791,7 +2972,8 @@
       localization: { locale: "en-US", priceFormatter: function (p) { return "$" + p.toFixed(2); } }
     });
 
-    var raw = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
+    var M = qqqChartModel(e);
+    var raw = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
       ? LIVE_AUCTION.candles : [];
     var seen = {}, candles = raw.map(function (b) {
       return {
@@ -2838,23 +3020,27 @@
       series.setData(points);
     }
 
-    var g = (LIVE_GEX && idx === FULL.length - 1) ? LIVE_GEX : get(e, "gex", {});
-    var L = (g && g.levels) || {};
-    function level(price, color, title, lineStyle, width) {
-      var p = Number(price);
-      if (!isFinite(p)) return;
+    var styleMap = { solid: TV.LineStyle.Solid, dashed: TV.LineStyle.Dashed,
+                     dotted: TV.LineStyle.Dotted };
+    function level(item) {
       series.createPriceLine({
-        price: p, color: color, lineWidth: width || 1,
-        lineStyle: lineStyle, axisLabelVisible: true, title: title
+        price: item.price, color: item.color, lineWidth: item.width || 1,
+        lineStyle: styleMap[item.style] || TV.LineStyle.Solid,
+        axisLabelVisible: true, title: item.title
       });
     }
-    if (g && (!g.gamma_flip_method || g.gamma_flip_method === "zero crossing")) {
-      level(g.gamma_flip, "#ffd600", "GEX flip", TV.LineStyle.Dashed, 2);
-    }
-    level(L.call_wall, "#00e676", "Call wall", TV.LineStyle.Solid, 2);
-    level(L.put_wall, "#ff453a", "Put wall", TV.LineStyle.Solid, 2);
-    level((LIVE_AUCTION && LIVE_AUCTION.spot) || (g && g.spot),
-      "#00e5ff", "Spot", TV.LineStyle.Dotted, 1);
+    // Same-price signals are combined into one labelled line. This is common
+    // when the call wall, put wall and OI magnet all sit on one strike.
+    var active = M.levels.filter(function (x) {
+      return x.group === "spot" || QQQ_LAYERS[x.group];
+    }).sort(function (a, b) { return a.priority - b.priority; });
+    var merged = {};
+    active.forEach(function (x) {
+      var key = x.price.toFixed(4);
+      if (!merged[key]) { merged[key] = x; return; }
+      if (merged[key].title.indexOf(x.title) < 0) merged[key].title += " · " + x.title;
+    });
+    Object.keys(merged).forEach(function (k) { level(merged[k]); });
 
     chart.timeScale().fitContent();
     var ro = window.ResizeObserver ? new ResizeObserver(function () {
@@ -3508,6 +3694,19 @@
       window.scrollTo(0, 0);
       render();
     }
+  });
+
+  // QQQ chart overlay toggles. The choice survives refreshes and rerenders.
+  document.addEventListener("click", function (ev) {
+    var t = (ev.target && ev.target.closest) ? ev.target.closest("[data-qqq-layer]") : null;
+    if (!t) return;
+    var layer = t.getAttribute("data-qqq-layer");
+    if (!Object.prototype.hasOwnProperty.call(QQQ_LAYERS, layer)) return;
+    QQQ_LAYERS[layer] = !QQQ_LAYERS[layer];
+    try { localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS)); } catch (eLayers) {}
+    var y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
   });
 
   // ---------- LIVE PRICES (client-side, browser-only) ----------
