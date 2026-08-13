@@ -3430,12 +3430,13 @@
     var _qqqBody =
       secNasdaqHUD(e) +
       (
-        group("Price", secQqqTradingChart(e) + secNasdaqStars(e)) +
+        group("Price", secNasdaqStars(e)) +
         group("Regime & fade edge", secGeometry(e) + secFadeRegime(e) + secRangeUsed(e)) +
         group("Dealer positioning", secGexLive(e) + secGex(e) + secVanna(e)) +
         group("Odds & flow", secTouchFlow(e) + secQuant(e)) +
         group("Plan and discipline", secPlan(e)) +
-        group("Options & venue", secOptions(e) + secVenue(e))
+        group("Options & venue", secOptions(e) + secVenue(e)) +
+        group("QQQ chart", secQqqTradingChart(e))
       );   // panels stay OPEN — charts/tables visible, styled as HUD cards
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
