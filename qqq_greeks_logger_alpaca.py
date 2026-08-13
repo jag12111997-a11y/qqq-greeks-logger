@@ -494,7 +494,20 @@ def compute_auction(bars, session_date, spot):
             vw = float(vw)
         except (TypeError, ValueError):
             vw = (h + l + c) / 3.0            # typical-price fallback
-        rows.append({"o": o, "h": h, "l": l, "c": c, "v": v, "vw": vw})
+        # Lightweight Charts expects an intraday Unix timestamp. Keep the raw
+        # Alpaca bar time alongside the auction inputs so the dashboard can
+        # draw the same QQQ tape this function is already analysing.
+        ts = b.get("t")
+        try:
+            if isinstance(ts, (int, float)):
+                ts = int(ts)
+            else:
+                ts = int(datetime.datetime.fromisoformat(
+                    str(ts).replace("Z", "+00:00")
+                ).timestamp())
+        except (TypeError, ValueError, OverflowError):
+            ts = None
+        rows.append({"time": ts, "o": o, "h": h, "l": l, "c": c, "v": v, "vw": vw})
     n = len(rows)
     if n < 5:
         return None
@@ -538,6 +551,18 @@ def compute_auction(bars, session_date, spot):
 
     dist = ((spot - vwap) / vwap * 100.0) if (spot and vwap) else None
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    candles = [
+        {
+            "time": r["time"],
+            "open": round(r["o"], 4),
+            "high": round(r["h"], 4),
+            "low": round(r["l"], 4),
+            "close": round(r["c"], 4),
+            "volume": round(r["v"], 0),
+        }
+        for r in rows[-450:] if r["time"] is not None
+    ]
+
     return {
         "generated_utc": stamp,
         "session_date": session_date,
@@ -553,6 +578,9 @@ def compute_auction(bars, session_date, spot):
         "spot_vs_or": spot_vs_or,
         "vol_total": round(tv, 0),
         "vol_pace": round(vol_pace, 2) if vol_pace is not None else None,
+        # QQQ only. The same IEX one-minute bars already fetched for VWAP and
+        # opening-range metrics now power the Nasdaq tab's TradingView chart.
+        "candles": candles,
     }
 
 

@@ -105,6 +105,16 @@
   .flow .band i { opacity:.35; background:#1c2b30; }
   .flow section h2 { color:#00e5ff; }
   .flow details.read { margin-top:8px; }
+  .qqq-chart-shell { position:relative; min-height:430px; margin-top:4px; }
+  .qqq-chart-canvas { width:100%; height:430px; }
+  .qqq-chart-meta { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center;
+                    color:var(--dim); font-size:10.5px; margin:2px 0 10px; }
+  .qqq-chart-meta .tv-credit { margin-left:auto; color:var(--faint); }
+  .qqq-chart-meta .tv-credit a { color:var(--dim); text-decoration:none; }
+  .qqq-chart-key { display:flex; flex-wrap:wrap; gap:7px 16px; margin-top:9px;
+                   color:var(--dim); font-size:10.5px; }
+  .qqq-chart-key i { display:inline-block; width:13px; height:2px; margin-right:6px;
+                     vertical-align:3px; background:currentColor; }
   table.wl td, table.wl th { padding:4px 0; }
   table.wl tr:not(:first-child):hover { background:rgba(0,229,255,.05); }
   .donutwrap { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
@@ -148,6 +158,9 @@
 
     /* long read lines need room to breathe */
     .read { font-size:12px; }
+    .qqq-chart-shell { min-height:350px; }
+    .qqq-chart-canvas { height:350px; }
+    .qqq-chart-meta .tv-credit { width:100%; margin-left:0; }
   }
 
   @media (max-width: 420px) {
@@ -167,6 +180,7 @@
   history.js sets window.MARKET_DASH_HISTORY.
 -->
 <script src="history.js" onerror="window.__histMissing=true"></script>
+<script src="https://unpkg.com/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
 (function () {
@@ -2699,6 +2713,157 @@
       .catch(function () {});
   }
 
+  // ---------- QQQ TRADINGVIEW CHART ----------
+  // One QQQ series only. Live 1-minute candles come from auction_live.json,
+  // which is written by the existing Alpaca/IEX logger. Until the next logger
+  // snapshot includes candles, the same chart falls back to real logged QQQ
+  // session prices instead of inventing OHLC bars.
+  var QQQ_TV = null;
+
+  function secQqqTradingChart(e) {
+    var liveBars = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
+      ? LIVE_AUCTION.candles.length : 0;
+    var source = liveBars
+      ? "QQQ · 1-minute · Alpaca IEX · " + liveBars + " bars"
+      : "QQQ · logged sessions · live candles join on the next logger snapshot";
+    var body =
+      '<div class="qqq-chart-meta"><span>' + esc(source) + '</span>' +
+      '<span class="tv-credit">Includes <a href="https://www.tradingview.com/" target="_blank" rel="noopener">' +
+      'Lightweight Charts&trade; by TradingView, Inc.</a></span></div>' +
+      '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
+      'role="img" aria-label="Interactive QQQ price chart with live gamma exposure levels"></div></div>' +
+      '<div class="qqq-chart-key">' +
+        '<span style="color:#ffd600"><i></i>gamma flip</span>' +
+        '<span style="color:#00e676"><i></i>call wall</span>' +
+        '<span style="color:#ff453a"><i></i>put wall</span>' +
+        '<span style="color:#00e5ff"><i></i>spot</span>' +
+      '</div>';
+    return secWide("QQQ · price + live GEX levels", body);
+  }
+
+  function destroyQqqChart() {
+    if (!QQQ_TV) return;
+    try { if (QQQ_TV.resize) QQQ_TV.resize.disconnect(); } catch (err) {}
+    try { if (QQQ_TV.chart) QQQ_TV.chart.remove(); } catch (err2) {}
+    QQQ_TV = null;
+  }
+
+  function mountQqqChart(e) {
+    destroyQqqChart();
+    var el = document.getElementById("qqq-tv-chart");
+    var TV = window.LightweightCharts;
+    if (!el) return;
+    if (!TV || !TV.createChart) {
+      el.innerHTML = '<div style="padding:54px 16px;text-align:center;color:var(--faint)">' +
+        "Chart library unavailable. QQQ and GEX cards below are unchanged.</div>";
+      return;
+    }
+
+    var chart = TV.createChart(el, {
+      width: Math.max(el.clientWidth, 280),
+      height: el.clientHeight || 430,
+      layout: {
+        background: { type: TV.ColorType.Solid, color: "#0c0c14" },
+        textColor: "#8b8ba6",
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+        attributionLogo: false
+      },
+      grid: {
+        vertLines: { color: "#15151f" },
+        horzLines: { color: "#15151f" }
+      },
+      crosshair: {
+        mode: TV.CrosshairMode.Normal,
+        vertLine: { color: "#55556b", labelBackgroundColor: "#1e1e2a" },
+        horzLine: { color: "#55556b", labelBackgroundColor: "#1e1e2a" }
+      },
+      rightPriceScale: { borderColor: "#1e1e2a", minimumWidth: 74 },
+      timeScale: {
+        borderColor: "#1e1e2a",
+        timeVisible: true,
+        secondsVisible: false,
+        rightOffset: 4,
+        barSpacing: 7,
+        fixLeftEdge: true
+      },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true },
+      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
+      localization: { locale: "en-US", priceFormatter: function (p) { return "$" + p.toFixed(2); } }
+    });
+
+    var raw = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
+      ? LIVE_AUCTION.candles : [];
+    var seen = {}, candles = raw.map(function (b) {
+      return {
+        time: Number(b.time), open: Number(b.open), high: Number(b.high),
+        low: Number(b.low), close: Number(b.close)
+      };
+    }).filter(function (b) {
+      var good = isFinite(b.time) && isFinite(b.open) && isFinite(b.high) &&
+        isFinite(b.low) && isFinite(b.close) && !seen[b.time];
+      if (good) seen[b.time] = 1;
+      return good;
+    }).sort(function (a, b) { return a.time - b.time; });
+
+    var series;
+    if (candles.length) {
+      series = chart.addSeries(TV.CandlestickSeries, {
+        upColor: "#00e676", downColor: "#ff453a",
+        borderUpColor: "#00e676", borderDownColor: "#ff453a",
+        wickUpColor: "#69f0ae", wickDownColor: "#ff7961",
+        priceLineVisible: false, lastValueVisible: true
+      });
+      series.setData(candles);
+    } else {
+      var cut = H.indexOf(e);
+      var hist = cut >= 0 ? H.slice(0, cut + 1) : H.slice();
+      var daily = {};
+      hist.forEach(function (entry) {
+        var q = null;
+        (entry.watchlist || []).forEach(function (w) { if (w.symbol === "QQQ") q = w; });
+        if (q && has(q.last) && entry.entry_date) {
+          // AM and PM snapshots can share a date. Keep the later real QQQ
+          // value so Lightweight Charts receives one strictly ordered point
+          // per session date.
+          daily[String(entry.entry_date).slice(0, 10)] = Number(q.last);
+        }
+      });
+      var points = Object.keys(daily).sort().map(function (day) {
+        return { time: day, value: daily[day] };
+      });
+      series = chart.addSeries(TV.LineSeries, {
+        color: "#00e5ff", lineWidth: 2, priceLineVisible: false,
+        lastValueVisible: true, crosshairMarkerRadius: 4
+      });
+      series.setData(points);
+    }
+
+    var g = (LIVE_GEX && idx === FULL.length - 1) ? LIVE_GEX : get(e, "gex", {});
+    var L = (g && g.levels) || {};
+    function level(price, color, title, lineStyle, width) {
+      var p = Number(price);
+      if (!isFinite(p)) return;
+      series.createPriceLine({
+        price: p, color: color, lineWidth: width || 1,
+        lineStyle: lineStyle, axisLabelVisible: true, title: title
+      });
+    }
+    if (g && (!g.gamma_flip_method || g.gamma_flip_method === "zero crossing")) {
+      level(g.gamma_flip, "#ffd600", "GEX flip", TV.LineStyle.Dashed, 2);
+    }
+    level(L.call_wall, "#00e676", "Call wall", TV.LineStyle.Solid, 2);
+    level(L.put_wall, "#ff453a", "Put wall", TV.LineStyle.Solid, 2);
+    level((LIVE_AUCTION && LIVE_AUCTION.spot) || (g && g.spot),
+      "#00e5ff", "Spot", TV.LineStyle.Dotted, 1);
+
+    chart.timeScale().fitContent();
+    var ro = window.ResizeObserver ? new ResizeObserver(function () {
+      if (el.clientWidth > 0) chart.applyOptions({ width: el.clientWidth, height: el.clientHeight || 430 });
+    }) : null;
+    if (ro) ro.observe(el);
+    QQQ_TV = { chart: chart, resize: ro };
+  }
+
   function secGexLive(e) {
     // Only on the latest session (it's a live, right-now read), only if we have data.
     if (!LIVE_GEX || idx !== FULL.length - 1 || !has(LIVE_GEX.net_gex)) return "";
@@ -3230,6 +3395,7 @@
 
   function render() {
     var e = FULL[idx];
+    destroyQqqChart();
     var opts = FULL.map(function (x, i) {
       var tag = x.session ? "  " + String(x.session).toUpperCase() : "";
       return '<option value="' + i + '"' + (i === idx ? " selected" : "") + ">" +
@@ -3264,7 +3430,7 @@
     var _qqqBody =
       secNasdaqHUD(e) +
       (
-        group("Price", secNasdaqStars(e)) +
+        group("Price", secQqqTradingChart(e) + secNasdaqStars(e)) +
         group("Regime & fade edge", secGeometry(e) + secFadeRegime(e) + secRangeUsed(e)) +
         group("Dealer positioning", secGexLive(e) + secGex(e) + secVanna(e)) +
         group("Odds & flow", secTouchFlow(e) + secQuant(e)) +
@@ -3297,6 +3463,9 @@
     });
 
     applyCollapseState();   // restore whatever you had folded last visit
+    if (TAB === "nasdaq") {
+      window.requestAnimationFrame(function () { mountQqqChart(e); });
+    }
   }
 
   render();
