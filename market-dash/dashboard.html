@@ -2758,7 +2758,14 @@
     var mk = {};
     (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
     var q = mk.QQQ || {};
-    var spot = Number((latest && LIVE_AUCTION && LIVE_AUCTION.spot) ||
+    // The live browser quote is the same QQQ price used by the page header and
+    // always wins over the slower 5-minute logger snapshot. Logger spot remains
+    // the safe fallback before the first browser quote arrives.
+    var quoteLive = latest && q._live_quote === true && isFinite(Number(q.last));
+    var quoteTime = quoteLive && isFinite(Number(q._live_src_time))
+      ? Number(q._live_src_time) : null;
+    var spot = Number((quoteLive ? q.last : null) ||
+                      (latest && LIVE_AUCTION && LIVE_AUCTION.spot) ||
                       (g && g.spot) || q.last);
     var vix = Number(get(mk, "VIX.last"));
     var sig = isFinite(vix) && vix > 0 ? vix / Math.sqrt(252) / 100 : null;
@@ -2840,7 +2847,7 @@
     }
     if (vanna) add("flow", vanna.price, "#00bfa5", touchTitle("Vanna", vanna.price), "dotted", 1, 80);
     if (theta) add("flow", theta.price, "#ff6d00", touchTitle("Theta", theta.price), "dotted", 1, 81);
-    add("spot", spot, "#00e5ff", "Spot", "dotted", 1, 1);
+    add("spot", spot, "#00e5ff", quoteLive ? "LIVE QQQ" : "Spot", "dotted", 1, 1);
 
     var vr2 = cockpitVR(e);
     var geometry = Number(get(e, "quant.geometry.diversification_volume"));
@@ -2866,27 +2873,45 @@
     var garchRegime = get(e, "quant.garch.regime");
     if (garchRegime) chip(String(garchRegime), garchRegime === "HIGH VOL" ? "down" : garchRegime === "LOW VOL" ? "up" : "");
     if (used !== null && isFinite(used)) chip("RANGE " + Math.round(used * 100) + "% USED", used >= 1 ? "down" : used >= .5 ? "warn" : "up");
+    if (quoteLive) statuses.unshift({ text: "QQQ LIVE $" + spot.toFixed(2), tone: "up", liveQuote: true });
     if (hostile >= 2) statuses.unshift({ text: "STAND DOWN", tone: "down" });
 
     var stamp = (latest && LIVE_AUCTION && LIVE_AUCTION.generated_utc) ||
                 (latest && LIVE_GEX && LIVE_GEX.generated_utc) || e.fetched_utc;
     var age = toDate(stamp);
     var ageMin = age ? Math.max(0, Math.round((Date.now() - age.getTime()) / 60000)) : null;
-    return { latest: latest, g: g || {}, spot: spot, sig: sig, sigLeft: sigLeft,
+    var quoteAgeMin = quoteTime === null ? null : Math.max(0, Math.round((Date.now() - quoteTime) / 60000));
+    return { latest: latest, g: g || {}, spot: spot, quoteLive: quoteLive,
+             quoteTime: quoteTime, quoteAgeMin: quoteAgeMin, sig: sig, sigLeft: sigLeft,
              hoursLeft: hoursLeft, levels: levels, statuses: statuses, used: used,
              stamp: stamp, ageMin: ageMin };
+  }
+
+  function qqqChartSource(M, liveBars) {
+    var bits = [];
+    if (M.quoteLive) {
+      bits.push("QQQ LIVE $" + M.spot.toFixed(2));
+      bits.push("Finnhub quote " + (M.quoteAgeMin <= 1 ? "updated now" : M.quoteAgeMin + "m old"));
+    } else {
+      bits.push("QQQ");
+    }
+    if (liveBars) {
+      bits.push("Alpaca IEX 1-minute candles · " + liveBars + " bars");
+      if (M.ageMin !== null) bits.push(M.ageMin <= 1 ? "candles updated now" : "candles " + M.ageMin + "m old");
+    } else {
+      bits.push("logged sessions · waiting for live candles");
+    }
+    return bits.join(" · ");
   }
 
   function secQqqTradingChart(e) {
     var M = qqqChartModel(e);
     var liveBars = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
       ? LIVE_AUCTION.candles.length : 0;
-    var source = liveBars
-      ? "QQQ · 1-minute · Alpaca IEX · " + liveBars + " bars"
-      : "QQQ · logged sessions · waiting for the next live candle refresh";
-    if (M.ageMin !== null) source += " · " + (M.ageMin <= 1 ? "updated now" : M.ageMin + "m old");
+    var source = qqqChartSource(M, liveBars);
     var chips = M.statuses.map(function (s) {
-      return '<span class="qqq-chart-chip ' + s.tone + '">' + esc(s.text) + "</span>";
+      return '<span class="qqq-chart-chip ' + s.tone + '"' +
+        (s.liveQuote ? ' id="qqq-live-chip"' : "") + '>' + esc(s.text) + "</span>";
     }).join("");
     var g = M.g || {};
     var exposure = [
@@ -2902,7 +2927,7 @@
         '" aria-pressed="' + (QQQ_LAYERS[id] ? "true" : "false") + '">' + esc(label) + "</button>";
     }
     var body =
-      '<div class="qqq-chart-meta"><span>' + esc(source) + '</span>' +
+      '<div class="qqq-chart-meta"><span id="qqq-live-source">' + esc(source) + '</span>' +
       '<span class="tv-credit">Includes <a href="https://www.tradingview.com/" target="_blank" rel="noopener">' +
       'Lightweight Charts&trade; by TradingView, Inc.</a></span></div>' +
       '<div class="qqq-chart-status">' + chips + "</div>" +
@@ -2917,7 +2942,7 @@
         '<span style="color:#29b6f6"><i></i>68% / 95% into close</span>' +
         '<span style="color:#ff00e5"><i></i>GARCH 68%</span>' +
         '<span style="color:#00bfa5"><i></i>vanna / theta concentration</span>' +
-        '<span style="color:#00e5ff"><i></i>spot</span>' +
+        '<span style="color:#00e5ff"><i></i>live QQQ quote</span>' +
       '</div>';
     return secWide("QQQ · live price + dealer map", body);
   }
@@ -3020,10 +3045,28 @@
       series.setData(points);
     }
 
+    // Candles come from the 5-minute logger commits. Extend their right edge
+    // to the browser's fresher QQQ quote so the chart and the live page price
+    // always agree without pretending the quote is a full OHLC candle.
+    var quoteSeries = null, lastCandleTime = null;
+    if (candles.length && M.quoteLive && M.quoteTime !== null) {
+      var tail = candles[candles.length - 1];
+      var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
+      lastCandleTime = tail.time;
+      quoteSeries = chart.addSeries(TV.LineSeries, {
+        color: "#00e5ff", lineWidth: 2, lineStyle: TV.LineStyle.Dotted,
+        priceLineVisible: false, lastValueVisible: false,
+        crosshairMarkerVisible: true, crosshairMarkerRadius: 5
+      });
+      quoteSeries.setData(quoteBarTime > tail.time
+        ? [{ time: tail.time, value: tail.close }, { time: quoteBarTime, value: M.spot }]
+        : [{ time: tail.time, value: M.spot }]);
+    }
+
     var styleMap = { solid: TV.LineStyle.Solid, dashed: TV.LineStyle.Dashed,
                      dotted: TV.LineStyle.Dotted };
     function level(item) {
-      series.createPriceLine({
+      return series.createPriceLine({
         price: item.price, color: item.color, lineWidth: item.width || 1,
         lineStyle: styleMap[item.style] || TV.LineStyle.Solid,
         axisLabelVisible: true, title: item.title
@@ -3040,14 +3083,39 @@
       if (!merged[key]) { merged[key] = x; return; }
       if (merged[key].title.indexOf(x.title) < 0) merged[key].title += " · " + x.title;
     });
-    Object.keys(merged).forEach(function (k) { level(merged[k]); });
+    var spotLine = null;
+    Object.keys(merged).forEach(function (k) {
+      var made = level(merged[k]);
+      if (merged[k].group === "spot") spotLine = made;
+    });
 
     chart.timeScale().fitContent();
     var ro = window.ResizeObserver ? new ResizeObserver(function () {
       if (el.clientWidth > 0) chart.applyOptions({ width: el.clientWidth, height: el.clientHeight || 430 });
     }) : null;
     if (ro) ro.observe(el);
-    QQQ_TV = { chart: chart, resize: ro };
+    QQQ_TV = { chart: chart, resize: ro, quoteSeries: quoteSeries,
+               spotLine: spotLine, lastCandleTime: lastCandleTime,
+               quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60 };
+  }
+
+  function updateMountedQqqQuote(e) {
+    if (!QQQ_TV || idx !== FULL.length - 1) return;
+    var M = qqqChartModel(e);
+    if (!M.quoteLive || M.quoteTime === null) return;
+    var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
+    try {
+      if (QQQ_TV.quoteSeries && quoteBarTime >= (QQQ_TV.quoteTime || 0)) {
+        QQQ_TV.quoteSeries.update({ time: quoteBarTime, value: M.spot });
+        QQQ_TV.quoteTime = quoteBarTime;
+      }
+      if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: "LIVE QQQ" });
+    } catch (err) {}
+    var sourceEl = document.getElementById("qqq-live-source");
+    var chipEl = document.getElementById("qqq-live-chip");
+    var bars = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles) ? LIVE_AUCTION.candles.length : 0;
+    if (sourceEl) sourceEl.textContent = qqqChartSource(M, bars);
+    if (chipEl) chipEl.textContent = "QQQ LIVE $" + M.spot.toFixed(2);
   }
 
   function secGexLive(e) {
@@ -3803,6 +3871,8 @@
         if (!q) return;
         r.last = q.last;
         if (q.pct !== null) r.pct_change = q.pct;
+        r._live_quote = true;
+        r._live_src_time = q.srcTime || Date.now();
         painted++; note(q);
       });
       // Sector donut (matched by ETF ticker). Only the % move shows there.
@@ -3859,8 +3929,21 @@
       });
     }
 
+    // QQQ gets a faster lightweight quote-only refresh for the chart. This is
+    // four requests per minute and stays comfortably inside the free feed's
+    // limit; the heavier all-symbol dashboard refresh remains once per minute.
+    function cycleQqq() {
+      if (document.hidden) return;
+      fetchOne("QQQ").then(function () {
+        var info = applyLive();
+        if (idx === FULL.length - 1) updateMountedQqqQuote(FULL[FULL.length - 1]);
+        stamp(info);
+      });
+    }
+
     cycle();                     // paint as soon as the page opens
     setInterval(cycle, 60000);   // keep it fresh every 60s while the page is open
+    setInterval(cycleQqq, 15000); // keep the QQQ chart quote aligned with the live price
   }
   startLivePrices();
 })();
