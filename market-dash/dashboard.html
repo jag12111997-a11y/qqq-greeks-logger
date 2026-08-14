@@ -137,6 +137,38 @@
                    color:var(--dim); font-size:10.5px; }
   .qqq-chart-key i { display:inline-block; width:13px; height:2px; margin-right:6px;
                      vertical-align:3px; background:currentColor; }
+  .qqq-top-grid { display:grid; grid-template-columns:minmax(0,2.05fr) minmax(320px,.95fr);
+                  gap:12px; align-items:stretch; margin:0 0 12px; }
+  .qqq-top-grid > section { min-width:0; }
+  .qqq-top-grid .qqq-chart-shell { min-height:470px; }
+  .qqq-top-grid .qqq-chart-canvas { height:470px; }
+  .qqq-gex-profile > details { height:100%; }
+  .qqq-gex-meta { display:flex; align-items:center; justify-content:space-between; gap:8px;
+                  color:var(--faint); font-size:9.5px; letter-spacing:.35px; margin-bottom:10px; }
+  .qqq-gex-source { color:var(--accent); }
+  .qqq-gex-regime { display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+                    border-left:3px solid currentColor; background:rgba(255,255,255,.025);
+                    border-radius:5px; padding:9px 10px; margin-bottom:8px; }
+  .qqq-gex-regime b { display:block; font-size:13px; letter-spacing:.6px; }
+  .qqq-gex-regime span { color:var(--dim); font-size:10px; white-space:nowrap; }
+  .qqq-gex-plot { background:#090910; border:1px solid #171722; border-radius:7px;
+                  padding:5px; overflow:hidden; }
+  .qqq-gex-plot svg { display:block; width:100%; height:auto; }
+  .qqq-gex-levels { display:grid; grid-template-columns:1fr 1fr; gap:1px; margin-top:8px;
+                    background:var(--line); border:1px solid var(--line); border-radius:7px;
+                    overflow:hidden; }
+  .qqq-gex-level { background:#0c0c14; padding:8px 9px; min-width:0; }
+  .qqq-gex-level small { display:block; color:var(--faint); font-size:9px; letter-spacing:.8px;
+                         text-transform:uppercase; white-space:nowrap; }
+  .qqq-gex-level b { display:block; margin-top:2px; color:var(--txt); font-size:12px;
+                     font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qqq-gex-foot { color:var(--faint); font-size:9.5px; line-height:1.45; margin-top:8px; }
+  .qqq-gex-window-note { color:var(--warn); font-size:9.5px; line-height:1.4; margin-top:6px; }
+  .qqq-gex-window-note:empty { display:none; }
+  .qqq-drilldown-note { display:flex; align-items:center; gap:10px; margin:18px 0 2px;
+                        color:var(--faint); font-size:10px; letter-spacing:1.4px;
+                        text-transform:uppercase; }
+  .qqq-drilldown-note::after { content:""; flex:1; height:1px; background:#1c2b30; opacity:.45; }
   table.wl td, table.wl th { padding:4px 0; }
   table.wl tr:not(:first-child):hover { background:rgba(0,229,255,.05); }
   .donutwrap { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
@@ -185,6 +217,13 @@
     .qqq-chart-meta .tv-credit { width:100%; margin-left:0; }
     .qqq-chart-exposure { grid-template-columns:repeat(2,minmax(110px,1fr)); }
     .qqq-chart-controls { margin-bottom:7px; }
+    .qqq-top-grid { grid-template-columns:1fr; }
+    .qqq-top-grid .qqq-chart-shell { min-height:350px; }
+    .qqq-top-grid .qqq-chart-canvas { height:350px; }
+  }
+
+  @media (min-width: 721px) and (max-width: 1020px) {
+    .qqq-top-grid { grid-template-columns:1fr; }
   }
 
   @media (max-width: 420px) {
@@ -1484,7 +1523,9 @@
   function secNasdaqHUD(e) {
     var mk = {};
     (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
-    var q = mk.QQQ, vix = get(mk, "VIX.last"), gx = e.gex;
+    // Keep the command board on the same gamma snapshot as the chart and the
+    // strike profile: live logger on the newest session, saved map in history.
+    var q = mk.QQQ, vix = get(mk, "VIX.last"), gx = qqqChartModel(e).g;
     var g = get(e, "quant.geometry");
     var dv = ok(g) && has(g.diversification_volume) ? g.diversification_volume : null;
     var vr2 = cockpitVR(e);
@@ -2947,6 +2988,128 @@
     return secWide("QQQ · live price + dealer map", body);
   }
 
+  // Compact strike-by-strike gamma profile that deliberately shares the
+  // chart's qqqChartModel(). That keeps spot, walls, flip, regime and history
+  // selection synchronized instead of mixing the live logger with an older map.
+  function secQqqGexProfile(e) {
+    var M = qqqChartModel(e), g = M.g || {}, raw = get(g, "strikes", []) || [];
+    var strikes = raw.map(function (s) {
+      return { strike:Number(s.strike), net_gex:Number(s.net_gex),
+               call_gex:Number(s.call_gex), put_gex:Number(s.put_gex) };
+    }).filter(function (s) {
+      return isFinite(s.strike) && isFinite(s.net_gex);
+    }).sort(function (a, b) { return a.strike - b.strike; });
+
+    if (!strikes.length) {
+      return sec("GEX · strike profile",
+        '<div style="padding:80px 10px;text-align:center;color:var(--faint)">' +
+        "Waiting for a real strike-by-strike GEX snapshot.</div>")
+        .replace("<section>", '<section class="qqq-gex-profile">');
+    }
+
+    var liveLogger = M.latest && LIVE_GEX && g === LIVE_GEX;
+    var L = g.levels || {};
+    var realFlip = !g.gamma_flip_method || g.gamma_flip_method === "zero crossing";
+    var flip = realFlip ? Number(g.gamma_flip) : NaN;
+    var spot = Number(M.spot);
+    var domain = strikes.map(function (s) { return s.strike; });
+    [spot, flip, Number(L.call_wall), Number(L.put_wall)].forEach(function (v) {
+      if (isFinite(v)) domain.push(v);
+    });
+    var kMin = Math.min.apply(null, domain), kMax = Math.max.apply(null, domain);
+    var span = Math.max(1, kMax - kMin), edge = Math.max(.35, span * .018);
+    kMin -= edge; kMax += edge; span = kMax - kMin;
+
+    var W = 420, Hh = 270, padL = 10, padR = 10, padT = 14, plotBot = 218;
+    var plotW = W - padL - padR, zero = (padT + plotBot) / 2;
+    var amp = (plotBot - padT) / 2;
+    var maxAbs = Math.max.apply(null, strikes.map(function (s) { return Math.abs(s.net_gex); })) || 1;
+    function X(k) { return padL + ((k - kMin) / span) * plotW; }
+    function Y(v) { return zero - (v / maxAbs) * amp; }
+    var bw = Math.max(.8, Math.min(12, plotW / strikes.length * .68));
+    var svg = "";
+    [0, .5, 1].forEach(function (p) {
+      var yy = padT + p * (plotBot - padT);
+      svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + yy.toFixed(1) +
+        '" y2="' + yy.toFixed(1) + '" stroke="#171722"/>';
+    });
+    svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + zero.toFixed(1) +
+      '" y2="' + zero.toFixed(1) + '" stroke="#343444" stroke-width="1.2"/>';
+    strikes.forEach(function (s) {
+      var y = Y(s.net_gex), h = Math.max(.7, Math.abs(y - zero));
+      svg += '<rect x="' + (X(s.strike) - bw / 2).toFixed(1) + '" y="' +
+        Math.min(y, zero).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) +
+        '" rx=".6" fill="' + (s.net_gex >= 0 ? "#00e676" : "#ff453a") + '" opacity=".88"><title>' +
+        esc(String(s.strike)) + " · net " + esc(fmtBig(s.net_gex).replace(/<[^>]*>/g, "")) +
+        " · calls " + esc(fmtBig(s.call_gex).replace(/<[^>]*>/g, "")) +
+        " · puts " + esc(fmtBig(s.put_gex).replace(/<[^>]*>/g, "")) + "</title></rect>";
+    });
+    function marker(v, color, dash, id) {
+      if (!isFinite(v) || v < kMin || v > kMax) return "";
+      var x = X(v).toFixed(1), attrs = id ? ' id="' + id + '-line"' : "";
+      return '<line' + attrs + ' x1="' + x + '" x2="' + x + '" y1="' + padT + '" y2="' + plotBot +
+        '" stroke="' + color + '" stroke-width="1.7"' + (dash ? ' stroke-dasharray="4 3"' : "") + '/>' +
+        '<circle' + (id ? ' id="' + id + '-dot"' : "") + ' cx="' + x + '" cy="' + zero.toFixed(1) +
+        '" r="2.6" fill="' + color + '"/>';
+    }
+    svg += marker(Number(L.put_wall), "#ff453a", true, "");
+    svg += marker(Number(L.call_wall), "#00e676", true, "");
+    svg += marker(flip, "#ffd600", false, "");
+    svg += marker(spot, "#00e5ff", false, "qqq-gex-spot");
+    svg += '<text x="' + padL + '" y="244" fill="#55556b" font-size="9">' + num(kMin + edge, 0) + '</text>' +
+      '<text x="' + (W - padR) + '" y="244" text-anchor="end" fill="#55556b" font-size="9">' +
+      num(kMax - edge, 0) + '</text>' +
+      '<text x="' + (W / 2) + '" y="244" text-anchor="middle" fill="#55556b" font-size="9">STRIKE</text>';
+
+    function level(label, value, color, id) {
+      var v = Number(value), shown = isFinite(v) ? num(v, 2) : "&mdash;";
+      var dist = isFinite(v) && isFinite(spot) && spot > 0
+        ? ' <span style="color:var(--faint);font-size:9px">' + signed((v - spot) / spot * 100, 2, "%") + "</span>" : "";
+      return '<div class="qqq-gex-level"><small style="color:' + color + '">' + esc(label) + '</small>' +
+        '<b' + (id ? ' id="' + id + '"' : "") +
+        (!id && isFinite(v) ? ' data-gex-level-price="' + v + '"' : "") + '>' + shown + dist + "</b></div>";
+    }
+    var pos = g.regime === "POSITIVE GAMMA", neg = g.regime === "NEGATIVE GAMMA";
+    var regimeColor = pos ? "var(--up)" : neg ? "var(--down)" : "var(--dim)";
+    var regimeRead = pos ? "dampening / pinning" : neg ? "amplifying / trending" : "regime unavailable";
+    var stamp = g.generated_utc || g.fetched_utc || e.fetched_utc;
+    var stampDate = toDate(stamp);
+    var ageMin = stampDate ? Math.max(0, Math.round((Date.now() - stampDate.getTime()) / 60000)) : null;
+    var freshness = ageMin === null ? "time unavailable" : ageMin <= 1 ? "updated now" : ageMin + "m old";
+    var scope = liveLogger ? "LIVE 0DTE LOGGER" : "SAVED SESSION MAP";
+    var body =
+      '<div id="qqq-gex-profile" data-kmin="' + kMin + '" data-kmax="' + kMax +
+        '" data-pad-left="' + padL + '" data-plot-width="' + plotW + '">' +
+        '<div class="qqq-gex-meta"><span class="qqq-gex-source">' + scope + '</span><span>' +
+          strikes.length + " strikes · " + esc(freshness) + '</span></div>' +
+        '<div class="qqq-gex-regime" style="color:' + regimeColor + '"><div><b>' +
+          esc(g.regime || "GAMMA UNAVAILABLE") + '</b><span>' +
+          regimeRead + '</span></div>' +
+          '<span>NET ' + (has(g.net_gex) ? fmtBig(Number(g.net_gex)) : "&mdash;") + '</span></div>' +
+        '<div class="qqq-gex-plot"><svg viewBox="0 0 ' + W + " " + Hh + '" role="img" ' +
+          'aria-label="Net gamma exposure by strike with live QQQ spot, gamma flip, call wall and put wall">' +
+          svg + '</svg></div>' +
+        '<div class="qqq-gex-levels">' +
+          level(M.quoteLive ? "Live QQQ" : "Spot", spot, "#00e5ff", "qqq-gex-spot-value") +
+          level("Gamma flip", flip, "#ffd600", "") +
+          level("Call wall", L.call_wall, "#00e676", "") +
+          level("Put wall", L.put_wall, "#ff453a", "") +
+        '</div>' +
+        '<div class="qqq-gex-foot">Green / red bars are actual net GEX by strike. Lines use the same snapshot as the dealer-map overlays. ' +
+          (liveLogger ? "Logger scope is the currently captured 0DTE strike window." : "Historical view uses the saved full-session options map.") +
+          (stamp ? " · As of " + fmtTime(stamp) : "") + '</div>' +
+        '<div id="qqq-gex-window-note" class="qqq-gex-window-note"></div>' +
+      '</div>';
+    return sec("GEX · synchronized strike profile", body)
+      .replace("<section>", '<section class="qqq-gex-profile">');
+  }
+
+  function secQqqOpening(e) {
+    var chart = secQqqTradingChart(e)
+      .replace('<section class="wide">', '<section class="wide qqq-primary-chart">');
+    return '<div class="qqq-top-grid">' + chart + secQqqGexProfile(e) + "</div>";
+  }
+
   function destroyQqqChart() {
     if (!QQQ_TV) return;
     try { if (QQQ_TV.resize) QQQ_TV.resize.disconnect(); } catch (err) {}
@@ -3100,22 +3263,62 @@
   }
 
   function updateMountedQqqQuote(e) {
-    if (!QQQ_TV || idx !== FULL.length - 1) return;
+    if (idx !== FULL.length - 1) return;
     var M = qqqChartModel(e);
     if (!M.quoteLive || M.quoteTime === null) return;
     var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
-    try {
-      if (QQQ_TV.quoteSeries && quoteBarTime >= (QQQ_TV.quoteTime || 0)) {
-        QQQ_TV.quoteSeries.update({ time: quoteBarTime, value: M.spot });
-        QQQ_TV.quoteTime = quoteBarTime;
-      }
-      if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: "LIVE QQQ" });
-    } catch (err) {}
+    if (QQQ_TV) {
+      try {
+        if (QQQ_TV.quoteSeries && quoteBarTime >= (QQQ_TV.quoteTime || 0)) {
+          QQQ_TV.quoteSeries.update({ time: quoteBarTime, value: M.spot });
+          QQQ_TV.quoteTime = quoteBarTime;
+        }
+        if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: "LIVE QQQ" });
+      } catch (err) {}
+    }
     var sourceEl = document.getElementById("qqq-live-source");
     var chipEl = document.getElementById("qqq-live-chip");
     var bars = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles) ? LIVE_AUCTION.candles.length : 0;
     if (sourceEl) sourceEl.textContent = qqqChartSource(M, bars);
     if (chipEl) chipEl.textContent = "QQQ LIVE $" + M.spot.toFixed(2);
+
+    // The profile's cyan spot marker follows the same 15-second browser quote
+    // as the chart; the gamma bars themselves only change with a real logger file.
+    var profile = document.getElementById("qqq-gex-profile");
+    var spotLine = document.getElementById("qqq-gex-spot-line");
+    var spotDot = document.getElementById("qqq-gex-spot-dot");
+    var spotValue = document.getElementById("qqq-gex-spot-value");
+    var windowNote = document.getElementById("qqq-gex-window-note");
+    if (profile && spotLine && spotDot) {
+      var kMin = Number(profile.getAttribute("data-kmin"));
+      var kMax = Number(profile.getAttribute("data-kmax"));
+      var padLeft = Number(profile.getAttribute("data-pad-left"));
+      var plotWidth = Number(profile.getAttribute("data-plot-width"));
+      if (isFinite(kMin) && isFinite(kMax) && kMax > kMin && isFinite(plotWidth)) {
+        var outside = M.spot < kMin || M.spot > kMax;
+        spotLine.style.display = outside ? "none" : "";
+        spotDot.style.display = outside ? "none" : "";
+        if (!outside) {
+          var x = padLeft + (M.spot - kMin) / (kMax - kMin) * plotWidth;
+          spotLine.setAttribute("x1", x.toFixed(1)); spotLine.setAttribute("x2", x.toFixed(1));
+          spotDot.setAttribute("cx", x.toFixed(1));
+        }
+        if (windowNote) windowNote.textContent = outside
+          ? "Live QQQ is outside the captured strike window; the spot marker is hidden until the logger refreshes."
+          : "";
+      }
+    }
+    if (spotValue) spotValue.textContent = M.spot.toFixed(2);
+    if (profile && profile.querySelectorAll) {
+      var levelNodes = profile.querySelectorAll("[data-gex-level-price]");
+      for (var i = 0; i < levelNodes.length; i++) {
+        var levelPrice = Number(levelNodes[i].getAttribute("data-gex-level-price"));
+        if (!isFinite(levelPrice) || !(M.spot > 0)) continue;
+        levelNodes[i].innerHTML = num(levelPrice, 2) +
+          ' <span style="color:var(--faint);font-size:9px">' +
+          signed((levelPrice - M.spot) / M.spot * 100, 2, "%") + "</span>";
+      }
+    }
   }
 
   function secGexLive(e) {
@@ -3676,22 +3879,22 @@
       '<select id="pick">' + opts + "</select>" +
       "</header>";
 
-    // NASDAQ (really QQQ) tab — your trading cockpit. Every card here reads QQQ:
-    // secGex/secGexLive/secVanna use e.gex + the QQQ gex_live.json logger, and
-    // secQuant/secTouchFlow/secRangeUsed key off mk.QQQ spot. Same data, new home.
-    // Narrative arc for a fader: where's price → what regime / is there an edge →
-    // what are dealers doing → where can price go & the odds → the plan → flow.
+    // NASDAQ (really QQQ) tab — chart first. The opening pair shares one truth
+    // source (live logger + browser quote on latest, saved session in history),
+    // followed by the compact command board and then the detailed drill-downs.
+    // The leverage-family experiment stays at the very bottom until it is ready.
     var _qqqBody =
+      secQqqOpening(e) +
       secNasdaqHUD(e) +
+      '<div class="qqq-drilldown-note">Detailed drill-downs</div>' +
       (
-        group("Price", secNasdaqStars(e)) +
         group("Regime & fade edge", secGeometry(e) + secFadeRegime(e) + secRangeUsed(e)) +
-        group("Dealer positioning", secGexLive(e) + secGex(e) + secVanna(e)) +
+        group("Dealer positioning", secGexLive(e) + secVanna(e)) +
         group("Odds & flow", secTouchFlow(e) + secQuant(e)) +
         group("Plan and discipline", secPlan(e)) +
         group("Options & venue", secOptions(e) + secVenue(e)) +
-        group("QQQ chart", secQqqTradingChart(e))
-      );   // panels stay OPEN — charts/tables visible, styled as HUD cards
+        group("Leverage family · refine later", secNasdaqStars(e))
+      );
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
     // STRETCH wheel sits right under the regime banner (first card).
