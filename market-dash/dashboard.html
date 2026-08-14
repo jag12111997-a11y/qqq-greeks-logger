@@ -3244,6 +3244,13 @@
     if (!QQQ_TV) return;
     try { if (QQQ_TV.resize) QQQ_TV.resize.disconnect(); } catch (err) {}
     try {
+      if (QQQ_TV.el && QQQ_TV.interactionHandler) {
+        ["pointermove", "wheel", "dblclick", "touchmove"].forEach(function (name) {
+          QQQ_TV.el.removeEventListener(name, QQQ_TV.interactionHandler);
+        });
+      }
+    } catch (interactionErr) {}
+    try {
       if (QQQ_TV.rangeHandler && QQQ_TV.chart && QQQ_TV.chart.timeScale) {
         QQQ_TV.chart.timeScale().unsubscribeVisibleLogicalRangeChange(QQQ_TV.rangeHandler);
       }
@@ -3331,8 +3338,13 @@
   }
 
   function scheduleQqqGexAlignment(series, chart) {
+    if (QQQ_TV && QQQ_TV.series === series && QQQ_TV.alignPending) return;
+    if (QQQ_TV && QQQ_TV.series === series) QQQ_TV.alignPending = true;
     window.requestAnimationFrame(function () {
-      if (QQQ_TV && QQQ_TV.series === series) alignQqqGexProfile(series, chart);
+      if (QQQ_TV && QQQ_TV.series === series) {
+        QQQ_TV.alignPending = false;
+        alignQqqGexProfile(series, chart);
+      }
     });
   }
 
@@ -3372,12 +3384,12 @@
         secondsVisible: false,
         rightOffset: 4,
         barSpacing: 7,
-        fixLeftEdge: true
+        fixLeftEdge: false
       },
       handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true },
-      // Keep the price scale automatic so the adjacent GEX profile stays on
-      // the exact same rows; horizontal zoom/scroll remains interactive.
-      handleScale: { axisPressedMouseMove: false, mouseWheel: true, pinch: true },
+      // Both chart axes stay draggable. The adjacent GEX profile is realigned
+      // on every scale/scroll gesture instead of disabling price-axis control.
+      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
       localization: { locale: "en-US", priceFormatter: function (p) { return "$" + p.toFixed(2); } }
     });
 
@@ -3489,10 +3501,17 @@
       scheduleQqqGexAlignment(series, chart);
     };
     try { chart.timeScale().subscribeVisibleLogicalRangeChange(rangeHandler); } catch (rangeErr) {}
+    var interactionHandler = function (ev) {
+      if (ev.type !== "pointermove" || ev.buttons) scheduleQqqGexAlignment(series, chart);
+    };
+    ["pointermove", "wheel", "dblclick", "touchmove"].forEach(function (name) {
+      el.addEventListener(name, interactionHandler, { passive:true });
+    });
     QQQ_TV = { chart: chart, resize: ro, quoteSeries: quoteSeries,
                series: series, rangeHandler: rangeHandler,
                spotLine: spotLine, lastCandleTime: lastCandleTime,
-               quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60 };
+               quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60,
+               el: el, interactionHandler: interactionHandler, alignPending:false };
     scheduleQqqGexAlignment(series, chart);
   }
 
