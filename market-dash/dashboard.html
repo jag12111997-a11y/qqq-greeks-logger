@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ༀ · M@RK3T D@$H</title>
+<title>ༀ</title>
 <style>
   :root {
     /* Webull neon-on-black. Pure black ground, saturated accents. */
@@ -423,7 +423,7 @@
   // ---------- no data yet ----------
   if (window.__histMissing || !H.length) {
     app.innerHTML =
-      '<header><h1>ༀ · M@RK3T D@$H</h1></header>' +
+      '<header><h1>ༀ</h1></header>' +
       '<div class="empty">' +
       "<p>No history yet.</p>" +
       "<p>Run <code>market_dash_fetch.py</code> once — it creates <code>history.js</code> " +
@@ -3215,6 +3215,7 @@
 
   function secQqqOpening(e, chartModel) {
     var body =
+      secNasdaqHUD(e, chartModel) +
       '<div class="qqq-top-grid">' +
         '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>' +
         '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile">' +
@@ -4170,10 +4171,10 @@
   function secNasdaqCommandCenter(e, chartModel) {
     var detail = secCockpit(e, chartModel);
     var k = keyFor("Nasdaq QQQ command center");
-    return '<section class="wide qqq-command-center"><details open data-k="' + k + '">' +
-      '<summary><h2>Nasdaq · QQQ command center</h2>' +
+    return '<section class="wide qqq-command-center"><details data-k="' + k + '">' +
+      '<summary><h2>QQQ · full model detail</h2>' +
       '<span class="qqq-command-sync">● one synchronized live model</span></summary>' +
-      '<div class="qqq-command-body">' + secNasdaqHUD(e, chartModel) +
+      '<div class="qqq-command-body">' +
       '<div class="qqq-command-flow">' + detail + '</div></div></details></section>';
   }
 
@@ -4197,7 +4198,7 @@
     }
 
     var _header =
-      "<header><h1>ༀ · M@RK3T D@$H</h1>" +
+      "<header><h1>ༀ</h1>" +
       '<span class="stamp">session ' + fmtDate(e.session_date || e.entry_date) +
       (e.session ? '  <span style="color:var(--accent)">' +
                    esc(String(e.session).toUpperCase()) + "</span>" : "") +
