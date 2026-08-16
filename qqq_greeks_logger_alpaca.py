@@ -181,6 +181,24 @@ def _put_greeks(S, K, T, r, q, sigma):
     return delta, gamma, theta, vega
 
 
+def _vanna_charm(S, K, T, r, q, sigma):
+    """Second-order hedge dials (3v3 notes F1), closed-form from d1/d2 — no extra
+    chain data needed. Verified against finite differences; identical for calls
+    and puts (put delta = call delta - e^{-qT}).
+        VANNA = dDelta/dsigma = -e^{-qT} phi(d1) d2 / sigma
+        CHARM = dDelta/dt      (per year)
+    """
+    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:
+        return None, None
+    sqrtT = math.sqrt(T)
+    d1 = (math.log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrtT)
+    d2 = d1 - sigma * sqrtT
+    pdf = _norm_pdf(d1)
+    vanna = -math.exp(-q * T) * pdf * d2 / sigma
+    charm = -math.exp(-q * T) * pdf * (2 * (r - q) * T - d2 * sigma * sqrtT) / (2 * T * sigma * sqrtT)
+    return vanna, charm
+
+
 # ---------- Alpaca data ----------
 
 def get_spot_price():
@@ -359,6 +377,7 @@ def compute_gex_live(call_rows, put_rows, spot):
             return None
 
     unit = CONTRACT_MULTIPLIER * (spot ** 2) * 0.01
+    _now = datetime.datetime.now(datetime.timezone.utc)
     by = {}
 
     def add(rows, is_call):
@@ -371,7 +390,8 @@ def compute_gex_live(call_rows, put_rows, spot):
             oi = int(oi)
             d = by.setdefault(k, {"strike": k, "call_gex": 0.0, "put_gex": 0.0,
                                   "call_oi": 0, "put_oi": 0, "dex": 0.0, "vex": 0.0,
-                                  "tex": 0.0, "call_g": 0.0, "put_g": 0.0})
+                                  "tex": 0.0, "vannaex": 0.0, "charmex": 0.0,
+                                  "call_g": 0.0, "put_g": 0.0})
             dollars = g * oi * unit
             if is_call:
                 d["call_gex"] += dollars; d["call_oi"] += oi; d["call_g"] += g * oi
@@ -384,6 +404,17 @@ def compute_gex_live(call_rows, put_rows, spot):
                 d["vex"] += ve * oi * CONTRACT_MULTIPLIER
             if th is not None:
                 d["tex"] += th * oi * CONTRACT_MULTIPLIER
+            iv = num(r.get("iv"))
+            exp = r.get("expiration")
+            if iv and exp:
+                try:
+                    Tv = time_to_expiry_years(_now, exp)
+                    vanna, charm = _vanna_charm(spot, k, Tv, 0.0, 0.0, iv)
+                    if vanna is not None:
+                        d["vannaex"] += vanna * oi * CONTRACT_MULTIPLIER
+                        d["charmex"] += charm * oi * CONTRACT_MULTIPLIER
+                except Exception:
+                    pass
 
     add(call_rows, True)
     add(put_rows, False)
@@ -393,13 +424,16 @@ def compute_gex_live(call_rows, put_rows, spot):
     strikes = sorted(by.values(), key=lambda x: x["strike"])
     for s in strikes:
         s["net_gex"] = (s["call_gex"] + s["put_gex"]) * GEX_DEALER_SIGN
-        for key in ("call_gex", "put_gex", "net_gex", "dex", "vex", "tex"):
+        for key in ("call_gex", "put_gex", "net_gex", "dex", "vex", "tex",
+                    "vannaex", "charmex"):
             s[key] = round(s[key], 2)
 
     net = round(sum(s["net_gex"] for s in strikes), 2)
     net_dex = round(sum(s["dex"] for s in strikes), 2)
     net_vex = round(sum(s["vex"] for s in strikes), 2)
     net_tex = round(sum(s["tex"] for s in strikes), 2)
+    net_vannaex = round(sum(s["vannaex"] for s in strikes), 2)
+    net_charmex = round(sum(s["charmex"] for s in strikes), 2)
     cg = sum(s["call_g"] for s in strikes)
     pg = sum(s["put_g"] for s in strikes)
     gamma_ratio = round(cg / (cg + pg), 4) if (cg + pg) else None
@@ -431,6 +465,7 @@ def compute_gex_live(call_rows, put_rows, spot):
     return {
         "symbol": SYMBOL, "spot": round(spot, 2),
         "net_gex": net, "net_dex": net_dex, "net_vex": net_vex, "net_tex": net_tex,
+        "net_vannaex": net_vannaex, "net_charmex": net_charmex,
         "gamma_ratio": gamma_ratio,
         "gamma_flip": flip, "gamma_flip_method": method,
         "regime": ("POSITIVE GAMMA"
@@ -440,7 +475,8 @@ def compute_gex_live(call_rows, put_rows, spot):
         "levels": {"call_wall": call_wall, "put_wall": put_wall, "highest_oi_strike": top_oi},
         "strikes": [{"strike": s["strike"], "call_gex": s["call_gex"], "put_gex": s["put_gex"],
                      "net_gex": s["net_gex"], "call_oi": s["call_oi"], "put_oi": s["put_oi"],
-                     "dex": s["dex"], "vex": s["vex"], "tex": s["tex"]} for s in strikes],
+                     "dex": s["dex"], "vex": s["vex"], "tex": s["tex"],
+                     "vannaex": s["vannaex"], "charmex": s["charmex"]} for s in strikes],
         "contracts_used": len(call_rows) + len(put_rows),
         "dealer_convention": "dealers long call gamma, short put gamma",
         "source": "5-min greeks logger (calls + puts, 0DTE)",

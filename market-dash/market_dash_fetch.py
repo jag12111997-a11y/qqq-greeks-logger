@@ -662,6 +662,7 @@ WATCHLIST = [
     ("USO",       "USO",  "United States Oil Fund"),
     ("GLD",       "GLD",  "SPDR Gold Shares"),
     ("^VIX",      "VIX",  "CBOE Volatility Index"),
+    ("^VXN",      "VXN",  "CBOE Nasdaq-100 Volatility Index"),
     ("EWY",       "EWY",  "iShares MSCI South Korea"),
     ("TLT",       "TLT",  "iShares 20+Y Treasury"),
     ("UUP",       "UUP",  "Invesco DB US Dollar (DXY tracker)"),
@@ -1210,17 +1211,26 @@ def _implied_vol(price, S, K, T, cp, lo=0.01, hi=5.0):
 def _bs_greeks(S, K, T, sigma, cp, r=0.0):
     d1, d2 = _d1_d2(S, K, T, sigma, r)
     if d1 is None:
-        return {"delta": None, "gamma": None, "vega": None, "theta": None}
+        return {"delta": None, "gamma": None, "vega": None, "theta": None,
+                "vanna": None, "charm": None}
     pdf = _norm_pdf(d1)
-    gamma = pdf / (S * sigma * math.sqrt(T))
-    vega = S * pdf * math.sqrt(T) / 100.0
+    sqrtT = math.sqrt(T)
+    gamma = pdf / (S * sigma * sqrtT)
+    vega = S * pdf * sqrtT / 100.0
+    # Second-order dials (3v3 notes F1), closed-form from d1/d2 — no extra chain
+    # data needed. q=0. Same for calls and puts (put delta = call delta - 1).
+    #   VANNA = dDelta/dsigma = -phi(d1)*d2/sigma
+    #   CHARM = dDelta/dt      (per year); verified vs finite differences
+    vanna = -pdf * d2 / sigma
+    charm = -pdf * (2 * r * T - d2 * sigma * sqrtT) / (2 * T * sigma * sqrtT)
     if cp == "call":
         delta = _norm_cdf(d1)
-        theta = (-S * pdf * sigma / (2 * math.sqrt(T))) / 365.0
+        theta = (-S * pdf * sigma / (2 * sqrtT)) / 365.0
     else:
         delta = _norm_cdf(d1) - 1.0
-        theta = (-S * pdf * sigma / (2 * math.sqrt(T))) / 365.0
-    return {"delta": delta, "gamma": gamma, "vega": vega, "theta": theta}
+        theta = (-S * pdf * sigma / (2 * sqrtT)) / 365.0
+    return {"delta": delta, "gamma": gamma, "vega": vega, "theta": theta,
+            "vanna": vanna, "charm": charm}
 
 
 def _parse_occ(sym):
@@ -1330,6 +1340,7 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
         g = snap.get("greeks") or {}
         gamma, delta, vega, theta = (g.get("gamma"), g.get("delta"),
                                      g.get("vega"), g.get("theta"))
+        vanna = charm = None
 
         if gamma is None:
             quote = snap.get("latestQuote") or {}
@@ -1350,6 +1361,7 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
                     gk = _bs_greeks(_CHAIN_SPOT[0], strike, T, float(iv), cp)
                     gamma, delta = gk["gamma"], gk["delta"]
                     vega, theta = gk["vega"], gk["theta"]
+                    vanna, charm = gk["vanna"], gk["charm"]
 
         if gamma is None:
             continue
@@ -1360,6 +1372,8 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
             "delta": float(delta) if delta is not None else None,
             "vega": float(vega) if vega is not None else None,
             "theta": float(theta) if theta is not None else None,
+            "vanna": float(vanna) if vanna is not None else None,
+            "charm": float(charm) if charm is not None else None,
             "open_interest": int(oi),
         })
     return rows
@@ -1385,6 +1399,7 @@ def compute_gex(rows, spot):
         d = by_strike.setdefault(k, {"strike": k, "call_gex": 0.0, "put_gex": 0.0,
                                      "call_oi": 0, "put_oi": 0, "dex": 0.0,
                                      "vex": 0.0, "tex": 0.0,
+                                     "vannaex": 0.0, "charmex": 0.0,
                                      "call_gamma_raw": 0.0, "put_gamma_raw": 0.0})
         dollars = r["gamma"] * r["open_interest"] * unit
         if r["type"] == "call":
@@ -1401,17 +1416,24 @@ def compute_gex(rows, spot):
             d["vex"] += r["vega"] * r["open_interest"] * CONTRACT_MULTIPLIER
         if r.get("theta") is not None:
             d["tex"] += r["theta"] * r["open_interest"] * CONTRACT_MULTIPLIER
+        if r.get("vanna") is not None:
+            d["vannaex"] += r["vanna"] * r["open_interest"] * CONTRACT_MULTIPLIER
+        if r.get("charm") is not None:
+            d["charmex"] += r["charm"] * r["open_interest"] * CONTRACT_MULTIPLIER
 
     strikes = sorted(by_strike.values(), key=lambda x: x["strike"])
     for s in strikes:
         s["net_gex"] = (s["call_gex"] + s["put_gex"]) * GEX_DEALER_SIGN
-        for key in ("call_gex", "put_gex", "net_gex", "dex", "vex", "tex"):
+        for key in ("call_gex", "put_gex", "net_gex", "dex", "vex", "tex",
+                    "vannaex", "charmex"):
             s[key] = round(s[key], 2)
 
     net = sum(s["net_gex"] for s in strikes)
     net_dex = sum(s["dex"] for s in strikes)
     net_vex = sum(s["vex"] for s in strikes)
     net_tex = sum(s["tex"] for s in strikes)
+    net_vannaex = sum(s["vannaex"] for s in strikes)
+    net_charmex = sum(s["charmex"] for s in strikes)
 
     # G — SqueezeMetrics "gamma-ratio": call gamma as a share of TOTAL gamma.
     # 0.5 = balanced, 1.0 = all calls, 0.0 = all puts. Uses raw gamma x OI,
@@ -1441,7 +1463,10 @@ def compute_gex(rows, spot):
         method = "nearest-to-zero (no crossing in window)"
 
     call_wall = max(strikes, key=lambda s: s["call_gex"])["strike"] if strikes else None
-    put_wall = min(strikes, key=lambda s: s["put_gex"])["strike"] if strikes else None
+    # Put wall = strike with the most negative NET dealer gamma (max short gamma =
+    # real support), matching the theory and the 0DTE logger. min(put_gex) snapped
+    # it toward the ATM strike, whose put gamma is large just from being ATM.
+    put_wall = min(strikes, key=lambda s: s["net_gex"])["strike"] if strikes else None
     max_pos = max(strikes, key=lambda s: s["net_gex"])["strike"] if strikes else None
     max_neg = min(strikes, key=lambda s: s["net_gex"])["strike"] if strikes else None
     top_oi = max(strikes, key=lambda s: s["call_oi"] + s["put_oi"])["strike"] if strikes else None
@@ -1453,13 +1478,15 @@ def compute_gex(rows, spot):
         "net_dex": round(net_dex, 2),
         "net_vex": round(net_vex, 2),
         "net_tex": round(net_tex, 2),
+        "net_vannaex": round(net_vannaex, 2),
+        "net_charmex": round(net_charmex, 2),
         "gamma_ratio": gamma_ratio,
         "gamma_ratio_note": "call gamma / total gamma (SqueezeMetrics G). "
                             "0.5 balanced, >0.5 call-driven, <0.5 put-driven.",
-        "exposure_note": "VEX here is VEGA exposure and TEX is THETA exposure — "
-                         "the real vanna and charm need cross-derivatives we "
-                         "don't get from the free chain. Labelled honestly "
-                         "rather than mislabelled as vanna/charm.",
+        "exposure_note": "VEX = vega exposure, TEX = theta exposure. VANNAEX and "
+                         "CHARMEX are the real second-order dials (dDelta/dsigma "
+                         "and dDelta/dt), computed closed-form from d1/d2 and "
+                         "verified vs finite differences — not proxied.",
         "gamma_flip": flip,
         "gamma_flip_method": method,
         # Regime prefers the flip when it's a real crossing; otherwise the

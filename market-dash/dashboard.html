@@ -2690,9 +2690,14 @@
         : "The day has already <b>exceeded</b> its 1&sigma; range &mdash; either real information " +
           "is driving it (don't fade) or it's badly overstretched (prime fade, but confirm the " +
           "regime first).") + "</div>");
-    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Uses the VIX 1-day " +
-      "&sigma; and QQQ's move so far. Pair a high 'range used' with the Fade-regime card: " +
-      "overstretched AND mean-reverting is the fade; overstretched AND trending is the trap.</div>");
+    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Uses the <b>VIX</b> 1-day " +
+      "&sigma; as the live proxy for QQQ's vol" +
+      (mk.VXN && has(mk.VXN.last)
+        ? " &mdash; the exact Nasdaq-100 gauge <b>VXN " + num(mk.VXN.last, 2) + "</b> typically runs a " +
+          "point or two higher, so QQQ's true 1&sigma; range is marginally wider than shown"
+        : " (VXN, the exact Nasdaq gauge, runs a touch higher)") +
+      ". Pair a high 'range used' with the Fade-regime card: overstretched AND mean-reverting is the " +
+      "fade; overstretched AND trending is the trap.</div>");
 
     return sec("Range used — how much of today's move is spent", body,
       '<details class="read"><summary><b>Read</b></summary><div>' +
@@ -2752,53 +2757,53 @@
     function colr(v) { return v > 0 ? "var(--up)" : v < 0 ? "var(--down)" : "var(--dim)"; }
     function big(v) { return '<span style="color:' + colr(v) + '">' + fmtBig(v) + "</span>"; }
 
-    // where each 2nd-order exposure concentrates across QQQ strikes
-    var vwall = null, vmax = -1, twall = null, tmax = -1;
-    (g.strikes || []).forEach(function (s2) {
-      var av = Math.abs(s2.vex || 0); if (av > vmax) { vmax = av; vwall = s2.strike; }
-      var at = Math.abs(s2.tex || 0); if (at > tmax) { tmax = at; twall = s2.strike; }
-    });
-
+    // Where each 2nd-order exposure concentrates across QQQ strikes.
+    function _peak(key) {
+      var wall = null, mx = -1;
+      (g.strikes || []).forEach(function (s2) {
+        var a = Math.abs(Number(s2[key]) || 0);
+        if (a > mx) { mx = a; wall = s2.strike; }
+      });
+      return mx > 0 ? wall : null;
+    }
+    var hasReal = has(g.net_vannaex);
+    var vwall = hasReal ? _peak("vannaex") : null;   // real vanna concentration
+    var cwall = hasReal ? _peak("charmex") : null;   // real charm concentration
     var pos = g.regime === "POSITIVE GAMMA";
-    var vex = g.net_vex;
 
     var body =
       row("Underlying", "QQQ  <span class=k>" + esc(g.gamma_flip_method ? "0DTE greeks" : "") + "</span>") +
       row("Regime", '<span style="color:' + (pos ? "var(--up)" : "var(--down)") + '">' +
           esc(g.regime || "—") + "</span>") +
       row("Net delta exposure (dex)", big(g.net_dex)) +
-      row("Net vanna exposure (vex)", big(g.net_vex)) +
+      (hasReal ? row("Net vanna exposure", big(g.net_vannaex)) : "") +
+      (hasReal ? row("Net charm exposure", big(g.net_charmex)) : "") +
+      row("Net vega exposure (vex)", big(g.net_vex)) +
       row("Net theta exposure (tex)", big(g.net_tex)) +
       (has(vwall) ? row("Vanna concentrated at", num(vwall, 0) + " strike") : "") +
-      (has(twall) ? row("Theta concentrated at", num(twall, 0) + " strike") : "");
+      (has(cwall) ? row("Charm concentrated at", num(cwall, 0) + " strike") : "");
 
     var lines = [];
     lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
       ? "With the book in <b>positive gamma</b>, the second-order flow is a quiet <b>charm grind</b>: as the session ages, dealer delta drifts toward the pins" +
-        (has(vwall) ? " (heaviest near " + num(vwall, 0) + ")" : "") +
+        (has(cwall) ? " (charm heaviest near " + num(cwall, 0) + ")" : "") +
         " and they hedge along it &mdash; the low-vol drift into the close &mdash; while a vol spike adds only mild vanna selling. All mechanical, all reverting."
       : "In <b>negative gamma</b>, charm and vanna push <b>with</b> the move: time-drift and any vol spike add to the direction instead of fading it, so the grind becomes a slide. Fading into strength is the trap here."));
-    lines.push("<div style='margin:5px 0'><b>Vanna (vex)</b> is how much dealer delta shifts when " +
-      "implied vol moves &mdash; hedging flow that fires on a <b>vol</b> change with no price catalyst. " +
-      "Net vex is <b>" + fmtBig(vex) + "</b>: a rise in IV pushes aggregate dealer delta " +
-      (vex > 0 ? "<b>up</b>, so staying hedged means <b>selling</b> QQQ into rising vol and buying it " +
-                 "back as vol falls"
-               : "<b>down</b>, so staying hedged means <b>buying</b> QQQ into rising vol and selling as " +
-                 "vol falls") +
-      ". Sign follows your logger's convention (" + esc(g.dealer_convention || "—") +
-      "), so read it as direction-of-tilt.</div>");
-    lines.push("<div style='margin:5px 0'><b>Theta (tex)</b> is the book's aggregate time-decay tilt. " +
-      "In <b>" + (pos ? "positive gamma" : "negative gamma") + "</b> this is the charm effect: as the " +
-      "session ages, dealer delta drifts " + (pos
-        ? "toward the pins and they hedge along it &mdash; the quiet low-vol grind into the close."
-        : "with the move and they hedge into it &mdash; time-drift <i>adds</i> to directional pushes, so " +
-          "fades into strength are more dangerous.") + "</div>");
+    lines.push("<div style='margin:5px 0'><b>Vanna</b> (dDelta/d&sigma;) is how much dealer delta shifts when " +
+      "implied vol moves &mdash; hedging flow that fires on a <b>vol</b> change with no price catalyst" +
+      (hasReal ? " (net <b>" + fmtBig(g.net_vannaex) + "</b>)" : "") + ". <b>Charm</b> (dDelta/dt) is how delta " +
+      "drifts purely as <b>time</b> passes &mdash; the usual suspect behind the low-vol grind into a 0DTE close" +
+      (hasReal ? " (net <b>" + fmtBig(g.net_charmex) + "</b>)" : "") + ". Both are the real closed-form Greeks, " +
+      "not proxies; sign follows your logger's convention (" + esc(g.dealer_convention || "—") + ").</div>");
+    lines.push("<div style='margin:5px 0'><b>Vega (vex)</b> and <b>theta (tex)</b> exposures sit alongside as the " +
+      "first-order companions &mdash; vega = value vs <i>vol</i>, theta = value vs <i>time</i> &mdash; not to be " +
+      "confused with vanna/charm, which are the <i>delta</i> derivatives above.</div>");
     if (has(g.exposure_note)) {
       lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>" +
         esc(g.exposure_note) + "</div>");
     }
-    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Second-order companions to " +
-      "the gamma card above: gamma = delta vs <i>price</i>, vanna = delta vs <i>vol</i>, charm/theta = " +
+    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Companions to " +
+      "the gamma card above: gamma = delta vs <i>price</i>, vanna = delta vs <i>vol</i>, charm = " +
       "delta vs <i>time</i>. All QQQ, from the same 0DTE greeks snapshot.</div>");
 
     return sec("Vanna / charm exposure — QQQ 2nd-order", body,
@@ -2933,7 +2938,11 @@
 
     var maxPos = extreme(function (n) { return n > 0; }, function (n, old) { return n > old; });
     var maxNeg = extreme(function (n) { return n < 0; }, function (n, old) { return n < old; });
-    var vanna = concentration("vex"), theta = concentration("tex");
+    // Real second-order dials now come off the pipeline (vannaex/charmex).
+    // concentration() returns null when a field is absent, so on older snapshots
+    // that predate these fields the lines simply don't draw — never a fake mark.
+    var vanna = concentration("vannaex"), charm = concentration("charmex"),
+        theta = concentration("tex");
     var levels = [];
     function add(group, price, color, title, style, width, priority) {
       var p = Number(price);
@@ -2963,6 +2972,7 @@
       add("ranges", spot * (1 - gsig), "#ff00e5", "-GARCH 68%", "dashed", 1, 71);
     }
     if (vanna) add("flow", vanna.price, "#00bfa5", touchTitle("Vanna", vanna.price), "dotted", 1, 80);
+    if (charm) add("flow", charm.price, "#c792ea", touchTitle("Charm", charm.price), "dotted", 1, 82);
     if (theta) add("flow", theta.price, "#ff6d00", touchTitle("Theta", theta.price), "dotted", 1, 81);
     add("spot", spot, "#00e5ff", quoteFresh ? "LIVE QQQ" : (quoteLive ? "QQQ" : "Spot"), "dotted", 1, 1);
 
@@ -3053,14 +3063,14 @@
       '<div class="qqq-chart-exposure">' + exposure + "</div>" +
       '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
         layerButton("core", "GEX levels + odds") + layerButton("ranges", "Expected ranges") +
-        layerButton("flow", "Vanna / theta") + "</div>" +
+        layerButton("flow", "Vanna / charm / theta") + "</div>" +
       '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
-      'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna and theta overlays"></div></div>' +
+      'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna, charm and theta overlays"></div></div>' +
       '<div class="qqq-chart-key">' +
         '<span style="color:#ffd600"><i></i>flip / walls / OI / max &plusmn;gamma</span>' +
         '<span style="color:#29b6f6"><i></i>68% / 95% into close</span>' +
         '<span style="color:#ff00e5"><i></i>GARCH 68%</span>' +
-        '<span style="color:#00bfa5"><i></i>vanna / theta concentration</span>' +
+        '<span style="color:#00bfa5"><i></i>vanna / charm / theta concentration</span>' +
         '<span style="color:#00e5ff"><i></i>live QQQ quote</span>' +
       '</div>';
     return bodyOnly ? body : secWide("QQQ · live price + dealer map", body);
@@ -3641,7 +3651,9 @@
       (has(L.call_wall) ? row("Call wall", num(L.call_wall, 0)) : "") +
       (has(L.put_wall) ? row("Put wall", num(L.put_wall, 0)) : "") +
       (has(g.gamma_ratio) ? row("Gamma ratio (G)", num(g.gamma_ratio, 3)) : "") +
-      row("Net vanna / theta", fmtBig(g.net_vex) + " / " + fmtBig(g.net_tex));
+      (has(g.net_vannaex)
+        ? row("Net vanna / charm", fmtBig(g.net_vannaex) + " / " + fmtBig(g.net_charmex))
+        : row("Net vega / theta", fmtBig(g.net_vex) + " / " + fmtBig(g.net_tex)));
 
     var lines = [];
     lines.push(verdict(pos ? "var(--up)" : "var(--down)", pos
@@ -3656,6 +3668,11 @@
     lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>" +
       esc(g.source || "logger") + ". OI is end-of-day; intraday moves come from spot + greeks. " +
       "Refreshes while the logger is running (mornings & midday PT).</div>");
+    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Read this map as " +
+      "<b>where the crowd's open interest &mdash; hence attention and reflexive reaction &mdash; is stacked</b>, " +
+      "more than proof dealers are <i>forced</i> to defend a level: Cboe's desk measured the net 0DTE hedging " +
+      "load at ~0.2% of daily liquidity (de minimis). Walls still tend to hold and break the way the map " +
+      "suggests, but the mechanism is often crowd-reflexivity rather than forced hedging.</div>");
 
     return sec("GEX — LIVE · 0DTE · ±$15 strikes · 5-min logger", body,
       '<details class="read" open><summary><b>Read</b></summary><div>' +
@@ -4001,10 +4018,11 @@
         (has(vxr.pct_change) ? signed(vxr.pct_change, 2, "%") + " today" : "level"),
         vxr.last >= 20 ? "warn" : "flat");
     }
-    // Vanna / charm — 2nd-order dealer flow
-    if (ok(gx) && has(gx.net_vex)) {
-      ctiles += tile("Vanna / charm", fmtBig(gx.net_vex),
-        "θ " + (has(gx.net_tex) ? fmtBig(gx.net_tex) : na()) + " · 2nd-order", "flat");
+    // Vanna / charm — the REAL 2nd-order dealer dials (dDelta/dsigma, dDelta/dt).
+    // Uses net_vannaex/net_charmex; hidden on older snapshots that lack them.
+    if (ok(gx) && has(gx.net_vannaex)) {
+      ctiles += tile("Vanna / charm", fmtBig(gx.net_vannaex),
+        "charm " + (has(gx.net_charmex) ? fmtBig(gx.net_charmex) : na()) + " · 2nd-order", "flat");
     }
     // Touch odds — chance price tags the gamma flip today
     if (ok(gx) && has(gx.gamma_flip) && isFinite(S.chart.spot) && S.chart.spot > 0) {
