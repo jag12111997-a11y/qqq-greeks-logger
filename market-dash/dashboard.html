@@ -2871,6 +2871,11 @@
     var quoteLive = latest && q._live_quote === true && isFinite(Number(q.last));
     var quoteTime = quoteLive && isFinite(Number(q._live_src_time))
       ? Number(q._live_src_time) : null;
+    // "LIVE" is only honest when we can confirm the quote is recent. Past 30 min
+    // (after hours / weekend) the browser quote is the last known price, not a
+    // live one, so the badge downgrades to "LAST" instead of over-claiming.
+    var quoteFresh = quoteLive && quoteTime !== null &&
+      (Date.now() - quoteTime) <= 30 * 60000;
     var spot = Number((quoteLive ? q.last : null) ||
                       (latest && LIVE_AUCTION && LIVE_AUCTION.spot) ||
                       (g && g.spot) || q.last);
@@ -2959,7 +2964,7 @@
     }
     if (vanna) add("flow", vanna.price, "#00bfa5", touchTitle("Vanna", vanna.price), "dotted", 1, 80);
     if (theta) add("flow", theta.price, "#ff6d00", touchTitle("Theta", theta.price), "dotted", 1, 81);
-    add("spot", spot, "#00e5ff", quoteLive ? "LIVE QQQ" : "Spot", "dotted", 1, 1);
+    add("spot", spot, "#00e5ff", quoteFresh ? "LIVE QQQ" : (quoteLive ? "QQQ" : "Spot"), "dotted", 1, 1);
 
     var vr2 = cockpitVR(e);
     var geometry = Number(get(e, "quant.geometry.diversification_volume"));
@@ -2985,7 +2990,7 @@
     var garchRegime = get(e, "quant.garch.regime");
     if (garchRegime) chip(String(garchRegime), garchRegime === "HIGH VOL" ? "down" : garchRegime === "LOW VOL" ? "up" : "");
     if (used !== null && isFinite(used)) chip("RANGE " + Math.round(used * 100) + "% USED", used >= 1 ? "down" : used >= .5 ? "warn" : "up");
-    if (quoteLive) statuses.unshift({ text: "QQQ LIVE $" + spot.toFixed(2), tone: "up", liveQuote: true });
+    if (quoteLive) statuses.unshift({ text: (quoteFresh ? "QQQ LIVE $" : "QQQ LAST $") + spot.toFixed(2), tone: quoteFresh ? "up" : "warn", liveQuote: true });
     if (hostile >= 2) statuses.unshift({ text: "STAND DOWN", tone: "down" });
 
     var stamp = (latest && LIVE_AUCTION && LIVE_AUCTION.generated_utc) ||
@@ -2995,7 +3000,7 @@
     var quoteAgeMin = quoteTime === null ? null : Math.max(0, Math.round((Date.now() - quoteTime) / 60000));
     return { latest: latest, g: g || {}, spot: spot, pct: pct, prevClose: prevClose,
              mk: mk, q: q, vix: vix, touch: touch, vr2: vr2, geometry: geometry,
-             quoteLive: quoteLive,
+             quoteLive: quoteLive, quoteFresh: quoteFresh,
              quoteTime: quoteTime, quoteAgeMin: quoteAgeMin, sig: sig, sigLeft: sigLeft,
              hoursLeft: hoursLeft, levels: levels, statuses: statuses, used: used,
              stamp: stamp, ageMin: ageMin };
@@ -3004,7 +3009,7 @@
   function qqqChartSource(M, liveBars) {
     var bits = [];
     if (M.quoteLive) {
-      bits.push("QQQ LIVE $" + M.spot.toFixed(2));
+      bits.push((M.quoteFresh ? "QQQ LIVE $" : "QQQ LAST $") + M.spot.toFixed(2));
       bits.push("Finnhub quote " + (M.quoteAgeMin <= 1 ? "updated now" : M.quoteAgeMin + "m old"));
     } else {
       bits.push("QQQ");
@@ -3177,7 +3182,7 @@
           'aria-label="Horizontal net gamma exposure bars aligned to the QQQ chart price axis, with live spot, gamma flip, call wall and put wall">' +
           svg + '</svg></div>' +
         '<div class="qqq-gex-levels">' +
-          level(M.quoteLive ? "Live QQQ" : "Spot", spot, "#00e5ff", "qqq-gex-spot-value") +
+          level(M.quoteFresh ? "Live QQQ" : (M.quoteLive ? "QQQ" : "Spot"), spot, "#00e5ff", "qqq-gex-spot-value") +
           level("Gamma flip", flip, "#ffd600", "") +
           level("Call wall", L.call_wall, "#00e676", "") +
           level("Put wall", L.put_wall, "#ff453a", "") +
@@ -3473,11 +3478,21 @@
     var active = M.levels.filter(function (x) {
       return x.group === "spot" || QQQ_LAYERS[x.group];
     }).sort(function (a, b) { return a.priority - b.priority; });
-    var merged = {};
+    // Merge signals on the same strike into one line. When they share the same
+    // touch-odds % (true whenever they sit on one price), show that % once at the
+    // end instead of repeating it after every label ("Call wall · Put wall · OI
+    // magnet · 87%" rather than "Call wall 87% · Put wall 87% · OI magnet 87%").
+    var merged = {}, pctRe = /\s(?:·\s)?(\d+%)$/;
     active.forEach(function (x) {
       var key = x.price.toFixed(4);
       if (!merged[key]) { merged[key] = x; return; }
-      if (merged[key].title.indexOf(x.title) < 0) merged[key].title += " · " + x.title;
+      var tgt = merged[key];
+      var mT = pctRe.exec(tgt.title), mX = pctRe.exec(x.title);
+      var pct = (mX && mX[1]) || (mT && mT[1]) || null;
+      var baseT = mT ? tgt.title.slice(0, mT.index) : tgt.title;
+      var baseX = mX ? x.title.slice(0, mX.index) : x.title;
+      if (baseT.split(" · ").indexOf(baseX) < 0) baseT += " · " + baseX;
+      tgt.title = baseT + (pct ? " · " + pct : "");
     });
     var spotLine = null;
     Object.keys(merged).forEach(function (k) {
@@ -3526,14 +3541,14 @@
           QQQ_TV.quoteSeries.update({ time: quoteBarTime, value: M.spot });
           QQQ_TV.quoteTime = quoteBarTime;
         }
-        if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: "LIVE QQQ" });
+        if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: M.quoteFresh ? "LIVE QQQ" : "QQQ" });
       } catch (err) {}
     }
     var sourceEl = document.getElementById("qqq-live-source");
     var chipEl = document.getElementById("qqq-live-chip");
     var bars = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles) ? LIVE_AUCTION.candles.length : 0;
     if (sourceEl) sourceEl.textContent = qqqChartSource(M, bars);
-    if (chipEl) chipEl.textContent = "QQQ LIVE $" + M.spot.toFixed(2);
+    if (chipEl) chipEl.textContent = (M.quoteFresh ? "QQQ LIVE $" : "QQQ LAST $") + M.spot.toFixed(2);
 
     // The command center follows the same fast quote without remounting the
     // chart or rebuilding the cockpit.

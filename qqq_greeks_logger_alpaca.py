@@ -420,7 +420,11 @@ def compute_gex_live(call_rows, put_rows, spot):
         method = "nearest-to-zero (no crossing in window)"
 
     call_wall = max(strikes, key=lambda s: s["call_gex"])["strike"]
-    put_wall = min(strikes, key=lambda s: s["put_gex"])["strike"]
+    # Put wall = strike with the most negative NET dealer gamma (max short gamma
+    # = the real support level). Using raw put_gex snapped it to the ATM strike,
+    # whose put gamma is huge just from being at-the-money, so the wall kept
+    # printing on top of spot. Net gamma puts it at the true downside level.
+    put_wall = min(strikes, key=lambda s: s["net_gex"])["strike"]
     top_oi = max(strikes, key=lambda s: s["call_oi"] + s["put_oi"])["strike"]
 
     now_utc = datetime.datetime.now(datetime.timezone.utc)
