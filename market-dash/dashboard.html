@@ -887,6 +887,62 @@
       head + bars + story + note;
   }
 
+  // ── Q2: Options positioning heatmap — strike (moneyness) × expiry horizon ──
+  // Reads tf.grid emitted by market_dash_fetch.fetch_time_footprint (cells of
+  // {e:bucketIdx, m:bandIdx, vol, oi, prem}). Renders a 2D grid: X = expiry
+  // buckets, Y = moneyness bands (ATM centred, high strike on top), cell shaded
+  // by premium $. Returns "" when no grid is present so the caller falls back to
+  // the classic bar view — nothing breaks on old data.
+  function secOptHeatmap(tf) {
+    if (!tf || tf.error || !tf.grid || !tf.grid.cells || !tf.grid.cells.length) return "";
+    var G = tf.grid, buckets = G.buckets || [], bands = G.bands || [];
+    var nB = buckets.length, nM = bands.length;
+    if (!nB || !nM) return "";
+    function kfmt(v) { v = v || 0; var a = Math.abs(v);
+      return a >= 1e6 ? (v / 1e6).toFixed(1) + "M" : a >= 1e3 ? (v / 1e3).toFixed(0) + "K" : String(Math.round(v)); }
+    var cellMap = {}, maxV = 0, peak = null;
+    G.cells.forEach(function (c) {
+      var v = c.prem || 0;
+      cellMap[c.e + "_" + c.m] = c;
+      if (v > maxV) maxV = v;
+      if (!peak || v > (peak.prem || 0)) peak = c;
+    });
+    function cellHtml(b, m) {
+      var c = cellMap[b + "_" + m], v = c ? (c.prem || 0) : 0;
+      var t = maxV > 0 ? v / maxV : 0;
+      var bg = v > 0 ? "rgba(255,43,224," + (0.07 + t * 0.73).toFixed(3) + ")" : "rgba(255,255,255,.02)";
+      var lab = (v > 0 && t >= 0.13) ? kfmt(v) : "";
+      var title = buckets[b] + " · " + bands[m] +
+        (c ? " · prem " + fmtBig(v) + " · vol " + kfmt(c.vol || 0) + " · OI " + kfmt(c.oi || 0) : " · —");
+      return '<div title="' + esc(title) + '" style="background:' + bg +
+        ';border-radius:4px;height:26px;display:flex;align-items:center;justify-content:center;' +
+        'font-size:9px;color:#ffd9f5;overflow:hidden;white-space:nowrap">' + lab + "</div>";
+    }
+    var cols = "58px repeat(" + nB + ",minmax(0,1fr))";
+    var html = '<div style="display:grid;grid-template-columns:' + cols + ';gap:3px;margin-bottom:3px"><div></div>';
+    buckets.forEach(function (bn) {
+      html += '<div style="font-size:9px;color:var(--dim);text-align:center;text-transform:uppercase;letter-spacing:.5px">' + esc(bn) + "</div>";
+    });
+    html += "</div>";
+    for (var m = nM - 1; m >= 0; m--) {
+      var atm = /ATM/.test(bands[m]);
+      html += '<div style="display:grid;grid-template-columns:' + cols + ';gap:3px;margin-bottom:3px">' +
+        '<div style="font-size:8.5px;color:' + (atm ? "var(--accent)" : "var(--faint)") +
+        ';display:flex;align-items:center;justify-content:flex-end;padding-right:5px;white-space:nowrap">' + esc(bands[m]) + "</div>";
+      for (var b = 0; b < nB; b++) html += cellHtml(b, m);
+      html += "</div>";
+    }
+    var story = peak ? '<div style="margin-top:8px;padding:9px 11px;background:rgba(255,255,255,.04);border-radius:8px;' +
+      'font-size:12px;color:var(--dim);line-height:1.5"><span style="color:var(--faint);text-transform:uppercase;' +
+      'letter-spacing:1px;font-size:10px">where the money sits</span><br>Heaviest premium is <b>' + esc(buckets[peak.e]) +
+      '</b> at the <b>' + esc(bands[peak.m]) + '</b> strike band (' + fmtBig(peak.prem || 0) + ").</div>" : "";
+    var note = '<div style="font-size:9.5px;color:var(--faint);margin-top:6px">cell = premium $ · X = expiry horizon · ' +
+      'Y = strike vs spot · near-money ±' + (tf.near_money_pct || 20) + "% · " + esc(tf.feed || "indicative") + " feed" +
+      (tf.generated_utc ? " · " + esc(tf.generated_utc) + " UTC" : "") + "</div>";
+    return '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      'text-transform:uppercase;margin-bottom:8px">Options positioning — strike × expiry</div>' + html + story + note;
+  }
+
   function secInternals(e) {
     var s = e.sectors;
     if (!ok(s) || !get(s, "rows", []).length) {
@@ -4170,7 +4226,8 @@
     // The shared command summary already owns The Call, leverage, range and
     // regime lights. Keep only cockpit-exclusive detail here so the combined
     // dashboard never repeats or contradicts itself.
-    var tfBlk = secTimeFootprint(get(e, "time_footprint"));
+    var _tf = get(e, "time_footprint");
+    var tfBlk = secOptHeatmap(_tf) || secTimeFootprint(_tf);   // heatmap when grid data exists, else classic bars
     return sectorsBlk + planBlk + auctBlk + ctxBlk + newsBlk + tfBlk;
   }
 

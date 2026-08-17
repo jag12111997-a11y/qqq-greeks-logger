@@ -1547,6 +1547,26 @@ def _tf_bucket(dte):
     return None
 
 
+# Moneyness bands for the STRIKE axis of the Q2 positioning heatmap.
+# Edges are % distance from spot; produces 7 bands, index 0 = lowest strike.
+TF_BAND_EDGES = [-8.0, -4.0, -1.5, 1.5, 4.0, 8.0]
+TF_BAND_LABELS = ["<= -8%", "-8..-4%", "-4..-1.5%", "ATM +/-1.5%", "+1.5..+4%", "+4..+8%", ">= +8%"]
+
+
+def _tf_band(strike, spot):
+    """Return the moneyness-band index for a strike, or None."""
+    if not spot:
+        return None
+    try:
+        pct = (float(strike) / float(spot) - 1.0) * 100.0
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
+    for i, edge in enumerate(TF_BAND_EDGES):
+        if pct < edge:
+            return i
+    return len(TF_BAND_EDGES)
+
+
 def fetch_time_footprint():
     """Per-bucket volume / open interest / premium for QQQ options, split by
     expiry horizon. Best-effort: returns an error dict on failure so build_entry
@@ -1576,6 +1596,15 @@ def fetch_time_footprint():
     exp_lte = (today + timedelta(days=TF_DAYS_OUT)).isoformat()
     acc = {name: {"vol": 0.0, "oi": 0, "prem": 0.0, "contracts": 0}
            for name, _, _ in TF_BUCKETS}
+    # Q2 heatmap: strike-band x expiry-bucket accumulator, keyed (bucket_name, band_idx)
+    grid_acc = {}
+
+    def _gcell(bname, band):
+        c = grid_acc.get((bname, band))
+        if c is None:
+            c = {"vol": 0.0, "oi": 0, "prem": 0.0}
+            grid_acc[(bname, band)] = c
+        return c
 
     def dte_of(exp_str):
         try:
@@ -1606,12 +1635,17 @@ def fetch_time_footprint():
             if not b:
                 continue
             oi = c.get("open_interest")
+            oi_i = 0
             if oi not in (None, ""):
                 try:
-                    acc[b]["oi"] += int(oi)
+                    oi_i = int(oi)
+                    acc[b]["oi"] += oi_i
                 except (TypeError, ValueError):
-                    pass
+                    oi_i = 0
             acc[b]["contracts"] += 1
+            band = _tf_band(c.get("strike_price"), spot)
+            if band is not None and oi_i:
+                _gcell(b, band)["oi"] += oi_i
         page = j.get("next_page_token")
         if not page:
             break
@@ -1649,8 +1683,14 @@ def fetch_time_footprint():
                 v = float(v); px = float(px)
             except (TypeError, ValueError):
                 v, px = 0.0, 0.0
+            prem = v * px * 100.0
             acc[b]["vol"] += v
-            acc[b]["prem"] += v * px * 100.0
+            acc[b]["prem"] += prem
+            band = _tf_band(strike, spot)
+            if band is not None and (v or prem):
+                gc = _gcell(b, band)
+                gc["vol"] += v
+                gc["prem"] += prem
         page = j.get("next_page_token")
         if not page:
             break
@@ -1670,6 +1710,15 @@ def fetch_time_footprint():
             out[m] = round(s / t * 100, 1) if t else None
         return out
 
+    # Q2 heatmap grid: strike-band x expiry-bucket cells (nonzero only).
+    bnames = [name for name, _, _ in TF_BUCKETS]
+    grid_cells = []
+    for (bname, band), gc in grid_acc.items():
+        if gc["vol"] or gc["oi"] or gc["prem"]:
+            grid_cells.append({"e": bnames.index(bname), "m": band,
+                               "vol": round(gc["vol"]), "oi": int(gc["oi"]),
+                               "prem": round(gc["prem"])})
+
     return {
         "generated_utc": _dt.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
         "feed": "indicative", "near_money_pct": int(TF_STRIKE_WINDOW * 100),
@@ -1678,6 +1727,7 @@ def fetch_time_footprint():
         "totals": {"vol": round(tot["vol"]), "oi": tot["oi"], "prem": round(tot["prem"])},
         "short_share": share(lambda lo, hi: hi <= 7),     # 0DTE + weeklies
         "long_share": share(lambda lo, hi: lo >= 31),     # 1-3mo + 3mo+
+        "grid": {"buckets": bnames, "bands": TF_BAND_LABELS, "cells": grid_cells},
     }
 
 
