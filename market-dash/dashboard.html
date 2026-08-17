@@ -186,6 +186,10 @@
   .qqq-command-body { padding:16px 17px 17px; }
   .qqq-command-summary { padding-bottom:16px; border-bottom:1px solid #1c1c28; }
   .qqq-command-flow { padding-top:2px; }
+  .qqq-model-detail-inline { margin-top:16px; padding-top:16px; border-top:1px solid #1c1c28; }
+  .qqq-model-detail-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .qqq-model-detail-title { color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
+                            text-transform:uppercase; }
   .qqq-deep-dive { padding:0 !important; overflow:hidden; }
   .qqq-deep-dive > details > summary { padding:15px 17px; }
   .qqq-deep-dive > details[open] > summary { border-bottom:1px solid var(--line); }
@@ -3223,6 +3227,16 @@
           '<small>shared QQQ price scale</small></div>' +
           secQqqGexProfile(e, true, chartModel) +
         '</aside>' +
+      '</div>' +
+      // Full model detail folded directly into the live-price card (was the
+      // separate "QQQ · full model detail" collapsible). One unified box:
+      // HUD → chart/GEX → complete cockpit.
+      '<div class="qqq-model-detail-inline">' +
+        '<div class="qqq-model-detail-head">' +
+          '<span class="qqq-model-detail-title">Full model detail</span>' +
+          '<span class="qqq-command-sync">● one synchronized live model</span>' +
+        '</div>' +
+        '<div class="qqq-command-flow">' + secCockpit(e, chartModel) + '</div>' +
       '</div>';
     return secWide("QQQ · live price + synchronized GEX", body)
       .replace('<section class="wide">', '<section class="wide qqq-market-card">');
@@ -4213,8 +4227,7 @@
     var _qqqModel = qqqChartModel(e);
     var _leverageLast = secNasdaqStars(e);
     var _qqqBody =
-      secQqqOpening(e, _qqqModel) +
-      secNasdaqCommandCenter(e, _qqqModel) +
+      secQqqOpening(e, _qqqModel) +   // now includes the full model detail inline
       secNasdaqDeepDive(e) +
       (_leverageLast ? band("Leverage family · refine later") +
         '<div class="grid qqq-leverage-last">' + _leverageLast + '</div>' : "");
