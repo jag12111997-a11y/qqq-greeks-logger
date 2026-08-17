@@ -1684,23 +1684,12 @@
     if (has(vix)) lights += light("VIX " + num(vix, 2), vix >= 20 ? "warn" : "dim");
     lights += "</div>";
 
-    var LEV = [["TQQQ", "#b388ff"], ["NDX", "#ff2be0"], ["QQQM", "#ffd600"], ["QQQ", "#00e676"], ["SQQQ", "#ff453a"]];
-    var maxAbs = 0.1;
-    LEV.forEach(function (p) { var r = mk[p[0]]; if (r && has(r.pct_change)) maxAbs = Math.max(maxAbs, Math.abs(r.pct_change)); });
-    var lb = "";
-    LEV.forEach(function (p) {
-      var r = mk[p[0]]; if (!r || !has(r.pct_change)) return;
-      var w = Math.max(3, Math.abs(r.pct_change) / maxAbs * 100);
-      lb += '<div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:52px;color:' + p[1] + '">' + p[0] + "</span>" +
-        '<span style="flex:1;height:9px;background:#17171f;border-radius:5px;overflow:hidden"><span style="display:block;width:' + w.toFixed(0) + '%;height:9px;background:' + p[1] + '"></span></span>' +
-        '<span style="width:58px;text-align:right;color:' + C(r.pct_change) + '">' + signed(r.pct_change, 2, "%") + "</span></div>";
-    });
-    var levBars = lb ? '<div style="font-size:10.5px;letter-spacing:1.5px;color:#8b8ba6;margin-bottom:8px">LEVERAGE FAMILY · TODAY</div>' +
-      '<div style="display:flex;flex-direction:column;gap:6px">' + lb + "</div>" : "";
+    // LEVERAGE FAMILY · TODAY bar strip removed 2026-08-17 (Q4). The full
+    // "Nasdaq — QQQ leverage family" Star-Players section (secNasdaqStars) is kept.
 
     return '<div id="qqq-command-live" class="qqq-command-summary" data-prev-close="' +
       (isFinite(S.chart.prevClose) ? S.chart.prevClose : "") + '" data-vix="' +
-      (isFinite(vix) ? vix : "") + '">' + hero + gauges + lights + levBars + "</div>";
+      (isFinite(vix) ? vix : "") + '">' + hero + gauges + lights + "</div>";
   }
 
   function secNasdaqStars(e) {
