@@ -3308,7 +3308,7 @@
     if (vr2 !== null) micro.push(vr2 > 1.1 ? "trending (VR " + num(vr2, 2) + ")" : vr2 < 0.9 ? "mean-reverting (VR " + num(vr2, 2) + ")" : "random walk");
     if (sp !== null) micro.push("edge " + signed(sp, 1, "pp") + " real−impl");
     if (ok(garch) && has(garch.regime) && has(garch.conditional_vol_pct))
-      micro.push(String(garch.regime).toLowerCase() + " vol " + num(garch.conditional_vol_pct, 1, "%"));
+      micro.push(String(garch.regime).toLowerCase() + " " + num(garch.conditional_vol_pct, 1, "%"));
     if (has(vix)) micro.push("VIX " + num(vix, 2));
 
     var upObj = cw !== null ? cw : (sig !== null ? spot * (1 + sig) : null);
