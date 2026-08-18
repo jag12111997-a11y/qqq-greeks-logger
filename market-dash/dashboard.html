@@ -186,6 +186,14 @@
   .qqq-command-body { padding:16px 17px 17px; }
   .qqq-command-summary { padding-bottom:16px; border-bottom:1px solid #1c1c28; }
   .qqq-command-flow { padding-top:2px; }
+  /* Q3: per-category Read blocks replaced by the single synthesis (QQQ tab only). */
+  .flow .read { display:none !important; }
+  .qqq-synthesis { margin:2px 0 18px; display:flex; flex-direction:column; gap:11px; }
+  .qqq-syn-row { display:grid; grid-template-columns:104px 1fr; gap:12px; align-items:start; }
+  .qqq-syn-k { color:var(--accent); font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; padding-top:3px; }
+  .qqq-syn-v { font-size:13px; color:var(--txt); line-height:1.5; }
+  .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
+  @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
   .qqq-model-detail-inline { margin-top:16px; padding-top:16px; border-top:1px solid #1c1c28; }
   .qqq-model-detail-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
   .qqq-model-detail-title { color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
@@ -3262,6 +3270,67 @@
       .replace("<section>", '<section class="qqq-gex-profile">');
   }
 
+  // ── Q3: one synthesized read — MARKET STORY + CURRENT POSTURE + KEY LEVELS ──
+  // Consolidates the per-section "Read" prose (now hidden via .flow .read) into a
+  // single narrative built from the SAME computed signals the HUD/cockpit use.
+  function secSynthesis(e, chartModel) {
+    var S = nasdaqCommandModel(e, chartModel);
+    var gx = S.g || {}, L = get(gx, "levels", {}) || {};
+    var spot = (S.chart && isFinite(S.chart.spot)) ? S.chart.spot : (has(gx.spot) ? gx.spot : null);
+    if (spot === null) return "";
+    var sig = (S.chart && S.chart.sigLeft !== undefined) ? S.chart.sigLeft : null;
+    var flip = has(gx.gamma_flip) ? gx.gamma_flip : null;
+    var cw = has(L.call_wall) ? L.call_wall : null;
+    var pw = has(L.put_wall) ? L.put_wall : null;
+    var oi = has(L.highest_oi_strike) ? L.highest_oi_strike : null;
+    var z = (S.q && has(S.q.z20)) ? S.q.z20 : null;
+    var dv = S.dv, vr2 = S.vr2, sp = S.spread, vix = S.vix;
+    var garch = get(e, "quant.garch");
+
+    function tag(name, p, col) {
+      if (p === null || !isFinite(p)) return "";
+      var d = spot ? (p / spot - 1) * 100 : null;
+      return '<span style="display:inline-block;background:rgba(255,255,255,.05);border:1px solid ' + col +
+        ';border-radius:7px;padding:3px 9px;margin:4px 6px 0 0;font-size:12px;color:var(--txt);white-space:nowrap">' +
+        '<span style="color:' + col + '">' + esc(name) + '</span> ' + num(p, 2) +
+        (d !== null ? ' <span style="color:' + (d >= 0 ? "#00e676" : "#ff453a") + ';font-size:11px">' + signed(d, 2, "%") + "</span>" : "") +
+        "</span>";
+    }
+
+    var story = ["QQQ " + num(spot, 2) +
+      (z !== null ? " · stretch z " + signed(z, 2) +
+        (Math.abs(z) >= 1.5 ? " (extended)" : Math.abs(z) >= 1 ? " (stretched)" : " (mid-range)") : "")];
+    if (has(gx.regime))
+      story.push(S.gpos ? "dealers long gamma — flow dampens / pins toward the walls"
+                        : "dealers short gamma — flow amplifies moves");
+    var micro = [];
+    if (dv !== null) micro.push(dv < 0.15 ? "geometry collapsed" : dv < 0.35 ? "geometry thin" : "geometry healthy");
+    if (vr2 !== null) micro.push(vr2 > 1.1 ? "trending (VR " + num(vr2, 2) + ")" : vr2 < 0.9 ? "mean-reverting (VR " + num(vr2, 2) + ")" : "random walk");
+    if (sp !== null) micro.push("edge " + signed(sp, 1, "pp") + " real−impl");
+    if (ok(garch) && has(garch.regime) && has(garch.conditional_vol_pct))
+      micro.push(String(garch.regime).toLowerCase() + " vol " + num(garch.conditional_vol_pct, 1, "%"));
+    if (has(vix)) micro.push("VIX " + num(vix, 2));
+
+    var upObj = cw !== null ? cw : (sig !== null ? spot * (1 + sig) : null);
+    var downInv = pw !== null ? pw : (sig !== null ? spot * (1 - sig) : null);
+    var magnet = oi !== null ? oi : flip;
+
+    return '<div class="qqq-synthesis">' +
+      '<div class="qqq-syn-row"><span class="qqq-syn-k">Market story</span><div class="qqq-syn-v">' +
+        esc(story.join(" · ")) + (micro.length ? '<div class="qqq-syn-sub">' + esc(micro.join(" · ")) + "</div>" : "") +
+      "</div></div>" +
+      '<div class="qqq-syn-row"><span class="qqq-syn-k">Current posture</span><div class="qqq-syn-v">' +
+        '<b style="color:' + S.callColor + '">' + esc(S.call) + "</b>" +
+        ' <span style="color:var(--dim)">— ' + S.hostile + " hostile · " + S.friendly + " friendly signal" +
+        ((S.hostile + S.friendly) === 1 ? "" : "s") + "</span></div></div>" +
+      '<div class="qqq-syn-row"><span class="qqq-syn-k">Key levels</span><div class="qqq-syn-v">' +
+        tag("Magnet", magnet, "#b388ff") + tag("Flip", flip, "#ffd600") +
+        tag("Upside", upObj, "#00e676") + tag("Downside", downInv, "#ff453a") +
+        (sig !== null ? tag("+1σ", spot * (1 + sig), "#29b6f6") + tag("−1σ", spot * (1 - sig), "#29b6f6") : "") +
+      "</div></div>" +
+    "</div>";
+  }
+
   function secQqqOpening(e, chartModel) {
     var body =
       secNasdaqHUD(e, chartModel) +
@@ -3281,6 +3350,7 @@
           '<span class="qqq-model-detail-title">Full model detail</span>' +
           '<span class="qqq-command-sync">● one synchronized live model</span>' +
         '</div>' +
+        secSynthesis(e, chartModel) +
         '<div class="qqq-command-flow">' + secCockpit(e, chartModel) + '</div>' +
       '</div>';
     return secWide("QQQ · live price + synchronized GEX", body)
@@ -3489,6 +3559,22 @@
       return good;
     }).sort(function (a, b) { return a.time - b.time; });
 
+    // Heikin Ashi transform — HA close = avg(O,H,L,C); HA open = mean of the
+    // previous HA open/close (first bar seeds from its own O/C). Same price
+    // scale as raw candles, so every GEX / range / dealer level still lines up.
+    var haCandles = (function (src) {
+      var out = [], pO = null, pC = null;
+      for (var i = 0; i < src.length; i++) {
+        var b = src[i];
+        var haC = (b.open + b.high + b.low + b.close) / 4;
+        var haO = pO === null ? (b.open + b.close) / 2 : (pO + pC) / 2;
+        out.push({ time: b.time, open: haO,
+          high: Math.max(b.high, haO, haC), low: Math.min(b.low, haO, haC), close: haC });
+        pO = haO; pC = haC;
+      }
+      return out;
+    })(candles);
+
     var series;
     if (candles.length) {
       series = chart.addSeries(TV.CandlestickSeries, {
@@ -3497,7 +3583,7 @@
         wickUpColor: "#69f0ae", wickDownColor: "#ff7961",
         priceLineVisible: false, lastValueVisible: true
       });
-      series.setData(candles);
+      series.setData(haCandles);
     } else {
       var cut = H.indexOf(e);
       var hist = cut >= 0 ? H.slice(0, cut + 1) : H.slice();
@@ -3527,7 +3613,7 @@
     // always agree without pretending the quote is a full OHLC candle.
     var quoteSeries = null, lastCandleTime = null;
     if (candles.length && M.quoteLive && M.quoteTime !== null) {
-      var tail = candles[candles.length - 1];
+      var tail = haCandles[haCandles.length - 1];
       var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
       lastCandleTime = tail.time;
       quoteSeries = chart.addSeries(TV.LineSeries, {
