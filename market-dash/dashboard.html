@@ -3317,7 +3317,7 @@
 
     return '<div class="qqq-synthesis">' +
       '<div class="qqq-syn-row"><span class="qqq-syn-k">Market story</span><div class="qqq-syn-v">' +
-        esc(story.join(" · ")) + (micro.length ? '<div class="qqq-syn-sub">' + esc(micro.join(" · ")) + "</div>" : "") +
+        story.join(" · ") + (micro.length ? '<div class="qqq-syn-sub">' + micro.join(" · ") + "</div>" : "") +
       "</div></div>" +
       '<div class="qqq-syn-row"><span class="qqq-syn-k">Current posture</span><div class="qqq-syn-v">' +
         '<b style="color:' + S.callColor + '">' + esc(S.call) + "</b>" +
