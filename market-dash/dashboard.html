@@ -194,7 +194,8 @@
   .qqq-syn-v { font-size:13px; color:var(--txt); line-height:1.5; }
   .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
   @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
-  .qqq-model-detail-inline { margin-top:16px; padding-top:16px; border-top:1px solid #1c1c28; }
+  .qqq-model-detail-inline { margin:16px 0 18px; padding:16px 0 18px;
+                             border-top:1px solid #1c1c28; border-bottom:1px solid #1c1c28; }
   .qqq-model-detail-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
   .qqq-model-detail-title { color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
                             text-transform:uppercase; }
@@ -3334,17 +3335,9 @@
   function secQqqOpening(e, chartModel) {
     var body =
       secNasdaqHUD(e, chartModel) +
-      '<div class="qqq-top-grid">' +
-        '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>' +
-        '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile">' +
-          '<div class="qqq-gex-pane-title"><span>GEX · synchronized strike profile</span>' +
-          '<small>shared QQQ price scale</small></div>' +
-          secQqqGexProfile(e, true, chartModel) +
-        '</aside>' +
-      '</div>' +
-      // Full model detail folded directly into the live-price card (was the
-      // separate "QQQ · full model detail" collapsible). One unified box:
-      // HUD → chart/GEX → complete cockpit.
+      // Keep the synthesized read and the complete cockpit visibly inside the
+      // opening QQQ panel, before the chart/GEX workspace. This is the content
+      // shown in the "Full model detail" and "The box" reference screenshots.
       '<div class="qqq-model-detail-inline">' +
         '<div class="qqq-model-detail-head">' +
           '<span class="qqq-model-detail-title">Full model detail</span>' +
@@ -3352,6 +3345,14 @@
         '</div>' +
         secSynthesis(e, chartModel) +
         '<div class="qqq-command-flow">' + secCockpit(e, chartModel) + '</div>' +
+      '</div>' +
+      '<div class="qqq-top-grid">' +
+        '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>' +
+        '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile">' +
+          '<div class="qqq-gex-pane-title"><span>GEX · synchronized strike profile</span>' +
+          '<small>shared QQQ price scale</small></div>' +
+          secQqqGexProfile(e, true, chartModel) +
+        '</aside>' +
       '</div>';
     return secWide("QQQ · live price + synchronized GEX", body)
       .replace('<section class="wide">', '<section class="wide qqq-market-card">');
