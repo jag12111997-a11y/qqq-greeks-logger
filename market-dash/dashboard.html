@@ -3343,17 +3343,8 @@
 
   function secQqqOpening(e, chartModel) {
     var body =
-      secNasdaqHUD(e, chartModel) +
-      // Everything (full model detail + complete cockpit) now sits in the top
-      // box, ABOVE the chart: HUD → model detail/cockpit → chart/GEX at bottom.
-      '<div class="qqq-model-detail-inline">' +
-        '<div class="qqq-model-detail-head">' +
-          '<span class="qqq-model-detail-title">Full model detail</span>' +
-          '<span class="qqq-command-sync">● one synchronized live model</span>' +
-        '</div>' +
-        secSynthesis(e, chartModel) +
-        '<div class="qqq-command-flow">' + secCockpit(e, chartModel) + '</div>' +
-      '</div>' +
+      // CHART on top; ALL the info (HUD + full model detail + cockpit) is packed
+      // into the space directly UNDER the chart. Positioning stays at the bottom.
       '<div class="qqq-top-grid">' +
         '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>' +
         '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile">' +
@@ -3361,6 +3352,15 @@
           '<small>shared QQQ price scale</small></div>' +
           secQqqGexProfile(e, true, chartModel) +
         '</aside>' +
+      '</div>' +
+      secNasdaqHUD(e, chartModel) +
+      '<div class="qqq-model-detail-inline">' +
+        '<div class="qqq-model-detail-head">' +
+          '<span class="qqq-model-detail-title">Full model detail</span>' +
+          '<span class="qqq-command-sync">● one synchronized live model</span>' +
+        '</div>' +
+        secSynthesis(e, chartModel) +
+        '<div class="qqq-command-flow">' + secCockpit(e, chartModel) + '</div>' +
       '</div>' +
       secQqqPositioning(e);
     return secWide("QQQ · live price + synchronized GEX", body)
