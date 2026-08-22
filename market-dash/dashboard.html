@@ -188,13 +188,13 @@
   .qqq-command-flow { padding-top:2px; }
   /* Q3: per-category Read blocks replaced by the single synthesis (QQQ tab only). */
   .flow .read { display:none !important; }
-  .qqq-synthesis { margin:2px 0 18px; display:flex; flex-direction:column; gap:11px; }
+  .qqq-synthesis { margin:2px 0 10px; display:flex; flex-direction:column; gap:8px; }
   .qqq-syn-row { display:grid; grid-template-columns:104px 1fr; gap:12px; align-items:start; }
   .qqq-syn-k { color:var(--accent); font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; padding-top:3px; }
   .qqq-syn-v { font-size:13px; color:var(--txt); line-height:1.5; }
   .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
   @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
-  .qqq-model-detail-inline { margin-top:16px; padding-top:16px; border-top:1px solid #1c1c28; }
+  .qqq-model-detail-inline { margin-top:10px; padding-top:10px; border-top:1px solid #1c1c28; }
   .qqq-model-detail-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
   .qqq-model-detail-title { color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
                             text-transform:uppercase; }
@@ -3101,7 +3101,7 @@
     var liveBars = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
       ? LIVE_AUCTION.candles.length : 0;
     var source = qqqChartSource(M, liveBars);
-    var chips = M.statuses.map(function (s) {
+    var chips = M.statuses.filter(function (s) { return s.liveQuote; }).map(function (s) {
       return '<span class="qqq-chart-chip ' + s.tone + '"' +
         (s.liveQuote ? ' id="qqq-live-chip"' : "") + '>' + esc(s.text) + "</span>";
     }).join("");
@@ -3317,12 +3317,8 @@
 
     return '<div class="qqq-synthesis">' +
       '<div class="qqq-syn-row"><span class="qqq-syn-k">Market story</span><div class="qqq-syn-v">' +
-        story.join(" · ") + (micro.length ? '<div class="qqq-syn-sub">' + micro.join(" · ") + "</div>" : "") +
+        story.join(" · ") +
       "</div></div>" +
-      '<div class="qqq-syn-row"><span class="qqq-syn-k">Current posture</span><div class="qqq-syn-v">' +
-        '<b style="color:' + S.callColor + '">' + esc(S.call) + "</b>" +
-        ' <span style="color:var(--dim)">— ' + S.hostile + " hostile · " + S.friendly + " friendly signal" +
-        ((S.hostile + S.friendly) === 1 ? "" : "s") + "</span></div></div>" +
       '<div class="qqq-syn-row"><span class="qqq-syn-k">Key levels</span><div class="qqq-syn-v">' +
         tag("Magnet", magnet, "#b388ff") + tag("Flip", flip, "#ffd600") +
         tag("Upside", upObj, "#00e676") + tag("Downside", downInv, "#ff453a") +
@@ -4138,7 +4134,7 @@
              tile("Opening range", "—", "OR30 · " + wait, "dim") +
              tile("Volume", "—", wait + " · IEX", "dim");
       }
-      auctBlk = '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      auctBlk = '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:6px">Auction — IEX' +
         (aStale ? ' <span style="color:var(--faint);letter-spacing:0">· last logged ' + aAgeTxt + '</span>' : '') +
         '</div><div style="display:flex;flex-wrap:wrap;gap:8px">' +
@@ -4154,10 +4150,7 @@
         (has(g2.unconditional_vol_pct) ? " · uncond " + num(g2.unconditional_vol_pct, 1, "%") : ""),
         /HIGH/i.test(g2.regime) ? "warn" : "flat");
     }
-    if (S.chart.sigLeft !== null && isFinite(S.chart.spot)) {
-      ctiles += tile("Expected move", "±" + (S.chart.sigLeft * 100).toFixed(2) + "%",
-        "$" + (S.chart.spot * S.chart.sigLeft).toFixed(2) + " · into close", "flat");
-    }
+    // Expected move tile removed — same ±1σ shown in Key levels above.
     var o2 = e.options;
     if (ok(o2) && has(o2.total_pc)) {
       var t = o2.total_pc;
@@ -4166,13 +4159,7 @@
         ? " · " + signed(o2.index_pc - o2.equity_pc, 2) + " idx−eq" : "";
       ctiles += tile("P/C skew", num(t, 2), lean + ieTxt, "flat");
     }
-    // VIX — the fear gauge (amber when elevated)
-    var vxr = mk.VIX;
-    if (vxr && has(vxr.last)) {
-      ctiles += tile("VIX (fear gauge)", num(vxr.last, 2),
-        (has(vxr.pct_change) ? signed(vxr.pct_change, 2, "%") + " today" : "level"),
-        vxr.last >= 20 ? "warn" : "flat");
-    }
+    // VIX fear-gauge tile removed — VIX already shown in the HUD lights row.
     // Vanna / charm — the REAL 2nd-order dealer dials (dDelta/dsigma, dDelta/dt).
     // Uses net_vannaex/net_charmex; hidden on older snapshots that lack them.
     if (ok(gx) && has(gx.net_vannaex)) {
@@ -4199,7 +4186,7 @@
       }
     }
     var ctxBlk = ctiles
-      ? '<div style="margin-top:16px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      ? '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:6px">Context</div>' +
         '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
         ctiles + "</div>"
@@ -4208,7 +4195,7 @@
     // ── Mini sectors donut ──
     var sec2 = get(e, "sectors");
     var sectorsBlk = (ok(sec2) && get(sec2, "rows", []).length)
-      ? '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      ? '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
       : "";
 
@@ -4247,7 +4234,7 @@
       : "";
 
     // ── Plan & discipline — the box, condensed ──
-    var planBlk = '<div style="margin-top:16px;background:rgba(255,255,255,.04);border-radius:12px;' +
+    var planBlk = '<div style="margin-top:10px;background:rgba(255,255,255,.04);border-radius:12px;' +
       'padding:12px 16px;font-size:12.5px;color:var(--dim);line-height:1.7">' +
       '<span style="letter-spacing:1px;text-transform:uppercase;font-size:10.5px">The box</span><br>' +
       '<span style="color:var(--txt)">7:17–8:30 PT</span> · QQQ 0DTE call 3 ITM · size 60% · ' +
@@ -4289,7 +4276,7 @@
       var accent = isToday ? "var(--warn)" : "var(--txt)";
       var bg = isToday ? "rgba(255,214,0,.12)" : "rgba(255,255,255,.045)";
       newsBlk =
-        '<div style="margin-top:18px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:6px">Next catalyst</div>' +
         '<div style="background:' + bg + ';border-radius:12px;padding:14px 16px">' +
           '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">' +
@@ -4314,7 +4301,7 @@
     // dashboard never repeats or contradicts itself.
     var _tf = get(e, "time_footprint");
     var tfBlk = secOptHeatmap(_tf) || secTimeFootprint(_tf);   // heatmap when grid data exists, else classic bars
-    return sectorsBlk + planBlk + auctBlk + ctxBlk + newsBlk + tfBlk;
+    return planBlk + auctBlk + ctxBlk + newsBlk + tfBlk + sectorsBlk;
   }
 
   function secNasdaqCommandCenter(e, chartModel) {
