@@ -3327,6 +3327,23 @@
     "</div>";
   }
 
+  // Options & market positioning — the strike×expiry heatmap + sectors donut.
+  // Deliberately SEPARATE from the trading cockpit: this renders BELOW the chart.
+  function secQqqPositioning(e) {
+    var _tf = get(e, "time_footprint");
+    var heat = secOptHeatmap(_tf) || secTimeFootprint(_tf) || "";
+    var sec2 = get(e, "sectors");
+    var sectors = (ok(sec2) && get(sec2, "rows", []).length)
+      ? '<div style="margin-top:14px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
+      : "";
+    if (!heat && !sectors) return "";
+    return '<div class="qqq-model-detail-inline">' +
+      '<div class="qqq-model-detail-head">' +
+        '<span class="qqq-model-detail-title">Options &amp; market positioning</span>' +
+      '</div>' + heat + sectors + '</div>';
+  }
+
   function secQqqOpening(e, chartModel) {
     var body =
       secNasdaqHUD(e, chartModel) +
@@ -3347,7 +3364,8 @@
           '<small>shared QQQ price scale</small></div>' +
           secQqqGexProfile(e, true, chartModel) +
         '</aside>' +
-      '</div>';
+      '</div>' +
+      secQqqPositioning(e);
     return secWide("QQQ · live price + synchronized GEX", body)
       .replace('<section class="wide">', '<section class="wide qqq-market-card">');
   }
@@ -3887,14 +3905,16 @@
         dim:  ["var(--dim)",  "rgba(139,139,166,.10)"],
         flat: ["var(--txt)",  "rgba(255,255,255,.045)"]   // neutral context tile
       };
-      var c = (map[cn] || map.dim)[0];
       // Compact ONE-LINE pill (matches the KEY LEVELS chip look) so Auction /
       // Context stay a couple of tight rows and leave room for the chart below.
+      // Border + label are COLOUR-CODED like Key Levels: green/red/amber signal
+      // state, lavender = neutral tile.
+      var col = { up: "#00e676", down: "#ff453a", warn: "#ffd600", dim: "#8b8ba6", flat: "#b388ff" }[cn] || "#8b8ba6";
       return '<span style="display:inline-flex;align-items:baseline;gap:7px;' +
-        'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:7px;' +
+        'background:rgba(255,255,255,.04);border:1px solid ' + col + ';border-radius:7px;' +
         'padding:4px 10px;font-size:12px;line-height:1.3;white-space:nowrap;max-width:100%">' +
-        '<span style="font-size:8.5px;letter-spacing:.6px;color:var(--dim);text-transform:uppercase">' + esc(label) + "</span>" +
-        '<b style="color:' + c + ';font-weight:700">' + big + "</b>" +
+        '<span style="font-size:8.5px;letter-spacing:.6px;color:' + col + ';text-transform:uppercase">' + esc(label) + "</span>" +
+        '<b style="color:var(--txt);font-weight:700">' + big + "</b>" +
         (sub ? '<span style="font-size:10px;color:var(--faint)">' + sub + "</span>" : "") +
         "</span>";
     }
@@ -4299,7 +4319,9 @@
     // dashboard never repeats or contradicts itself.
     var _tf = get(e, "time_footprint");
     var tfBlk = secOptHeatmap(_tf) || secTimeFootprint(_tf);   // heatmap when grid data exists, else classic bars
-    return planBlk + auctBlk + ctxBlk + newsBlk + tfBlk + sectorsBlk;
+    // tfBlk (options heatmap) + sectorsBlk moved BELOW the chart — now rendered
+    // by secQqqPositioning() so trading and positioning read as separate zones.
+    return planBlk + auctBlk + ctxBlk + newsBlk;
   }
 
   function secNasdaqCommandCenter(e, chartModel) {
