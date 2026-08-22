@@ -146,8 +146,8 @@
                   gap:12px; align-items:stretch; margin:0; }
   .qqq-top-grid > .qqq-primary-chart,
   .qqq-top-grid > .qqq-gex-profile { min-width:0; }
-  .qqq-top-grid .qqq-chart-shell { min-height:470px; }
-  .qqq-top-grid .qqq-chart-canvas { height:470px; }
+  .qqq-top-grid .qqq-chart-shell { min-height:240px; }
+  .qqq-top-grid .qqq-chart-canvas { height:240px; }
   .qqq-gex-profile { height:100%; border-left:1px solid #1c1c28; padding-left:12px; }
   .flow section.qqq-market-card { margin-bottom:12px; }
   .qqq-gex-pane-title { display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -164,7 +164,7 @@
   .qqq-gex-regime span { color:var(--dim); font-size:10px; white-space:nowrap; }
   .qqq-gex-align-spacer { height:0; }
   .qqq-gex-plot { background:#090910; border:1px solid #171722; border-radius:7px;
-                  padding:5px; overflow:hidden; height:470px; }
+                  padding:5px; overflow:hidden; height:240px; }
   .qqq-gex-plot svg { display:block; width:100%; height:100%; }
   .qqq-gex-levels { display:grid; grid-template-columns:1fr 1fr; gap:1px; margin-top:8px;
                     background:var(--line); border:1px solid var(--line); border-radius:7px;
@@ -263,9 +263,9 @@
     .qqq-chart-exposure { grid-template-columns:repeat(2,minmax(110px,1fr)); }
     .qqq-chart-controls { margin-bottom:7px; }
     .qqq-top-grid { grid-template-columns:1fr; }
-    .qqq-top-grid .qqq-chart-shell { min-height:350px; }
-    .qqq-top-grid .qqq-chart-canvas { height:350px; }
-    .qqq-gex-plot { height:350px; }
+    .qqq-top-grid .qqq-chart-shell { min-height:220px; }
+    .qqq-top-grid .qqq-chart-canvas { height:220px; }
+    .qqq-gex-plot { height:220px; }
     .qqq-gex-profile { border-left:0; border-top:1px solid #1c1c28; padding:12px 0 0; }
     .qqq-command-sync { display:none; }
     .qqq-deep-dive-sub { display:none; }
@@ -1687,10 +1687,10 @@
     var qz = q && has(q.z20) ? q.z20 : null;
     var qMove = q && has(q.last) && isFinite(S.chart.prevClose) ? q.last - S.chart.prevClose : null;
     var hero =
-      '<div style="display:flex;gap:12px;margin-bottom:12px">' +
-        '<div style="flex:2;background:#0d1a12;border:1px solid #14432b;border-radius:12px;padding:14px 16px">' +
-          '<div style="font-size:10.5px;letter-spacing:1.5px;color:#8b8ba6">QQQ STRETCH</div>' +
-          '<div style="font-size:38px;font-weight:800;line-height:1;color:' + (qz !== null ? (qz >= 0 ? "#00e676" : "#ff453a") : "#8b8ba6") + '">' +
+      '<div style="display:flex;gap:10px;margin-bottom:8px">' +
+        '<div style="flex:2;background:#0d1a12;border:1px solid #14432b;border-radius:12px;padding:9px 14px">' +
+          '<div style="font-size:10px;letter-spacing:1.5px;color:#8b8ba6">QQQ STRETCH</div>' +
+          '<div style="font-size:26px;font-weight:800;line-height:1.05;color:' + (qz !== null ? (qz >= 0 ? "#00e676" : "#ff453a") : "#8b8ba6") + '">' +
             (qz !== null ? "z " + signed(qz, 2) : "&mdash;") + '</div>' +
           '<div style="font-size:12px;color:#8b8ba6;margin-top:5px">' +
             '<span id="qqq-command-move">' +
@@ -1698,9 +1698,9 @@
             '</span><span id="qqq-command-price">' +
             (q && has(q.last) ? num(q.last, 2) : "") + '</span></div>' +
         '</div>' +
-        '<div style="flex:1.4;background:#120c0c;border:1px solid ' + callBrd + ';border-radius:12px;padding:14px 16px">' +
-          '<div style="font-size:10.5px;letter-spacing:1.5px;color:#8b8ba6">THE CALL</div>' +
-          '<div style="font-size:20px;font-weight:800;line-height:1.15;margin-top:5px;color:' + callCol + '">● ' + call + '</div>' +
+        '<div style="flex:1.4;background:#120c0c;border:1px solid ' + callBrd + ';border-radius:12px;padding:9px 14px">' +
+          '<div style="font-size:10px;letter-spacing:1.5px;color:#8b8ba6">THE CALL</div>' +
+          '<div style="font-size:16px;font-weight:800;line-height:1.15;margin-top:3px;color:' + callCol + '">● ' + call + '</div>' +
           '<div style="font-size:11px;color:#8b8ba6;margin-top:5px">' + hostile + ' hostile · ' + friendly + ' friendly</div>' +
         '</div>' +
       '</div>';
@@ -1713,7 +1713,7 @@
     var usedPct = used === null ? 0 : Math.min(1, used);
     var usedCol = used === null ? "#8b8ba6" : used < 0.5 ? "#00e676" : used < 1 ? "#ffd600" : "#ff453a";
     var gauges =
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">' +
         '<div style="background:#0c0c14;border:1px solid #1c1c28;border-radius:10px;padding:11px 13px">' +
           '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#8b8ba6"><span>LEVERAGE LEAN</span><span style="color:#ff2be0">' +
             (lv === null ? "—" : lvWord + " " + signed(lv, 2)) + '</span></div>' +
@@ -1740,7 +1740,7 @@
       return '<span style="font-size:11px;background:' + m[0] + ';border:1px solid ' + m[1] + ';color:' + m[2] +
         ';border-radius:8px;padding:4px 9px">' + (cn === "dim" ? "" : "● ") + txt + "</span>";
     }
-    var lights = '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">';
+    var lights = '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">';
     if (dv !== null) lights += light("√det(G) " + num(dv, 3) + " · " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
     if (vr2 !== null) lights += light("VR(2) " + num(vr2, 2) + " · " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
     if (ok(gx) && has(gx.regime)) lights += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
@@ -3315,14 +3315,11 @@
     var downInv = pw !== null ? pw : (sig !== null ? spot * (1 - sig) : null);
     var magnet = oi !== null ? oi : flip;
 
+    // Key levels row removed — magnet/flip/walls/±1σ are already drawn as the
+    // labelled price lines on the chart, so the text pills were redundant.
     return '<div class="qqq-synthesis">' +
       '<div class="qqq-syn-row"><span class="qqq-syn-k">Market story</span><div class="qqq-syn-v">' +
         story.join(" · ") +
-      "</div></div>" +
-      '<div class="qqq-syn-row"><span class="qqq-syn-k">Key levels</span><div class="qqq-syn-v">' +
-        tag("Magnet", magnet, "#b388ff") + tag("Flip", flip, "#ffd600") +
-        tag("Upside", upObj, "#00e676") + tag("Downside", downInv, "#ff453a") +
-        (sig !== null ? tag("+1σ", spot * (1 + sig), "#29b6f6") + tag("−1σ", spot * (1 - sig), "#29b6f6") : "") +
       "</div></div>" +
     "</div>";
   }
@@ -3674,6 +3671,20 @@
       var made = level(merged[k]);
       if (merged[k].group === "spot") spotLine = made;
     });
+
+    // VWAP + opening range folded onto the chart (moved off the Auction pills).
+    try {
+      if (M.latest && LIVE_AUCTION) {
+        var _A = LIVE_AUCTION;
+        if (has(_A.vwap) && isFinite(Number(_A.vwap)))
+          level({ price: Number(_A.vwap), color: "#9aa0b5", width: 1, style: "dotted",
+                  title: "VWAP " + Number(_A.vwap).toFixed(2) });
+        if (has(_A.or30_high) && isFinite(Number(_A.or30_high)))
+          level({ price: Number(_A.or30_high), color: "#6b6b80", width: 1, style: "dotted", title: "OR high" });
+        if (has(_A.or30_low) && isFinite(Number(_A.or30_low)))
+          level({ price: Number(_A.or30_low), color: "#6b6b80", width: 1, style: "dotted", title: "OR low" });
+      }
+    } catch (auctLineErr) {}
 
     chart.timeScale().fitContent();
     var ro = window.ResizeObserver ? new ResizeObserver(function () {
@@ -4133,14 +4144,11 @@
           : aAge >= 120 ? Math.round(aAge / 60) + "h ago"
           : Math.round(aAge) + "m ago";
         var aTag = aStale ? " · " + aAgeTxt : "";
-        at += tile("VWAP", has(A.vwap) ? num(A.vwap, 2) : "—",
-          (has(A.vwap_dist_pct) ? signed(A.vwap_dist_pct, 2, "%") + " from spot" : "session mean"),
-          "flat");
+        // VWAP tile removed — now a line on the chart.
         at += tile("ADL", has(A.ad_z) ? "z " + signed(A.ad_z, 2) : "—",
           (has(A.ad_z) ? (A.ad_z > 0 ? "accum · gate open" : "distrib · gate shut") : "gate"),
           (aStale || !has(A.ad_z)) ? "dim" : (A.ad_z > 0 ? "up" : "down"));
-        at += tile("Opening range", (has(A.or30_high) && A.spot_vs_or) ? String(A.spot_vs_or).toUpperCase() : "OR30",
-          (has(A.or30_high) && has(A.or30_low) ? "OR30 " + num(A.or30_low, 2) + "–" + num(A.or30_high, 2) : "—"), "flat");
+        // Opening range tile removed — now OR high/low lines on the chart.
         at += tile("Volume", has(A.vol_pace) ? num(A.vol_pace, 2) + "×" : "—",
           "pace vs session avg",
           (aStale || !has(A.vol_pace)) ? "dim" : (A.vol_pace >= 1.3 ? "warn" : A.vol_pace <= 0.7 ? "dim" : "flat"));
