@@ -186,7 +186,7 @@
   .qqq-command-sync { margin-left:auto; color:var(--up); font-size:9.5px;
                       letter-spacing:.7px; text-transform:uppercase; }
   .qqq-command-body { padding:16px 17px 17px; }
-  .qqq-command-summary { padding-bottom:7px; border-bottom:1px solid #1c1c28; }
+  .qqq-command-summary { padding-bottom:5px; border-bottom:0; }
   .qqq-command-chips { display:flex; flex-wrap:wrap; align-items:stretch; gap:5px; margin:0; }
   .qqq-hud-chip { position:relative; display:inline-flex; align-items:baseline; gap:6px;
                   min-height:27px; max-width:100%; overflow:hidden; padding:4px 9px;
@@ -203,6 +203,8 @@
   .qqq-hud-chip.down .v { color:var(--down); }
   .qqq-hud-chip.warn .v { color:var(--warn); }
   .qqq-hud-chip.accent { color:var(--accent); border-color:rgba(255,43,224,.45); }
+  .qqq-hud-chip.info { color:#29b6f6; border-color:rgba(41,182,246,.48); }
+  .qqq-hud-chip.violet { color:#b388ff; border-color:rgba(179,136,255,.48); }
   .qqq-hud-chip.dim { color:var(--dim); border-color:#2a2a38; }
   .qqq-hud-chip .qqq-mini-bar { position:absolute; left:0; bottom:0; height:2px;
                                 border-radius:0 2px 2px 0; opacity:.9; }
@@ -216,6 +218,7 @@
   .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
   @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
   .qqq-model-detail-inline { margin-top:7px; padding-top:7px; border-top:1px solid #1c1c28; }
+  .qqq-model-detail-inline.qqq-command-detail { margin-top:0; padding-top:0; border-top:0; }
   .qqq-model-detail-head { display:flex; align-items:center; gap:6px; margin-bottom:7px; }
   .qqq-model-detail-title { color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
                             text-transform:uppercase; }
@@ -3362,13 +3365,10 @@
           secQqqGexProfile(e, true, chartModel) +
         '</aside>' +
       '</div>' +
-      '<div class="qqq-model-detail-inline">' +
-        '<div class="qqq-model-detail-head">' +
-          '<span class="qqq-model-detail-title">Full model detail</span>' +
-          '<span class="qqq-command-sync">● one synchronized live model</span>' +
-        '</div>' +
+      '<div class="qqq-model-detail-inline qqq-command-detail">' +
+        qqqPlanBlock() +
         secSynthesis(e, chartModel) +
-        '<div class="qqq-command-flow">' + secCockpit(e, chartModel) + '</div>' +
+        '<div class="qqq-command-flow">' + secCockpit(e, chartModel, true) + '</div>' +
       '</div>' +
       secQqqPositioning(e);
     return secWide("QQQ · live price + synchronized GEX", body)
@@ -3914,11 +3914,20 @@
     return varK(2) / (2 * v1);
   }
 
-  function secCockpit(e, chartModel) {
+  function qqqPlanBlock() {
+    return '<div style="margin-top:4px;background:rgba(255,214,0,.045);border:1px solid rgba(255,214,0,.22);' +
+      'border-left:3px solid var(--warn);border-radius:7px;padding:6px 10px;font-size:11.5px;color:var(--dim);line-height:1.4">' +
+      '<span style="letter-spacing:1px;text-transform:uppercase;font-size:9.5px;color:var(--warn)">The box</span> · ' +
+      '<span style="color:var(--txt)">7:17–8:30 PT</span> · QQQ 0DTE call 3 ITM · size 60% · ' +
+      'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
+      '15-min time-stop · flat 12:45 PT</div>';
+  }
+
+  function secCockpit(e, chartModel, omitPlan) {
     var S = nasdaqCommandModel(e, chartModel);
     function tile(label, big, sub, cn) {
       // Auction and Context use the exact same chip as the command signals.
-      var tone = cn === "flat" ? "accent" : (cn || "dim");
+      var tone = cn === "flat" ? "info" : (cn || "dim");
       return '<span class="qqq-hud-chip ' + tone + '">' +
         '<span class="k">' + esc(label) + "</span>" +
         '<span class="v">' + big + "</span>" +
@@ -4163,14 +4172,14 @@
         at + "</div>";
     }
 
-    // ── Context tiles (neutral): the quant card, condensed to a glance ──
-    var ctiles = "";
+    // ── Context tiles: risk/timing first, mechanics next, reference last. ──
+    var ctxUrgent = "", ctxMechanics = "", ctxSecondary = "";
     var g2 = get(e, "quant.garch");
     if (ok(g2) && has(g2.regime) && has(g2.conditional_vol_pct)) {
-      ctiles += tile("Vol regime (GARCH)", num(g2.conditional_vol_pct, 1, "%"),
+      ctxUrgent += tile("Vol regime (GARCH)", num(g2.conditional_vol_pct, 1, "%"),
         String(g2.regime).toLowerCase() +
         (has(g2.unconditional_vol_pct) ? " · uncond " + num(g2.unconditional_vol_pct, 1, "%") : ""),
-        /HIGH/i.test(g2.regime) ? "warn" : "flat");
+        /HIGH/i.test(g2.regime) ? "warn" : "info");
     }
     // Expected move tile removed — same ±1σ shown in Key levels above.
     var o2 = e.options;
@@ -4179,22 +4188,24 @@
       var lean = t >= 1.15 ? "put-heavy" : t >= 0.95 ? "balanced" : t >= 0.75 ? "call-lean" : "very call-heavy";
       var ieTxt = (has(o2.index_pc) && has(o2.equity_pc))
         ? " · " + signed(o2.index_pc - o2.equity_pc, 2) + " idx−eq" : "";
-      ctiles += tile("P/C skew", num(t, 2), lean + ieTxt, "flat");
+      ctxMechanics += tile("P/C skew", num(t, 2), lean + ieTxt,
+        (t >= 1.15 || t < 0.75) ? "warn" : "info");
     }
     // VIX fear-gauge tile removed — VIX already shown in the HUD lights row.
     // Vanna / charm — the REAL 2nd-order dealer dials (dDelta/dsigma, dDelta/dt).
     // Uses net_vannaex/net_charmex; hidden on older snapshots that lack them.
     if (ok(gx) && has(gx.net_vannaex)) {
-      ctiles += tile("Vanna / charm", fmtBig(gx.net_vannaex),
-        "charm " + (has(gx.net_charmex) ? fmtBig(gx.net_charmex) : na()) + " · 2nd-order", "flat");
+      ctxMechanics += tile("Vanna / charm", fmtBig(gx.net_vannaex),
+        "charm " + (has(gx.net_charmex) ? fmtBig(gx.net_charmex) : na()) + " · 2nd-order", "violet");
     }
     // Touch odds — chance price tags the gamma flip today
     if (ok(gx) && has(gx.gamma_flip) && isFinite(S.chart.spot) && S.chart.spot > 0) {
       var kf = gx.gamma_flip;
       var pTouch = S.chart.touch(kf);
       if (pTouch !== null) {
-        ctiles += tile("Touch odds — flip", (pTouch * 100).toFixed(0) + "%",
-          "flip " + num(kf, 0) + " · " + signed((kf - S.chart.spot) / S.chart.spot * 100, 2, "%"), "flat");
+        ctxUrgent += tile("Touch odds — flip", (pTouch * 100).toFixed(0) + "%",
+          "flip " + num(kf, 0) + " · " + signed((kf - S.chart.spot) / S.chart.spot * 100, 2, "%"),
+          pTouch >= 0.65 ? "warn" : "info");
       }
     }
     // Venue concentration — Cboe share (fills in after the fetcher's next run)
@@ -4203,10 +4214,12 @@
       var cbV = vc.volume_share.filter(function (r) { return /cboe/i.test(r.venue); })[0];
       var cbP = (vc.premium_share || []).filter(function (r) { return /cboe/i.test(r.venue); })[0];
       if (cbV && has(cbV.today)) {
-        ctiles += tile("Venue — Cboe", num(cbV.today, 1, "%"),
-          "vol share" + (cbP && has(cbP.today) ? " · prem " + num(cbP.today, 1, "%") : ""), "flat");
+        ctxSecondary += tile("Venue — Cboe", num(cbV.today, 1, "%"),
+          "vol share" + (cbP && has(cbP.today) ? " · prem " + num(cbP.today, 1, "%") : ""), "dim");
       }
     }
+    var ctiles = ctxUrgent + ctxMechanics + ctxSecondary +
+      tile("Model", "● synchronized live", "", "dim");
     var ctxBlk = ctiles
       ? '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:4px">Context</div>' +
@@ -4255,13 +4268,8 @@
         levTiles + "</div>"
       : "";
 
-    // ── Plan & discipline — the box, condensed ──
-    var planBlk = '<div style="margin-top:6px;background:rgba(255,255,255,.04);border-radius:7px;' +
-      'padding:6px 10px;font-size:11.5px;color:var(--dim);line-height:1.4">' +
-      '<span style="letter-spacing:1px;text-transform:uppercase;font-size:9.5px">The box</span> · ' +
-      '<span style="color:var(--txt)">7:17–8:30 PT</span> · QQQ 0DTE call 3 ITM · size 60% · ' +
-      'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
-      '15-min time-stop · flat 12:45 PT</div>';
+    // ── Plan & discipline — shared with the unified decision panel. ──
+    var planBlk = qqqPlanBlock();
 
     // ── Next catalyst — condensed to ONE glance box (cockpit tile aesthetic),
     //    a quick daily read: the soonest event, its real forecasts, a plain-
@@ -4325,7 +4333,7 @@
     var tfBlk = secOptHeatmap(_tf) || secTimeFootprint(_tf);   // heatmap when grid data exists, else classic bars
     // tfBlk (options heatmap) + sectorsBlk moved BELOW the chart — now rendered
     // by secQqqPositioning() so trading and positioning read as separate zones.
-    return planBlk + auctBlk + ctxBlk + newsBlk;
+    return (omitPlan ? "" : planBlk) + auctBlk + newsBlk + ctxBlk;
   }
 
   function secNasdaqCommandCenter(e, chartModel) {
