@@ -2945,6 +2945,10 @@
   // snapshot includes candles, the same chart falls back to real logged QQQ
   // session prices instead of inventing OHLC bars.
   var QQQ_TV = null;
+  // Once the user pans or zooms, keep that exact horizontal view through any
+  // real data remount. The ordinary 60-second quote refresh no longer remounts
+  // the chart at all while the user is working in it.
+  var QQQ_VIEW_STATE = { userAdjusted: false, logicalRange: null };
   var QQQ_LAYERS = { core: true, ranges: true, flow: true };
   var QQQ_CHART_VIEW = { mode: "raw", ema: true, pane: "adl" };
   try {
@@ -3493,10 +3497,18 @@
 
   function destroyQqqChart() {
     if (!QQQ_TV) return;
+    try {
+      if (QQQ_VIEW_STATE.userAdjusted && QQQ_TV.chart && QQQ_TV.chart.timeScale) {
+        var savedRange = QQQ_TV.chart.timeScale().getVisibleLogicalRange();
+        if (savedRange && isFinite(savedRange.from) && isFinite(savedRange.to)) {
+          QQQ_VIEW_STATE.logicalRange = { from:savedRange.from, to:savedRange.to };
+        }
+      }
+    } catch (saveRangeErr) {}
     try { if (QQQ_TV.resize) QQQ_TV.resize.disconnect(); } catch (err) {}
     try {
       if (QQQ_TV.el && QQQ_TV.interactionHandler) {
-        ["pointermove", "wheel", "dblclick", "touchmove"].forEach(function (name) {
+        ["pointerdown", "pointermove", "wheel", "dblclick", "touchstart", "touchmove"].forEach(function (name) {
           QQQ_TV.el.removeEventListener(name, QQQ_TV.interactionHandler);
         });
       }
@@ -3928,6 +3940,10 @@
     } catch (auctLineErr) {}
 
     chart.timeScale().fitContent();
+    if (QQQ_VIEW_STATE.userAdjusted && QQQ_VIEW_STATE.logicalRange) {
+      try { chart.timeScale().setVisibleLogicalRange(QQQ_VIEW_STATE.logicalRange); }
+      catch (restoreRangeErr) {}
+    }
     var ro = window.ResizeObserver ? new ResizeObserver(function () {
       if (el.clientWidth > 0) {
         chart.applyOptions({ width: el.clientWidth, height: el.clientHeight || 430 });
@@ -3939,14 +3955,20 @@
       var profilePlot = document.querySelector(".qqq-gex-plot");
       if (profilePlot) ro.observe(profilePlot);
     }
-    var rangeHandler = function () {
+    var rangeHandler = function (range) {
+      if (QQQ_VIEW_STATE.userAdjusted && range && isFinite(range.from) && isFinite(range.to)) {
+        QQQ_VIEW_STATE.logicalRange = { from:range.from, to:range.to };
+      }
       scheduleQqqGexAlignment(series, chart);
     };
     try { chart.timeScale().subscribeVisibleLogicalRangeChange(rangeHandler); } catch (rangeErr) {}
     var interactionHandler = function (ev) {
-      if (ev.type !== "pointermove" || ev.buttons) scheduleQqqGexAlignment(series, chart);
+      if (ev.type !== "pointermove" || ev.buttons) {
+        QQQ_VIEW_STATE.userAdjusted = true;
+        scheduleQqqGexAlignment(series, chart);
+      }
     };
-    ["pointermove", "wheel", "dblclick", "touchmove"].forEach(function (name) {
+    ["pointerdown", "pointermove", "wheel", "dblclick", "touchstart", "touchmove"].forEach(function (name) {
       el.addEventListener(name, interactionHandler, { passive:true });
     });
     QQQ_TV = { chart: chart, resize: ro, quoteSeries: null,
@@ -4688,6 +4710,8 @@
 
     document.getElementById("pick").addEventListener("change", function () {
       idx = parseInt(this.value, 10);
+      QQQ_VIEW_STATE.userAdjusted = false;
+      QQQ_VIEW_STATE.logicalRange = null;
       render();
     });
 
@@ -4921,7 +4945,13 @@
         var info = applyLive();
         // Repaint without losing scroll or which session you are viewing.
         if (info.painted && idx === FULL.length - 1) {
-          var y = window.scrollY; render(); window.scrollTo(0, y);
+          // Once the user has positioned the Nasdaq chart, the minute refresh
+          // updates its live quote in place instead of destroying the chart.
+          if (TAB === "nasdaq" && QQQ_TV && QQQ_VIEW_STATE.userAdjusted) {
+            updateMountedQqqQuote(FULL[FULL.length - 1]);
+          } else {
+            var y = window.scrollY; render(); window.scrollTo(0, y);
+          }
         }
         stamp(info);
       });
