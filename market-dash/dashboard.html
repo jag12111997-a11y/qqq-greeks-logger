@@ -131,40 +131,6 @@
                cursor:pointer; }
   .qqq-layer[aria-pressed="true"] { color:var(--accent); border-color:rgba(255,43,224,.5);
                                      background:rgba(255,43,224,.07); }
-  .qqq-motion { margin:0 0 6px; padding:6px 7px; border:1px solid #1c1c28;
-                border-radius:7px; background:#090911; overflow:hidden; }
-  .qqq-motion-head { display:flex; align-items:center; gap:8px; margin:0 1px 5px;
-                     color:var(--faint); font-size:9px; letter-spacing:1px;
-                     text-transform:uppercase; white-space:nowrap; }
-  .qqq-motion-head b { color:#29b6f6; font-weight:600; }
-  .qqq-motion-head .state { margin-left:auto; color:var(--dim); letter-spacing:.35px; }
-  .qqq-motion-strip { display:flex; gap:5px; overflow-x:auto; overscroll-behavior-x:contain;
-                      scrollbar-width:thin; scrollbar-color:#242433 transparent; padding-bottom:1px; }
-  .qqq-motion-card { flex:0 0 154px; min-width:0; padding:5px 6px 4px; border:1px solid #242433;
-                     border-radius:6px; background:#0d0d16; transition:border-color .25s ease; }
-  .qqq-motion-card.toward { border-color:rgba(0,230,118,.42); }
-  .qqq-motion-card.away { border-color:rgba(255,159,10,.42); }
-  .qqq-motion-top, .qqq-motion-foot { display:flex; align-items:center; justify-content:space-between;
-                                      gap:5px; white-space:nowrap; }
-  .qqq-motion-top { color:var(--txt); font-size:9.5px; }
-  .qqq-motion-name { overflow:hidden; text-overflow:ellipsis; }
-  .qqq-motion-name i { display:inline-block; width:5px; height:5px; margin-right:5px;
-                       border-radius:50%; vertical-align:1px; background:var(--level-color); }
-  .qqq-motion-price { color:var(--level-color); }
-  .qqq-motion-track { position:relative; height:5px; margin:5px 0 4px; border-radius:4px;
-                      background:#1a1a25; }
-  .qqq-motion-track:after { content:""; position:absolute; left:50%; top:-2px; width:1px;
-                            height:9px; background:#5a5a70; opacity:.8; }
-  .qqq-motion-dot { position:absolute; left:var(--level-pos); top:50%; width:7px; height:7px;
-                    border:1px solid #090911; border-radius:50%; background:var(--level-color);
-                    transform:translate(-50%,-50%); box-shadow:0 0 5px var(--level-color);
-                    transition:left .55s ease; }
-  .qqq-motion-foot { color:var(--dim); font-size:8.5px; letter-spacing:.15px; }
-  .qqq-motion-foot .toward { color:var(--up); }
-  .qqq-motion-foot .away { color:#ff9f0a; }
-  @media (prefers-reduced-motion:reduce) {
-    .qqq-motion-dot, .qqq-motion-card { transition:none; }
-  }
   .qqq-chart-exposure { display:grid; grid-template-columns:repeat(5,minmax(100px,1fr));
                         gap:1px; margin:0 0 10px; overflow:hidden; border:1px solid var(--line);
                         border-radius:7px; background:var(--line); }
@@ -2935,6 +2901,25 @@
       .catch(function () {});
   }
 
+  // Compact one-point-per-snapshot history written by the same greeks logger.
+  // This powers real step-lines through time; it is never reconstructed from
+  // today's final level because doing that would make the past look predictive.
+  var LIVE_GEX_INTRADAY = null;
+  function loadGexIntraday() {
+    return fetch("gex_intraday.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (j && Array.isArray(j.points)) {
+          var changed = !LIVE_GEX_INTRADAY || LIVE_GEX_INTRADAY.updated_utc !== j.updated_utc;
+          LIVE_GEX_INTRADAY = j;
+          if (changed && idx === FULL.length - 1) {
+            var y = window.scrollY; render(); window.scrollTo(0, y);
+          }
+        }
+      })
+      .catch(function () {});
+  }
+
   // Live auction metrics (VWAP, A/D line, opening range, volume) from the 60s
   // logger's QQQ 1-min IEX bars (market-dash/auction_live.json). Same guarded
   // pattern as Live GEX — missing file just hides the tiles, never breaks the page.
@@ -2962,13 +2947,24 @@
   var QQQ_TV = null;
   var QQQ_LAYERS = { core: true, ranges: true, flow: true };
   var QQQ_CHART_VIEW = { mode: "raw", ema: true, pane: "adl" };
-  var QQQ_MOTION_GAPS = {};
   try {
     var _ql = JSON.parse(localStorage.getItem("md:qqq-layers") || "{}");
     ["core", "ranges", "flow"].forEach(function (k) {
       if (typeof _ql[k] === "boolean") QQQ_LAYERS[k] = _ql[k];
     });
   } catch (eQqqLayers) {}
+  // One-time migration to the cleaner reference-style chart: core GEX paths
+  // on, optional ranges/second-order paths off. After this, the user's own
+  // choices are remembered normally.
+  try {
+    if (!localStorage.getItem("md:qqq-step-history-v1")) {
+      QQQ_LAYERS.core = true;
+      QQQ_LAYERS.ranges = false;
+      QQQ_LAYERS.flow = false;
+      localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS));
+      localStorage.setItem("md:qqq-step-history-v1", "1");
+    }
+  } catch (eQqqStepDefault) {}
   try {
     var _qv = JSON.parse(localStorage.getItem("md:qqq-chart-view") || "{}");
     if (_qv.mode === "raw" || _qv.mode === "ha") QQQ_CHART_VIEW.mode = _qv.mode;
@@ -3180,6 +3176,10 @@
     var liveBarState = qqqLiveBarState(M);
     chips += '<span id="qqq-live-bar-chip" class="qqq-chart-chip ' + liveBarState.tone + '">' +
       esc(liveBarState.text) + '</span>';
+    if (M.latest && LIVE_GEX_INTRADAY && LIVE_GEX_INTRADAY.points && LIVE_GEX_INTRADAY.points.length > 1) {
+      chips += '<span class="qqq-chart-chip up">GEX HISTORY · ' +
+        LIVE_GEX_INTRADAY.points.length + ' × 1M</span>';
+    }
     var g = M.g || {};
     var exposure = [
       ["GEX", g.net_gex], ["DEX", g.net_dex], ["VEX", g.net_vex],
@@ -3214,13 +3214,12 @@
         viewButton("data-qqq-pane", "none", "Off", QQQ_CHART_VIEW.pane === "none") +
       '</div>' +
       '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
-        layerButton("core", "GEX levels + odds") + layerButton("ranges", "Expected ranges") +
-        layerButton("flow", "Vanna / charm / theta") + "</div>" +
-      '<div id="qqq-motion-radar" class="qqq-motion" aria-label="Live level motion radar"></div>' +
+        layerButton("core", "GEX history + odds") + layerButton("ranges", "Expected ranges") +
+        layerButton("flow", "Vanna / charm / theta history") + "</div>" +
       '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
       'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna, charm and theta overlays"></div></div>' +
       '<div class="qqq-chart-key">' +
-        '<span style="color:#ffd600"><i></i>flip / walls / OI / max &plusmn;gamma</span>' +
+        '<span style="color:#ffd600"><i></i>step lines = real logger history</span>' +
         '<span style="color:#29b6f6"><i></i>68% / 95% into close</span>' +
         '<span style="color:#ff00e5"><i></i>GARCH 68%</span>' +
         '<span style="color:#00bfa5"><i></i>vanna / charm / theta concentration</span>' +
@@ -3682,93 +3681,6 @@
     return out;
   }
 
-  function qqqMotionItems(M) {
-    var rows = [];
-    (M.levels || []).forEach(function (x) {
-      if (x.group === "spot" || !QQQ_LAYERS[x.group]) return;
-      rows.push({ name:x.title, price:Number(x.price), color:x.color, priority:x.priority || 50 });
-    });
-    if (M.latest && LIVE_AUCTION) {
-      [["VWAP", LIVE_AUCTION.vwap, "#aeb4c7", 8],
-       ["OR high", LIVE_AUCTION.or30_high, "#77778b", 90],
-       ["OR low", LIVE_AUCTION.or30_low, "#77778b", 91]].forEach(function (x) {
-        if (has(x[1]) && isFinite(Number(x[1])))
-          rows.push({ name:x[0], price:Number(x[1]), color:x[2], priority:x[3] });
-      });
-    }
-    if (QQQ_CHART_VIEW.ema && QQQ_TV && QQQ_TV.rawCandles && QQQ_TV.rawCandles.length) {
-      [["EMA 9", 9, "#29b6f6", 5], ["EMA 20", 20, "#ff9f0a", 6]].forEach(function (x) {
-        var points = qqqEma(QQQ_TV.rawCandles, x[1]);
-        if (points.length) rows.push({ name:x[0], price:points[points.length - 1].value,
-                                      color:x[2], priority:x[3] });
-      });
-    }
-
-    // Signals that share one strike become one moving marker instead of a pile
-    // of duplicate cards. Every label remains available in the tooltip.
-    var merged = {};
-    rows.forEach(function (x) {
-      if (!isFinite(x.price)) return;
-      var key = x.price.toFixed(2);
-      if (!merged[key]) merged[key] = { price:x.price, color:x.color, priority:x.priority, names:[] };
-      String(x.name).split(" · ").forEach(function (part) {
-        part = part.trim();
-        if (!part || /^\d+%$/.test(part)) return;
-        if (part.charAt(0) !== "+" && part.charAt(0) !== "-" && !/close/i.test(part))
-          part = part.replace(/\s+\d+%$/, "");
-        if (part && merged[key].names.indexOf(part) < 0) merged[key].names.push(part);
-      });
-      if (x.priority < merged[key].priority) {
-        merged[key].priority = x.priority;
-        merged[key].color = x.color;
-      }
-    });
-    return Object.keys(merged).map(function (key) {
-      var x = merged[key];
-      x.name = x.names.join(" · ");
-      x.key = x.name.replace(/\s\d+%/g, "") + "@" + key;
-      x.distance = Math.abs(x.price - M.spot);
-      return x;
-    }).sort(function (a, b) {
-      return a.distance - b.distance || a.priority - b.priority;
-    });
-  }
-
-  function updateQqqMotionRadar(M) {
-    var el = document.getElementById("qqq-motion-radar");
-    if (!el || !isFinite(M.spot) || !(M.spot > 0)) return;
-    var items = qqqMotionItems(M);
-    var live = M.quoteFresh && qqqMarketOpen();
-    var scale = Math.max(M.sigLeft ? M.sigLeft * 100 : 0, .5);
-    var nextGaps = {};
-    var cards = items.map(function (x) {
-      var gapPct = (x.price - M.spot) / M.spot * 100;
-      var pos = Math.max(4, Math.min(96, 50 + gapPct / scale * 45));
-      var gapAbs = Math.abs(x.price - M.spot), previous = QQQ_MOTION_GAPS[x.key];
-      var motion = "last", motionText = live ? "SET" : "LAST";
-      if (live && isFinite(previous)) {
-        var change = previous - gapAbs;
-        if (change > .005) { motion = "toward"; motionText = "TOWARD"; }
-        else if (change < -.005) { motion = "away"; motionText = "AWAY"; }
-        else { motion = "steady"; motionText = "STEADY"; }
-      }
-      nextGaps[x.key] = gapAbs;
-      var side = gapPct >= 0 ? "ABOVE" : "BELOW";
-      return '<div class="qqq-motion-card ' + motion + '" style="--level-color:' + x.color +
-        ';--level-pos:' + pos.toFixed(1) + '%" title="' + esc(x.name) + '">' +
-        '<div class="qqq-motion-top"><span class="qqq-motion-name"><i></i>' + esc(x.name) +
-        '</span><span class="qqq-motion-price">' + x.price.toFixed(2) + '</span></div>' +
-        '<div class="qqq-motion-track"><span class="qqq-motion-dot"></span></div>' +
-        '<div class="qqq-motion-foot"><span>' + side + ' ' + (gapPct >= 0 ? "+" : "") +
-        gapPct.toFixed(2) + '%</span><span class="' + motion + '">' + motionText + '</span></div></div>';
-    }).join("");
-    QQQ_MOTION_GAPS = nextGaps;
-    el.innerHTML = '<div class="qqq-motion-head"><b>Live level motion</b><span>nearest first · center = QQQ</span>' +
-      '<span class="state">' + (live ? "15s motion" : "last snapshot") + ' · ' + items.length +
-      ' levels →</span></div>' +
-      '<div class="qqq-motion-strip">' + (cards || '<span class="qqq-chart-chip">Waiting for levels</span>') + '</div>';
-  }
-
   function mountQqqChart(e, chartModel) {
     destroyQqqChart();
     var el = document.getElementById("qqq-tv-chart");
@@ -3837,6 +3749,10 @@
     var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : qqqRawDisplay(candles);
 
     var series, ema9Series = null, ema20Series = null, indicatorSeries = null;
+    var gexTrailSeries = [];
+    var trailRows = M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points)
+      ? LIVE_GEX_INTRADAY.points.slice() : [];
+    var hasGexTrail = candles.length && trailRows.length >= 2;
     if (candles.length) {
       series = chart.addSeries(TV.CandlestickSeries, {
         upColor: "#00e676", downColor: "#ff453a",
@@ -3913,6 +3829,48 @@
       series.setData(points);
     }
 
+    // The reference-style moving GEX system: each logger snapshot becomes one
+    // point, and WithSteps holds that value until the next real snapshot. The
+    // final segment extends to the latest candle as "last known", not as a
+    // fabricated recalculation between logger captures.
+    if (hasGexTrail) {
+      trailRows.sort(function (a, b) { return Number(a.time) - Number(b.time); });
+      var trailEnd = candles[candles.length - 1].time;
+      var stepType = TV.LineType && has(TV.LineType.WithSteps) ? TV.LineType.WithSteps : 1;
+      function addTrail(field, title, color, width, showLast, style) {
+        var seenTrail = {}, points = trailRows.map(function (p) {
+          return { time:Number(p.time), value:Number(p[field]), raw:p[field] };
+        }).filter(function (p) {
+          var ok = p.raw !== null && p.raw !== "" && isFinite(p.time) &&
+            p.time <= trailEnd + 60 && isFinite(p.value) && !seenTrail[p.time];
+          if (ok) seenTrail[p.time] = 1;
+          return ok;
+        }).map(function (p) { return { time:p.time, value:p.value }; });
+        if (points.length < 2) return;
+        var last = points[points.length - 1];
+        if (trailEnd > last.time) points.push({ time:trailEnd, value:last.value });
+        var s = chart.addSeries(TV.LineSeries, {
+          title:title, color:color, lineWidth:width || 1, lineType:stepType,
+          lineStyle:style === "dashed" ? TV.LineStyle.Dashed : TV.LineStyle.Solid,
+          priceLineVisible:false, lastValueVisible:!!showLast,
+          crosshairMarkerVisible:false
+        });
+        s.setData(points);
+        gexTrailSeries.push({ series:s, value:last.value, field:field,
+                              time:Math.max(last.time, trailEnd) });
+      }
+      if (QQQ_LAYERS.core) {
+        addTrail("max_pos_gamma", "+γ MAX", "#00e676", 2, true);
+        addTrail("max_neg_gamma", "−γ MAX", "#ff453a", 2, true);
+        addTrail("gamma_flip", "GAMMA FLIP", "#ffd600", 1, true);
+      }
+      if (QQQ_LAYERS.flow) {
+        addTrail("vanna_strike", "VANNA", "#00bfa5", 1, false, "dashed");
+        addTrail("charm_strike", "CHARM", "#c792ea", 1, false, "dashed");
+        addTrail("theta_strike", "THETA", "#ff6d00", 1, false, "dashed");
+      }
+    }
+
     // During market hours the current minute is built from the browser's
     // fresher 15-second quote. Its volume stays at zero until a real IEX bar
     // arrives, so the price is live without inventing volume data.
@@ -3930,6 +3888,7 @@
     // Same-price signals are combined into one labelled line. This is common
     // when the call wall, put wall and OI magnet all sit on one strike.
     var active = M.levels.filter(function (x) {
+      if (hasGexTrail && (x.group === "core" || x.group === "flow")) return false;
       return x.group === "spot" || QQQ_LAYERS[x.group];
     }).sort(function (a, b) { return a.priority - b.priority; });
     // Merge signals on the same strike into one line. When they share the same
@@ -3961,9 +3920,9 @@
         if (has(_A.vwap) && isFinite(Number(_A.vwap)))
           level({ price: Number(_A.vwap), color: "#9aa0b5", width: 1, style: "dotted",
                   title: "VWAP " + Number(_A.vwap).toFixed(2) });
-        if (has(_A.or30_high) && isFinite(Number(_A.or30_high)))
+        if (QQQ_LAYERS.ranges && has(_A.or30_high) && isFinite(Number(_A.or30_high)))
           level({ price: Number(_A.or30_high), color: "#6b6b80", width: 1, style: "dotted", title: "OR high" });
-        if (has(_A.or30_low) && isFinite(Number(_A.or30_low)))
+        if (QQQ_LAYERS.ranges && has(_A.or30_low) && isFinite(Number(_A.or30_low)))
           level({ price: Number(_A.or30_low), color: "#6b6b80", width: 1, style: "dotted", title: "OR low" });
       }
     } catch (auctLineErr) {}
@@ -3994,11 +3953,11 @@
                series: series, candleSeries: candles.length ? series : null,
                rawCandles: candles, ema9Series: ema9Series, ema20Series: ema20Series,
                indicatorSeries: indicatorSeries, paneType: QQQ_CHART_VIEW.pane,
+               gexTrailSeries: gexTrailSeries,
                mode: QQQ_CHART_VIEW.mode, rangeHandler: rangeHandler,
                spotLine: spotLine, lastCandleTime: lastCandleTime,
                quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60,
                el: el, interactionHandler: interactionHandler, alignPending:false };
-    updateQqqMotionRadar(M);
     scheduleQqqGexAlignment(series, chart);
   }
 
@@ -4045,6 +4004,14 @@
           }
           QQQ_TV.quoteTime = quoteBarTime;
         }
+        if (M.quoteFresh && qqqMarketOpen() && QQQ_TV.gexTrailSeries) {
+          QQQ_TV.gexTrailSeries.forEach(function (trail) {
+            if (quoteBarTime >= trail.time) {
+              trail.series.update({ time:quoteBarTime, value:trail.value });
+              trail.time = quoteBarTime;
+            }
+          });
+        }
         if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: M.quoteFresh ? "LIVE QQQ" : "QQQ" });
       } catch (err) {}
     }
@@ -4059,8 +4026,6 @@
       barChipEl.textContent = barState.text;
       barChipEl.className = "qqq-chart-chip " + barState.tone;
     }
-    updateQqqMotionRadar(M);
-
     // The command center follows the same fast quote without remounting the
     // chart or rebuilding the cockpit.
     var command = document.getElementById("qqq-command-live");
@@ -4950,6 +4915,7 @@
 
     function cycle() {
       loadLiveGex();
+      loadGexIntraday();
       loadAuction();
       fetchAll().then(function () {
         var info = applyLive();

@@ -70,6 +70,7 @@ DIVIDEND_YIELD = 0.0
 CONTRACT_MULTIPLIER = 100
 GEX_DEALER_SIGN = 1
 GEX_LIVE_PATH = os.path.join("market-dash", "gex_live.json")
+GEX_INTRADAY_PATH = os.path.join("market-dash", "gex_intraday.json")
 AUCTION_LIVE_PATH = os.path.join("market-dash", "auction_live.json")
 
 # Intraday live-push: on GitHub Actions, push the live JSONs every few minutes
@@ -378,6 +379,19 @@ def compute_gex_live(call_rows, put_rows, spot):
 
     unit = CONTRACT_MULTIPLIER * (spot ** 2) * 0.01
     _now = datetime.datetime.now(datetime.timezone.utc)
+    # Reuse the capture time when rebuilding a saved session. Live rows carry
+    # the same timestamp, so this is identical in production and keeps vanna /
+    # charm history honest during a backfill after expiration.
+    for sample_rows in (call_rows, put_rows):
+        if not sample_rows:
+            continue
+        try:
+            _now = datetime.datetime.strptime(
+                sample_rows[0]["run_time"], "%Y-%m-%d %H:%M:%S"
+            ).replace(tzinfo=datetime.timezone.utc)
+            break
+        except (KeyError, TypeError, ValueError):
+            pass
     by = {}
 
     def add(rows, is_call):
@@ -488,6 +502,91 @@ def write_gex_live(gx):
     os.makedirs(os.path.dirname(GEX_LIVE_PATH), exist_ok=True)
     with open(GEX_LIVE_PATH, "w") as f:
         json.dump(gx, f, indent=2)
+
+
+def gex_intraday_point(gx):
+    """Reduce one full option-chain snapshot to the changing chart levels.
+
+    The full strike map remains in gex_live.json; this compact record is what
+    lets the dashboard draw genuine historical step-lines instead of extending
+    today's latest levels backward across the whole price chart.
+    """
+    if not gx or gx.get("error"):
+        return None
+    try:
+        stamp = datetime.datetime.strptime(gx["generated_utc"], "%Y-%m-%d %H:%M:%S")
+        stamp = stamp.replace(tzinfo=datetime.timezone.utc)
+    except (KeyError, TypeError, ValueError):
+        stamp = datetime.datetime.now(datetime.timezone.utc)
+    levels = gx.get("levels") or {}
+    strikes = gx.get("strikes") or []
+
+    def extreme(test, pick):
+        found = None
+        for row in strikes:
+            try:
+                value = float(row.get("net_gex"))
+                strike = float(row.get("strike"))
+            except (TypeError, ValueError):
+                continue
+            if not test(value) or (found is not None and not pick(value, found[1])):
+                continue
+            found = (strike, value)
+        return found[0] if found else None
+
+    def concentration(field):
+        found = None
+        for row in strikes:
+            try:
+                value = abs(float(row.get(field)))
+                strike = float(row.get("strike"))
+            except (TypeError, ValueError):
+                continue
+            if found is None or value > found[1]:
+                found = (strike, value)
+        return found[0] if found and found[1] > 0 else None
+
+    return {
+        "time": int(stamp.timestamp()),
+        "spot": gx.get("spot"),
+        "gamma_flip": gx.get("gamma_flip") if gx.get("gamma_flip_method") == "zero crossing" else None,
+        "call_wall": levels.get("call_wall"),
+        "put_wall": levels.get("put_wall"),
+        "oi_magnet": levels.get("highest_oi_strike"),
+        "max_pos_gamma": extreme(lambda n: n > 0, lambda n, old: n > old),
+        "max_neg_gamma": extreme(lambda n: n < 0, lambda n, old: n < old),
+        "vanna_strike": concentration("vannaex"),
+        "charm_strike": concentration("charmex"),
+        "theta_strike": concentration("tex"),
+    }
+
+
+def append_gex_intraday(gx):
+    point = gex_intraday_point(gx)
+    if not point:
+        return
+    session_date = datetime.datetime.fromtimestamp(
+        point["time"], ZoneInfo("America/New_York")).date().isoformat()
+    history = {"symbol": SYMBOL, "session_date": session_date, "points": []}
+    try:
+        with open(GEX_INTRADAY_PATH) as f:
+            existing = json.load(f)
+        if existing.get("session_date") == session_date and isinstance(existing.get("points"), list):
+            history = existing
+    except (OSError, ValueError, TypeError):
+        pass
+
+    # One point per captured minute. A retry replaces that minute rather than
+    # drawing a one-second zig-zag, and the cap keeps GitHub Pages lightweight.
+    by_minute = {int(p.get("time", 0)) // 60: p for p in history["points"] if p.get("time")}
+    by_minute[point["time"] // 60] = point
+    history["points"] = sorted(by_minute.values(), key=lambda p: p["time"])[-600:]
+    history["updated_utc"] = gx.get("generated_utc")
+    os.makedirs(os.path.dirname(GEX_INTRADAY_PATH), exist_ok=True)
+    tmp = GEX_INTRADAY_PATH + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(history, f, separators=(",", ":"))
+    os.replace(tmp, GEX_INTRADAY_PATH)
 
 
 # ---------- Auction metrics (VWAP, A/D line, opening range, volume) ----------
@@ -649,7 +748,7 @@ def push_live_snapshots():
             _git("config", "user.name", "qqq-logger-bot")
             _git("config", "user.email", "actions@github.com")
             _git_ready[0] = True
-        _git("add", GEX_LIVE_PATH, AUCTION_LIVE_PATH)
+        _git("add", GEX_LIVE_PATH, GEX_INTRADAY_PATH, AUCTION_LIVE_PATH)
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%SZ")
         c = _git("commit", "-m", f"live snapshot {stamp}")
         if "nothing to commit" in (c.stdout + c.stderr).lower():
@@ -673,7 +772,9 @@ def snapshot_and_write(spot):
             got[t] = rows
     try:
         if got.get("call") or got.get("put"):
-            write_gex_live(compute_gex_live(got.get("call", []), got.get("put", []), spot))
+            live_gex = compute_gex_live(got.get("call", []), got.get("put", []), spot)
+            write_gex_live(live_gex)
+            append_gex_intraday(live_gex)
     except Exception as e:
         print(f"live GEX skipped (continuing): {e}")
 
