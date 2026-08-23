@@ -174,7 +174,9 @@
                          text-transform:uppercase; white-space:nowrap; }
   .qqq-gex-level b { display:block; margin-top:2px; color:var(--txt); font-size:12px;
                      font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .qqq-gex-foot { color:var(--faint); font-size:9.5px; line-height:1.45; margin-top:8px; }
+  /* The long GEX explainer used to make the right column taller than the chart,
+     leaving a large blank block on the left. It now lives on the panel tooltip. */
+  .qqq-gex-foot { display:none; }
   .qqq-gex-window-note { color:var(--warn); font-size:9.5px; line-height:1.4; margin-top:6px; }
   .qqq-gex-window-note:empty { display:none; }
   .qqq-command-center { padding:0 !important; overflow:hidden; margin-bottom:12px !important; }
@@ -3346,14 +3348,17 @@
       // CHART on top; ALL the info (HUD + full model detail + cockpit) is packed
       // into the space directly UNDER the chart. Positioning stays at the bottom.
       '<div class="qqq-top-grid">' +
-        '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>' +
-        '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile">' +
+        '<div class="qqq-primary-chart">' +
+          secQqqTradingChart(e, true, chartModel) +
+          secNasdaqHUD(e, chartModel) +
+        '</div>' +
+        '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile" ' +
+          'title="Strike price shares the QQQ chart scale. Green and red net-GEX bars extend right and left from zero; lines match the dealer-map overlays.">' +
           '<div class="qqq-gex-pane-title"><span>GEX · synchronized strike profile</span>' +
           '<small>shared QQQ price scale</small></div>' +
           secQqqGexProfile(e, true, chartModel) +
         '</aside>' +
       '</div>' +
-      secNasdaqHUD(e, chartModel) +
       '<div class="qqq-model-detail-inline">' +
         '<div class="qqq-model-detail-head">' +
           '<span class="qqq-model-detail-title">Full model detail</span>' +
