@@ -184,18 +184,37 @@
   .qqq-command-sync { margin-left:auto; color:var(--up); font-size:9.5px;
                       letter-spacing:.7px; text-transform:uppercase; }
   .qqq-command-body { padding:16px 17px 17px; }
-  .qqq-command-summary { padding-bottom:16px; border-bottom:1px solid #1c1c28; }
+  .qqq-command-summary { padding-bottom:7px; border-bottom:1px solid #1c1c28; }
+  .qqq-command-chips { display:flex; flex-wrap:wrap; align-items:stretch; gap:5px; margin:0; }
+  .qqq-hud-chip { position:relative; display:inline-flex; align-items:baseline; gap:6px;
+                  min-height:27px; max-width:100%; overflow:hidden; padding:4px 9px;
+                  border:1px solid #2a2a38; border-radius:7px; background:rgba(255,255,255,.035);
+                  color:var(--dim); font-size:10px; line-height:1.3; white-space:nowrap; }
+  .qqq-hud-chip .k { color:currentColor; font-size:8.5px; letter-spacing:.65px;
+                     text-transform:uppercase; }
+  .qqq-hud-chip .v { color:var(--txt); font-size:12px; font-weight:700; }
+  .qqq-hud-chip .sub { color:var(--faint); font-size:9.5px; }
+  .qqq-hud-chip.up { color:var(--up); border-color:rgba(0,230,118,.45); }
+  .qqq-hud-chip.down { color:var(--down); border-color:rgba(255,69,58,.45); }
+  .qqq-hud-chip.warn { color:var(--warn); border-color:rgba(255,214,0,.45); }
+  .qqq-hud-chip.up .v { color:var(--up); }
+  .qqq-hud-chip.down .v { color:var(--down); }
+  .qqq-hud-chip.warn .v { color:var(--warn); }
+  .qqq-hud-chip.accent { color:var(--accent); border-color:rgba(255,43,224,.45); }
+  .qqq-hud-chip.dim { color:var(--dim); border-color:#2a2a38; }
+  .qqq-hud-chip .qqq-mini-bar { position:absolute; left:0; bottom:0; height:2px;
+                                border-radius:0 2px 2px 0; opacity:.9; }
   .qqq-command-flow { padding-top:2px; }
   /* Q3: per-category Read blocks replaced by the single synthesis (QQQ tab only). */
   .flow .read { display:none !important; }
-  .qqq-synthesis { margin:2px 0 10px; display:flex; flex-direction:column; gap:8px; }
-  .qqq-syn-row { display:grid; grid-template-columns:104px 1fr; gap:12px; align-items:start; }
+  .qqq-synthesis { margin:1px 0 6px; display:flex; flex-direction:column; gap:5px; }
+  .qqq-syn-row { display:grid; grid-template-columns:104px 1fr; gap:8px; align-items:start; }
   .qqq-syn-k { color:var(--accent); font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; padding-top:3px; }
   .qqq-syn-v { font-size:13px; color:var(--txt); line-height:1.5; }
   .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
   @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
-  .qqq-model-detail-inline { margin-top:10px; padding-top:10px; border-top:1px solid #1c1c28; }
-  .qqq-model-detail-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .qqq-model-detail-inline { margin-top:7px; padding-top:7px; border-top:1px solid #1c1c28; }
+  .qqq-model-detail-head { display:flex; align-items:center; gap:6px; margin-bottom:7px; }
   .qqq-model-detail-title { color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
                             text-transform:uppercase; }
   .qqq-deep-dive { padding:0 !important; overflow:hidden; }
@@ -1681,79 +1700,60 @@
     var mk = S.mk, q = S.q, vix = S.vix, gx = S.g;
     var g = S.geometry, dv = S.dv, vr2 = S.vr2, sp = S.spread, gpos = S.gpos;
     var hostile = S.hostile, friendly = S.friendly;
-    var call = S.call, callCol = S.callColor, callBrd = S.callBorder;
+    var call = S.call;
     function C(v) { return v >= 0 ? "#00e676" : "#ff453a"; }
 
     var qz = q && has(q.z20) ? q.z20 : null;
     var qMove = q && has(q.last) && isFinite(S.chart.prevClose) ? q.last - S.chart.prevClose : null;
-    var hero =
-      '<div style="display:flex;gap:10px;margin-bottom:8px">' +
-        '<div style="flex:2;background:#0d1a12;border:1px solid #14432b;border-radius:12px;padding:9px 14px">' +
-          '<div style="font-size:10px;letter-spacing:1.5px;color:#8b8ba6">QQQ STRETCH</div>' +
-          '<div style="font-size:26px;font-weight:800;line-height:1.05;color:' + (qz !== null ? (qz >= 0 ? "#00e676" : "#ff453a") : "#8b8ba6") + '">' +
-            (qz !== null ? "z " + signed(qz, 2) : "&mdash;") + '</div>' +
-          '<div style="font-size:12px;color:#8b8ba6;margin-top:5px">' +
-            '<span id="qqq-command-move">' +
-            (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
-            '</span><span id="qqq-command-price">' +
-            (q && has(q.last) ? num(q.last, 2) : "") + '</span></div>' +
-        '</div>' +
-        '<div style="flex:1.4;background:#120c0c;border:1px solid ' + callBrd + ';border-radius:12px;padding:9px 14px">' +
-          '<div style="font-size:10px;letter-spacing:1.5px;color:#8b8ba6">THE CALL</div>' +
-          '<div style="font-size:16px;font-weight:800;line-height:1.15;margin-top:3px;color:' + callCol + '">● ' + call + '</div>' +
-          '<div style="font-size:11px;color:#8b8ba6;margin-top:5px">' + hostile + ' hostile · ' + friendly + ' friendly</div>' +
-        '</div>' +
-      '</div>';
-
     var _tq = mk.TQQQ, _sq = mk.SQQQ;
     var lv = (_tq && has(_tq.z20) && _sq && has(_sq.z20)) ? (_tq.z20 - _sq.z20) / 2 : null;
     var lvWord = lv === null ? "—" : lv >= 0.5 ? "callish" : lv <= -0.5 ? "bearish" : "balanced";
-    var lvClamp = lv === null ? 0 : Math.max(-1, Math.min(1, lv / 2.5));
     var used = S.chart.used;
     var usedPct = used === null ? 0 : Math.min(1, used);
     var usedCol = used === null ? "#8b8ba6" : used < 0.5 ? "#00e676" : used < 1 ? "#ffd600" : "#ff453a";
-    var gauges =
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">' +
-        '<div style="background:#0c0c14;border:1px solid #1c1c28;border-radius:10px;padding:11px 13px">' +
-          '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#8b8ba6"><span>LEVERAGE LEAN</span><span style="color:#ff2be0">' +
-            (lv === null ? "—" : lvWord + " " + signed(lv, 2)) + '</span></div>' +
-          '<div style="position:relative;height:10px;background:#17171f;border-radius:6px;margin-top:8px">' +
-            '<div style="position:absolute;left:50%;top:-2px;width:1px;height:14px;background:#3a3a48"></div>' +
-            (lv === null ? "" : '<div style="position:absolute;' +
-              (lvClamp >= 0 ? "left:50%;width:" + (lvClamp * 50).toFixed(0) : "right:50%;width:" + (-lvClamp * 50).toFixed(0)) +
-              '%;height:10px;background:' + (lv >= 0 ? "#00e676" : "#ff453a") + ';border-radius:6px"></div>') +
-          '</div>' +
-          '<div style="display:flex;justify-content:space-between;font-size:9.5px;color:#5a5a6a;margin-top:5px"><span>bear</span><span>bull</span></div>' +
-        '</div>' +
-        '<div style="background:#0c0c14;border:1px solid #1c1c28;border-radius:10px;padding:11px 13px">' +
-          '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#8b8ba6"><span>RANGE USED</span><span id="qqq-command-range-used" style="color:' + usedCol + '">' +
-            (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span></div>' +
-          '<div style="height:10px;background:#17171f;border-radius:6px;margin-top:8px;overflow:hidden"><div id="qqq-command-range-bar" style="width:' +
-            (usedPct * 100).toFixed(0) + '%;height:10px;background:' + usedCol + '"></div></div>' +
-          '<div style="font-size:9.5px;color:#5a5a6a;margin-top:5px">vs 1σ range</div>' +
-        '</div>' +
-      '</div>';
 
-    function light(txt, cn) {
-      var m = cn === "down" ? ["#120c0c", "#45201f", "#ff453a"] : cn === "up" ? ["#0d1a12", "#14432b", "#00e676"]
-        : cn === "warn" ? ["#14120c", "#454020", "#ffd600"] : ["#0c0c14", "#2a2a38", "#8b8ba6"];
-      return '<span style="font-size:11px;background:' + m[0] + ';border:1px solid ' + m[1] + ';color:' + m[2] +
-        ';border-radius:8px;padding:4px 9px">' + (cn === "dim" ? "" : "● ") + txt + "</span>";
+    // One compact visual language for every glance signal. These chips match
+    // the Auction / Context pills below and replace the old hero cards + gauges.
+    function chip(label, value, sub, tone, extra) {
+      return '<span class="qqq-hud-chip ' + (tone || "dim") + '">' +
+        (label ? '<span class="k">' + label + '</span>' : "") +
+        (value ? '<span class="v">' + value + '</span>' : "") +
+        (sub ? '<span class="sub">' + sub + '</span>' : "") +
+        (extra || "") + '</span>';
     }
-    var lights = '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">';
-    if (dv !== null) lights += light("√det(G) " + num(dv, 3) + " · " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
-    if (vr2 !== null) lights += light("VR(2) " + num(vr2, 2) + " · " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
-    if (ok(gx) && has(gx.regime)) lights += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
-    if (sp !== null) lights += light("edge " + signed(sp, 1, "pp"), sp > 0 ? "up" : "down");
-    if (has(vix)) lights += light("VIX " + num(vix, 2), vix >= 20 ? "warn" : "dim");
-    lights += "</div>";
+    function light(txt, tone) {
+      return chip("", (tone === "dim" ? "" : "● ") + txt, "", tone);
+    }
+
+    var chips = '<div class="qqq-command-chips">';
+    chips += chip("QQQ stretch", qz !== null ? "z " + signed(qz, 2) : "—",
+      '<span id="qqq-command-move">' +
+      (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
+      '</span><span id="qqq-command-price">' + (q && has(q.last) ? num(q.last, 2) : "") + '</span>',
+      qz === null ? "dim" : qz >= 0 ? "up" : "down");
+    chips += chip("Call", "● " + call, hostile + " hostile · " + friendly + " friendly",
+      call === "STAND DOWN" ? "down" : call === "LEAN FADE" ? "up" : "warn");
+    chips += chip("Leverage", lv === null ? "—" : lvWord + " " + signed(lv, 2),
+      (_tq && _sq && has(_tq.z20) && has(_sq.z20))
+        ? "T " + signed(_tq.z20, 2) + " / S " + signed(_sq.z20, 2) : "TQQQ / SQQQ",
+      "accent");
+    chips += chip("Range", '<span id="qqq-command-range-used" style="color:' + usedCol + '">' +
+      (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span>', "of 1σ", used === null ? "dim" : used < 0.5 ? "up" : used < 1 ? "warn" : "down",
+      '<i id="qqq-command-range-bar" class="qqq-mini-bar" style="width:' +
+      (usedPct * 100).toFixed(0) + '%;background:' + usedCol + '"></i>');
+    if (dv !== null) chips += light("√det(G) " + num(dv, 3) + " · " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
+    if (vr2 !== null) chips += light("VR(2) " + num(vr2, 2) + " · " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
+    if (ok(gx) && has(gx.regime)) chips += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
+    if (sp !== null) chips += light("edge " + signed(sp, 1, "pp"), sp > 0 ? "up" : "down");
+    if (has(vix)) chips += light("VIX " + num(vix, 2), vix >= 20 ? "warn" : "dim");
+    chips += "</div>";
 
     // LEVERAGE FAMILY · TODAY bar strip removed 2026-08-17 (Q4). The full
     // "Nasdaq — QQQ leverage family" Star-Players section (secNasdaqStars) is kept.
 
     return '<div id="qqq-command-live" class="qqq-command-summary" data-prev-close="' +
       (isFinite(S.chart.prevClose) ? S.chart.prevClose : "") + '" data-vix="' +
-      (isFinite(vix) ? vix : "") + '">' + hero + gauges + lights + "</div>";
+      (isFinite(vix) ? vix : "") + '">' + chips + "</div>";
   }
 
   function secNasdaqStars(e) {
@@ -3909,24 +3909,12 @@
   function secCockpit(e, chartModel) {
     var S = nasdaqCommandModel(e, chartModel);
     function tile(label, big, sub, cn) {
-      var map = {
-        up:   ["var(--up)",   "rgba(0,230,118,.13)"],
-        down: ["var(--down)", "rgba(255,69,58,.13)"],
-        warn: ["var(--warn)", "rgba(255,214,0,.12)"],
-        dim:  ["var(--dim)",  "rgba(139,139,166,.10)"],
-        flat: ["var(--txt)",  "rgba(255,255,255,.045)"]   // neutral context tile
-      };
-      // Compact ONE-LINE pill (matches the KEY LEVELS chip look) so Auction /
-      // Context stay a couple of tight rows and leave room for the chart below.
-      // Border + label are COLOUR-CODED like Key Levels: green/red/amber signal
-      // state, lavender = neutral tile.
-      var col = { up: "#00e676", down: "#ff453a", warn: "#ffd600", dim: "#8b8ba6", flat: "#b388ff" }[cn] || "#8b8ba6";
-      return '<span style="display:inline-flex;align-items:baseline;gap:7px;' +
-        'background:rgba(255,255,255,.04);border:1px solid ' + col + ';border-radius:7px;' +
-        'padding:4px 10px;font-size:12px;line-height:1.3;white-space:nowrap;max-width:100%">' +
-        '<span style="font-size:8.5px;letter-spacing:.6px;color:' + col + ';text-transform:uppercase">' + esc(label) + "</span>" +
-        '<b style="color:var(--txt);font-weight:700">' + big + "</b>" +
-        (sub ? '<span style="font-size:10px;color:var(--faint)">' + sub + "</span>" : "") +
+      // Auction and Context use the exact same chip as the command signals.
+      var tone = cn === "flat" ? "accent" : (cn || "dim");
+      return '<span class="qqq-hud-chip ' + tone + '">' +
+        '<span class="k">' + esc(label) + "</span>" +
+        '<span class="v">' + big + "</span>" +
+        (sub ? '<span class="sub">' + sub + "</span>" : "") +
         "</span>";
     }
 
@@ -4160,10 +4148,10 @@
              tile("Opening range", "—", "OR30 · " + wait, "dim") +
              tile("Volume", "—", wait + " · IEX", "dim");
       }
-      auctBlk = '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Auction — IEX' +
+      auctBlk = '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:4px">Auction — IEX' +
         (aStale ? ' <span style="color:var(--faint);letter-spacing:0">· last logged ' + aAgeTxt + '</span>' : '') +
-        '</div><div style="display:flex;flex-wrap:wrap;gap:8px">' +
+        '</div><div class="qqq-command-chips">' +
         at + "</div>";
     }
 
@@ -4212,9 +4200,9 @@
       }
     }
     var ctxBlk = ctiles
-      ? '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Context</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+      ? '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:4px">Context</div>' +
+        '<div class="qqq-command-chips">' +
         ctiles + "</div>"
       : "";
 
@@ -4260,9 +4248,9 @@
       : "";
 
     // ── Plan & discipline — the box, condensed ──
-    var planBlk = '<div style="margin-top:10px;background:rgba(255,255,255,.04);border-radius:12px;' +
-      'padding:8px 14px;font-size:12px;color:var(--dim);line-height:1.5">' +
-      '<span style="letter-spacing:1px;text-transform:uppercase;font-size:10.5px">The box</span><br>' +
+    var planBlk = '<div style="margin-top:6px;background:rgba(255,255,255,.04);border-radius:7px;' +
+      'padding:6px 10px;font-size:11.5px;color:var(--dim);line-height:1.4">' +
+      '<span style="letter-spacing:1px;text-transform:uppercase;font-size:9.5px">The box</span> · ' +
       '<span style="color:var(--txt)">7:17–8:30 PT</span> · QQQ 0DTE call 3 ITM · size 60% · ' +
       'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
       '15-min time-stop · flat 12:45 PT</div>';
@@ -4302,9 +4290,9 @@
       var accent = isToday ? "var(--warn)" : "var(--txt)";
       var bg = isToday ? "rgba(255,214,0,.12)" : "rgba(255,255,255,.045)";
       newsBlk =
-        '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Next catalyst</div>' +
-        '<div style="background:' + bg + ';border-radius:12px;padding:10px 14px">' +
+        '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        'text-transform:uppercase;margin-bottom:4px">Next catalyst</div>' +
+        '<div style="background:' + bg + ';border-radius:7px;padding:7px 10px">' +
           '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">' +
             '<div style="font-size:15px;font-weight:700;line-height:1.2;color:' + accent + '">' + esc(head) + '</div>' +
             '<div style="font-size:11px;letter-spacing:1px;white-space:nowrap;color:' +
