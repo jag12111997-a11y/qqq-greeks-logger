@@ -131,6 +131,40 @@
                cursor:pointer; }
   .qqq-layer[aria-pressed="true"] { color:var(--accent); border-color:rgba(255,43,224,.5);
                                      background:rgba(255,43,224,.07); }
+  .qqq-motion { margin:0 0 6px; padding:6px 7px; border:1px solid #1c1c28;
+                border-radius:7px; background:#090911; overflow:hidden; }
+  .qqq-motion-head { display:flex; align-items:center; gap:8px; margin:0 1px 5px;
+                     color:var(--faint); font-size:9px; letter-spacing:1px;
+                     text-transform:uppercase; white-space:nowrap; }
+  .qqq-motion-head b { color:#29b6f6; font-weight:600; }
+  .qqq-motion-head .state { margin-left:auto; color:var(--dim); letter-spacing:.35px; }
+  .qqq-motion-strip { display:flex; gap:5px; overflow-x:auto; overscroll-behavior-x:contain;
+                      scrollbar-width:thin; scrollbar-color:#242433 transparent; padding-bottom:1px; }
+  .qqq-motion-card { flex:0 0 154px; min-width:0; padding:5px 6px 4px; border:1px solid #242433;
+                     border-radius:6px; background:#0d0d16; transition:border-color .25s ease; }
+  .qqq-motion-card.toward { border-color:rgba(0,230,118,.42); }
+  .qqq-motion-card.away { border-color:rgba(255,159,10,.42); }
+  .qqq-motion-top, .qqq-motion-foot { display:flex; align-items:center; justify-content:space-between;
+                                      gap:5px; white-space:nowrap; }
+  .qqq-motion-top { color:var(--txt); font-size:9.5px; }
+  .qqq-motion-name { overflow:hidden; text-overflow:ellipsis; }
+  .qqq-motion-name i { display:inline-block; width:5px; height:5px; margin-right:5px;
+                       border-radius:50%; vertical-align:1px; background:var(--level-color); }
+  .qqq-motion-price { color:var(--level-color); }
+  .qqq-motion-track { position:relative; height:5px; margin:5px 0 4px; border-radius:4px;
+                      background:#1a1a25; }
+  .qqq-motion-track:after { content:""; position:absolute; left:50%; top:-2px; width:1px;
+                            height:9px; background:#5a5a70; opacity:.8; }
+  .qqq-motion-dot { position:absolute; left:var(--level-pos); top:50%; width:7px; height:7px;
+                    border:1px solid #090911; border-radius:50%; background:var(--level-color);
+                    transform:translate(-50%,-50%); box-shadow:0 0 5px var(--level-color);
+                    transition:left .55s ease; }
+  .qqq-motion-foot { color:var(--dim); font-size:8.5px; letter-spacing:.15px; }
+  .qqq-motion-foot .toward { color:var(--up); }
+  .qqq-motion-foot .away { color:#ff9f0a; }
+  @media (prefers-reduced-motion:reduce) {
+    .qqq-motion-dot, .qqq-motion-card { transition:none; }
+  }
   .qqq-chart-exposure { display:grid; grid-template-columns:repeat(5,minmax(100px,1fr));
                         gap:1px; margin:0 0 10px; overflow:hidden; border:1px solid var(--line);
                         border-radius:7px; background:var(--line); }
@@ -2928,6 +2962,7 @@
   var QQQ_TV = null;
   var QQQ_LAYERS = { core: true, ranges: true, flow: true };
   var QQQ_CHART_VIEW = { mode: "raw", ema: true, pane: "adl" };
+  var QQQ_MOTION_GAPS = {};
   try {
     var _ql = JSON.parse(localStorage.getItem("md:qqq-layers") || "{}");
     ["core", "ranges", "flow"].forEach(function (k) {
@@ -3181,6 +3216,7 @@
       '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
         layerButton("core", "GEX levels + odds") + layerButton("ranges", "Expected ranges") +
         layerButton("flow", "Vanna / charm / theta") + "</div>" +
+      '<div id="qqq-motion-radar" class="qqq-motion" aria-label="Live level motion radar"></div>' +
       '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
       'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna, charm and theta overlays"></div></div>' +
       '<div class="qqq-chart-key">' +
@@ -3646,6 +3682,93 @@
     return out;
   }
 
+  function qqqMotionItems(M) {
+    var rows = [];
+    (M.levels || []).forEach(function (x) {
+      if (x.group === "spot" || !QQQ_LAYERS[x.group]) return;
+      rows.push({ name:x.title, price:Number(x.price), color:x.color, priority:x.priority || 50 });
+    });
+    if (M.latest && LIVE_AUCTION) {
+      [["VWAP", LIVE_AUCTION.vwap, "#aeb4c7", 8],
+       ["OR high", LIVE_AUCTION.or30_high, "#77778b", 90],
+       ["OR low", LIVE_AUCTION.or30_low, "#77778b", 91]].forEach(function (x) {
+        if (has(x[1]) && isFinite(Number(x[1])))
+          rows.push({ name:x[0], price:Number(x[1]), color:x[2], priority:x[3] });
+      });
+    }
+    if (QQQ_CHART_VIEW.ema && QQQ_TV && QQQ_TV.rawCandles && QQQ_TV.rawCandles.length) {
+      [["EMA 9", 9, "#29b6f6", 5], ["EMA 20", 20, "#ff9f0a", 6]].forEach(function (x) {
+        var points = qqqEma(QQQ_TV.rawCandles, x[1]);
+        if (points.length) rows.push({ name:x[0], price:points[points.length - 1].value,
+                                      color:x[2], priority:x[3] });
+      });
+    }
+
+    // Signals that share one strike become one moving marker instead of a pile
+    // of duplicate cards. Every label remains available in the tooltip.
+    var merged = {};
+    rows.forEach(function (x) {
+      if (!isFinite(x.price)) return;
+      var key = x.price.toFixed(2);
+      if (!merged[key]) merged[key] = { price:x.price, color:x.color, priority:x.priority, names:[] };
+      String(x.name).split(" · ").forEach(function (part) {
+        part = part.trim();
+        if (!part || /^\d+%$/.test(part)) return;
+        if (part.charAt(0) !== "+" && part.charAt(0) !== "-" && !/close/i.test(part))
+          part = part.replace(/\s+\d+%$/, "");
+        if (part && merged[key].names.indexOf(part) < 0) merged[key].names.push(part);
+      });
+      if (x.priority < merged[key].priority) {
+        merged[key].priority = x.priority;
+        merged[key].color = x.color;
+      }
+    });
+    return Object.keys(merged).map(function (key) {
+      var x = merged[key];
+      x.name = x.names.join(" · ");
+      x.key = x.name.replace(/\s\d+%/g, "") + "@" + key;
+      x.distance = Math.abs(x.price - M.spot);
+      return x;
+    }).sort(function (a, b) {
+      return a.distance - b.distance || a.priority - b.priority;
+    });
+  }
+
+  function updateQqqMotionRadar(M) {
+    var el = document.getElementById("qqq-motion-radar");
+    if (!el || !isFinite(M.spot) || !(M.spot > 0)) return;
+    var items = qqqMotionItems(M);
+    var live = M.quoteFresh && qqqMarketOpen();
+    var scale = Math.max(M.sigLeft ? M.sigLeft * 100 : 0, .5);
+    var nextGaps = {};
+    var cards = items.map(function (x) {
+      var gapPct = (x.price - M.spot) / M.spot * 100;
+      var pos = Math.max(4, Math.min(96, 50 + gapPct / scale * 45));
+      var gapAbs = Math.abs(x.price - M.spot), previous = QQQ_MOTION_GAPS[x.key];
+      var motion = "last", motionText = live ? "SET" : "LAST";
+      if (live && isFinite(previous)) {
+        var change = previous - gapAbs;
+        if (change > .005) { motion = "toward"; motionText = "TOWARD"; }
+        else if (change < -.005) { motion = "away"; motionText = "AWAY"; }
+        else { motion = "steady"; motionText = "STEADY"; }
+      }
+      nextGaps[x.key] = gapAbs;
+      var side = gapPct >= 0 ? "ABOVE" : "BELOW";
+      return '<div class="qqq-motion-card ' + motion + '" style="--level-color:' + x.color +
+        ';--level-pos:' + pos.toFixed(1) + '%" title="' + esc(x.name) + '">' +
+        '<div class="qqq-motion-top"><span class="qqq-motion-name"><i></i>' + esc(x.name) +
+        '</span><span class="qqq-motion-price">' + x.price.toFixed(2) + '</span></div>' +
+        '<div class="qqq-motion-track"><span class="qqq-motion-dot"></span></div>' +
+        '<div class="qqq-motion-foot"><span>' + side + ' ' + (gapPct >= 0 ? "+" : "") +
+        gapPct.toFixed(2) + '%</span><span class="' + motion + '">' + motionText + '</span></div></div>';
+    }).join("");
+    QQQ_MOTION_GAPS = nextGaps;
+    el.innerHTML = '<div class="qqq-motion-head"><b>Live level motion</b><span>nearest first · center = QQQ</span>' +
+      '<span class="state">' + (live ? "15s motion" : "last snapshot") + ' · ' + items.length +
+      ' levels →</span></div>' +
+      '<div class="qqq-motion-strip">' + (cards || '<span class="qqq-chart-chip">Waiting for levels</span>') + '</div>';
+  }
+
   function mountQqqChart(e, chartModel) {
     destroyQqqChart();
     var el = document.getElementById("qqq-tv-chart");
@@ -3875,6 +3998,7 @@
                spotLine: spotLine, lastCandleTime: lastCandleTime,
                quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60,
                el: el, interactionHandler: interactionHandler, alignPending:false };
+    updateQqqMotionRadar(M);
     scheduleQqqGexAlignment(series, chart);
   }
 
@@ -3935,6 +4059,7 @@
       barChipEl.textContent = barState.text;
       barChipEl.className = "qqq-chart-chip " + barState.tone;
     }
+    updateQqqMotionRadar(M);
 
     // The command center follows the same fast quote without remounting the
     // chart or rebuilding the cockpit.
