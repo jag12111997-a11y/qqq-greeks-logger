@@ -1727,26 +1727,29 @@
       return chip("", (tone === "dim" ? "" : "● ") + txt, "", tone);
     }
 
+    // Stable left-to-right decision hierarchy: action first, then the signals
+    // that can veto a trade, then execution state, then supporting context.
+    // Positions never jump when a chip changes colour, which lowers scan load.
     var chips = '<div class="qqq-command-chips">';
+    chips += chip("Call", "● " + call, hostile + " hostile · " + friendly + " friendly",
+      call === "STAND DOWN" ? "down" : call === "LEAN FADE" ? "up" : "warn");
+    if (dv !== null) chips += light("√det(G) " + num(dv, 3) + " · " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
+    if (vr2 !== null) chips += light("VR(2) " + num(vr2, 2) + " · " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
+    chips += chip("Range", '<span id="qqq-command-range-used" style="color:' + usedCol + '">' +
+      (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span>', "of 1σ", used === null ? "dim" : used < 0.5 ? "up" : used < 1 ? "warn" : "down",
+      '<i id="qqq-command-range-bar" class="qqq-mini-bar" style="width:' +
+      (usedPct * 100).toFixed(0) + '%;background:' + usedCol + '"></i>');
+    if (ok(gx) && has(gx.regime)) chips += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
     chips += chip("QQQ stretch", qz !== null ? "z " + signed(qz, 2) : "—",
       '<span id="qqq-command-move">' +
       (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
       '</span><span id="qqq-command-price">' + (q && has(q.last) ? num(q.last, 2) : "") + '</span>',
       qz === null ? "dim" : qz >= 0 ? "up" : "down");
-    chips += chip("Call", "● " + call, hostile + " hostile · " + friendly + " friendly",
-      call === "STAND DOWN" ? "down" : call === "LEAN FADE" ? "up" : "warn");
+    if (sp !== null) chips += light("edge " + signed(sp, 1, "pp"), sp > 0 ? "up" : "down");
     chips += chip("Leverage", lv === null ? "—" : lvWord + " " + signed(lv, 2),
       (_tq && _sq && has(_tq.z20) && has(_sq.z20))
         ? "T " + signed(_tq.z20, 2) + " / S " + signed(_sq.z20, 2) : "TQQQ / SQQQ",
       "accent");
-    chips += chip("Range", '<span id="qqq-command-range-used" style="color:' + usedCol + '">' +
-      (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span>', "of 1σ", used === null ? "dim" : used < 0.5 ? "up" : used < 1 ? "warn" : "down",
-      '<i id="qqq-command-range-bar" class="qqq-mini-bar" style="width:' +
-      (usedPct * 100).toFixed(0) + '%;background:' + usedCol + '"></i>');
-    if (dv !== null) chips += light("√det(G) " + num(dv, 3) + " · " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
-    if (vr2 !== null) chips += light("VR(2) " + num(vr2, 2) + " · " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
-    if (ok(gx) && has(gx.regime)) chips += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
-    if (sp !== null) chips += light("edge " + signed(sp, 1, "pp"), sp > 0 ? "up" : "down");
     if (has(vix)) chips += light("VIX " + num(vix, 2), vix >= 20 ? "warn" : "dim");
     chips += "</div>";
 
