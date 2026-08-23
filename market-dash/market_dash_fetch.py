@@ -1321,8 +1321,7 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
     oi_map = fetch_open_interest(symbol, days_out, spot=spot)
 
     from datetime import datetime as _dt
-    from zoneinfo import ZoneInfo
-    now_utc = _dt.now(timezone.utc)
+    now = _dt.now()
 
     rows = []
     for occ, snap in snapshots.items():
@@ -1342,10 +1341,6 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
         gamma, delta, vega, theta = (g.get("gamma"), g.get("delta"),
                                      g.get("vega"), g.get("theta"))
         vanna = charm = None
-        expiry_et = _dt.strptime(exp, "%Y-%m-%d").replace(
-            hour=16, tzinfo=ZoneInfo("America/New_York"))
-        T = max((expiry_et - now_utc).total_seconds(), 60.0) / (365.0 * 24 * 3600)
-        iv = snap.get("impliedVolatility")
 
         if gamma is None:
             quote = snap.get("latestQuote") or {}
@@ -1356,6 +1351,9 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
             elif snap.get("latestTrade", {}).get("p"):
                 mid = float(snap["latestTrade"]["p"])
 
+            T = max((_dt.strptime(exp, "%Y-%m-%d") - now).total_seconds()
+                    / (365.0 * 24 * 3600), 1e-6)
+            iv = snap.get("impliedVolatility")
             if mid and _CHAIN_SPOT[0]:
                 if iv is None:
                     iv = _implied_vol(mid, _CHAIN_SPOT[0], strike, T, cp)
@@ -1376,53 +1374,9 @@ def fetch_option_chain(symbol=GEX_SYMBOL, days_out=GEX_DAYS_OUT, spot=None):
             "theta": float(theta) if theta is not None else None,
             "vanna": float(vanna) if vanna is not None else None,
             "charm": float(charm) if charm is not None else None,
-            "iv": float(iv) if iv is not None else None,
-            "time_to_expiry": T,
             "open_interest": int(oi),
         })
     return rows
-
-
-def _repriced_gamma_flip(rows, spot):
-    """3v3 notes F2: solve GEX(S*)=0 by repricing the entire chain."""
-    usable = []
-    for row in rows:
-        try:
-            strike = float(row["strike"])
-            iv = float(row["iv"])
-            T = float(row["time_to_expiry"])
-            oi = float(row["open_interest"])
-            sign = 1.0 if row["type"] == "call" else -1.0
-        except (KeyError, TypeError, ValueError):
-            continue
-        if strike > 0 and iv > 0 and T > 0 and oi > 0:
-            usable.append((strike, iv, T, oi, sign))
-    if not usable:
-        return None, "no zero crossing in captured window"
-
-    low = min(x[0] for x in usable)
-    high = max(x[0] for x in usable)
-    steps = max(2, int(round((high - low) / 0.25)))
-    curve = []
-    for i in range(steps + 1):
-        test_spot = low + (high - low) * i / steps
-        total = 0.0
-        for strike, iv, T, oi, sign in usable:
-            gamma = _bs_greeks(test_spot, strike, T, iv, "call")["gamma"]
-            if gamma is not None:
-                total += sign * gamma * oi
-        curve.append((test_spot, total))
-
-    crossings = []
-    for (a_spot, a_gex), (b_spot, b_gex) in zip(curve, curve[1:]):
-        if a_gex == 0:
-            crossings.append(a_spot)
-        elif (a_gex < 0 < b_gex) or (a_gex > 0 > b_gex) or b_gex == 0:
-            frac = abs(a_gex) / (abs(a_gex) + abs(b_gex)) if (a_gex or b_gex) else 0.5
-            crossings.append(a_spot + (b_spot - a_spot) * frac)
-    if not crossings:
-        return None, "no zero crossing in captured window"
-    return round(min(crossings, key=lambda value: abs(value - spot)), 2), "zero crossing"
 
 
 def compute_gex(rows, spot):
@@ -1488,14 +1442,31 @@ def compute_gex(rows, spot):
     pg = sum(s["put_gamma_raw"] for s in strikes)
     gamma_ratio = round(cg / (cg + pg), 4) if (cg + pg) else None
 
-    flip, method = _repriced_gamma_flip(rows, spot)
+    # Gamma flip: where the running total of net GEX crosses zero.
+    flip, run, method = None, 0.0, None
+    cum = []
+    for i, s in enumerate(strikes):
+        prev = run
+        run += s["net_gex"]
+        cum.append((s["strike"], run))
+        if i and ((prev < 0 <= run) or (prev > 0 >= run)):
+            a, b = strikes[i - 1]["strike"], s["strike"]
+            frac = abs(prev) / (abs(prev) + abs(run)) if (prev or run) else 0.5
+            flip = round(a + (b - a) * frac, 2)
+            method = "zero crossing"
 
-    # The 3v3 notes define walls as heavy-open-interest strikes. This keeps the
-    # structural levels distinct from the much noisier current-gamma maximum.
-    overhead = [s for s in strikes if s["strike"] >= spot] or strikes
-    support = [s for s in strikes if s["strike"] <= spot] or strikes
-    call_wall = max(overhead, key=lambda s: s["call_oi"])["strike"] if strikes else None
-    put_wall = max(support, key=lambda s: s["put_oi"])["strike"] if strikes else None
+    # No crossing inside the strike window: fall back to the strike where the
+    # running total is closest to zero, and say so rather than reporting None.
+    if flip is None and cum:
+        k, _ = min(cum, key=lambda t: abs(t[1]))
+        flip = round(k, 2)
+        method = "nearest-to-zero (no crossing in window)"
+
+    call_wall = max(strikes, key=lambda s: s["call_gex"])["strike"] if strikes else None
+    # Put wall = strike with the most negative NET dealer gamma (max short gamma =
+    # real support), matching the theory and the 0DTE logger. min(put_gex) snapped
+    # it toward the ATM strike, whose put gamma is large just from being ATM.
+    put_wall = min(strikes, key=lambda s: s["net_gex"])["strike"] if strikes else None
     max_pos = max(strikes, key=lambda s: s["net_gex"])["strike"] if strikes else None
     max_neg = min(strikes, key=lambda s: s["net_gex"])["strike"] if strikes else None
     top_oi = max(strikes, key=lambda s: s["call_oi"] + s["put_oi"])["strike"] if strikes else None
@@ -1518,8 +1489,6 @@ def compute_gex(rows, spot):
                          "verified vs finite differences — not proxied.",
         "gamma_flip": flip,
         "gamma_flip_method": method,
-        "gamma_flip_basis": "whole chain repriced across hypothetical spot ladder",
-        "wall_basis": "largest overhead call OI / downside put OI strike in captured window",
         # Regime prefers the flip when it's a real crossing; otherwise the
         # sign of aggregate net GEX, which is never undetermined.
         "regime": ("POSITIVE GAMMA" if (spot > flip if method == "zero crossing" else net > 0)

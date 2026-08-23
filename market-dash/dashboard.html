@@ -2058,8 +2058,7 @@
   }
 
   function secGex(e) {
-    var latest = FULL.indexOf(e) === FULL.length - 1;
-    var g = (latest && LIVE_GEX) ? LIVE_GEX : e.gex;
+    var g = e.gex;
     if (!ok(g) || !get(g, "strikes", []).length) return "";
 
     var strikes = g.strikes, spot = g.spot;
@@ -2579,8 +2578,7 @@
     (e.watchlist || []).forEach(function (r) { mk[r.symbol] = r; });
     var vix = get(mk, "VIX.last");
     var q = mk.QQQ;
-    var latest = FULL.indexOf(e) === FULL.length - 1;
-    var g = (latest && LIVE_GEX) ? LIVE_GEX : e.gex;
+    var g = e.gex;
     if (!has(vix) || !q || !has(q.last) || !ok(g)) return "";
 
     var spot = q.last;
@@ -3179,7 +3177,7 @@
     chips += '<span id="qqq-live-bar-chip" class="qqq-chart-chip ' + liveBarState.tone + '">' +
       esc(liveBarState.text) + '</span>';
     if (M.latest && LIVE_GEX_INTRADAY && LIVE_GEX_INTRADAY.points && LIVE_GEX_INTRADAY.points.length > 1) {
-      chips += '<span class="qqq-chart-chip up">POSITION HISTORY · ' +
+      chips += '<span class="qqq-chart-chip up">GEX HISTORY · ' +
         LIVE_GEX_INTRADAY.points.length + ' × 1M</span>';
     }
     var g = M.g || {};
@@ -3216,12 +3214,12 @@
         viewButton("data-qqq-pane", "none", "Off", QQQ_CHART_VIEW.pane === "none") +
       '</div>' +
       '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
-        layerButton("core", "OI walls + gamma flip") + layerButton("ranges", "Expected ranges") +
+        layerButton("core", "GEX history + odds") + layerButton("ranges", "Expected ranges") +
         layerButton("flow", "Vanna / charm / theta history") + "</div>" +
       '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
       'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna, charm and theta overlays"></div></div>' +
       '<div class="qqq-chart-key">' +
-        '<span style="color:#ffd600"><i></i>step lines = captured positioning estimates</span>' +
+        '<span style="color:#ffd600"><i></i>step lines = real logger history</span>' +
         '<span style="color:#29b6f6"><i></i>68% / 95% into close</span>' +
         '<span style="color:#ff00e5"><i></i>GARCH 68%</span>' +
         '<span style="color:#00bfa5"><i></i>vanna / charm / theta concentration</span>' +
@@ -3831,52 +3829,40 @@
       series.setData(points);
     }
 
-    // Honest positioning history: the flip follows the whole-chain repricing
-    // method from the 3v3 notes; call/put walls are the heaviest OI strikes.
-    // WithSteps holds each captured value until the next real snapshot.
+    // The reference-style moving GEX system: each logger snapshot becomes one
+    // point, and WithSteps holds that value until the next real snapshot. The
+    // final segment extends to the latest candle as "last known", not as a
+    // fabricated recalculation between logger captures.
     if (hasGexTrail) {
       trailRows.sort(function (a, b) { return Number(a.time) - Number(b.time); });
       var trailEnd = candles[candles.length - 1].time;
       var stepType = TV.LineType && has(TV.LineType.WithSteps) ? TV.LineType.WithSteps : 1;
       function addTrail(field, title, color, width, showLast, style) {
-        var seenTrail = {}, valueCount = 0, points = [];
-        trailRows.forEach(function (p) {
-          var t = Number(p.time), raw = p[field];
-          if (!isFinite(t) || t > trailEnd + 60 || seenTrail[t]) return;
-          seenTrail[t] = 1;
-          if (raw === null || raw === "" || !isFinite(Number(raw))) {
-            points.push({ time:t }); // whitespace breaks the line; never bridge missing estimates
-          } else {
-            points.push({ time:t, value:Number(raw) });
-            valueCount++;
-          }
-        });
-        if (valueCount < 2) return;
-        var latest = points[points.length - 1];
-        var current = has(latest.value);
-        // A stale zero-gamma estimate is more dangerous than no estimate. If
-        // the latest capture cannot solve it, omit that trail from the live view.
-        if (field === "gamma_flip" && !current) return;
-        var last = null;
-        for (var j = points.length - 1; j >= 0; j--) {
-          if (has(points[j].value)) { last = points[j]; break; }
-        }
-        if (!last) return;
-        if (current && trailEnd > latest.time) points.push({ time:trailEnd, value:latest.value });
+        var seenTrail = {}, points = trailRows.map(function (p) {
+          return { time:Number(p.time), value:Number(p[field]), raw:p[field] };
+        }).filter(function (p) {
+          var ok = p.raw !== null && p.raw !== "" && isFinite(p.time) &&
+            p.time <= trailEnd + 60 && isFinite(p.value) && !seenTrail[p.time];
+          if (ok) seenTrail[p.time] = 1;
+          return ok;
+        }).map(function (p) { return { time:p.time, value:p.value }; });
+        if (points.length < 2) return;
+        var last = points[points.length - 1];
+        if (trailEnd > last.time) points.push({ time:trailEnd, value:last.value });
         var s = chart.addSeries(TV.LineSeries, {
           title:title, color:color, lineWidth:width || 1, lineType:stepType,
           lineStyle:style === "dashed" ? TV.LineStyle.Dashed : TV.LineStyle.Solid,
-          priceLineVisible:false, lastValueVisible:!!showLast && current,
+          priceLineVisible:false, lastValueVisible:!!showLast,
           crosshairMarkerVisible:false
         });
         s.setData(points);
         gexTrailSeries.push({ series:s, value:last.value, field:field,
-                              time:current ? Math.max(last.time, trailEnd) : last.time });
+                              time:Math.max(last.time, trailEnd) });
       }
       if (QQQ_LAYERS.core) {
-        addTrail("call_wall", "CALL WALL · OI", "#00e676", 2, true);
-        addTrail("put_wall", "PUT WALL · OI", "#ff453a", 2, true);
-        addTrail("gamma_flip", "ZERO GAMMA · EST", "#ffd600", 1, true);
+        addTrail("max_pos_gamma", "+γ MAX", "#00e676", 2, true);
+        addTrail("max_neg_gamma", "−γ MAX", "#ff453a", 2, true);
+        addTrail("gamma_flip", "GAMMA FLIP", "#ffd600", 1, true);
       }
       if (QQQ_LAYERS.flow) {
         addTrail("vanna_strike", "VANNA", "#00bfa5", 1, false, "dashed");
