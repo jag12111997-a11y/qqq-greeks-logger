@@ -146,8 +146,8 @@
                   gap:12px; align-items:stretch; margin:0; }
   .qqq-top-grid > .qqq-primary-chart,
   .qqq-top-grid > .qqq-gex-profile { min-width:0; }
-  .qqq-top-grid .qqq-chart-shell { min-height:240px; }
-  .qqq-top-grid .qqq-chart-canvas { height:240px; }
+  .qqq-top-grid .qqq-chart-shell { min-height:300px; }
+  .qqq-top-grid .qqq-chart-canvas { height:300px; }
   .qqq-gex-profile { height:100%; border-left:1px solid #1c1c28; padding-left:12px; }
   .flow section.qqq-market-card { margin-bottom:12px; }
   .qqq-gex-pane-title { display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -287,8 +287,8 @@
     .qqq-chart-exposure { grid-template-columns:repeat(2,minmax(110px,1fr)); }
     .qqq-chart-controls { margin-bottom:7px; }
     .qqq-top-grid { grid-template-columns:1fr; }
-    .qqq-top-grid .qqq-chart-shell { min-height:220px; }
-    .qqq-top-grid .qqq-chart-canvas { height:220px; }
+    .qqq-top-grid .qqq-chart-shell { min-height:270px; }
+    .qqq-top-grid .qqq-chart-canvas { height:270px; }
     .qqq-gex-plot { height:220px; }
     .qqq-gex-profile { border-left:0; border-top:1px solid #1c1c28; padding:12px 0 0; }
     .qqq-command-sync { display:none; }
@@ -2927,12 +2927,40 @@
   // session prices instead of inventing OHLC bars.
   var QQQ_TV = null;
   var QQQ_LAYERS = { core: true, ranges: true, flow: true };
+  var QQQ_CHART_VIEW = { mode: "raw", ema: true, pane: "adl" };
   try {
     var _ql = JSON.parse(localStorage.getItem("md:qqq-layers") || "{}");
     ["core", "ranges", "flow"].forEach(function (k) {
       if (typeof _ql[k] === "boolean") QQQ_LAYERS[k] = _ql[k];
     });
   } catch (eQqqLayers) {}
+  try {
+    var _qv = JSON.parse(localStorage.getItem("md:qqq-chart-view") || "{}");
+    if (_qv.mode === "raw" || _qv.mode === "ha") QQQ_CHART_VIEW.mode = _qv.mode;
+    if (typeof _qv.ema === "boolean") QQQ_CHART_VIEW.ema = _qv.ema;
+    if (["volume", "adl", "rsi", "none"].indexOf(_qv.pane) >= 0) QQQ_CHART_VIEW.pane = _qv.pane;
+  } catch (eQqqView) {}
+
+  function qqqMarketOpen() {
+    try {
+      var parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York", weekday: "short", hour: "numeric",
+        minute: "numeric", hour12: false
+      }).formatToParts(new Date());
+      var p = {};
+      parts.forEach(function (x) { p[x.type] = x.value; });
+      if (["Sat", "Sun"].indexOf(p.weekday) >= 0) return false;
+      var mins = Number(p.hour) * 60 + Number(p.minute || 0);
+      return isFinite(mins) && mins >= 570 && mins < 960;
+    } catch (marketClockErr) { return false; }
+  }
+
+  function qqqLiveBarState(M) {
+    if (!M.latest) return { text: "HISTORICAL BARS", tone: "" };
+    if (!qqqMarketOpen()) return { text: "MARKET CLOSED · LAST BARS", tone: "" };
+    if (M.quoteFresh) return { text: "LIVE 1M BAR · 15S QUOTES", tone: "up" };
+    return { text: "WAITING FOR FRESH QUOTE", tone: "warn" };
+  }
 
   function qqqChartModel(e) {
     var latest = idx === FULL.length - 1;
@@ -3097,6 +3125,7 @@
     }
     if (liveBars) {
       bits.push("Alpaca IEX 1-minute candles · " + liveBars + " bars");
+      if (M.quoteFresh && qqqMarketOpen()) bits.push("current 1m bar from 15s quotes");
       if (M.ageMin !== null) bits.push(M.ageMin <= 1 ? "candles updated now" : "candles " + M.ageMin + "m old");
     } else {
       bits.push("logged sessions · waiting for live candles");
@@ -3113,6 +3142,9 @@
       return '<span class="qqq-chart-chip ' + s.tone + '"' +
         (s.liveQuote ? ' id="qqq-live-chip"' : "") + '>' + esc(s.text) + "</span>";
     }).join("");
+    var liveBarState = qqqLiveBarState(M);
+    chips += '<span id="qqq-live-bar-chip" class="qqq-chart-chip ' + liveBarState.tone + '">' +
+      esc(liveBarState.text) + '</span>';
     var g = M.g || {};
     var exposure = [
       ["GEX", g.net_gex], ["DEX", g.net_dex], ["VEX", g.net_vex],
@@ -3126,12 +3158,26 @@
       return '<button type="button" class="qqq-layer" data-qqq-layer="' + id +
         '" aria-pressed="' + (QQQ_LAYERS[id] ? "true" : "false") + '">' + esc(label) + "</button>";
     }
+    function viewButton(attr, id, label, on) {
+      return '<button type="button" class="qqq-layer" ' + attr + '="' + id +
+        '" aria-pressed="' + (on ? "true" : "false") + '">' + esc(label) + "</button>";
+    }
     var body =
       '<div class="qqq-chart-meta"><span id="qqq-live-source">' + esc(source) + '</span>' +
       '<span class="tv-credit">Includes <a href="https://www.tradingview.com/" target="_blank" rel="noopener">' +
       'Lightweight Charts&trade; by TradingView, Inc.</a></span></div>' +
       '<div class="qqq-chart-status">' + chips + "</div>" +
       '<div class="qqq-chart-exposure">' + exposure + "</div>" +
+      '<div class="qqq-chart-controls"><span class="label">Chart</span>' +
+        viewButton("data-qqq-mode", "raw", "Raw candles", QQQ_CHART_VIEW.mode === "raw") +
+        viewButton("data-qqq-mode", "ha", "Heikin-Ashi", QQQ_CHART_VIEW.mode === "ha") +
+        viewButton("data-qqq-ema", "ema", "EMA 9 / 20", QQQ_CHART_VIEW.ema) +
+        '<span class="label" style="margin-left:7px">Lower pane</span>' +
+        viewButton("data-qqq-pane", "adl", "ADL", QQQ_CHART_VIEW.pane === "adl") +
+        viewButton("data-qqq-pane", "volume", "Volume", QQQ_CHART_VIEW.pane === "volume") +
+        viewButton("data-qqq-pane", "rsi", "RSI 14", QQQ_CHART_VIEW.pane === "rsi") +
+        viewButton("data-qqq-pane", "none", "Off", QQQ_CHART_VIEW.pane === "none") +
+      '</div>' +
       '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
         layerButton("core", "GEX levels + odds") + layerButton("ranges", "Expected ranges") +
         layerButton("flow", "Vanna / charm / theta") + "</div>" +
@@ -3142,7 +3188,8 @@
         '<span style="color:#29b6f6"><i></i>68% / 95% into close</span>' +
         '<span style="color:#ff00e5"><i></i>GARCH 68%</span>' +
         '<span style="color:#00bfa5"><i></i>vanna / charm / theta concentration</span>' +
-        '<span style="color:#ff2be0"><i></i>live QQQ quote</span>' +
+        '<span style="color:#29b6f6"><i></i>EMA 9 / ADL</span>' +
+        '<span style="color:#ff9f0a"><i></i>EMA 20</span>' +
       '</div>';
     return bodyOnly ? body : secWide("QQQ · live price + dealer map", body);
   }
@@ -3459,7 +3506,9 @@
     var pxToView = viewH / svgHeight;
     var panePxH = chartEl.clientHeight;
     try {
-      if (chart && chart.timeScale && chart.timeScale().height) {
+      if (chart && chart.panes && chart.panes()[0] && chart.panes()[0].getHeight) {
+        panePxH = chart.panes()[0].getHeight();
+      } else if (chart && chart.timeScale && chart.timeScale().height) {
         panePxH -= chart.timeScale().height();
       }
     } catch (paneErr) {}
@@ -3517,6 +3566,86 @@
     });
   }
 
+  function qqqMergeLiveCandle(src, M) {
+    var rows = src.map(function (b) {
+      return { time:b.time, open:b.open, high:b.high, low:b.low,
+               close:b.close, volume:b.volume || 0, quoteBuilt:!!b.quoteBuilt };
+    });
+    if (!M.latest || !M.quoteFresh || !qqqMarketOpen() || M.quoteTime === null || !isFinite(M.spot)) return rows;
+    var t = Math.floor(M.quoteTime / 60000) * 60;
+    var last = rows.length ? rows[rows.length - 1] : null;
+    if (last && t < last.time) return rows;
+    if (last && t === last.time) {
+      last.high = Math.max(last.high, M.spot);
+      last.low = Math.min(last.low, M.spot);
+      last.close = M.spot;
+      last.quoteBuilt = true;
+      return rows;
+    }
+    var contiguous = last && t - last.time <= 120;
+    var open = contiguous ? last.close : M.spot;
+    rows.push({ time:t, open:open, high:Math.max(open, M.spot),
+                low:Math.min(open, M.spot), close:M.spot, volume:0, quoteBuilt:true });
+    return rows;
+  }
+
+  function qqqHaCandles(src) {
+    var out = [], pO = null, pC = null;
+    for (var i = 0; i < src.length; i++) {
+      var b = src[i], haC = (b.open + b.high + b.low + b.close) / 4;
+      var haO = pO === null ? (b.open + b.close) / 2 : (pO + pC) / 2;
+      out.push({ time:b.time, open:haO, high:Math.max(b.high, haO, haC),
+                 low:Math.min(b.low, haO, haC), close:haC });
+      pO = haO; pC = haC;
+    }
+    return out;
+  }
+
+  function qqqRawDisplay(src) {
+    return src.map(function (b) {
+      return { time:b.time, open:b.open, high:b.high, low:b.low, close:b.close };
+    });
+  }
+
+  function qqqEma(src, period) {
+    if (!src.length) return [];
+    var k = 2 / (period + 1), value = src[0].close;
+    return src.map(function (b, i) {
+      value = i ? b.close * k + value * (1 - k) : b.close;
+      return { time:b.time, value:value };
+    });
+  }
+
+  function qqqAdl(src) {
+    var ad = 0;
+    return src.map(function (b) {
+      var range = b.high - b.low;
+      var clv = range > 0 ? ((b.close - b.low) - (b.high - b.close)) / range : 0;
+      ad += clv * (b.volume || 0);
+      return { time:b.time, value:ad };
+    });
+  }
+
+  function qqqRsi(src, period) {
+    var out = [], gains = 0, losses = 0, avgGain = 0, avgLoss = 0;
+    period = period || 14;
+    for (var i = 1; i < src.length; i++) {
+      var d = src[i].close - src[i - 1].close;
+      var gain = Math.max(0, d), loss = Math.max(0, -d);
+      if (i <= period) {
+        gains += gain; losses += loss;
+        if (i < period) continue;
+        avgGain = gains / period; avgLoss = losses / period;
+      } else {
+        avgGain = (avgGain * (period - 1) + gain) / period;
+        avgLoss = (avgLoss * (period - 1) + loss) / period;
+      }
+      var value = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+      out.push({ time:src[i].time, value:value });
+    }
+    return out;
+  }
+
   function mountQqqChart(e, chartModel) {
     destroyQqqChart();
     var el = document.getElementById("qqq-tv-chart");
@@ -3535,7 +3664,12 @@
         background: { type: TV.ColorType.Solid, color: "#0c0c14" },
         textColor: "#8b8ba6",
         fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-        attributionLogo: false
+        attributionLogo: false,
+        panes: {
+          separatorColor: "#242433",
+          separatorHoverColor: "rgba(41,182,246,.45)",
+          enableResize: true
+        }
       },
       grid: {
         vertLines: { color: "#15151f" },
@@ -3565,10 +3699,10 @@
     var M = chartModel || qqqChartModel(e);
     var raw = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
       ? LIVE_AUCTION.candles : [];
-    var seen = {}, candles = raw.map(function (b) {
+    var seen = {}, baseCandles = raw.map(function (b) {
       return {
         time: Number(b.time), open: Number(b.open), high: Number(b.high),
-        low: Number(b.low), close: Number(b.close)
+        low: Number(b.low), close: Number(b.close), volume: Number(b.volume) || 0
       };
     }).filter(function (b) {
       var good = isFinite(b.time) && isFinite(b.open) && isFinite(b.high) &&
@@ -3576,24 +3710,10 @@
       if (good) seen[b.time] = 1;
       return good;
     }).sort(function (a, b) { return a.time - b.time; });
+    var candles = qqqMergeLiveCandle(baseCandles, M);
+    var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : qqqRawDisplay(candles);
 
-    // Heikin Ashi transform — HA close = avg(O,H,L,C); HA open = mean of the
-    // previous HA open/close (first bar seeds from its own O/C). Same price
-    // scale as raw candles, so every GEX / range / dealer level still lines up.
-    var haCandles = (function (src) {
-      var out = [], pO = null, pC = null;
-      for (var i = 0; i < src.length; i++) {
-        var b = src[i];
-        var haC = (b.open + b.high + b.low + b.close) / 4;
-        var haO = pO === null ? (b.open + b.close) / 2 : (pO + pC) / 2;
-        out.push({ time: b.time, open: haO,
-          high: Math.max(b.high, haO, haC), low: Math.min(b.low, haO, haC), close: haC });
-        pO = haO; pC = haC;
-      }
-      return out;
-    })(candles);
-
-    var series;
+    var series, ema9Series = null, ema20Series = null, indicatorSeries = null;
     if (candles.length) {
       series = chart.addSeries(TV.CandlestickSeries, {
         upColor: "#00e676", downColor: "#ff453a",
@@ -3601,7 +3721,51 @@
         wickUpColor: "#69f0ae", wickDownColor: "#ff7961",
         priceLineVisible: false, lastValueVisible: true
       });
-      series.setData(haCandles);
+      series.setData(displayCandles);
+
+      if (QQQ_CHART_VIEW.ema) {
+        ema9Series = chart.addSeries(TV.LineSeries, {
+          title: "EMA 9", color: "#29b6f6", lineWidth: 1,
+          priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false
+        });
+        ema20Series = chart.addSeries(TV.LineSeries, {
+          title: "EMA 20", color: "#ff9f0a", lineWidth: 1,
+          priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false
+        });
+        ema9Series.setData(qqqEma(candles, 9));
+        ema20Series.setData(qqqEma(candles, 20));
+      }
+
+      if (QQQ_CHART_VIEW.pane === "volume") {
+        indicatorSeries = chart.addSeries(TV.HistogramSeries, {
+          title: "IEX volume", priceFormat: { type:"volume" },
+          priceLineVisible: false, lastValueVisible: false
+        }, 1);
+        indicatorSeries.setData(candles.map(function (b) {
+          return { time:b.time, value:b.volume || 0,
+                   color:b.close >= b.open ? "rgba(0,230,118,.55)" : "rgba(255,69,58,.55)" };
+        }));
+      } else if (QQQ_CHART_VIEW.pane === "adl") {
+        indicatorSeries = chart.addSeries(TV.LineSeries, {
+          title: "ADL · IEX", color: "#29b6f6", lineWidth: 2,
+          priceLineVisible: false, lastValueVisible: true, crosshairMarkerRadius: 3
+        }, 1);
+        indicatorSeries.setData(qqqAdl(candles));
+      } else if (QQQ_CHART_VIEW.pane === "rsi") {
+        indicatorSeries = chart.addSeries(TV.LineSeries, {
+          title: "RSI 14", color: "#b388ff", lineWidth: 2,
+          priceLineVisible: false, lastValueVisible: true, crosshairMarkerRadius: 3,
+          autoscaleInfoProvider: function () { return { priceRange:{ minValue:0, maxValue:100 } }; }
+        }, 1);
+        indicatorSeries.setData(qqqRsi(candles, 14));
+        indicatorSeries.createPriceLine({ price:70, color:"rgba(255,69,58,.55)", lineWidth:1,
+          lineStyle:TV.LineStyle.Dashed, axisLabelVisible:true, title:"70" });
+        indicatorSeries.createPriceLine({ price:30, color:"rgba(0,230,118,.55)", lineWidth:1,
+          lineStyle:TV.LineStyle.Dashed, axisLabelVisible:true, title:"30" });
+      }
+      try {
+        if (indicatorSeries && chart.panes && chart.panes()[1]) chart.panes()[1].setHeight(74);
+      } catch (paneHeightErr) {}
     } else {
       var cut = H.indexOf(e);
       var hist = cut >= 0 ? H.slice(0, cut + 1) : H.slice();
@@ -3626,23 +3790,10 @@
       series.setData(points);
     }
 
-    // Candles come from the 5-minute logger commits. Extend their right edge
-    // to the browser's fresher QQQ quote so the chart and the live page price
-    // always agree without pretending the quote is a full OHLC candle.
-    var quoteSeries = null, lastCandleTime = null;
-    if (candles.length && M.quoteLive && M.quoteTime !== null) {
-      var tail = haCandles[haCandles.length - 1];
-      var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
-      lastCandleTime = tail.time;
-      quoteSeries = chart.addSeries(TV.LineSeries, {
-        color: "#ff2be0", lineWidth: 2, lineStyle: TV.LineStyle.Dotted,
-        priceLineVisible: false, lastValueVisible: false,
-        crosshairMarkerVisible: true, crosshairMarkerRadius: 5
-      });
-      quoteSeries.setData(quoteBarTime > tail.time
-        ? [{ time: tail.time, value: tail.close }, { time: quoteBarTime, value: M.spot }]
-        : [{ time: tail.time, value: M.spot }]);
-    }
+    // During market hours the current minute is built from the browser's
+    // fresher 15-second quote. Its volume stays at zero until a real IEX bar
+    // arrives, so the price is live without inventing volume data.
+    var lastCandleTime = candles.length ? candles[candles.length - 1].time : null;
 
     var styleMap = { solid: TV.LineStyle.Solid, dashed: TV.LineStyle.Dashed,
                      dotted: TV.LineStyle.Dotted };
@@ -3716,8 +3867,11 @@
     ["pointermove", "wheel", "dblclick", "touchmove"].forEach(function (name) {
       el.addEventListener(name, interactionHandler, { passive:true });
     });
-    QQQ_TV = { chart: chart, resize: ro, quoteSeries: quoteSeries,
-               series: series, rangeHandler: rangeHandler,
+    QQQ_TV = { chart: chart, resize: ro, quoteSeries: null,
+               series: series, candleSeries: candles.length ? series : null,
+               rawCandles: candles, ema9Series: ema9Series, ema20Series: ema20Series,
+               indicatorSeries: indicatorSeries, paneType: QQQ_CHART_VIEW.pane,
+               mode: QQQ_CHART_VIEW.mode, rangeHandler: rangeHandler,
                spotLine: spotLine, lastCandleTime: lastCandleTime,
                quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60,
                el: el, interactionHandler: interactionHandler, alignPending:false };
@@ -3731,8 +3885,40 @@
     var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
     if (QQQ_TV) {
       try {
-        if (QQQ_TV.quoteSeries && quoteBarTime >= (QQQ_TV.quoteTime || 0)) {
-          QQQ_TV.quoteSeries.update({ time: quoteBarTime, value: M.spot });
+        if (QQQ_TV.candleSeries && quoteBarTime >= (QQQ_TV.quoteTime || 0)) {
+          var before = QQQ_TV.rawCandles.length ? QQQ_TV.rawCandles[QQQ_TV.rawCandles.length - 1] : null;
+          var mergedLive = qqqMergeLiveCandle(QQQ_TV.rawCandles, M);
+          var after = mergedLive.length ? mergedLive[mergedLive.length - 1] : null;
+          var changed = after && (!before || mergedLive.length !== QQQ_TV.rawCandles.length ||
+            after.time !== before.time || after.close !== before.close ||
+            after.high !== before.high || after.low !== before.low);
+          if (changed) {
+            QQQ_TV.rawCandles = mergedLive;
+            var shown = QQQ_TV.mode === "ha" ? qqqHaCandles(mergedLive) : qqqRawDisplay(mergedLive);
+            QQQ_TV.candleSeries.update(shown[shown.length - 1]);
+            if (QQQ_TV.ema9Series) {
+              var e9 = qqqEma(mergedLive, 9);
+              if (e9.length) QQQ_TV.ema9Series.update(e9[e9.length - 1]);
+            }
+            if (QQQ_TV.ema20Series) {
+              var e20 = qqqEma(mergedLive, 20);
+              if (e20.length) QQQ_TV.ema20Series.update(e20[e20.length - 1]);
+            }
+            if (QQQ_TV.indicatorSeries) {
+              if (QQQ_TV.paneType === "volume") {
+                QQQ_TV.indicatorSeries.update({ time:after.time, value:after.volume || 0,
+                  color:after.close >= after.open ? "rgba(0,230,118,.55)" : "rgba(255,69,58,.55)" });
+              } else if (QQQ_TV.paneType === "adl") {
+                var ad = qqqAdl(mergedLive);
+                if (ad.length) QQQ_TV.indicatorSeries.update(ad[ad.length - 1]);
+              } else if (QQQ_TV.paneType === "rsi") {
+                var rsi = qqqRsi(mergedLive, 14);
+                if (rsi.length) QQQ_TV.indicatorSeries.update(rsi[rsi.length - 1]);
+              }
+            }
+            QQQ_TV.lastCandleTime = after.time;
+            scheduleQqqGexAlignment(QQQ_TV.series, QQQ_TV.chart);
+          }
           QQQ_TV.quoteTime = quoteBarTime;
         }
         if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: M.quoteFresh ? "LIVE QQQ" : "QQQ" });
@@ -3740,9 +3926,15 @@
     }
     var sourceEl = document.getElementById("qqq-live-source");
     var chipEl = document.getElementById("qqq-live-chip");
+    var barChipEl = document.getElementById("qqq-live-bar-chip");
     var bars = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles) ? LIVE_AUCTION.candles.length : 0;
     if (sourceEl) sourceEl.textContent = qqqChartSource(M, bars);
     if (chipEl) chipEl.textContent = (M.quoteFresh ? "QQQ LIVE $" : "QQQ LAST $") + M.spot.toFixed(2);
+    if (barChipEl) {
+      var barState = qqqLiveBarState(M);
+      barChipEl.textContent = barState.text;
+      barChipEl.className = "qqq-chart-chip " + barState.tone;
+    }
 
     // The command center follows the same fast quote without remounting the
     // chart or rebuilding the cockpit.
@@ -4464,6 +4656,29 @@
     if (!Object.prototype.hasOwnProperty.call(QQQ_LAYERS, layer)) return;
     QQQ_LAYERS[layer] = !QQQ_LAYERS[layer];
     try { localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS)); } catch (eLayers) {}
+    var y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+  });
+
+  // Chart type and indicator controls. Rebuild the small chart only when the
+  // user changes a view, and remember that choice for the next visit.
+  document.addEventListener("click", function (ev) {
+    var t = (ev.target && ev.target.closest) ?
+      ev.target.closest("[data-qqq-mode],[data-qqq-ema],[data-qqq-pane]") : null;
+    if (!t) return;
+    if (t.hasAttribute("data-qqq-mode")) {
+      var mode = t.getAttribute("data-qqq-mode");
+      if (mode !== "raw" && mode !== "ha") return;
+      QQQ_CHART_VIEW.mode = mode;
+    } else if (t.hasAttribute("data-qqq-ema")) {
+      QQQ_CHART_VIEW.ema = !QQQ_CHART_VIEW.ema;
+    } else {
+      var pane = t.getAttribute("data-qqq-pane");
+      if (["volume", "adl", "rsi", "none"].indexOf(pane) < 0) return;
+      QQQ_CHART_VIEW.pane = pane;
+    }
+    try { localStorage.setItem("md:qqq-chart-view", JSON.stringify(QQQ_CHART_VIEW)); } catch (eView) {}
     var y = window.scrollY;
     render();
     window.scrollTo(0, y);
