@@ -182,6 +182,15 @@ def _put_greeks(S, K, T, r, q, sigma):
     return delta, gamma, theta, vega
 
 
+def _bs_gamma(S, K, T, r, q, sigma):
+    """Per-share Black-Scholes gamma at a hypothetical underlying price."""
+    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:
+        return None
+    sqrtT = math.sqrt(T)
+    d1 = (math.log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrtT)
+    return math.exp(-q * T) * _norm_pdf(d1) / (S * sigma * sqrtT)
+
+
 def _vanna_charm(S, K, T, r, q, sigma):
     """Second-order hedge dials (3v3 notes F1), closed-form from d1/d2 — no extra
     chain data needed. Verified against finite differences; identical for calls
@@ -279,7 +288,9 @@ def build_snapshot_rows(opt_type="call", spot=None):
     today = datetime.date.today().isoformat()
     if spot is None:
         spot = get_spot_price()
-    low, high = spot - WINDOW, spot + WINDOW
+    # Align the fetch window to whole-dollar strikes. A wall should not vanish
+    # merely because spot moved a few cents beyond an arbitrary decimal edge.
+    low, high = math.floor(spot - WINDOW), math.ceil(spot + WINDOW)
     snapshots = get_option_chain(low, high, today, opt_type)
     if not snapshots:
         print(f"{now_utc.strftime('%H:%M:%S')} UTC: no {opt_type} contracts near spot "
@@ -399,18 +410,26 @@ def compute_gex_live(call_rows, put_rows, spot):
             k = num(r.get("strike"))
             g = num(r.get("gamma"))
             oi = num(r.get("open_interest"))
-            if k is None or g is None or not oi:
+            if k is None or not oi:
                 continue
             oi = int(oi)
             d = by.setdefault(k, {"strike": k, "call_gex": 0.0, "put_gex": 0.0,
                                   "call_oi": 0, "put_oi": 0, "dex": 0.0, "vex": 0.0,
                                   "tex": 0.0, "vannaex": 0.0, "charmex": 0.0,
                                   "call_g": 0.0, "put_g": 0.0})
+            if is_call:
+                d["call_oi"] += oi
+            else:
+                d["put_oi"] += oi
+            # OI walls remain valid even when the free quote feed cannot infer
+            # a usable IV/gamma for this snapshot. Exposure math still skips it.
+            if g is None:
+                continue
             dollars = g * oi * unit
             if is_call:
-                d["call_gex"] += dollars; d["call_oi"] += oi; d["call_g"] += g * oi
+                d["call_gex"] += dollars; d["call_g"] += g * oi
             else:
-                d["put_gex"] -= dollars; d["put_oi"] += oi; d["put_g"] += g * oi
+                d["put_gex"] -= dollars; d["put_g"] += g * oi
             de, ve, th = num(r.get("delta")), num(r.get("vega")), num(r.get("theta"))
             if de is not None:
                 d["dex"] += de * oi * CONTRACT_MULTIPLIER * spot
@@ -452,30 +471,62 @@ def compute_gex_live(call_rows, put_rows, spot):
     pg = sum(s["put_g"] for s in strikes)
     gamma_ratio = round(cg / (cg + pg), 4) if (cg + pg) else None
 
-    flip, run, method, cum = None, 0.0, None, []
-    for i, s in enumerate(strikes):
-        prev = run
-        run += s["net_gex"]
-        cum.append((s["strike"], run))
-        if i and ((prev < 0 <= run) or (prev > 0 >= run)):
-            a, b = strikes[i - 1]["strike"], s["strike"]
-            frac = abs(prev) / (abs(prev) + abs(run)) if (prev or run) else 0.5
-            flip = round(a + (b - a) * frac, 2)
-            method = "zero crossing"
-    if flip is None and cum:
-        k, _ = min(cum, key=lambda t: abs(t[1]))
-        flip = round(k, 2)
-        method = "nearest-to-zero (no crossing in window)"
+    # 3v3 notes F2: the zero-gamma level is NOT a cumulative sum across strikes.
+    # Reprice every option's gamma at a ladder of hypothetical QQQ prices, sum
+    # the whole chain at each price, then solve for the nearest sign crossing.
+    repricing_rows = []
+    for rows, sign in ((call_rows, 1.0), (put_rows, -1.0)):
+        for r in rows:
+            k, iv, oi = num(r.get("strike")), num(r.get("iv")), num(r.get("open_interest"))
+            exp = r.get("expiration")
+            if not (k and iv and oi and exp):
+                continue
+            try:
+                T = time_to_expiry_years(_now, exp)
+            except Exception:
+                continue
+            repricing_rows.append((k, iv, oi, T, sign))
 
-    call_wall = max(strikes, key=lambda s: s["call_gex"])["strike"]
-    # Put wall = strike with the most negative NET dealer gamma (max short gamma
-    # = the real support level). Using raw put_gex snapped it to the ATM strike,
-    # whose put gamma is huge just from being at-the-money, so the wall kept
-    # printing on top of spot. Net gamma puts it at the true downside level.
-    put_wall = min(strikes, key=lambda s: s["net_gex"])["strike"]
+    flip = None
+    method = "no zero crossing in captured window"
+    captured_span = ((max(x[0] for x in repricing_rows) - min(x[0] for x in repricing_rows))
+                     if repricing_rows else 0.0)
+    enough_coverage = captured_span >= max(4.0, 2.0 * WINDOW - 2.0)
+    if repricing_rows and enough_coverage:
+        low = min(x[0] for x in repricing_rows)
+        high = max(x[0] for x in repricing_rows)
+        steps = max(2, int(round((high - low) / 0.10)))
+        curve = []
+        for i in range(steps + 1):
+            test_spot = low + (high - low) * i / steps
+            total = 0.0
+            for k, iv, oi, T, sign in repricing_rows:
+                gamma = _bs_gamma(test_spot, k, T, RISK_FREE_RATE, DIVIDEND_YIELD, iv)
+                if gamma is not None:
+                    total += sign * gamma * oi
+            curve.append((test_spot, total))
+        crossings = []
+        for (a_spot, a_gex), (b_spot, b_gex) in zip(curve, curve[1:]):
+            if a_gex == 0:
+                crossings.append(a_spot)
+            elif (a_gex < 0 < b_gex) or (a_gex > 0 > b_gex) or b_gex == 0:
+                frac = abs(a_gex) / (abs(a_gex) + abs(b_gex)) if (a_gex or b_gex) else 0.5
+                crossings.append(a_spot + (b_spot - a_spot) * frac)
+        if crossings:
+            flip = round(min(crossings, key=lambda value: abs(value - spot)), 2)
+            method = "zero crossing"
+    elif repricing_rows:
+        method = "insufficient strike coverage"
+
+    # The reading material defines walls as heavy-open-interest strikes. OI is
+    # an OCC end-of-day positioning measure, so these should be stable instead
+    # of jumping whenever the largest instantaneous gamma estimate changes.
+    overhead = [s for s in strikes if s["strike"] >= spot] or strikes
+    support = [s for s in strikes if s["strike"] <= spot] or strikes
+    call_wall = max(overhead, key=lambda s: s["call_oi"])["strike"]
+    put_wall = max(support, key=lambda s: s["put_oi"])["strike"]
     top_oi = max(strikes, key=lambda s: s["call_oi"] + s["put_oi"])["strike"]
 
-    now_utc = datetime.datetime.now(datetime.timezone.utc)
     return {
         "symbol": SYMBOL, "spot": round(spot, 2),
         "net_gex": net, "net_dex": net_dex, "net_vex": net_vex, "net_tex": net_tex,
@@ -492,9 +543,11 @@ def compute_gex_live(call_rows, put_rows, spot):
                      "dex": s["dex"], "vex": s["vex"], "tex": s["tex"],
                      "vannaex": s["vannaex"], "charmex": s["charmex"]} for s in strikes],
         "contracts_used": len(call_rows) + len(put_rows),
-        "dealer_convention": "dealers long call gamma, short put gamma",
+        "dealer_convention": "estimated: dealers long call gamma, short put gamma",
+        "gamma_flip_basis": "whole chain repriced across hypothetical spot ladder",
+        "wall_basis": "largest overhead call OI / downside put OI strike in captured window",
         "source": "5-min greeks logger (calls + puts, 0DTE)",
-        "generated_utc": now_utc.strftime("%Y-%m-%d %H:%M:%S"),
+        "generated_utc": _now.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
 
@@ -521,19 +574,6 @@ def gex_intraday_point(gx):
     levels = gx.get("levels") or {}
     strikes = gx.get("strikes") or []
 
-    def extreme(test, pick):
-        found = None
-        for row in strikes:
-            try:
-                value = float(row.get("net_gex"))
-                strike = float(row.get("strike"))
-            except (TypeError, ValueError):
-                continue
-            if not test(value) or (found is not None and not pick(value, found[1])):
-                continue
-            found = (strike, value)
-        return found[0] if found else None
-
     def concentration(field):
         found = None
         for row in strikes:
@@ -553,8 +593,6 @@ def gex_intraday_point(gx):
         "call_wall": levels.get("call_wall"),
         "put_wall": levels.get("put_wall"),
         "oi_magnet": levels.get("highest_oi_strike"),
-        "max_pos_gamma": extreme(lambda n: n > 0, lambda n, old: n > old),
-        "max_neg_gamma": extreme(lambda n: n < 0, lambda n, old: n < old),
         "vanna_strike": concentration("vannaex"),
         "charm_strike": concentration("charmex"),
         "theta_strike": concentration("tex"),
