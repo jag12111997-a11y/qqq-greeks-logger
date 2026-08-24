@@ -146,8 +146,8 @@
                   gap:12px; align-items:stretch; margin:0; }
   .qqq-top-grid > .qqq-primary-chart,
   .qqq-top-grid > .qqq-gex-profile { min-width:0; }
-  .qqq-top-grid .qqq-chart-shell { min-height:240px; }
-  .qqq-top-grid .qqq-chart-canvas { height:240px; }
+  .qqq-top-grid .qqq-chart-shell { min-height:300px; }
+  .qqq-top-grid .qqq-chart-canvas { height:300px; }
   .qqq-gex-profile { height:100%; border-left:1px solid #1c1c28; padding-left:12px; }
   .flow section.qqq-market-card { margin-bottom:12px; }
   .qqq-gex-pane-title { display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -174,7 +174,9 @@
                          text-transform:uppercase; white-space:nowrap; }
   .qqq-gex-level b { display:block; margin-top:2px; color:var(--txt); font-size:12px;
                      font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .qqq-gex-foot { color:var(--faint); font-size:9.5px; line-height:1.45; margin-top:8px; }
+  /* The long GEX explainer used to make the right column taller than the chart,
+     leaving a large blank block on the left. It now lives on the panel tooltip. */
+  .qqq-gex-foot { display:none; }
   .qqq-gex-window-note { color:var(--warn); font-size:9.5px; line-height:1.4; margin-top:6px; }
   .qqq-gex-window-note:empty { display:none; }
   .qqq-command-center { padding:0 !important; overflow:hidden; margin-bottom:12px !important; }
@@ -184,19 +186,40 @@
   .qqq-command-sync { margin-left:auto; color:var(--up); font-size:9.5px;
                       letter-spacing:.7px; text-transform:uppercase; }
   .qqq-command-body { padding:16px 17px 17px; }
-  .qqq-command-summary { padding-bottom:16px; border-bottom:1px solid #1c1c28; }
-  .qqq-hud-chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 6px; }
+  .qqq-command-summary { padding-bottom:5px; border-bottom:0; }
+  .qqq-command-chips { display:flex; flex-wrap:wrap; align-items:stretch; gap:5px; margin:0; }
+  .qqq-hud-chip { position:relative; display:inline-flex; align-items:baseline; gap:6px;
+                  min-height:27px; max-width:100%; overflow:hidden; padding:4px 9px;
+                  border:1px solid #2a2a38; border-radius:7px; background:rgba(255,255,255,.035);
+                  color:var(--dim); font-size:10px; line-height:1.3; white-space:nowrap; }
+  .qqq-hud-chip .k { color:currentColor; font-size:8.5px; letter-spacing:.65px;
+                     text-transform:uppercase; }
+  .qqq-hud-chip .v { color:var(--txt); font-size:12px; font-weight:700; }
+  .qqq-hud-chip .sub { color:var(--faint); font-size:9.5px; }
+  .qqq-hud-chip.up { color:var(--up); border-color:rgba(0,230,118,.45); }
+  .qqq-hud-chip.down { color:var(--down); border-color:rgba(255,69,58,.45); }
+  .qqq-hud-chip.warn { color:var(--warn); border-color:rgba(255,214,0,.45); }
+  .qqq-hud-chip.up .v { color:var(--up); }
+  .qqq-hud-chip.down .v { color:var(--down); }
+  .qqq-hud-chip.warn .v { color:var(--warn); }
+  .qqq-hud-chip.accent { color:var(--accent); border-color:rgba(255,43,224,.45); }
+  .qqq-hud-chip.info { color:#29b6f6; border-color:rgba(41,182,246,.48); }
+  .qqq-hud-chip.violet { color:#b388ff; border-color:rgba(179,136,255,.48); }
+  .qqq-hud-chip.dim { color:var(--dim); border-color:#2a2a38; }
+  .qqq-hud-chip .qqq-mini-bar { position:absolute; left:0; bottom:0; height:2px;
+                                border-radius:0 2px 2px 0; opacity:.9; }
   .qqq-command-flow { padding-top:2px; }
   /* Q3: per-category Read blocks replaced by the single synthesis (QQQ tab only). */
   .flow .read { display:none !important; }
-  .qqq-synthesis { margin:0 0 6px; display:flex; flex-direction:column; gap:6px; }
-  .qqq-syn-row { display:grid; grid-template-columns:104px 1fr; gap:12px; align-items:start; }
+  .qqq-synthesis { margin:1px 0 6px; display:flex; flex-direction:column; gap:5px; }
+  .qqq-syn-row { display:grid; grid-template-columns:104px 1fr; gap:8px; align-items:start; }
   .qqq-syn-k { color:var(--accent); font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; padding-top:3px; }
   .qqq-syn-v { font-size:13px; color:var(--txt); line-height:1.5; }
   .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
   @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
-  .qqq-model-detail-inline { margin-top:8px; padding-top:8px; border-top:1px solid #1c1c28; }
-  .qqq-model-detail-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .qqq-model-detail-inline { margin-top:7px; padding-top:7px; border-top:1px solid #1c1c28; }
+  .qqq-model-detail-inline.qqq-command-detail { margin-top:0; padding-top:0; border-top:0; }
+  .qqq-model-detail-head { display:flex; align-items:center; gap:6px; margin-bottom:7px; }
   .qqq-model-detail-title { color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
                             text-transform:uppercase; }
   .qqq-deep-dive { padding:0 !important; overflow:hidden; }
@@ -264,8 +287,8 @@
     .qqq-chart-exposure { grid-template-columns:repeat(2,minmax(110px,1fr)); }
     .qqq-chart-controls { margin-bottom:7px; }
     .qqq-top-grid { grid-template-columns:1fr; }
-    .qqq-top-grid .qqq-chart-shell { min-height:220px; }
-    .qqq-top-grid .qqq-chart-canvas { height:220px; }
+    .qqq-top-grid .qqq-chart-shell { min-height:270px; }
+    .qqq-top-grid .qqq-chart-canvas { height:270px; }
     .qqq-gex-plot { height:220px; }
     .qqq-gex-profile { border-left:0; border-top:1px solid #1c1c28; padding:12px 0 0; }
     .qqq-command-sync { display:none; }
@@ -1677,27 +1700,13 @@
   // Game-HUD command board for the Nasdaq tab — a glance dashboard (hero score,
   // gauges, status lights, compact leverage bars) built from the same live data
   // the cockpit uses. The heavy charts/tables live in the collapsed panels below.
-  // Unified compact chip — the ONE size/style used for EVERY stat across the QQQ
-  // view (HUD, auction, context, lights). Colour-coded border+label: green up /
-  // red down / amber warn / grey dim / lavender neutral. Value white. Identical
-  // to secCockpit's tile() so the whole view is one cohesive chip field.
-  function pill(label, big, sub, cn) {
-    var col = { up: "#00e676", down: "#ff453a", warn: "#ffd600", dim: "#8b8ba6", flat: "#b388ff" }[cn] || "#8b8ba6";
-    return '<span style="display:inline-flex;align-items:baseline;gap:7px;' +
-      'background:rgba(255,255,255,.04);border:1px solid ' + col + ';border-radius:7px;' +
-      'padding:4px 10px;font-size:12px;line-height:1.3;white-space:nowrap;max-width:100%">' +
-      '<span style="font-size:8.5px;letter-spacing:.6px;color:' + col + ';text-transform:uppercase">' + esc(label) + "</span>" +
-      '<b style="color:var(--txt);font-weight:700">' + big + "</b>" +
-      (sub ? '<span style="font-size:10px;color:var(--faint)">' + sub + "</span>" : "") +
-      "</span>";
-  }
-
   function secNasdaqHUD(e, chartModel) {
     var S = nasdaqCommandModel(e, chartModel);
     var mk = S.mk, q = S.q, vix = S.vix, gx = S.g;
     var g = S.geometry, dv = S.dv, vr2 = S.vr2, sp = S.spread, gpos = S.gpos;
     var hostile = S.hostile, friendly = S.friendly;
     var call = S.call;
+    function C(v) { return v >= 0 ? "#00e676" : "#ff453a"; }
 
     var qz = q && has(q.z20) ? q.z20 : null;
     var qMove = q && has(q.last) && isFinite(S.chart.prevClose) ? q.last - S.chart.prevClose : null;
@@ -1705,29 +1714,52 @@
     var lv = (_tq && has(_tq.z20) && _sq && has(_sq.z20)) ? (_tq.z20 - _sq.z20) / 2 : null;
     var lvWord = lv === null ? "—" : lv >= 0.5 ? "callish" : lv <= -0.5 ? "bearish" : "balanced";
     var used = S.chart.used;
-    var callTone = hostile >= 2 ? "down" : (friendly >= 2 && hostile === 0) ? "up" : "warn";
+    var usedPct = used === null ? 0 : Math.min(1, used);
+    var usedCol = used === null ? "#8b8ba6" : used < 0.5 ? "#00e676" : used < 1 ? "#ffd600" : "#ff453a";
 
-    // Every stat is ONE chip size — no oversized hero boxes or bar gauges.
-    var chips =
-      pill("QQQ stretch", (qz !== null ? "z " + signed(qz, 2) : "—"),
-        '<span id="qqq-command-move">' +
-        (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
-        '</span><span id="qqq-command-price">' + (q && has(q.last) ? num(q.last, 2) : "") + '</span>',
-        qz !== null ? (qz >= 0 ? "up" : "down") : "dim") +
-      pill("The call", call, hostile + " hostile · " + friendly + " friendly", callTone) +
-      pill("Leverage", lv === null ? "—" : lvWord + " " + signed(lv, 2), "",
-        (lv === null || Math.abs(lv) < 0.5) ? "flat" : (lv > 0 ? "up" : "down")) +
-      pill("Range used", '<span id="qqq-command-range-used">' +
-        (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span>',
-        "vs 1σ", used === null ? "dim" : used < 0.5 ? "up" : used < 1 ? "warn" : "down");
+    // One compact visual language for every glance signal. These chips match
+    // the Auction / Context pills below and replace the old hero cards + gauges.
+    function chip(label, value, sub, tone, extra) {
+      return '<span class="qqq-hud-chip ' + (tone || "dim") + '">' +
+        (label ? '<span class="k">' + label + '</span>' : "") +
+        (value ? '<span class="v">' + value + '</span>' : "") +
+        (sub ? '<span class="sub">' + sub + '</span>' : "") +
+        (extra || "") + '</span>';
+    }
+    function light(txt, tone) {
+      return chip("", (tone === "dim" ? "" : "● ") + txt, "", tone);
+    }
 
-    if (dv !== null) chips += pill("√det(G)", num(dv, 3), dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy", dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
-    if (vr2 !== null) chips += pill("VR(2)", num(vr2, 2), vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random", vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
-    if (ok(gx) && has(gx.regime)) chips += pill("Gamma", gpos ? "+γ" : "−γ", gpos ? "dampen" : "amplify", gpos ? "up" : "down");
-    if (sp !== null) chips += pill("Edge", signed(sp, 1, "pp"), "real−impl", sp > 0 ? "up" : "down");
-    if (has(vix)) chips += pill("VIX", num(vix, 2), "", vix >= 20 ? "warn" : "dim");
+    // Stable left-to-right decision hierarchy: action first, then the signals
+    // that can veto a trade, then execution state, then supporting context.
+    // Positions never jump when a chip changes colour, which lowers scan load.
+    var chips = '<div class="qqq-command-chips">';
+    chips += chip("Call", "● " + call, hostile + " hostile · " + friendly + " friendly",
+      call === "STAND DOWN" ? "down" : call === "LEAN FADE" ? "up" : "warn");
+    if (dv !== null) chips += light("√det(G) " + num(dv, 3) + " · " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
+    if (vr2 !== null) chips += light("VR(2) " + num(vr2, 2) + " · " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
+    chips += chip("Range", '<span id="qqq-command-range-used" style="color:' + usedCol + '">' +
+      (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span>', "of 1σ", used === null ? "dim" : used < 0.5 ? "up" : used < 1 ? "warn" : "down",
+      '<i id="qqq-command-range-bar" class="qqq-mini-bar" style="width:' +
+      (usedPct * 100).toFixed(0) + '%;background:' + usedCol + '"></i>');
+    if (ok(gx) && has(gx.regime)) chips += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
+    chips += chip("QQQ stretch", qz !== null ? "z " + signed(qz, 2) : "—",
+      '<span id="qqq-command-move">' +
+      (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
+      '</span><span id="qqq-command-price">' + (q && has(q.last) ? num(q.last, 2) : "") + '</span>',
+      qz === null ? "dim" : qz >= 0 ? "up" : "down");
+    if (sp !== null) chips += light("edge " + signed(sp, 1, "pp"), sp > 0 ? "up" : "down");
+    chips += chip("Leverage", lv === null ? "—" : lvWord + " " + signed(lv, 2),
+      (_tq && _sq && has(_tq.z20) && has(_sq.z20))
+        ? "T " + signed(_tq.z20, 2) + " / S " + signed(_sq.z20, 2) : "TQQQ / SQQQ",
+      "accent");
+    if (has(vix)) chips += light("VIX " + num(vix, 2), vix >= 20 ? "warn" : "dim");
+    chips += "</div>";
 
-    return '<div id="qqq-command-live" class="qqq-hud-chips" data-prev-close="' +
+    // LEVERAGE FAMILY · TODAY bar strip removed 2026-08-17 (Q4). The full
+    // "Nasdaq — QQQ leverage family" Star-Players section (secNasdaqStars) is kept.
+
+    return '<div id="qqq-command-live" class="qqq-command-summary" data-prev-close="' +
       (isFinite(S.chart.prevClose) ? S.chart.prevClose : "") + '" data-vix="' +
       (isFinite(vix) ? vix : "") + '">' + chips + "</div>";
   }
@@ -2869,6 +2901,25 @@
       .catch(function () {});
   }
 
+  // Compact one-point-per-snapshot history written by the same greeks logger.
+  // This powers real step-lines through time; it is never reconstructed from
+  // today's final level because doing that would make the past look predictive.
+  var LIVE_GEX_INTRADAY = null;
+  function loadGexIntraday() {
+    return fetch("gex_intraday.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (j && Array.isArray(j.points)) {
+          var changed = !LIVE_GEX_INTRADAY || LIVE_GEX_INTRADAY.updated_utc !== j.updated_utc;
+          LIVE_GEX_INTRADAY = j;
+          if (changed && idx === FULL.length - 1) {
+            var y = window.scrollY; render(); window.scrollTo(0, y);
+          }
+        }
+      })
+      .catch(function () {});
+  }
+
   // Live auction metrics (VWAP, A/D line, opening range, volume) from the 60s
   // logger's QQQ 1-min IEX bars (market-dash/auction_live.json). Same guarded
   // pattern as Live GEX — missing file just hides the tiles, never breaks the page.
@@ -2894,13 +2945,57 @@
   // snapshot includes candles, the same chart falls back to real logged QQQ
   // session prices instead of inventing OHLC bars.
   var QQQ_TV = null;
+  // Once the user pans or zooms, keep that exact horizontal view through any
+  // real data remount. The ordinary 60-second quote refresh no longer remounts
+  // the chart at all while the user is working in it.
+  var QQQ_VIEW_STATE = { userAdjusted: false, logicalRange: null };
   var QQQ_LAYERS = { core: true, ranges: true, flow: true };
+  var QQQ_CHART_VIEW = { mode: "raw", ema: true, pane: "adl" };
   try {
     var _ql = JSON.parse(localStorage.getItem("md:qqq-layers") || "{}");
     ["core", "ranges", "flow"].forEach(function (k) {
       if (typeof _ql[k] === "boolean") QQQ_LAYERS[k] = _ql[k];
     });
   } catch (eQqqLayers) {}
+  // One-time migration to the cleaner reference-style chart: core GEX paths
+  // on, optional ranges/second-order paths off. After this, the user's own
+  // choices are remembered normally.
+  try {
+    if (!localStorage.getItem("md:qqq-step-history-v1")) {
+      QQQ_LAYERS.core = true;
+      QQQ_LAYERS.ranges = false;
+      QQQ_LAYERS.flow = false;
+      localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS));
+      localStorage.setItem("md:qqq-step-history-v1", "1");
+    }
+  } catch (eQqqStepDefault) {}
+  try {
+    var _qv = JSON.parse(localStorage.getItem("md:qqq-chart-view") || "{}");
+    if (_qv.mode === "raw" || _qv.mode === "ha") QQQ_CHART_VIEW.mode = _qv.mode;
+    if (typeof _qv.ema === "boolean") QQQ_CHART_VIEW.ema = _qv.ema;
+    if (["volume", "adl", "rsi", "none"].indexOf(_qv.pane) >= 0) QQQ_CHART_VIEW.pane = _qv.pane;
+  } catch (eQqqView) {}
+
+  function qqqMarketOpen() {
+    try {
+      var parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York", weekday: "short", hour: "numeric",
+        minute: "numeric", hour12: false
+      }).formatToParts(new Date());
+      var p = {};
+      parts.forEach(function (x) { p[x.type] = x.value; });
+      if (["Sat", "Sun"].indexOf(p.weekday) >= 0) return false;
+      var mins = Number(p.hour) * 60 + Number(p.minute || 0);
+      return isFinite(mins) && mins >= 570 && mins < 960;
+    } catch (marketClockErr) { return false; }
+  }
+
+  function qqqLiveBarState(M) {
+    if (!M.latest) return { text: "HISTORICAL BARS", tone: "" };
+    if (!qqqMarketOpen()) return { text: "MARKET CLOSED · LAST BARS", tone: "" };
+    if (M.quoteFresh) return { text: "LIVE 1M BAR · 15S QUOTES", tone: "up" };
+    return { text: "WAITING FOR FRESH QUOTE", tone: "warn" };
+  }
 
   function qqqChartModel(e) {
     var latest = idx === FULL.length - 1;
@@ -3065,6 +3160,7 @@
     }
     if (liveBars) {
       bits.push("Alpaca IEX 1-minute candles · " + liveBars + " bars");
+      if (M.quoteFresh && qqqMarketOpen()) bits.push("current 1m bar from 15s quotes");
       if (M.ageMin !== null) bits.push(M.ageMin <= 1 ? "candles updated now" : "candles " + M.ageMin + "m old");
     } else {
       bits.push("logged sessions · waiting for live candles");
@@ -3081,6 +3177,13 @@
       return '<span class="qqq-chart-chip ' + s.tone + '"' +
         (s.liveQuote ? ' id="qqq-live-chip"' : "") + '>' + esc(s.text) + "</span>";
     }).join("");
+    var liveBarState = qqqLiveBarState(M);
+    chips += '<span id="qqq-live-bar-chip" class="qqq-chart-chip ' + liveBarState.tone + '">' +
+      esc(liveBarState.text) + '</span>';
+    if (M.latest && LIVE_GEX_INTRADAY && LIVE_GEX_INTRADAY.points && LIVE_GEX_INTRADAY.points.length > 1) {
+      chips += '<span class="qqq-chart-chip up">GEX HISTORY · ' +
+        LIVE_GEX_INTRADAY.points.length + ' × 1M</span>';
+    }
     var g = M.g || {};
     var exposure = [
       ["GEX", g.net_gex], ["DEX", g.net_dex], ["VEX", g.net_vex],
@@ -3094,23 +3197,38 @@
       return '<button type="button" class="qqq-layer" data-qqq-layer="' + id +
         '" aria-pressed="' + (QQQ_LAYERS[id] ? "true" : "false") + '">' + esc(label) + "</button>";
     }
+    function viewButton(attr, id, label, on) {
+      return '<button type="button" class="qqq-layer" ' + attr + '="' + id +
+        '" aria-pressed="' + (on ? "true" : "false") + '">' + esc(label) + "</button>";
+    }
     var body =
       '<div class="qqq-chart-meta"><span id="qqq-live-source">' + esc(source) + '</span>' +
       '<span class="tv-credit">Includes <a href="https://www.tradingview.com/" target="_blank" rel="noopener">' +
       'Lightweight Charts&trade; by TradingView, Inc.</a></span></div>' +
       '<div class="qqq-chart-status">' + chips + "</div>" +
       '<div class="qqq-chart-exposure">' + exposure + "</div>" +
+      '<div class="qqq-chart-controls"><span class="label">Chart</span>' +
+        viewButton("data-qqq-mode", "raw", "Raw candles", QQQ_CHART_VIEW.mode === "raw") +
+        viewButton("data-qqq-mode", "ha", "Heikin-Ashi", QQQ_CHART_VIEW.mode === "ha") +
+        viewButton("data-qqq-ema", "ema", "EMA 9 / 20", QQQ_CHART_VIEW.ema) +
+        '<span class="label" style="margin-left:7px">Lower pane</span>' +
+        viewButton("data-qqq-pane", "adl", "ADL", QQQ_CHART_VIEW.pane === "adl") +
+        viewButton("data-qqq-pane", "volume", "Volume", QQQ_CHART_VIEW.pane === "volume") +
+        viewButton("data-qqq-pane", "rsi", "RSI 14", QQQ_CHART_VIEW.pane === "rsi") +
+        viewButton("data-qqq-pane", "none", "Off", QQQ_CHART_VIEW.pane === "none") +
+      '</div>' +
       '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
-        layerButton("core", "GEX levels + odds") + layerButton("ranges", "Expected ranges") +
-        layerButton("flow", "Vanna / charm / theta") + "</div>" +
+        layerButton("core", "GEX history + odds") + layerButton("ranges", "Expected ranges") +
+        layerButton("flow", "Vanna / charm / theta history") + "</div>" +
       '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
       'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna, charm and theta overlays"></div></div>' +
       '<div class="qqq-chart-key">' +
-        '<span style="color:#ffd600"><i></i>flip / walls / OI / max &plusmn;gamma</span>' +
+        '<span style="color:#ffd600"><i></i>step lines = real logger history</span>' +
         '<span style="color:#29b6f6"><i></i>68% / 95% into close</span>' +
         '<span style="color:#ff00e5"><i></i>GARCH 68%</span>' +
         '<span style="color:#00bfa5"><i></i>vanna / charm / theta concentration</span>' +
-        '<span style="color:#ff2be0"><i></i>live QQQ quote</span>' +
+        '<span style="color:#29b6f6"><i></i>EMA 9 / ADL</span>' +
+        '<span style="color:#ff9f0a"><i></i>EMA 20</span>' +
       '</div>';
     return bodyOnly ? body : secWide("QQQ · live price + dealer map", body);
   }
@@ -3307,7 +3425,7 @@
     var heat = secOptHeatmap(_tf) || secTimeFootprint(_tf) || "";
     var sec2 = get(e, "sectors");
     var sectors = (ok(sec2) && get(sec2, "rows", []).length)
-      ? '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      ? '<div style="margin-top:14px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
       : "";
     if (!heat && !sectors) return "";
@@ -3322,21 +3440,21 @@
       // CHART on top; ALL the info (HUD + full model detail + cockpit) is packed
       // into the space directly UNDER the chart. Positioning stays at the bottom.
       '<div class="qqq-top-grid">' +
-        '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>' +
-        '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile">' +
+        '<div class="qqq-primary-chart">' +
+          secQqqTradingChart(e, true, chartModel) +
+          secNasdaqHUD(e, chartModel) +
+        '</div>' +
+        '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile" ' +
+          'title="Strike price shares the QQQ chart scale. Green and red net-GEX bars extend right and left from zero; lines match the dealer-map overlays.">' +
           '<div class="qqq-gex-pane-title"><span>GEX · synchronized strike profile</span>' +
           '<small>shared QQQ price scale</small></div>' +
           secQqqGexProfile(e, true, chartModel) +
         '</aside>' +
       '</div>' +
-      secNasdaqHUD(e, chartModel) +
-      '<div class="qqq-model-detail-inline">' +
-        '<div class="qqq-model-detail-head">' +
-          '<span class="qqq-model-detail-title">Full model detail</span>' +
-          '<span class="qqq-command-sync">● one synchronized live model</span>' +
-        '</div>' +
+      '<div class="qqq-model-detail-inline qqq-command-detail">' +
+        qqqPlanBlock() +
         secSynthesis(e, chartModel) +
-        '<div class="qqq-command-flow">' + secCockpit(e, chartModel) + '</div>' +
+        '<div class="qqq-command-flow">' + secCockpit(e, chartModel, true) + '</div>' +
       '</div>' +
       secQqqPositioning(e);
     return secWide("QQQ · live price + synchronized GEX", body)
@@ -3379,10 +3497,18 @@
 
   function destroyQqqChart() {
     if (!QQQ_TV) return;
+    try {
+      if (QQQ_VIEW_STATE.userAdjusted && QQQ_TV.chart && QQQ_TV.chart.timeScale) {
+        var savedRange = QQQ_TV.chart.timeScale().getVisibleLogicalRange();
+        if (savedRange && isFinite(savedRange.from) && isFinite(savedRange.to)) {
+          QQQ_VIEW_STATE.logicalRange = { from:savedRange.from, to:savedRange.to };
+        }
+      }
+    } catch (saveRangeErr) {}
     try { if (QQQ_TV.resize) QQQ_TV.resize.disconnect(); } catch (err) {}
     try {
       if (QQQ_TV.el && QQQ_TV.interactionHandler) {
-        ["pointermove", "wheel", "dblclick", "touchmove"].forEach(function (name) {
+        ["pointerdown", "pointermove", "wheel", "dblclick", "touchstart", "touchmove"].forEach(function (name) {
           QQQ_TV.el.removeEventListener(name, QQQ_TV.interactionHandler);
         });
       }
@@ -3427,7 +3553,9 @@
     var pxToView = viewH / svgHeight;
     var panePxH = chartEl.clientHeight;
     try {
-      if (chart && chart.timeScale && chart.timeScale().height) {
+      if (chart && chart.panes && chart.panes()[0] && chart.panes()[0].getHeight) {
+        panePxH = chart.panes()[0].getHeight();
+      } else if (chart && chart.timeScale && chart.timeScale().height) {
         panePxH -= chart.timeScale().height();
       }
     } catch (paneErr) {}
@@ -3485,6 +3613,86 @@
     });
   }
 
+  function qqqMergeLiveCandle(src, M) {
+    var rows = src.map(function (b) {
+      return { time:b.time, open:b.open, high:b.high, low:b.low,
+               close:b.close, volume:b.volume || 0, quoteBuilt:!!b.quoteBuilt };
+    });
+    if (!M.latest || !M.quoteFresh || !qqqMarketOpen() || M.quoteTime === null || !isFinite(M.spot)) return rows;
+    var t = Math.floor(M.quoteTime / 60000) * 60;
+    var last = rows.length ? rows[rows.length - 1] : null;
+    if (last && t < last.time) return rows;
+    if (last && t === last.time) {
+      last.high = Math.max(last.high, M.spot);
+      last.low = Math.min(last.low, M.spot);
+      last.close = M.spot;
+      last.quoteBuilt = true;
+      return rows;
+    }
+    var contiguous = last && t - last.time <= 120;
+    var open = contiguous ? last.close : M.spot;
+    rows.push({ time:t, open:open, high:Math.max(open, M.spot),
+                low:Math.min(open, M.spot), close:M.spot, volume:0, quoteBuilt:true });
+    return rows;
+  }
+
+  function qqqHaCandles(src) {
+    var out = [], pO = null, pC = null;
+    for (var i = 0; i < src.length; i++) {
+      var b = src[i], haC = (b.open + b.high + b.low + b.close) / 4;
+      var haO = pO === null ? (b.open + b.close) / 2 : (pO + pC) / 2;
+      out.push({ time:b.time, open:haO, high:Math.max(b.high, haO, haC),
+                 low:Math.min(b.low, haO, haC), close:haC });
+      pO = haO; pC = haC;
+    }
+    return out;
+  }
+
+  function qqqRawDisplay(src) {
+    return src.map(function (b) {
+      return { time:b.time, open:b.open, high:b.high, low:b.low, close:b.close };
+    });
+  }
+
+  function qqqEma(src, period) {
+    if (!src.length) return [];
+    var k = 2 / (period + 1), value = src[0].close;
+    return src.map(function (b, i) {
+      value = i ? b.close * k + value * (1 - k) : b.close;
+      return { time:b.time, value:value };
+    });
+  }
+
+  function qqqAdl(src) {
+    var ad = 0;
+    return src.map(function (b) {
+      var range = b.high - b.low;
+      var clv = range > 0 ? ((b.close - b.low) - (b.high - b.close)) / range : 0;
+      ad += clv * (b.volume || 0);
+      return { time:b.time, value:ad };
+    });
+  }
+
+  function qqqRsi(src, period) {
+    var out = [], gains = 0, losses = 0, avgGain = 0, avgLoss = 0;
+    period = period || 14;
+    for (var i = 1; i < src.length; i++) {
+      var d = src[i].close - src[i - 1].close;
+      var gain = Math.max(0, d), loss = Math.max(0, -d);
+      if (i <= period) {
+        gains += gain; losses += loss;
+        if (i < period) continue;
+        avgGain = gains / period; avgLoss = losses / period;
+      } else {
+        avgGain = (avgGain * (period - 1) + gain) / period;
+        avgLoss = (avgLoss * (period - 1) + loss) / period;
+      }
+      var value = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+      out.push({ time:src[i].time, value:value });
+    }
+    return out;
+  }
+
   function mountQqqChart(e, chartModel) {
     destroyQqqChart();
     var el = document.getElementById("qqq-tv-chart");
@@ -3503,7 +3711,12 @@
         background: { type: TV.ColorType.Solid, color: "#0c0c14" },
         textColor: "#8b8ba6",
         fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-        attributionLogo: false
+        attributionLogo: false,
+        panes: {
+          separatorColor: "#242433",
+          separatorHoverColor: "rgba(41,182,246,.45)",
+          enableResize: true
+        }
       },
       grid: {
         vertLines: { color: "#15151f" },
@@ -3533,10 +3746,10 @@
     var M = chartModel || qqqChartModel(e);
     var raw = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
       ? LIVE_AUCTION.candles : [];
-    var seen = {}, candles = raw.map(function (b) {
+    var seen = {}, baseCandles = raw.map(function (b) {
       return {
         time: Number(b.time), open: Number(b.open), high: Number(b.high),
-        low: Number(b.low), close: Number(b.close)
+        low: Number(b.low), close: Number(b.close), volume: Number(b.volume) || 0
       };
     }).filter(function (b) {
       var good = isFinite(b.time) && isFinite(b.open) && isFinite(b.high) &&
@@ -3544,24 +3757,14 @@
       if (good) seen[b.time] = 1;
       return good;
     }).sort(function (a, b) { return a.time - b.time; });
+    var candles = qqqMergeLiveCandle(baseCandles, M);
+    var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : qqqRawDisplay(candles);
 
-    // Heikin Ashi transform — HA close = avg(O,H,L,C); HA open = mean of the
-    // previous HA open/close (first bar seeds from its own O/C). Same price
-    // scale as raw candles, so every GEX / range / dealer level still lines up.
-    var haCandles = (function (src) {
-      var out = [], pO = null, pC = null;
-      for (var i = 0; i < src.length; i++) {
-        var b = src[i];
-        var haC = (b.open + b.high + b.low + b.close) / 4;
-        var haO = pO === null ? (b.open + b.close) / 2 : (pO + pC) / 2;
-        out.push({ time: b.time, open: haO,
-          high: Math.max(b.high, haO, haC), low: Math.min(b.low, haO, haC), close: haC });
-        pO = haO; pC = haC;
-      }
-      return out;
-    })(candles);
-
-    var series;
+    var series, ema9Series = null, ema20Series = null, indicatorSeries = null;
+    var gexTrailSeries = [];
+    var trailRows = M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points)
+      ? LIVE_GEX_INTRADAY.points.slice() : [];
+    var hasGexTrail = candles.length && trailRows.length >= 2;
     if (candles.length) {
       series = chart.addSeries(TV.CandlestickSeries, {
         upColor: "#00e676", downColor: "#ff453a",
@@ -3569,7 +3772,51 @@
         wickUpColor: "#69f0ae", wickDownColor: "#ff7961",
         priceLineVisible: false, lastValueVisible: true
       });
-      series.setData(haCandles);
+      series.setData(displayCandles);
+
+      if (QQQ_CHART_VIEW.ema) {
+        ema9Series = chart.addSeries(TV.LineSeries, {
+          title: "EMA 9", color: "#29b6f6", lineWidth: 1,
+          priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false
+        });
+        ema20Series = chart.addSeries(TV.LineSeries, {
+          title: "EMA 20", color: "#ff9f0a", lineWidth: 1,
+          priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false
+        });
+        ema9Series.setData(qqqEma(candles, 9));
+        ema20Series.setData(qqqEma(candles, 20));
+      }
+
+      if (QQQ_CHART_VIEW.pane === "volume") {
+        indicatorSeries = chart.addSeries(TV.HistogramSeries, {
+          title: "IEX volume", priceFormat: { type:"volume" },
+          priceLineVisible: false, lastValueVisible: false
+        }, 1);
+        indicatorSeries.setData(candles.map(function (b) {
+          return { time:b.time, value:b.volume || 0,
+                   color:b.close >= b.open ? "rgba(0,230,118,.55)" : "rgba(255,69,58,.55)" };
+        }));
+      } else if (QQQ_CHART_VIEW.pane === "adl") {
+        indicatorSeries = chart.addSeries(TV.LineSeries, {
+          title: "ADL · IEX", color: "#29b6f6", lineWidth: 2,
+          priceLineVisible: false, lastValueVisible: true, crosshairMarkerRadius: 3
+        }, 1);
+        indicatorSeries.setData(qqqAdl(candles));
+      } else if (QQQ_CHART_VIEW.pane === "rsi") {
+        indicatorSeries = chart.addSeries(TV.LineSeries, {
+          title: "RSI 14", color: "#b388ff", lineWidth: 2,
+          priceLineVisible: false, lastValueVisible: true, crosshairMarkerRadius: 3,
+          autoscaleInfoProvider: function () { return { priceRange:{ minValue:0, maxValue:100 } }; }
+        }, 1);
+        indicatorSeries.setData(qqqRsi(candles, 14));
+        indicatorSeries.createPriceLine({ price:70, color:"rgba(255,69,58,.55)", lineWidth:1,
+          lineStyle:TV.LineStyle.Dashed, axisLabelVisible:true, title:"70" });
+        indicatorSeries.createPriceLine({ price:30, color:"rgba(0,230,118,.55)", lineWidth:1,
+          lineStyle:TV.LineStyle.Dashed, axisLabelVisible:true, title:"30" });
+      }
+      try {
+        if (indicatorSeries && chart.panes && chart.panes()[1]) chart.panes()[1].setHeight(74);
+      } catch (paneHeightErr) {}
     } else {
       var cut = H.indexOf(e);
       var hist = cut >= 0 ? H.slice(0, cut + 1) : H.slice();
@@ -3594,23 +3841,52 @@
       series.setData(points);
     }
 
-    // Candles come from the 5-minute logger commits. Extend their right edge
-    // to the browser's fresher QQQ quote so the chart and the live page price
-    // always agree without pretending the quote is a full OHLC candle.
-    var quoteSeries = null, lastCandleTime = null;
-    if (candles.length && M.quoteLive && M.quoteTime !== null) {
-      var tail = haCandles[haCandles.length - 1];
-      var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
-      lastCandleTime = tail.time;
-      quoteSeries = chart.addSeries(TV.LineSeries, {
-        color: "#ff2be0", lineWidth: 2, lineStyle: TV.LineStyle.Dotted,
-        priceLineVisible: false, lastValueVisible: false,
-        crosshairMarkerVisible: true, crosshairMarkerRadius: 5
-      });
-      quoteSeries.setData(quoteBarTime > tail.time
-        ? [{ time: tail.time, value: tail.close }, { time: quoteBarTime, value: M.spot }]
-        : [{ time: tail.time, value: M.spot }]);
+    // The reference-style moving GEX system: each logger snapshot becomes one
+    // point, and WithSteps holds that value until the next real snapshot. The
+    // final segment extends to the latest candle as "last known", not as a
+    // fabricated recalculation between logger captures.
+    if (hasGexTrail) {
+      trailRows.sort(function (a, b) { return Number(a.time) - Number(b.time); });
+      var trailEnd = candles[candles.length - 1].time;
+      var stepType = TV.LineType && has(TV.LineType.WithSteps) ? TV.LineType.WithSteps : 1;
+      function addTrail(field, title, color, width, showLast, style) {
+        var seenTrail = {}, points = trailRows.map(function (p) {
+          return { time:Number(p.time), value:Number(p[field]), raw:p[field] };
+        }).filter(function (p) {
+          var ok = p.raw !== null && p.raw !== "" && isFinite(p.time) &&
+            p.time <= trailEnd + 60 && isFinite(p.value) && !seenTrail[p.time];
+          if (ok) seenTrail[p.time] = 1;
+          return ok;
+        }).map(function (p) { return { time:p.time, value:p.value }; });
+        if (points.length < 2) return;
+        var last = points[points.length - 1];
+        if (trailEnd > last.time) points.push({ time:trailEnd, value:last.value });
+        var s = chart.addSeries(TV.LineSeries, {
+          title:title, color:color, lineWidth:width || 1, lineType:stepType,
+          lineStyle:style === "dashed" ? TV.LineStyle.Dashed : TV.LineStyle.Solid,
+          priceLineVisible:false, lastValueVisible:!!showLast,
+          crosshairMarkerVisible:false
+        });
+        s.setData(points);
+        gexTrailSeries.push({ series:s, value:last.value, field:field,
+                              time:Math.max(last.time, trailEnd) });
+      }
+      if (QQQ_LAYERS.core) {
+        addTrail("max_pos_gamma", "+γ MAX", "#00e676", 2, true);
+        addTrail("max_neg_gamma", "−γ MAX", "#ff453a", 2, true);
+        addTrail("gamma_flip", "GAMMA FLIP", "#ffd600", 1, true);
+      }
+      if (QQQ_LAYERS.flow) {
+        addTrail("vanna_strike", "VANNA", "#00bfa5", 1, false, "dashed");
+        addTrail("charm_strike", "CHARM", "#c792ea", 1, false, "dashed");
+        addTrail("theta_strike", "THETA", "#ff6d00", 1, false, "dashed");
+      }
     }
+
+    // During market hours the current minute is built from the browser's
+    // fresher 15-second quote. Its volume stays at zero until a real IEX bar
+    // arrives, so the price is live without inventing volume data.
+    var lastCandleTime = candles.length ? candles[candles.length - 1].time : null;
 
     var styleMap = { solid: TV.LineStyle.Solid, dashed: TV.LineStyle.Dashed,
                      dotted: TV.LineStyle.Dotted };
@@ -3624,6 +3900,7 @@
     // Same-price signals are combined into one labelled line. This is common
     // when the call wall, put wall and OI magnet all sit on one strike.
     var active = M.levels.filter(function (x) {
+      if (hasGexTrail && (x.group === "core" || x.group === "flow")) return false;
       return x.group === "spot" || QQQ_LAYERS[x.group];
     }).sort(function (a, b) { return a.priority - b.priority; });
     // Merge signals on the same strike into one line. When they share the same
@@ -3655,14 +3932,18 @@
         if (has(_A.vwap) && isFinite(Number(_A.vwap)))
           level({ price: Number(_A.vwap), color: "#9aa0b5", width: 1, style: "dotted",
                   title: "VWAP " + Number(_A.vwap).toFixed(2) });
-        if (has(_A.or30_high) && isFinite(Number(_A.or30_high)))
+        if (QQQ_LAYERS.ranges && has(_A.or30_high) && isFinite(Number(_A.or30_high)))
           level({ price: Number(_A.or30_high), color: "#6b6b80", width: 1, style: "dotted", title: "OR high" });
-        if (has(_A.or30_low) && isFinite(Number(_A.or30_low)))
+        if (QQQ_LAYERS.ranges && has(_A.or30_low) && isFinite(Number(_A.or30_low)))
           level({ price: Number(_A.or30_low), color: "#6b6b80", width: 1, style: "dotted", title: "OR low" });
       }
     } catch (auctLineErr) {}
 
     chart.timeScale().fitContent();
+    if (QQQ_VIEW_STATE.userAdjusted && QQQ_VIEW_STATE.logicalRange) {
+      try { chart.timeScale().setVisibleLogicalRange(QQQ_VIEW_STATE.logicalRange); }
+      catch (restoreRangeErr) {}
+    }
     var ro = window.ResizeObserver ? new ResizeObserver(function () {
       if (el.clientWidth > 0) {
         chart.applyOptions({ width: el.clientWidth, height: el.clientHeight || 430 });
@@ -3674,18 +3955,28 @@
       var profilePlot = document.querySelector(".qqq-gex-plot");
       if (profilePlot) ro.observe(profilePlot);
     }
-    var rangeHandler = function () {
+    var rangeHandler = function (range) {
+      if (QQQ_VIEW_STATE.userAdjusted && range && isFinite(range.from) && isFinite(range.to)) {
+        QQQ_VIEW_STATE.logicalRange = { from:range.from, to:range.to };
+      }
       scheduleQqqGexAlignment(series, chart);
     };
     try { chart.timeScale().subscribeVisibleLogicalRangeChange(rangeHandler); } catch (rangeErr) {}
     var interactionHandler = function (ev) {
-      if (ev.type !== "pointermove" || ev.buttons) scheduleQqqGexAlignment(series, chart);
+      if (ev.type !== "pointermove" || ev.buttons) {
+        QQQ_VIEW_STATE.userAdjusted = true;
+        scheduleQqqGexAlignment(series, chart);
+      }
     };
-    ["pointermove", "wheel", "dblclick", "touchmove"].forEach(function (name) {
+    ["pointerdown", "pointermove", "wheel", "dblclick", "touchstart", "touchmove"].forEach(function (name) {
       el.addEventListener(name, interactionHandler, { passive:true });
     });
-    QQQ_TV = { chart: chart, resize: ro, quoteSeries: quoteSeries,
-               series: series, rangeHandler: rangeHandler,
+    QQQ_TV = { chart: chart, resize: ro, quoteSeries: null,
+               series: series, candleSeries: candles.length ? series : null,
+               rawCandles: candles, ema9Series: ema9Series, ema20Series: ema20Series,
+               indicatorSeries: indicatorSeries, paneType: QQQ_CHART_VIEW.pane,
+               gexTrailSeries: gexTrailSeries,
+               mode: QQQ_CHART_VIEW.mode, rangeHandler: rangeHandler,
                spotLine: spotLine, lastCandleTime: lastCandleTime,
                quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60,
                el: el, interactionHandler: interactionHandler, alignPending:false };
@@ -3699,19 +3990,64 @@
     var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
     if (QQQ_TV) {
       try {
-        if (QQQ_TV.quoteSeries && quoteBarTime >= (QQQ_TV.quoteTime || 0)) {
-          QQQ_TV.quoteSeries.update({ time: quoteBarTime, value: M.spot });
+        if (QQQ_TV.candleSeries && quoteBarTime >= (QQQ_TV.quoteTime || 0)) {
+          var before = QQQ_TV.rawCandles.length ? QQQ_TV.rawCandles[QQQ_TV.rawCandles.length - 1] : null;
+          var mergedLive = qqqMergeLiveCandle(QQQ_TV.rawCandles, M);
+          var after = mergedLive.length ? mergedLive[mergedLive.length - 1] : null;
+          var changed = after && (!before || mergedLive.length !== QQQ_TV.rawCandles.length ||
+            after.time !== before.time || after.close !== before.close ||
+            after.high !== before.high || after.low !== before.low);
+          if (changed) {
+            QQQ_TV.rawCandles = mergedLive;
+            var shown = QQQ_TV.mode === "ha" ? qqqHaCandles(mergedLive) : qqqRawDisplay(mergedLive);
+            QQQ_TV.candleSeries.update(shown[shown.length - 1]);
+            if (QQQ_TV.ema9Series) {
+              var e9 = qqqEma(mergedLive, 9);
+              if (e9.length) QQQ_TV.ema9Series.update(e9[e9.length - 1]);
+            }
+            if (QQQ_TV.ema20Series) {
+              var e20 = qqqEma(mergedLive, 20);
+              if (e20.length) QQQ_TV.ema20Series.update(e20[e20.length - 1]);
+            }
+            if (QQQ_TV.indicatorSeries) {
+              if (QQQ_TV.paneType === "volume") {
+                QQQ_TV.indicatorSeries.update({ time:after.time, value:after.volume || 0,
+                  color:after.close >= after.open ? "rgba(0,230,118,.55)" : "rgba(255,69,58,.55)" });
+              } else if (QQQ_TV.paneType === "adl") {
+                var ad = qqqAdl(mergedLive);
+                if (ad.length) QQQ_TV.indicatorSeries.update(ad[ad.length - 1]);
+              } else if (QQQ_TV.paneType === "rsi") {
+                var rsi = qqqRsi(mergedLive, 14);
+                if (rsi.length) QQQ_TV.indicatorSeries.update(rsi[rsi.length - 1]);
+              }
+            }
+            QQQ_TV.lastCandleTime = after.time;
+            scheduleQqqGexAlignment(QQQ_TV.series, QQQ_TV.chart);
+          }
           QQQ_TV.quoteTime = quoteBarTime;
+        }
+        if (M.quoteFresh && qqqMarketOpen() && QQQ_TV.gexTrailSeries) {
+          QQQ_TV.gexTrailSeries.forEach(function (trail) {
+            if (quoteBarTime >= trail.time) {
+              trail.series.update({ time:quoteBarTime, value:trail.value });
+              trail.time = quoteBarTime;
+            }
+          });
         }
         if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: M.quoteFresh ? "LIVE QQQ" : "QQQ" });
       } catch (err) {}
     }
     var sourceEl = document.getElementById("qqq-live-source");
     var chipEl = document.getElementById("qqq-live-chip");
+    var barChipEl = document.getElementById("qqq-live-bar-chip");
     var bars = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles) ? LIVE_AUCTION.candles.length : 0;
     if (sourceEl) sourceEl.textContent = qqqChartSource(M, bars);
     if (chipEl) chipEl.textContent = (M.quoteFresh ? "QQQ LIVE $" : "QQQ LAST $") + M.spot.toFixed(2);
-
+    if (barChipEl) {
+      var barState = qqqLiveBarState(M);
+      barChipEl.textContent = barState.text;
+      barChipEl.className = "qqq-chart-chip " + barState.tone;
+    }
     // The command center follows the same fast quote without remounting the
     // chart or rebuilding the cockpit.
     var command = document.getElementById("qqq-command-live");
@@ -3882,27 +4218,24 @@
     return varK(2) / (2 * v1);
   }
 
-  function secCockpit(e, chartModel) {
+  function qqqPlanBlock() {
+    return '<div style="margin-top:4px;background:rgba(255,214,0,.045);border:1px solid rgba(255,214,0,.22);' +
+      'border-left:3px solid var(--warn);border-radius:7px;padding:6px 10px;font-size:11.5px;color:var(--dim);line-height:1.4">' +
+      '<span style="letter-spacing:1px;text-transform:uppercase;font-size:9.5px;color:var(--warn)">The box</span> · ' +
+      '<span style="color:var(--txt)">7:17–8:30 PT</span> · QQQ 0DTE call 3 ITM · size 60% · ' +
+      'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
+      '15-min time-stop · flat 12:45 PT</div>';
+  }
+
+  function secCockpit(e, chartModel, omitPlan) {
     var S = nasdaqCommandModel(e, chartModel);
     function tile(label, big, sub, cn) {
-      var map = {
-        up:   ["var(--up)",   "rgba(0,230,118,.13)"],
-        down: ["var(--down)", "rgba(255,69,58,.13)"],
-        warn: ["var(--warn)", "rgba(255,214,0,.12)"],
-        dim:  ["var(--dim)",  "rgba(139,139,166,.10)"],
-        flat: ["var(--txt)",  "rgba(255,255,255,.045)"]   // neutral context tile
-      };
-      // Compact ONE-LINE pill (matches the KEY LEVELS chip look) so Auction /
-      // Context stay a couple of tight rows and leave room for the chart below.
-      // Border + label are COLOUR-CODED like Key Levels: green/red/amber signal
-      // state, lavender = neutral tile.
-      var col = { up: "#00e676", down: "#ff453a", warn: "#ffd600", dim: "#8b8ba6", flat: "#b388ff" }[cn] || "#8b8ba6";
-      return '<span style="display:inline-flex;align-items:baseline;gap:7px;' +
-        'background:rgba(255,255,255,.04);border:1px solid ' + col + ';border-radius:7px;' +
-        'padding:4px 10px;font-size:12px;line-height:1.3;white-space:nowrap;max-width:100%">' +
-        '<span style="font-size:8.5px;letter-spacing:.6px;color:' + col + ';text-transform:uppercase">' + esc(label) + "</span>" +
-        '<b style="color:var(--txt);font-weight:700">' + big + "</b>" +
-        (sub ? '<span style="font-size:10px;color:var(--faint)">' + sub + "</span>" : "") +
+      // Auction and Context use the exact same chip as the command signals.
+      var tone = cn === "flat" ? "info" : (cn || "dim");
+      return '<span class="qqq-hud-chip ' + tone + '">' +
+        '<span class="k">' + esc(label) + "</span>" +
+        '<span class="v">' + big + "</span>" +
+        (sub ? '<span class="sub">' + sub + "</span>" : "") +
         "</span>";
     }
 
@@ -4137,20 +4470,20 @@
              tile("Volume", "—", wait + " · IEX", "dim");
       }
       auctBlk = '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Auction — IEX' +
+        'text-transform:uppercase;margin-bottom:4px">Auction — IEX' +
         (aStale ? ' <span style="color:var(--faint);letter-spacing:0">· last logged ' + aAgeTxt + '</span>' : '') +
-        '</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+        '</div><div class="qqq-command-chips">' +
         at + "</div>";
     }
 
-    // ── Context tiles (neutral): the quant card, condensed to a glance ──
-    var ctiles = "";
+    // ── Context tiles: risk/timing first, mechanics next, reference last. ──
+    var ctxUrgent = "", ctxMechanics = "", ctxSecondary = "";
     var g2 = get(e, "quant.garch");
     if (ok(g2) && has(g2.regime) && has(g2.conditional_vol_pct)) {
-      ctiles += tile("Vol regime (GARCH)", num(g2.conditional_vol_pct, 1, "%"),
+      ctxUrgent += tile("Vol regime (GARCH)", num(g2.conditional_vol_pct, 1, "%"),
         String(g2.regime).toLowerCase() +
         (has(g2.unconditional_vol_pct) ? " · uncond " + num(g2.unconditional_vol_pct, 1, "%") : ""),
-        /HIGH/i.test(g2.regime) ? "warn" : "flat");
+        /HIGH/i.test(g2.regime) ? "warn" : "info");
     }
     // Expected move tile removed — same ±1σ shown in Key levels above.
     var o2 = e.options;
@@ -4159,22 +4492,24 @@
       var lean = t >= 1.15 ? "put-heavy" : t >= 0.95 ? "balanced" : t >= 0.75 ? "call-lean" : "very call-heavy";
       var ieTxt = (has(o2.index_pc) && has(o2.equity_pc))
         ? " · " + signed(o2.index_pc - o2.equity_pc, 2) + " idx−eq" : "";
-      ctiles += tile("P/C skew", num(t, 2), lean + ieTxt, "flat");
+      ctxMechanics += tile("P/C skew", num(t, 2), lean + ieTxt,
+        (t >= 1.15 || t < 0.75) ? "warn" : "info");
     }
     // VIX fear-gauge tile removed — VIX already shown in the HUD lights row.
     // Vanna / charm — the REAL 2nd-order dealer dials (dDelta/dsigma, dDelta/dt).
     // Uses net_vannaex/net_charmex; hidden on older snapshots that lack them.
     if (ok(gx) && has(gx.net_vannaex)) {
-      ctiles += tile("Vanna / charm", fmtBig(gx.net_vannaex),
-        "charm " + (has(gx.net_charmex) ? fmtBig(gx.net_charmex) : na()) + " · 2nd-order", "flat");
+      ctxMechanics += tile("Vanna / charm", fmtBig(gx.net_vannaex),
+        "charm " + (has(gx.net_charmex) ? fmtBig(gx.net_charmex) : na()) + " · 2nd-order", "violet");
     }
     // Touch odds — chance price tags the gamma flip today
     if (ok(gx) && has(gx.gamma_flip) && isFinite(S.chart.spot) && S.chart.spot > 0) {
       var kf = gx.gamma_flip;
       var pTouch = S.chart.touch(kf);
       if (pTouch !== null) {
-        ctiles += tile("Touch odds — flip", (pTouch * 100).toFixed(0) + "%",
-          "flip " + num(kf, 0) + " · " + signed((kf - S.chart.spot) / S.chart.spot * 100, 2, "%"), "flat");
+        ctxUrgent += tile("Touch odds — flip", (pTouch * 100).toFixed(0) + "%",
+          "flip " + num(kf, 0) + " · " + signed((kf - S.chart.spot) / S.chart.spot * 100, 2, "%"),
+          pTouch >= 0.65 ? "warn" : "info");
       }
     }
     // Venue concentration — Cboe share (fills in after the fetcher's next run)
@@ -4183,21 +4518,23 @@
       var cbV = vc.volume_share.filter(function (r) { return /cboe/i.test(r.venue); })[0];
       var cbP = (vc.premium_share || []).filter(function (r) { return /cboe/i.test(r.venue); })[0];
       if (cbV && has(cbV.today)) {
-        ctiles += tile("Venue — Cboe", num(cbV.today, 1, "%"),
-          "vol share" + (cbP && has(cbP.today) ? " · prem " + num(cbP.today, 1, "%") : ""), "flat");
+        ctxSecondary += tile("Venue — Cboe", num(cbV.today, 1, "%"),
+          "vol share" + (cbP && has(cbP.today) ? " · prem " + num(cbP.today, 1, "%") : ""), "dim");
       }
     }
+    var ctiles = ctxUrgent + ctxMechanics + ctxSecondary +
+      tile("Model", "● synchronized live", "", "dim");
     var ctxBlk = ctiles
       ? '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Context</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+        'text-transform:uppercase;margin-bottom:4px">Context</div>' +
+        '<div class="qqq-command-chips">' +
         ctiles + "</div>"
       : "";
 
     // ── Mini sectors donut ──
     var sec2 = get(e, "sectors");
     var sectorsBlk = (ok(sec2) && get(sec2, "rows", []).length)
-      ? '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      ? '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
       : "";
 
@@ -4235,13 +4572,8 @@
         levTiles + "</div>"
       : "";
 
-    // ── Plan & discipline — the box, condensed ──
-    var planBlk = '<div style="margin-top:6px;background:rgba(255,255,255,.04);border-radius:10px;' +
-      'padding:7px 12px;font-size:12px;color:var(--dim);line-height:1.5">' +
-      '<span style="letter-spacing:1px;text-transform:uppercase;font-size:10.5px">The box</span><br>' +
-      '<span style="color:var(--txt)">7:17–8:30 PT</span> · QQQ 0DTE call 3 ITM · size 60% · ' +
-      'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
-      '15-min time-stop · flat 12:45 PT</div>';
+    // ── Plan & discipline — shared with the unified decision panel. ──
+    var planBlk = qqqPlanBlock();
 
     // ── Next catalyst — condensed to ONE glance box (cockpit tile aesthetic),
     //    a quick daily read: the soonest event, its real forecasts, a plain-
@@ -4279,8 +4611,8 @@
       var bg = isToday ? "rgba(255,214,0,.12)" : "rgba(255,255,255,.045)";
       newsBlk =
         '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:6px">Next catalyst</div>' +
-        '<div style="background:' + bg + ';border-radius:12px;padding:10px 14px">' +
+        'text-transform:uppercase;margin-bottom:4px">Next catalyst</div>' +
+        '<div style="background:' + bg + ';border-radius:7px;padding:7px 10px">' +
           '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">' +
             '<div style="font-size:15px;font-weight:700;line-height:1.2;color:' + accent + '">' + esc(head) + '</div>' +
             '<div style="font-size:11px;letter-spacing:1px;white-space:nowrap;color:' +
@@ -4305,7 +4637,7 @@
     var tfBlk = secOptHeatmap(_tf) || secTimeFootprint(_tf);   // heatmap when grid data exists, else classic bars
     // tfBlk (options heatmap) + sectorsBlk moved BELOW the chart — now rendered
     // by secQqqPositioning() so trading and positioning read as separate zones.
-    return planBlk + auctBlk + ctxBlk + newsBlk;
+    return (omitPlan ? "" : planBlk) + auctBlk + newsBlk + ctxBlk;
   }
 
   function secNasdaqCommandCenter(e, chartModel) {
@@ -4378,6 +4710,8 @@
 
     document.getElementById("pick").addEventListener("change", function () {
       idx = parseInt(this.value, 10);
+      QQQ_VIEW_STATE.userAdjusted = false;
+      QQQ_VIEW_STATE.logicalRange = null;
       render();
     });
 
@@ -4436,6 +4770,29 @@
     if (!Object.prototype.hasOwnProperty.call(QQQ_LAYERS, layer)) return;
     QQQ_LAYERS[layer] = !QQQ_LAYERS[layer];
     try { localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS)); } catch (eLayers) {}
+    var y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+  });
+
+  // Chart type and indicator controls. Rebuild the small chart only when the
+  // user changes a view, and remember that choice for the next visit.
+  document.addEventListener("click", function (ev) {
+    var t = (ev.target && ev.target.closest) ?
+      ev.target.closest("[data-qqq-mode],[data-qqq-ema],[data-qqq-pane]") : null;
+    if (!t) return;
+    if (t.hasAttribute("data-qqq-mode")) {
+      var mode = t.getAttribute("data-qqq-mode");
+      if (mode !== "raw" && mode !== "ha") return;
+      QQQ_CHART_VIEW.mode = mode;
+    } else if (t.hasAttribute("data-qqq-ema")) {
+      QQQ_CHART_VIEW.ema = !QQQ_CHART_VIEW.ema;
+    } else {
+      var pane = t.getAttribute("data-qqq-pane");
+      if (["volume", "adl", "rsi", "none"].indexOf(pane) < 0) return;
+      QQQ_CHART_VIEW.pane = pane;
+    }
+    try { localStorage.setItem("md:qqq-chart-view", JSON.stringify(QQQ_CHART_VIEW)); } catch (eView) {}
     var y = window.scrollY;
     render();
     window.scrollTo(0, y);
@@ -4582,12 +4939,19 @@
 
     function cycle() {
       loadLiveGex();
+      loadGexIntraday();
       loadAuction();
       fetchAll().then(function () {
         var info = applyLive();
         // Repaint without losing scroll or which session you are viewing.
         if (info.painted && idx === FULL.length - 1) {
-          var y = window.scrollY; render(); window.scrollTo(0, y);
+          // Once the user has positioned the Nasdaq chart, the minute refresh
+          // updates its live quote in place instead of destroying the chart.
+          if (TAB === "nasdaq" && QQQ_TV && QQQ_VIEW_STATE.userAdjusted) {
+            updateMountedQqqQuote(FULL[FULL.length - 1]);
+          } else {
+            var y = window.scrollY; render(); window.scrollTo(0, y);
+          }
         }
         stamp(info);
       });
