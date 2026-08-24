@@ -185,17 +185,18 @@
                       letter-spacing:.7px; text-transform:uppercase; }
   .qqq-command-body { padding:16px 17px 17px; }
   .qqq-command-summary { padding-bottom:16px; border-bottom:1px solid #1c1c28; }
+  .qqq-hud-chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 6px; }
   .qqq-command-flow { padding-top:2px; }
   /* Q3: per-category Read blocks replaced by the single synthesis (QQQ tab only). */
   .flow .read { display:none !important; }
-  .qqq-synthesis { margin:2px 0 10px; display:flex; flex-direction:column; gap:8px; }
+  .qqq-synthesis { margin:0 0 6px; display:flex; flex-direction:column; gap:6px; }
   .qqq-syn-row { display:grid; grid-template-columns:104px 1fr; gap:12px; align-items:start; }
   .qqq-syn-k { color:var(--accent); font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; padding-top:3px; }
   .qqq-syn-v { font-size:13px; color:var(--txt); line-height:1.5; }
   .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
   @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
-  .qqq-model-detail-inline { margin-top:10px; padding-top:10px; border-top:1px solid #1c1c28; }
-  .qqq-model-detail-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .qqq-model-detail-inline { margin-top:8px; padding-top:8px; border-top:1px solid #1c1c28; }
+  .qqq-model-detail-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
   .qqq-model-detail-title { color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
                             text-transform:uppercase; }
   .qqq-deep-dive { padding:0 !important; overflow:hidden; }
@@ -1676,84 +1677,59 @@
   // Game-HUD command board for the Nasdaq tab — a glance dashboard (hero score,
   // gauges, status lights, compact leverage bars) built from the same live data
   // the cockpit uses. The heavy charts/tables live in the collapsed panels below.
+  // Unified compact chip — the ONE size/style used for EVERY stat across the QQQ
+  // view (HUD, auction, context, lights). Colour-coded border+label: green up /
+  // red down / amber warn / grey dim / lavender neutral. Value white. Identical
+  // to secCockpit's tile() so the whole view is one cohesive chip field.
+  function pill(label, big, sub, cn) {
+    var col = { up: "#00e676", down: "#ff453a", warn: "#ffd600", dim: "#8b8ba6", flat: "#b388ff" }[cn] || "#8b8ba6";
+    return '<span style="display:inline-flex;align-items:baseline;gap:7px;' +
+      'background:rgba(255,255,255,.04);border:1px solid ' + col + ';border-radius:7px;' +
+      'padding:4px 10px;font-size:12px;line-height:1.3;white-space:nowrap;max-width:100%">' +
+      '<span style="font-size:8.5px;letter-spacing:.6px;color:' + col + ';text-transform:uppercase">' + esc(label) + "</span>" +
+      '<b style="color:var(--txt);font-weight:700">' + big + "</b>" +
+      (sub ? '<span style="font-size:10px;color:var(--faint)">' + sub + "</span>" : "") +
+      "</span>";
+  }
+
   function secNasdaqHUD(e, chartModel) {
     var S = nasdaqCommandModel(e, chartModel);
     var mk = S.mk, q = S.q, vix = S.vix, gx = S.g;
     var g = S.geometry, dv = S.dv, vr2 = S.vr2, sp = S.spread, gpos = S.gpos;
     var hostile = S.hostile, friendly = S.friendly;
-    var call = S.call, callCol = S.callColor, callBrd = S.callBorder;
-    function C(v) { return v >= 0 ? "#00e676" : "#ff453a"; }
+    var call = S.call;
 
     var qz = q && has(q.z20) ? q.z20 : null;
     var qMove = q && has(q.last) && isFinite(S.chart.prevClose) ? q.last - S.chart.prevClose : null;
-    var hero =
-      '<div style="display:flex;gap:10px;margin-bottom:8px">' +
-        '<div style="flex:2;background:#0d1a12;border:1px solid #14432b;border-radius:12px;padding:9px 14px">' +
-          '<div style="font-size:10px;letter-spacing:1.5px;color:#8b8ba6">QQQ STRETCH</div>' +
-          '<div style="font-size:26px;font-weight:800;line-height:1.05;color:' + (qz !== null ? (qz >= 0 ? "#00e676" : "#ff453a") : "#8b8ba6") + '">' +
-            (qz !== null ? "z " + signed(qz, 2) : "&mdash;") + '</div>' +
-          '<div style="font-size:12px;color:#8b8ba6;margin-top:5px">' +
-            '<span id="qqq-command-move">' +
-            (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
-            '</span><span id="qqq-command-price">' +
-            (q && has(q.last) ? num(q.last, 2) : "") + '</span></div>' +
-        '</div>' +
-        '<div style="flex:1.4;background:#120c0c;border:1px solid ' + callBrd + ';border-radius:12px;padding:9px 14px">' +
-          '<div style="font-size:10px;letter-spacing:1.5px;color:#8b8ba6">THE CALL</div>' +
-          '<div style="font-size:16px;font-weight:800;line-height:1.15;margin-top:3px;color:' + callCol + '">● ' + call + '</div>' +
-          '<div style="font-size:11px;color:#8b8ba6;margin-top:5px">' + hostile + ' hostile · ' + friendly + ' friendly</div>' +
-        '</div>' +
-      '</div>';
-
     var _tq = mk.TQQQ, _sq = mk.SQQQ;
     var lv = (_tq && has(_tq.z20) && _sq && has(_sq.z20)) ? (_tq.z20 - _sq.z20) / 2 : null;
     var lvWord = lv === null ? "—" : lv >= 0.5 ? "callish" : lv <= -0.5 ? "bearish" : "balanced";
-    var lvClamp = lv === null ? 0 : Math.max(-1, Math.min(1, lv / 2.5));
     var used = S.chart.used;
-    var usedPct = used === null ? 0 : Math.min(1, used);
-    var usedCol = used === null ? "#8b8ba6" : used < 0.5 ? "#00e676" : used < 1 ? "#ffd600" : "#ff453a";
-    var gauges =
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">' +
-        '<div style="background:#0c0c14;border:1px solid #1c1c28;border-radius:10px;padding:11px 13px">' +
-          '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#8b8ba6"><span>LEVERAGE LEAN</span><span style="color:#ff2be0">' +
-            (lv === null ? "—" : lvWord + " " + signed(lv, 2)) + '</span></div>' +
-          '<div style="position:relative;height:10px;background:#17171f;border-radius:6px;margin-top:8px">' +
-            '<div style="position:absolute;left:50%;top:-2px;width:1px;height:14px;background:#3a3a48"></div>' +
-            (lv === null ? "" : '<div style="position:absolute;' +
-              (lvClamp >= 0 ? "left:50%;width:" + (lvClamp * 50).toFixed(0) : "right:50%;width:" + (-lvClamp * 50).toFixed(0)) +
-              '%;height:10px;background:' + (lv >= 0 ? "#00e676" : "#ff453a") + ';border-radius:6px"></div>') +
-          '</div>' +
-          '<div style="display:flex;justify-content:space-between;font-size:9.5px;color:#5a5a6a;margin-top:5px"><span>bear</span><span>bull</span></div>' +
-        '</div>' +
-        '<div style="background:#0c0c14;border:1px solid #1c1c28;border-radius:10px;padding:11px 13px">' +
-          '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:#8b8ba6"><span>RANGE USED</span><span id="qqq-command-range-used" style="color:' + usedCol + '">' +
-            (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span></div>' +
-          '<div style="height:10px;background:#17171f;border-radius:6px;margin-top:8px;overflow:hidden"><div id="qqq-command-range-bar" style="width:' +
-            (usedPct * 100).toFixed(0) + '%;height:10px;background:' + usedCol + '"></div></div>' +
-          '<div style="font-size:9.5px;color:#5a5a6a;margin-top:5px">vs 1σ range</div>' +
-        '</div>' +
-      '</div>';
+    var callTone = hostile >= 2 ? "down" : (friendly >= 2 && hostile === 0) ? "up" : "warn";
 
-    function light(txt, cn) {
-      var m = cn === "down" ? ["#120c0c", "#45201f", "#ff453a"] : cn === "up" ? ["#0d1a12", "#14432b", "#00e676"]
-        : cn === "warn" ? ["#14120c", "#454020", "#ffd600"] : ["#0c0c14", "#2a2a38", "#8b8ba6"];
-      return '<span style="font-size:11px;background:' + m[0] + ';border:1px solid ' + m[1] + ';color:' + m[2] +
-        ';border-radius:8px;padding:4px 9px">' + (cn === "dim" ? "" : "● ") + txt + "</span>";
-    }
-    var lights = '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">';
-    if (dv !== null) lights += light("√det(G) " + num(dv, 3) + " · " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
-    if (vr2 !== null) lights += light("VR(2) " + num(vr2, 2) + " · " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
-    if (ok(gx) && has(gx.regime)) lights += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
-    if (sp !== null) lights += light("edge " + signed(sp, 1, "pp"), sp > 0 ? "up" : "down");
-    if (has(vix)) lights += light("VIX " + num(vix, 2), vix >= 20 ? "warn" : "dim");
-    lights += "</div>";
+    // Every stat is ONE chip size — no oversized hero boxes or bar gauges.
+    var chips =
+      pill("QQQ stretch", (qz !== null ? "z " + signed(qz, 2) : "—"),
+        '<span id="qqq-command-move">' +
+        (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
+        '</span><span id="qqq-command-price">' + (q && has(q.last) ? num(q.last, 2) : "") + '</span>',
+        qz !== null ? (qz >= 0 ? "up" : "down") : "dim") +
+      pill("The call", call, hostile + " hostile · " + friendly + " friendly", callTone) +
+      pill("Leverage", lv === null ? "—" : lvWord + " " + signed(lv, 2), "",
+        (lv === null || Math.abs(lv) < 0.5) ? "flat" : (lv > 0 ? "up" : "down")) +
+      pill("Range used", '<span id="qqq-command-range-used">' +
+        (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span>',
+        "vs 1σ", used === null ? "dim" : used < 0.5 ? "up" : used < 1 ? "warn" : "down");
 
-    // LEVERAGE FAMILY · TODAY bar strip removed 2026-08-17 (Q4). The full
-    // "Nasdaq — QQQ leverage family" Star-Players section (secNasdaqStars) is kept.
+    if (dv !== null) chips += pill("√det(G)", num(dv, 3), dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy", dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
+    if (vr2 !== null) chips += pill("VR(2)", num(vr2, 2), vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random", vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
+    if (ok(gx) && has(gx.regime)) chips += pill("Gamma", gpos ? "+γ" : "−γ", gpos ? "dampen" : "amplify", gpos ? "up" : "down");
+    if (sp !== null) chips += pill("Edge", signed(sp, 1, "pp"), "real−impl", sp > 0 ? "up" : "down");
+    if (has(vix)) chips += pill("VIX", num(vix, 2), "", vix >= 20 ? "warn" : "dim");
 
-    return '<div id="qqq-command-live" class="qqq-command-summary" data-prev-close="' +
+    return '<div id="qqq-command-live" class="qqq-hud-chips" data-prev-close="' +
       (isFinite(S.chart.prevClose) ? S.chart.prevClose : "") + '" data-vix="' +
-      (isFinite(vix) ? vix : "") + '">' + hero + gauges + lights + "</div>";
+      (isFinite(vix) ? vix : "") + '">' + chips + "</div>";
   }
 
   function secNasdaqStars(e) {
@@ -3331,7 +3307,7 @@
     var heat = secOptHeatmap(_tf) || secTimeFootprint(_tf) || "";
     var sec2 = get(e, "sectors");
     var sectors = (ok(sec2) && get(sec2, "rows", []).length)
-      ? '<div style="margin-top:14px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      ? '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
       : "";
     if (!heat && !sectors) return "";
@@ -4160,10 +4136,10 @@
              tile("Opening range", "—", "OR30 · " + wait, "dim") +
              tile("Volume", "—", wait + " · IEX", "dim");
       }
-      auctBlk = '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      auctBlk = '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:6px">Auction — IEX' +
         (aStale ? ' <span style="color:var(--faint);letter-spacing:0">· last logged ' + aAgeTxt + '</span>' : '') +
-        '</div><div style="display:flex;flex-wrap:wrap;gap:8px">' +
+        '</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
         at + "</div>";
     }
 
@@ -4212,16 +4188,16 @@
       }
     }
     var ctxBlk = ctiles
-      ? '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      ? '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:6px">Context</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
         ctiles + "</div>"
       : "";
 
     // ── Mini sectors donut ──
     var sec2 = get(e, "sectors");
     var sectorsBlk = (ok(sec2) && get(sec2, "rows", []).length)
-      ? '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+      ? '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
       : "";
 
@@ -4260,8 +4236,8 @@
       : "";
 
     // ── Plan & discipline — the box, condensed ──
-    var planBlk = '<div style="margin-top:10px;background:rgba(255,255,255,.04);border-radius:12px;' +
-      'padding:8px 14px;font-size:12px;color:var(--dim);line-height:1.5">' +
+    var planBlk = '<div style="margin-top:6px;background:rgba(255,255,255,.04);border-radius:10px;' +
+      'padding:7px 12px;font-size:12px;color:var(--dim);line-height:1.5">' +
       '<span style="letter-spacing:1px;text-transform:uppercase;font-size:10.5px">The box</span><br>' +
       '<span style="color:var(--txt)">7:17–8:30 PT</span> · QQQ 0DTE call 3 ITM · size 60% · ' +
       'stop <span style="color:var(--down)">−$0.30</span> · target <span style="color:var(--up)">+$0.82</span> · ' +
@@ -4302,7 +4278,7 @@
       var accent = isToday ? "var(--warn)" : "var(--txt)";
       var bg = isToday ? "rgba(255,214,0,.12)" : "rgba(255,255,255,.045)";
       newsBlk =
-        '<div style="margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
+        '<div style="margin-top:6px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
         'text-transform:uppercase;margin-bottom:6px">Next catalyst</div>' +
         '<div style="background:' + bg + ';border-radius:12px;padding:10px 14px">' +
           '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">' +
