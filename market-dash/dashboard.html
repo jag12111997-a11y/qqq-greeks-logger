@@ -3877,9 +3877,9 @@
         addTrail("gamma_flip", "GAMMA FLIP", "#ffd600", 1, true);
       }
       if (QQQ_LAYERS.flow) {
-        addTrail("vanna_strike", "VANNA", "#00bfa5", 1, false, "dashed");
-        addTrail("charm_strike", "CHARM", "#c792ea", 1, false, "dashed");
-        addTrail("theta_strike", "THETA", "#ff6d00", 1, false, "dashed");
+        addTrail("vanna_strike", "", "#00bfa5", 1, false, "dashed");
+        addTrail("charm_strike", "", "#c792ea", 1, false, "dashed");
+        addTrail("theta_strike", "", "#ff6d00", 1, false, "dashed");
       }
     }
 
@@ -3891,10 +3891,11 @@
     var styleMap = { solid: TV.LineStyle.Solid, dashed: TV.LineStyle.Dashed,
                      dotted: TV.LineStyle.Dotted };
     function level(item) {
+      var showLabel = item.group === 'spot' || (item.priority !== undefined && item.priority < 25);
       return series.createPriceLine({
         price: item.price, color: item.color, lineWidth: item.width || 1,
         lineStyle: styleMap[item.style] || TV.LineStyle.Solid,
-        axisLabelVisible: true, title: item.title
+        axisLabelVisible: showLabel, title: showLabel ? item.title : ''
       });
     }
     // Same-price signals are combined into one labelled line. This is common
@@ -3931,11 +3932,11 @@
         var _A = LIVE_AUCTION;
         if (has(_A.vwap) && isFinite(Number(_A.vwap)))
           level({ price: Number(_A.vwap), color: "#9aa0b5", width: 1, style: "dotted",
-                  title: "VWAP " + Number(_A.vwap).toFixed(2) });
+                  title: "VWAP " + Number(_A.vwap).toFixed(2), priority: 100 });
         if (QQQ_LAYERS.ranges && has(_A.or30_high) && isFinite(Number(_A.or30_high)))
-          level({ price: Number(_A.or30_high), color: "#6b6b80", width: 1, style: "dotted", title: "OR high" });
+          level({ price: Number(_A.or30_high), color: "#6b6b80", width: 1, style: "dotted", title: "OR high", priority: 100 });
         if (QQQ_LAYERS.ranges && has(_A.or30_low) && isFinite(Number(_A.or30_low)))
-          level({ price: Number(_A.or30_low), color: "#6b6b80", width: 1, style: "dotted", title: "OR low" });
+          level({ price: Number(_A.or30_low), color: "#6b6b80", width: 1, style: "dotted", title: "OR low", priority: 100 });
       }
     } catch (auctLineErr) {}
 
