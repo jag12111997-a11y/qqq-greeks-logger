@@ -3440,7 +3440,7 @@
       '<div class="qqq-chart-meta"><span id="qqq-live-source">' + esc(source) + '</span>' +
       '<span class="tv-credit">Includes <a href="https://www.tradingview.com/" target="_blank" rel="noopener">' +
       'Lightweight Charts&trade; by TradingView, Inc.</a></span></div>' +
-      '<div class="qqq-chart-status">' + chips + "</div>" +
+      '<div class="qqq-chart-status">' + chartModel.statuses.filter(function(s){return s.liveQuote;}).map(function(s){return '<span class="status ' + s.tone + '">' + esc(s.text) + '</span>';}).join("") + "</div>" +
       '<div class="qqq-chart-exposure">' + exposure + "</div>" +
       '<div class="qqq-chart-controls"><span class="label">Chart</span>' +
         viewButton("data-qqq-mode", "raw", "Raw candles", QQQ_CHART_VIEW.mode === "raw") +
@@ -4126,11 +4126,10 @@
     var styleMap = { solid: TV.LineStyle.Solid, dashed: TV.LineStyle.Dashed,
                      dotted: TV.LineStyle.Dotted };
     function level(item) {
-      var showLabel = item.group === 'spot' || (item.priority !== undefined && item.priority < 25);
       return series.createPriceLine({
         price: item.price, color: item.color, lineWidth: item.width || 1,
         lineStyle: styleMap[item.style] || TV.LineStyle.Solid,
-        axisLabelVisible: showLabel, title: showLabel ? item.title : ''
+        axisLabelVisible: false, title: ''
       });
     }
     // Same-price signals are combined into one labelled line. This is common
@@ -4272,15 +4271,17 @@
     });
 
     // Upside zone bracket
-    if (upside.length >= 2 && spot) {
+    if (upside.length >= 1 && spot) {
       var uTop = Math.min.apply(null, upside.map(function (x) { return x.y; }));
       var uBot = spot.y;
-      if (uBot - uTop > 10) {
+      var uH = Math.max(uBot - uTop, 20);
+      uTop = uBot - uH;
+      if (uH >= 4) {
         var uRows = upside.map(function (x) {
           return '<div class="zp-row"><span class="zp-name">' + esc(x.title.replace(/\s*·?\s*\d+%$/, "")) +
             '</span><span style="color:' + x.color + '">' + x.price.toFixed(2) + '</span></div>';
         }).join("");
-        html += '<div class="qqq-zone-bracket" style="top:' + uTop + 'px;height:' + (uBot - uTop) + 'px">' +
+        html += '<div class="qqq-zone-bracket" style="top:' + uTop + 'px;height:' + uH + 'px">' +
           '<div class="qqq-zone-body" style="border-color:#00e676; color:#00e676">' +
           '<span class="zt">▲ UPSIDE</span>' +
           '<span class="zr">' + upside[upside.length - 1].price.toFixed(2) + ' – ' + upside[0].price.toFixed(2) + '</span>' +
@@ -4292,15 +4293,17 @@
     }
 
     // Downside zone bracket
-    if (downside.length >= 2 && spot) {
+    if (downside.length >= 1 && spot) {
       var dTop = spot.y;
       var dBot = Math.max.apply(null, downside.map(function (x) { return x.y; }));
-      if (dBot - dTop > 10) {
+      var dH = Math.max(dBot - dTop, 20);
+      dBot = dTop + dH;
+      if (dH >= 4) {
         var dRows = downside.map(function (x) {
           return '<div class="zp-row"><span class="zp-name">' + esc(x.title.replace(/\s*·?\s*\d+%$/, "")) +
             '</span><span style="color:' + x.color + '">' + x.price.toFixed(2) + '</span></div>';
         }).join("");
-        html += '<div class="qqq-zone-bracket" style="top:' + dTop + 'px;height:' + (dBot - dTop) + 'px">' +
+        html += '<div class="qqq-zone-bracket" style="top:' + dTop + 'px;height:' + dH + 'px">' +
           '<div class="qqq-zone-body" style="border-color:#ffd600; color:#ffd600">' +
           '<span class="zt">▼ DOWNSIDE</span>' +
           '<span class="zr">' + downside[0].price.toFixed(2) + ' – ' + downside[downside.length - 1].price.toFixed(2) + '</span>' +
