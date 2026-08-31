@@ -1888,7 +1888,7 @@
 
   // secNasdaqHUD removed — replaced by secQuadrantCockpit (2026-08-30).
 
-  function secNasdaqStars(e) {
+  function secNasdaqStars(e, view) {
     var all = get(e, "watchlist", []);
     if (!all.length) return "";
     var by = {};
@@ -1897,13 +1897,17 @@
       .filter(function (r) { return r && (has(r.pct_change) || has(r.last)); });
     if (!rows.length) return "";
 
-    var _S = STARS, _C = STAR_COLOR;
-    STARS = NASDAQ_STARS; STAR_COLOR = NASDAQ_COLOR;
-    var chart;
-    try {
-      chart = starChart(e);   // correlation dropped — leveraged twins are ±1 by construction
-    } finally {
-      STARS = _S; STAR_COLOR = _C;
+    var showChart = view !== "table";
+    var showTable = view !== "chart";
+    var chart = "";
+    if (showChart) {
+      var _S = STARS, _C = STAR_COLOR;
+      STARS = NASDAQ_STARS; STAR_COLOR = NASDAQ_COLOR;
+      try {
+        chart = starChart(e);   // correlation dropped — leveraged twins are ±1 by construction
+      } finally {
+        STARS = _S; STAR_COLOR = _C;
+      }
     }
 
     var lines = [];
@@ -1924,8 +1928,13 @@
     var readHtml = '<details class="read" open><summary><b>Read</b></summary><div>' +
       lines.join("") + "</div></details>";
 
-    return secWide("Nasdaq — SQQQ / TQQQ / VIX",
-      chart + wlTable(rows, true), readHtml);
+    var body = (showChart ? chart : "") + (showTable ? wlTable(rows, true) : "");
+    var title = showChart && !showTable
+      ? "Nasdaq — SQQQ / TQQQ / VIX chart"
+      : showTable && !showChart
+        ? "Nasdaq — SQQQ / TQQQ / VIX data"
+        : "Nasdaq — SQQQ / TQQQ / VIX";
+    return secWide(title, body, showChart ? readHtml : "");
   }
 
   // Reusable pairwise-correlation table for any symbol list (same Pearson math
@@ -5083,12 +5092,15 @@
     // Focused leverage/volatility comparison first, followed by the complete
     // QQQ live chart/profile/cockpit and then the preserved long calculations.
     var _qqqModel = qqqChartModel(e);
-    var _leverageLast = secNasdaqStars(e);
+    var _leverageChart = secNasdaqStars(e, "chart");
+    var _leverageTable = secNasdaqStars(e, "table");
     var _qqqBody =
-      (_leverageLast ? band("Leverage family · refine later") +
-        '<div class="grid qqq-leverage-last">' + _leverageLast + '</div>' : "") +
+      (_leverageChart ? band("Leverage family · refine later") +
+        '<div class="grid qqq-leverage-last">' + _leverageChart + '</div>' : "") +
       secQqqOpening(e, _qqqModel) +   // includes the live chart, GEX and unified cockpit
-      secNasdaqDeepDive(e);
+      secNasdaqDeepDive(e) +
+      (_leverageTable ? band("Leverage family · data") +
+        '<div class="grid qqq-leverage-last">' + _leverageTable + '</div>' : "");
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
     // STRETCH wheel sits right under the regime banner (first card).
