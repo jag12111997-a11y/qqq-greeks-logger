@@ -218,7 +218,55 @@
   .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
   @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
 
-  /* ── Quadrant Grid Cockpit (compact) ── */
+  /* ── THE CALL: hub strip spans full width under chart+gex ── */
+  .qqq-call-strip {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+  .qqq-quad-hub-strip {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .qqq-quad-hub-strip .qqq-quad-hub-wrap {
+    padding: 10px;
+  }
+  .qqq-quad-hub-strip .qqq-quad-hub {
+    width: 90px; height: 90px;
+  }
+  .qqq-quad-hub-strip .qh-call {
+    font-size: 16px !important;
+  }
+  .qqq-quad-hub-strip .qh-label {
+    font-size: 7px;
+  }
+  .qqq-quad-hub-strip .qh-count {
+    font-size: 8px;
+  }
+  .qqq-quad-hub-strip .qh-story {
+    font-size: 7px; max-width: 80px;
+  }
+  .qqq-quad-hub-strip .qqq-compass-row {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+  .qqq-quad-hub-strip .qqq-compass-chip .cv {
+    font-size: 13px;
+  }
+  .qqq-quad-hub-strip .qqq-compass-chip .ck {
+    font-size: 7px;
+  }
+
+  /* ── Sidebar quadrant panels ── */
+  .qqq-quad-panels {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  /* ── Quadrant Grid Cockpit (legacy / fallback) ── */
   .qqq-quad-cockpit {
     display: grid;
     grid-template-columns: 1fr;
@@ -242,9 +290,9 @@
   .qqq-quad-br { border-radius: 0; border-bottom: 0; }
   .qqq-quad-title {
     grid-column: 1 / -1;
-    font-size: 7px; letter-spacing: 1.2px; text-transform: uppercase;
+    font-size: 8px; letter-spacing: 1.2px; text-transform: uppercase;
     display: flex; align-items: center; gap: 3px;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
   }
   .qqq-quad-title .qdot {
     width: 4px; height: 4px; border-radius: 50%;
@@ -256,13 +304,13 @@
     font-variant-numeric: tabular-nums;
   }
   .qqq-qnode .qk {
-    font-size: 7px; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.6;
+    font-size: 8px; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.6;
   }
   .qqq-qnode .qv {
-    font-size: 11px; font-weight: 700; line-height: 1.2;
+    font-size: 12px; font-weight: 700; line-height: 1.2;
   }
   .qqq-qnode .qs {
-    font-size: 7.5px; opacity: 0.55; line-height: 1.2;
+    font-size: 8.5px; opacity: 0.55; line-height: 1.2;
   }
   .qqq-qnode.sm .qv { font-size: 10px; }
   .qqq-qnode.sm { padding: 2px 5px; }
@@ -362,6 +410,12 @@
   /* Chart label overlay removed (2026-08-31) — reverted to plain TradingView chart */
 
   @media (max-width: 700px) {
+    /* On mobile, panels stack under GEX, hub strip below */
+    .qqq-call-strip { grid-column: 1; }
+    .qqq-quad-hub-strip .qqq-quad-hub { width: 70px; height: 70px; }
+    .qqq-quad-hub-strip .qh-call { font-size: 13px !important; }
+    .qqq-quad-hub-strip .qqq-compass-chip .cv { font-size: 11px; }
+    /* Legacy cockpit fallback */
     .qqq-quad-cockpit {
       grid-template-columns: 1fr;
       grid-template-rows: auto;
@@ -389,7 +443,6 @@
     }
     .qqq-compass-row { display: none; }
     .qqq-quad-cockpit.qqq-cockpit-open .qqq-compass-row { display: flex; }
-    /* label overlay removed */
   }
 
   .qqq-model-detail-inline { margin-top:7px; padding-top:7px; border-top:1px solid #1c1c28; }
@@ -3548,8 +3601,6 @@
 
   function secQqqOpening(e, chartModel) {
     var body =
-      // CHART on top; ALL the info (HUD + full model detail + cockpit) is packed
-      // into the space directly UNDER the chart. Positioning stays at the bottom.
       '<div class="qqq-top-grid">' +
         '<div class="qqq-primary-chart">' +
           secQqqTradingChart(e, true, chartModel) +
@@ -3557,8 +3608,11 @@
         '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile" ' +
           'title="Strike price shares the QQQ chart scale. Green and red net-GEX bars extend right and left from zero; lines match the dealer-map overlays.">' +
           secQqqGexProfile(e, true, chartModel) +
-          secQuadrantCockpit(e, chartModel) +
+          secQuadrantCockpit(e, chartModel, "panels") +
         '</aside>' +
+        '<div class="qqq-call-strip">' +
+          secQuadrantCockpit(e, chartModel, "hub") +
+        '</div>' +
       '</div>' +
       secQqqPositioning(e);
     return secWide("QQQ · live price + synchronized GEX", body)
@@ -4158,22 +4212,30 @@
       barChipEl.textContent = barState.text;
       barChipEl.className = "qqq-chart-chip " + barState.tone;
     }
-    // Live-update the quadrant cockpit with current quote data
+    // Live-update the split cockpit: panels (sidebar) + hub strip (under chart)
     try {
-      var cockpitEl = document.getElementById("qqq-quad-cockpit");
-      if (cockpitEl) {
-        // Detect call-state change for pulse animation
-        var oldHub = cockpitEl.querySelector(".qqq-quad-hub .qh-call");
+      // Update sidebar panels
+      var panelsEl = document.getElementById("qqq-quad-panels");
+      if (panelsEl) {
+        var freshPanels = secQuadrantCockpit(e, M, "panels");
+        var tmpP = document.createElement("div");
+        tmpP.innerHTML = freshPanels;
+        var newPanels = tmpP.querySelector(".qqq-quad-panels");
+        if (newPanels) panelsEl.innerHTML = newPanels.innerHTML;
+      }
+      // Update hub strip
+      var hubEl = document.getElementById("qqq-quad-hub-strip");
+      if (hubEl) {
+        var oldHub = hubEl.querySelector(".qqq-quad-hub .qh-call");
         var oldCall = oldHub ? oldHub.textContent.trim() : "";
-        var freshCockpit = secQuadrantCockpit(e, M);
-        var tmpDiv = document.createElement("div");
-        tmpDiv.innerHTML = freshCockpit;
-        var newCockpit = tmpDiv.querySelector(".qqq-quad-cockpit");
-        if (newCockpit) {
-          cockpitEl.innerHTML = newCockpit.innerHTML;
-          // Pulse the hub if the call changed
-          var newHub = cockpitEl.querySelector(".qqq-quad-hub");
-          var newCallEl = cockpitEl.querySelector(".qqq-quad-hub .qh-call");
+        var freshHub = secQuadrantCockpit(e, M, "hub");
+        var tmpH = document.createElement("div");
+        tmpH.innerHTML = freshHub;
+        var newHubStrip = tmpH.querySelector(".qqq-quad-hub-strip");
+        if (newHubStrip) {
+          hubEl.innerHTML = newHubStrip.innerHTML;
+          var newHub = hubEl.querySelector(".qqq-quad-hub");
+          var newCallEl = hubEl.querySelector(".qqq-quad-hub .qh-call");
           var newCall = newCallEl ? newCallEl.textContent.trim() : "";
           if (newHub && oldCall && newCall && oldCall !== newCall) {
             newHub.classList.add("qqq-hub-pulse");
@@ -4334,7 +4396,7 @@
       '15-min time-stop · flat 12:45 PT</div>';
   }
 
-  function secQuadrantCockpit(e, chartModel) {
+  function secQuadrantCockpit(e, chartModel, mode) {
     var S = nasdaqCommandModel(e, chartModel);
     var gx = S.g || {}, L = get(gx, "levels", {}) || {};
     var mk = S.mk, q = S.q, vix = S.vix;
@@ -4584,13 +4646,15 @@
     compass += '</div>';
 
     // ── ASSEMBLE ──
-    var cockpit = '<div id="qqq-quad-cockpit" class="qqq-quad-cockpit">' +
+    // mode: "panels" = quadrant panels only (for sidebar)
+    //        "hub"    = hub + compass + box + story + legend (full-width under chart)
+    //        undefined = everything combined (legacy / live-update source)
+
+    var panelsHtml = '<div id="qqq-quad-panels" class="qqq-quad-panels">' +
       '<div class="qqq-quad qqq-quad-tl">' + q1 + '</div>' +
-      hub +
       '<div class="qqq-quad qqq-quad-tr">' + q2 + '</div>' +
       '<div class="qqq-quad qqq-quad-bl">' + q3 + '</div>' +
       '<div class="qqq-quad qqq-quad-br">' + q4 + '</div>' +
-      compass +
       '</div>';
 
     // THE BOX strip
@@ -4618,6 +4682,22 @@
       '<span><span class="ldot" style="background:var(--purple)"></span>greeks</span>' +
       '</div>';
 
+    var hubHtml = '<div id="qqq-quad-hub-strip" class="qqq-quad-hub-strip">' +
+      hub + compass + box + storyHtml + legend +
+      '</div>';
+
+    if (mode === "panels") return panelsHtml;
+    if (mode === "hub") return hubHtml;
+
+    // Legacy combined (used as source for live-update parsing)
+    var cockpit = '<div id="qqq-quad-cockpit" class="qqq-quad-cockpit">' +
+      '<div class="qqq-quad qqq-quad-tl">' + q1 + '</div>' +
+      hub +
+      '<div class="qqq-quad qqq-quad-tr">' + q2 + '</div>' +
+      '<div class="qqq-quad qqq-quad-bl">' + q3 + '</div>' +
+      '<div class="qqq-quad qqq-quad-br">' + q4 + '</div>' +
+      compass +
+      '</div>';
     return cockpit + box + storyHtml + legend;
   }
 
