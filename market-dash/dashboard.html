@@ -1314,9 +1314,9 @@
     GLD:"#b388ff", VIX:"#ff00e5", EWY:"#ff9100", TLT:"#64ffda"
   };
 
-  // Nasdaq-100 leverage family for the QQQ tab's own Star Players card.
-  var NASDAQ_STARS = ["NDX", "QQQ", "QQQM", "TQQQ", "SQQQ"];
-  var NASDAQ_COLOR = { NDX:"#ff2be0", QQQ:"#00e676", QQQM:"#ffd600", TQQQ:"#b388ff", SQQQ:"#ff453a" };
+  // Focused leverage/volatility comparison for the QQQ tab.
+  var NASDAQ_STARS = ["SQQQ", "TQQQ", "VIX"];
+  var NASDAQ_COLOR = { SQQQ:"#ff453a", TQQQ:"#b388ff", VIX:"#ff00e5" };
 
   // Distinct line colours for the rest-of-watchlist overlay chart (cycled).
   var WL_PALETTE = ["#ff2be0","#00e676","#ffd600","#ff453a","#b388ff","#ff00e5",
@@ -1344,9 +1344,12 @@
     var b = "display:inline-block;font:11px ui-monospace,Menlo,monospace;padding:4px 10px;" +
             "margin:0 6px 8px 0;border:1px solid var(--line);border-radius:6px;color:var(--dim);" +
             "cursor:pointer;background:rgba(255,255,255,.03);user-select:none";
+    var baseControl = STARS.indexOf("DXY") >= 0
+      ? '<span data-chart-mode role="button" style="' + b + '">' +
+          (CHART.mode === "dxy" ? "base: vs DXY" : "base: rebase 100") + " &#8646;</span>"
+      : '<span style="' + b + ';cursor:default">base: rebase 100</span>';
     return '<div style="margin-bottom:6px">' +
-      '<span data-chart-mode role="button" style="' + b + '">' +
-        (CHART.mode === "dxy" ? "base: vs DXY" : "base: rebase 100") + " &#8646;</span>" +
+      baseControl +
       '<span data-chart-shorter role="button" style="' + b + '">&#9660; shorter</span>' +
       '<span data-chart-taller role="button" style="' + b + '">&#9650; taller</span>' +
       '<span data-chart-expand role="button" style="' + b + '">' +
@@ -1912,17 +1915,16 @@
         ((tq && has(tq.pct_change) && sq && has(sq.pct_change))
           ? " (actual TQQQ " + signed(tq.pct_change, 2, "%") + ", SQQQ " + signed(sq.pct_change, 2, "%") + ")"
           : "") +
-        ". NDX and QQQM are the same Nasdaq-100 &mdash; drift between them and QQQ is a tracking / data tell.</div>");
+        ".</div>");
     }
     lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Same Star-Players logic on the " +
-      "Nasdaq-100 leverage family. The overlay rebases each to 100, so leverage shows up as slope: TQQQ swings " +
-      "~3&times; the QQQ line and SQQQ mirrors it. Correlations sit near &plusmn;1 by construction &mdash; the " +
-      "value is the spread and the leverage, not the sign. New symbols fill in as sessions log.</div>");
+      "TQQQ / SQQQ leverage pair with VIX as the volatility context. The overlay rebases each to 100, so " +
+      "direction, leverage and fear can be compared on one scale.</div>");
 
     var readHtml = '<details class="read" open><summary><b>Read</b></summary><div>' +
       lines.join("") + "</div></details>";
 
-    return secWide("Nasdaq — QQQ leverage family",
+    return secWide("Nasdaq — SQQQ / TQQQ / VIX",
       chart + wlTable(rows, true), readHtml);
   }
 
@@ -5078,16 +5080,15 @@
       '<select id="pick">' + opts + "</select>" +
       "</header>";
 
-    // Unified NASDAQ (really QQQ) workspace: live chart/profile first, command
-    // board, the complete former cockpit, then every preserved long calculation
-    // in one flowing box. The leverage experiment remains the final module.
+    // Focused leverage/volatility comparison first, followed by the complete
+    // QQQ live chart/profile/cockpit and then the preserved long calculations.
     var _qqqModel = qqqChartModel(e);
     var _leverageLast = secNasdaqStars(e);
     var _qqqBody =
-      secQqqOpening(e, _qqqModel) +   // now includes the full model detail inline
-      secNasdaqDeepDive(e) +
       (_leverageLast ? band("Leverage family · refine later") +
-        '<div class="grid qqq-leverage-last">' + _leverageLast + '</div>' : "");
+        '<div class="grid qqq-leverage-last">' + _leverageLast + '</div>' : "") +
+      secQqqOpening(e, _qqqModel) +   // includes the live chart, GEX and unified cockpit
+      secNasdaqDeepDive(e);
 
     // MARKET DASH tab — the broad-market context (cross-asset, sectors, macro).
     // STRETCH wheel sits right under the regime banner (first card).
