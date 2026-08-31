@@ -512,76 +512,313 @@
     h1 { font-size:17px; }
     table { font-size:11px; }
   }
+  /* ── PIPELINE v2 CONCEPT STYLING ─────────────────────────────── */
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
 
-  /* ── CROSS-ASSET PIPELINE LAYOUT ── */
-  .dash-pipeline {
+  .p-page {
     display:grid;
-    grid-template-columns:260px 1fr 320px;
+    grid-template-columns:220px 1fr 320px;
+    grid-template-rows:auto 1fr;
     gap:1px;
-    background:var(--line);
-    border:1px solid var(--line);
-    border-radius:10px;
-    overflow:hidden;
-    margin-bottom:22px;
+    background:#252A45;
+    min-height:100vh;
   }
-  .dash-col {
-    background:var(--bg);
-    padding:12px 14px;
-    min-width:0;
+  @media (max-width:900px) {
+    .p-page { grid-template-columns:1fr; grid-template-rows:auto; }
+  }
+
+  .p-panel {
+    background:#0B0D17;
+    padding:14px 16px;
     overflow-x:auto;
   }
-  .dash-col .grid { grid-template-columns:1fr; gap:12px; }
-  .dash-col section { margin-bottom:0; }
-  .dash-col section.wide { grid-column:auto; }
-  .dash-col .band { margin:16px 0 6px; }
-  .dash-col .band:first-child { margin-top:0; }
-  .dash-col .regime {
-    margin-bottom:14px;
-    padding:12px 14px;
-  }
-  .dash-col .regime .call { font-size:17px; }
 
-  /* Center column gets extra breathing room */
-  .dash-col-center {
-    border-left:1px solid var(--line);
-    border-right:1px solid var(--line);
-  }
-
-  /* Column labels */
-  .dash-col-label {
-    font:600 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-    letter-spacing:2px;
+  .p-lbl {
+    font-family:'Space Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.14em;
     text-transform:uppercase;
-    color:var(--faint);
-    margin-bottom:12px;
-    padding-bottom:6px;
-    border-bottom:1px solid var(--line);
+    color:#3E4468;
+    margin-bottom:8px;
+  }
+  .p-lbl em { font-style:normal; color:#D4587A; }
+  .p-lbl .p-num { color:#60688A; margin-right:4px; }
+
+  .p-val {
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:#DDD9E8;
+    line-height:1.5;
+  }
+  .p-val-big {
+    font-family:'Space Mono',monospace;
+    font-size:15px;
+    font-weight:700;
+    color:#DDD9E8;
+    line-height:1.5;
+  }
+  .p-val-sm {
+    font-family:'Space Mono',monospace;
+    font-size:10px;
+    color:#60688A;
+    line-height:1.5;
+  }
+
+  .p-pos { color:#3DDC84; }
+  .p-neg { color:#FF5252; }
+  .p-warn { color:#FFAB40; }
+  .p-acc { color:#D4587A; }
+  .p-dim { color:#3E4468; }
+  .p-blu { color:#5B8DEF; }
+
+  .p-tag {
+    font-family:'Space Mono',monospace;
+    font-size:8px;
+    letter-spacing:0.06em;
+    padding:2px 6px;
+    border-radius:3px;
+    display:inline-block;
+    vertical-align:middle;
+  }
+  .p-tag-g { background:rgba(61,220,132,0.12); color:#3DDC84; }
+  .p-tag-r { background:rgba(255,82,82,0.12); color:#FF5252; }
+  .p-tag-a { background:rgba(255,171,64,0.12); color:#FFAB40; }
+  .p-tag-n { background:rgba(96,104,138,0.12); color:#60688A; }
+  .p-tag-p { background:rgba(212,88,122,0.15); color:#D4587A; }
+
+  .p-row {
     display:flex;
+    gap:6px;
+    flex-wrap:wrap;
     align-items:center;
+    margin-bottom:4px;
+  }
+  .p-row:last-child { margin-bottom:0; }
+
+  .p-sep { border-top:1px solid #252A45; margin:8px 0; }
+
+  .p-header {
+    grid-column:1 / -1;
+    background:#13162A;
+    padding:10px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
     gap:8px;
   }
-  .dash-col-label .stage-num {
-    background:var(--accent);
-    color:#000;
-    padding:2px 5px;
-    border-radius:3px;
-    font-size:8px;
+  .p-title {
+    font-family:'Space Mono',monospace;
+    font-size:11px;
     font-weight:700;
+    letter-spacing:0.06em;
+    color:#DDD9E8;
+  }
+  .p-title em { font-style:normal; color:#D4587A; }
+
+  .p-strip {
+    display:flex;
+    gap:2px;
+  }
+  .p-ps {
+    font-family:'Space Mono',monospace;
+    font-size:8px;
+    letter-spacing:0.06em;
+    padding:3px 8px;
+    background:#1A1E35;
+    color:#3E4468;
+    text-transform:uppercase;
+  }
+  .p-ps:first-child { border-radius:3px 0 0 3px; }
+  .p-ps:last-child { border-radius:0 3px 3px 0; }
+
+  /* mini table */
+  .p-mt { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  .p-mt th {
+    font-family:'Space Mono',monospace;
+    font-size:8px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:#3E4468;
+    text-align:left;
+    padding:4px 4px;
+    border-bottom:1px solid #252A45;
+    font-weight:400;
+  }
+  .p-mt td {
+    font-family:'Space Mono',monospace;
+    font-size:10px;
+    padding:4px;
+    border-bottom:1px solid rgba(37,42,69,0.3);
+    color:#60688A;
+  }
+  .p-mt .p-s { color:#DDD9E8; font-weight:500; }
+
+  /* opportunity cards */
+  .p-opp {
+    background:#13162A;
+    border-radius:4px;
+    padding:8px 10px;
+    margin-bottom:6px;
+    border-left:2px solid #3DDC84;
+  }
+  .p-opp.p-bear { border-left-color:#FF5252; }
+  .p-opp.p-wait { border-left-color:#FFAB40; }
+  .p-opp .p-oh {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:3px;
+  }
+  .p-opp .p-os {
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    font-weight:700;
+    color:#DDD9E8;
+  }
+  .p-opp .p-od {
+    font-family:'Space Mono',monospace;
+    font-size:8px;
+    letter-spacing:0.06em;
+  }
+  .p-opp .p-ob {
+    font-size:10px;
+    color:#60688A;
+    line-height:1.45;
+  }
+  .p-opp .p-ob strong { color:#DDD9E8; font-weight:500; }
+
+  /* horizon mini grid */
+  .p-hg {
+    display:grid;
+    grid-template-columns:48px 1fr 1fr 1fr;
+    gap:1px;
+    background:#252A45;
+    border-radius:3px;
+    overflow:hidden;
+    font-family:'Space Mono',monospace;
+    font-size:9px;
+  }
+  .p-hg .p-c {
+    background:#0B0D17;
+    padding:4px 6px;
+    text-align:center;
+  }
+  .p-hg .p-c.p-h {
+    background:#1A1E35;
+    color:#3E4468;
+    font-size:8px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+  .p-hg .p-c.p-sy { text-align:left; color:#DDD9E8; font-weight:500; }
+
+  /* alignment dots */
+  .p-dots { display:flex; gap:3px; margin-top:4px; }
+  .p-dot {
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    border:1px solid #252A45;
+    background:#1A1E35;
+  }
+  .p-dot-g { background:#3DDC84; border-color:#3DDC84; }
+  .p-dot-r { background:#FF5252; border-color:#FF5252; }
+  .p-dot-n { background:#60688A; border-color:#60688A; }
+
+  /* bottom bar */
+  .p-bottom {
+    grid-column:1 / -1;
+    background:#13162A;
+    padding:8px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .p-note {
+    font-family:'Space Mono',monospace;
+    font-size:9px;
+    color:#3E4468;
+    letter-spacing:0.04em;
   }
 
-  /* Responsive: stack on smaller screens */
-  @media (max-width: 1100px) {
-    .dash-pipeline {
-      grid-template-columns:1fr 1fr;
-    }
-    .dash-col-right {
-      grid-column:1 / -1;
-    }
+  /* override body styling when pipeline page is active */
+  .p-page, .p-page * { box-sizing:border-box; }
+  .p-page section { background:transparent; border:none; border-radius:0; padding:0; }
+  .p-page .grid { display:block; }
+  .p-page .band { display:none; }
+  .p-page .regime { background:transparent; border:none; border-left:none; padding:0; margin:0;
+                    box-shadow:none; border-radius:0; }
+  .p-page .regime .label { display:none; }
+  .p-page .regime .call { font-family:'Space Mono',monospace; font-size:15px; font-weight:700;
+                          letter-spacing:0; text-shadow:none; margin:0; }
+  .p-page .regime .why { font-family:'Space Mono',monospace; font-size:10px; color:#60688A;
+                         margin-top:4px; }
+  .p-page footer { grid-column:1 / -1; background:#13162A; padding:8px 16px;
+                   font-family:'Space Mono',monospace; font-size:9px; color:#3E4468; text-align:center; }
+  .p-page .read { border-top:1px solid #252A45; padding-top:6px; margin-top:8px; font-size:10px; color:#60688A; }
+  .p-page .read b { color:#3E4468; font-size:8px; letter-spacing:0.1em; }
+  .p-page details > summary::before { color:#3E4468; }
+  .p-page details > summary:hover::before { color:#D4587A; }
+  .p-page h2 { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.14em;
+               text-transform:uppercase; color:#3E4468; margin:0 0 6px; font-weight:400; }
+  .p-page .row { gap:6px; padding:2px 0; }
+  .p-page .row .k { font-family:'Space Mono',monospace; font-size:10px; color:#3E4468; }
+  .p-page .row .v { font-family:'Space Mono',monospace; font-size:10px; color:#DDD9E8; }
+  .p-page table { font-family:'Space Mono',monospace; font-size:10px; }
+  .p-page th { font-family:'Space Mono',monospace; font-size:8px; letter-spacing:0.08em; color:#3E4468; }
+  .p-page td { font-size:10px; color:#60688A; }
+  .p-page .up { color:#3DDC84; }
+  .p-page .down { color:#FF5252; }
+  .p-page .flat { color:#60688A; }
+  .p-page .na { color:#3E4468; }
+  .p-page .cat { border-bottom-color:#252A45; font-size:10px; }
+  .p-page .hi { border-left-color:#FFAB40; }
+  .p-page .cat .when { font-size:9px; color:#3E4468; }
+  .p-page .cat .fc { font-size:9px; color:#3E4468; }
+  .p-page table.wl th { font-size:8px; color:#3E4468; letter-spacing:0.08em; }
+  .p-page table.wl td { font-size:10px; color:#60688A; }
+  .p-page table.wl td b { color:#DDD9E8; font-weight:500; }
+
+  /* When pipeline page is active, the .wrap container needs to go full width */
+  .wrap:has(.p-page) {
+    max-width:none;
+    padding:0;
   }
-  @media (max-width: 700px) {
-    .dash-pipeline {
-      grid-template-columns:1fr;
-    }
+  /* Fallback for browsers without :has() */
+  .p-page-active { max-width:none !important; padding:0 !important; }
+  body:has(.p-page) { padding:0; background:#0B0D17; }
+  /* The scanline overlay should use concept colors */
+  body:has(.p-page) .scan { display:none; }
+  /* Restyle original header/tab bar in pipeline mode */
+  .p-page-active > header {
+    background:#13162A;
+    border-bottom:1px solid #252A45;
+    padding:10px 16px;
+    margin:0;
+  }
+  .p-page-active > header h1 { color:#D4587A; text-shadow:none; font-size:18px; }
+  .p-page-active > header .stamp { color:#3E4468; font-size:10px; }
+  .p-page-active > header select {
+    background:#1A1E35; color:#DDD9E8; border-color:#252A45;
+    font-family:'Space Mono',monospace; font-size:10px;
+  }
+  .p-page-active > div[style*="border-bottom"] {
+    border-bottom-color:#252A45 !important;
+    margin:0 !important;
+    padding:0 16px !important;
+    background:#13162A;
+  }
+  .p-page-active > div[style*="border-bottom"] span[data-tab] {
+    font-family:'Space Mono',monospace !important;
+    font-size:10px !important;
+    border-color:#252A45 !important;
+    padding:6px 14px !important;
+  }
+  .p-page-active > div[style*="border-bottom"] span[data-tab][style*="var(--accent)"] {
+    color:#D4587A !important;
   }
 </style>
 </head>
@@ -805,6 +1042,40 @@
 
   function secMacro(e) {
     var m = e.macro;
+
+    // Pipeline v2 rendering for Market Dash tab
+    if (TAB === "dash") {
+      var out = '<div class="p-lbl"><span class="p-num">01</span> Dashboard</div>';
+
+      if (!ok(m)) {
+        out += '<div class="p-val-sm p-dim">no macro data</div>';
+      } else {
+        var gdp = m.real_gdp, cpi = m.cpi, pce = m.core_pce;
+        var ff = m.fed_funds, curve = m.curve_2s10s;
+        out += '<div class="p-row"><span class="p-val-sm">Growth ' + (ok(gdp) ? num(gdp.latest, 1) + " " + signed(gdp.change, 1) : na()) + '</span></div>';
+        out += '<div class="p-row"><span class="p-val-sm">CPI ' + (ok(cpi) ? num(cpi.latest, 1) + " " + signed(cpi.change, 2) : na()) + '</span></div>';
+        out += '<div class="p-row"><span class="p-val-sm">PCE ' + (ok(pce) ? num(pce.latest, 2) + " " + signed(pce.change, 2) : na()) + '</span></div>';
+        out += '<div class="p-row"><span class="p-val-sm">Fed funds ' + (ok(ff) ? num(ff.latest, 2, "%") + " " + signed(ff.change, 2) : na()) + '</span></div>';
+        out += '<div class="p-row"><span class="p-val-sm">2s10s ' + (ok(curve) ? signed(curve.spread, 2) + " " + esc(curve.read || "") : na()) + '</span></div>';
+      }
+
+      // Catalysts
+      var hi = get(e, "calendar.us_high_impact", []);
+      if (hi && hi.length) {
+        out += '<div class="p-sep"></div>';
+        out += '<div class="p-lbl"><span class="p-blu">Catalyst</span></div>';
+        hi.slice(0, 6).forEach(function (ev, i) {
+          var isToday = String(ev.date || "").slice(0, 10) === String(e.entry_date || "").slice(0, 10);
+          var cls = isToday ? "p-blu" : "p-dim";
+          out += '<div class="p-val-sm ' + cls + '">' + esc(ev.title) +
+            (isToday ? " — TODAY" : " · " + fmtDate(ev.date).replace(/<[^>]*>/g, "")) + '</div>';
+        });
+      }
+
+      return out;
+    }
+
+    // Legacy rendering
     var body = "";
     if (!ok(m)) {
       body = '<div class="err">' + esc(get(m, "error", "no macro data")) + "</div>";
@@ -825,7 +1096,6 @@
       : na());
     body += staleStamp(e);
 
-    // Main catalysts live here — they're macro events, not price action.
     var hi = get(e, "calendar.us_high_impact", []);
     if (hi && hi.length) {
       body += '<div style="margin-top:14px"><h2 style="margin-bottom:6px">Main catalysts</h2>';
@@ -839,7 +1109,6 @@
       body += "</div>";
     }
 
-    // regime read
     var bits = [];
     if (ok(curve)) bits.push(curve.spread < 0 ? "curve inverted" : "curve normal");
     if (ok(cpi) && has(cpi.change)) bits.push(cpi.change > 0 ? "CPI rising" : "CPI cooling");
@@ -918,6 +1187,28 @@
 
   function secPositioning(e) {
     var p = e.positioning;
+
+    // Pipeline v2 rendering
+    if (TAB === "dash") {
+      var out = '<div class="p-sep"></div>';
+      out += '<div class="p-lbl">Positioning <span class="p-dim">(COT)</span></div>';
+      if (!ok(p)) {
+        out += '<div class="p-val-sm p-dim">no COT data</div>';
+        return out;
+      }
+      var keys = Object.keys(p);
+      keys.forEach(function (k) {
+        var c = p[k];
+        if (!ok(c)) return;
+        out += '<div class="p-row"><span class="p-val-sm" style="color:#DDD9E8">' + esc(k.replace(/_/g, " ")) + '</span></div>';
+        out += '<div class="p-row"><span class="p-val-sm">net ' + signed(c.nonCommercialNet, 0) + '</span>' +
+          '<span class="p-val-sm">Δ ' + signed(c.nonCommercialNetChange, 0) + '</span></div>';
+      });
+      out += '<div class="p-val-sm p-dim" style="margin-top:4px">COT = Tue data released Fri — stale by design</div>';
+      return out;
+    }
+
+    // Legacy rendering
     var body = "";
     if (!ok(p)) return sec("Positioning", '<div class="err">' + esc(get(p, "error", "no COT data")) + "</div>", read(na()));
 
@@ -1252,14 +1543,11 @@
   function secInternals(e) {
     var s = e.sectors;
     if (!ok(s) || !get(s, "rows", []).length) {
+      if (TAB === "dash") {
+        return '<div class="p-lbl">Sectors</div><div class="p-val-sm p-dim">no sector data</div>';
+      }
       return sec("Internals", '<div class="err">' + esc(get(s, "error", "no sector data")) + "</div>", read(na()));
     }
-    var body = donut(s.rows);
-    body += '<div style="margin-top:12px">';
-    body += row("Leaders", (s.leaders || []).join(", ") || na());
-    body += row("Laggards", (s.laggards || []).join(", ") || na());
-    body += row("Breadth", val(s.breadth));
-    body += "</div>";
 
     var green = s.rows.filter(function (r) { return r.pct_change > 0; }).length;
     var tot = s.rows.length;
@@ -1269,6 +1557,27 @@
     var lead = (s.leaders || [])[0];
     var defensive = ["Utilities", "Consumer Staples", "Health Care", "Real Estate"];
     var flavor = lead && defensive.indexOf(lead) >= 0 ? "defensives leading" : "cyclicals leading";
+
+    // Pipeline v2 rendering
+    if (TAB === "dash") {
+      var out = '<div class="p-lbl">Sectors</div>';
+      out += donut(s.rows, true);
+      out += '<div style="margin-top:8px">';
+      out += '<div class="p-row"><span class="p-val-sm">Leaders: ' + esc((s.leaders || []).join(", ") || "—") + '</span></div>';
+      out += '<div class="p-row"><span class="p-val-sm">Laggards: ' + esc((s.laggards || []).join(", ") || "—") + '</span></div>';
+      out += '<div class="p-row"><span class="p-val-sm">Breadth: ' + val(s.breadth) + '</span></div>';
+      out += '<div class="p-row"><span class="p-val-sm p-dim">' + esc(tone + ", " + flavor) + '</span></div>';
+      out += '</div>';
+      return out;
+    }
+
+    // Legacy rendering
+    var body = donut(s.rows);
+    body += '<div style="margin-top:12px">';
+    body += row("Leaders", (s.leaders || []).join(", ") || na());
+    body += row("Laggards", (s.laggards || []).join(", ") || na());
+    body += row("Breadth", val(s.breadth));
+    body += "</div>";
 
     return sec("Internals", body, read(tone + ", " + flavor));
   }
@@ -1898,7 +2207,6 @@
     }
     if (uso && has(uso.ret_ytd)) bits.push("USO " + money(dollarsFrom(uso.last, uso.ret_ytd)) + " YTD");
 
-    // cross-asset divergence note from today's moves
     function dv(sym) {
       var r = by[sym];
       return r && has(r.last) && has(r.pct_change)
@@ -1922,6 +2230,97 @@
       extra = marketLines(e, all, mv2);
     } catch (err) { extra = []; }
 
+    // Pipeline v2 rendering — rotation scanner mini table
+    if (TAB === "dash") {
+      var dxy = by.DXY || by.UUP;
+      var dxyPct = dxy && has(dxy.pct_change) ? dxy.pct_change : 0;
+
+      // Sort rows by z20 descending
+      var sorted = rows.slice().sort(function(a, b) {
+        var za = has(a.z20) ? a.z20 : -999;
+        var zb = has(b.z20) ? b.z20 : -999;
+        return zb - za;
+      });
+
+      var out = '<div class="p-lbl"><span class="p-num">03</span> Rotation Scanner</div>';
+      out += '<table class="p-mt"><thead><tr>';
+      out += '<th>Asset</th><th>Day</th><th>Z20</th><th>vs $</th><th>Flow</th><th></th>';
+      out += '</tr></thead><tbody>';
+
+      var greenCount = 0, totalCount = 0;
+      sorted.forEach(function(r) {
+        if (!has(r.pct_change) && !has(r.z20)) return;
+        totalCount++;
+        var sym = r.symbol;
+        var pct = has(r.pct_change) ? r.pct_change : 0;
+        var z = has(r.z20) ? r.z20 : 0;
+        var isVol = sym === "VIX" || sym === "VXN";
+        var isDxy = sym === "DXY" || sym === "UUP";
+
+        // vs dollar
+        var vsDxy = "—";
+        var vsDxyCls = "";
+        if (!isVol && !isDxy && has(r.pct_change)) {
+          var beating = r.pct_change > dxyPct;
+          vsDxy = beating ? "beat" : "lag";
+          vsDxyCls = beating ? " class=\"p-pos\"" : " class=\"p-neg\"";
+        }
+
+        // Flow direction (from YTD return as proxy)
+        var flow = "—";
+        var flowCls = "";
+        if (!isVol && !isDxy) {
+          if (has(r.ret_ytd) && r.ret_ytd > 5) { flow = "in"; flowCls = " class=\"p-pos\""; }
+          else if (has(r.ret_ytd) && r.ret_ytd < -5) { flow = "out"; flowCls = " class=\"p-neg\""; }
+          else { flow = "flat"; }
+        }
+
+        // Tag logic
+        var tag = "", tagCls = "p-tag-n";
+        if (isVol) {
+          if (z < -1) { tag = "LOW"; tagCls = "p-tag-g"; }
+          else if (z > 1) { tag = "HIGH"; tagCls = "p-tag-r"; }
+          else { tag = "NEUT"; tagCls = "p-tag-n"; }
+        } else if (isDxy) {
+          tag = "BASE"; tagCls = "p-tag-n";
+        } else {
+          var beating2 = has(r.pct_change) ? r.pct_change > dxyPct : false;
+          if (z > 1.5 && beating2) { tag = "LEAD"; tagCls = "p-tag-g"; greenCount++; }
+          else if (z > 0 && beating2) { tag = "ROT IN"; tagCls = "p-tag-g"; greenCount++; }
+          else if (z < -1 && !beating2) { tag = "WEAK"; tagCls = "p-tag-r"; }
+          else if (z < -1.5 && !beating2) { tag = "FADE"; tagCls = "p-tag-r"; }
+          else if ((z > 0 && !beating2) || (z < 0 && beating2)) { tag = "MIXED"; tagCls = "p-tag-a"; }
+          else if (pct < -2 && z > 0) { tag = "PULL"; tagCls = "p-tag-a"; }
+          else { tag = "NEUT"; tagCls = "p-tag-n"; }
+        }
+
+        var pctCls = pct > 0 ? " class=\"p-pos\"" : pct < 0 ? " class=\"p-neg\"" : "";
+        out += '<tr><td class="p-s">' + esc(sym) + '</td>';
+        out += '<td' + pctCls + '>' + (pct > 0 ? "+" : "") + pct.toFixed(2) + '%</td>';
+        out += '<td>' + (z > 0 ? "+" : "") + z.toFixed(2) + '</td>';
+        out += '<td' + vsDxyCls + '>' + vsDxy + '</td>';
+        out += '<td' + flowCls + '>' + flow + '</td>';
+        out += '<td><span class="p-tag ' + tagCls + '">' + tag + '</span></td></tr>';
+      });
+
+      out += '</tbody></table>';
+
+      // Breadth summary
+      var live = all.filter(function(r) { return has(r.pct_change); });
+      var grn = live.filter(function(r) { return r.pct_change > 0; }).length;
+      out += '<div class="p-val-sm p-dim" style="margin-top:6px">sorted by z20 · ' +
+        grn + '▲ ' + (live.length - grn) + '▼ · breadth ' + greenCount + '/' + totalCount + ' green</div>';
+
+      // Keep star chart, correlation, and dollar moves — they look good already
+      out += '<div class="p-sep"></div>';
+      out += starChart(e);
+      out += '<div class="p-sep"></div>';
+      out += starCorrel(e);
+
+      return out;
+    }
+
+    // Legacy rendering
     var readHtml = '<details class="read" open><summary><b>Read</b></summary><div>' +
       extra.join("") +
       (bits.length ? '<div style="margin:5px 0"><span style="color:var(--dim)">Cross-asset</span>  ' +
@@ -2714,8 +3113,64 @@
 
     if (has(pc) && pc >= 1.15) why += " Put-heavy tape (" + pc.toFixed(2) + ") — mean-reversion setups favored.";
 
-    // Alignment lives HERE now, under the call it produced — not in its own
-    // box halfway down the page.
+    // Pipeline v2 concept rendering
+    if (TAB === "dash") {
+      var callCol = (s >= n * 0.6) ? "p-pos" : (s <= -n * 0.6) ? "p-neg" : "p-warn";
+      var dots = "";
+      var sigList = "";
+      if (align.votes) {
+        dots = '<div class="p-dots">';
+        var sigBits = [];
+        Object.keys(align.votes).forEach(function(k) {
+          var v = align.votes[k];
+          var dc = v === null ? "" : v > 0 ? " p-dot-g" : v < 0 ? " p-dot-r" : " p-dot-n";
+          var txt = v === null ? "—" : v > 0 ? "risk-on" : v < 0 ? "risk-off" : "neutral";
+          dots += '<span class="p-dot' + dc + '" title="' + esc(k) + '"></span>';
+          sigBits.push(esc(k.toLowerCase()) + " " + txt);
+        });
+        dots += '</div>';
+        sigList = '<div class="p-val-sm p-dim" style="margin-top:6px">' + sigBits.join(" · ") + '</div>';
+      }
+
+      // Regime math section
+      var mathHtml = "";
+      var geom = get(e, "quant.geometry");
+      if (ok(geom)) {
+        var vol2 = geom.diversification_volume;
+        var volLabel = vol2 < 0.15 ? "collapsed" : vol2 < 0.35 ? "thinning" : "healthy";
+        var volCls = vol2 < 0.15 ? "p-neg" : vol2 < 0.35 ? "p-warn" : "p-pos";
+        mathHtml += '<div class="p-sep"></div>';
+        mathHtml += '<div class="p-lbl">Regime Math</div>';
+        mathHtml += '<div class="p-row"><span class="p-val-sm">√det(G) ' + num(vol2, 3) + ' <span class="' + volCls + '">' + volLabel + '</span></span></div>';
+        if (has(geom.variance_ratio)) {
+          var vr = geom.variance_ratio;
+          var vrLabel = vr > 1.05 ? "trending" : vr < 0.95 ? "mean-reverting" : "random walk";
+          var vrCls = vr > 1.05 ? "p-pos" : vr < 0.95 ? "p-neg" : "p-dim";
+          mathHtml += '<div class="p-row"><span class="p-val-sm">VR(2) ' + num(vr, 2) + ' <span class="' + vrCls + '">' + vrLabel + '</span></span></div>';
+        }
+        if (has(geom.hurst)) {
+          var hu = geom.hurst;
+          var huLabel = hu > 0.55 ? "persistent" : hu < 0.45 ? "anti-persistent" : "random";
+          var huCls = hu > 0.55 ? "p-pos" : hu < 0.45 ? "p-neg" : "p-dim";
+          mathHtml += '<div class="p-row"><span class="p-val-sm">Hurst ' + num(hu, 2) + ' <span class="' + huCls + '">' + huLabel + '</span></span></div>';
+        }
+        if (has(geom.range_pct)) {
+          var rp = geom.range_pct;
+          var rpLabel = rp > 80 ? "extended" : rp > 50 ? "half spent" : "early";
+          var rpCls = rp > 80 ? "p-neg" : rp > 50 ? "p-warn" : "p-pos";
+          mathHtml += '<div class="p-row"><span class="p-val-sm">Range ' + num(rp, 0, "%") + ' <span class="' + rpCls + '">' + rpLabel + '</span></span></div>';
+        }
+        mathHtml += '<div class="p-row"><span class="p-val-sm p-dim">→ ' + esc(call.toLowerCase()) + ' = rotation scan matters</span></div>';
+      }
+
+      return '<div class="p-lbl"><span class="p-num">02</span> Regime</div>' +
+        '<div class="p-val-big ' + callCol + '">' + call + '</div>' +
+        '<div class="p-val-sm" style="margin-top:4px">Alignment ' + align.live + '/' +
+        Object.keys(align.votes || {}).length + ' — ' + esc(align.read || why) + '</div>' +
+        dots + sigList + mathHtml;
+    }
+
+    // Legacy rendering for non-dash tabs (shouldn't happen, but safety)
     var strip = "";
     if (align.votes) {
       var chips = Object.keys(align.votes).map(function (k) {
@@ -5210,45 +5665,60 @@
       (_leverageTable ? band("Leverage family · data") +
         '<div class="grid qqq-leverage-last">' + _leverageTable + '</div>' : "");
 
-    // MARKET DASH tab — cross-asset pipeline layout.
-    // Three columns: LEFT (regime + macro + news), CENTER (rotation + price),
-    // RIGHT (sectors + positioning). All data immediate, no scroll-through.
+    // MARKET DASH tab — Pipeline v2 concept: 3-column layout.
     var _stretchWheel = moveWheel(e.watchlist || []);
 
-    // ── LEFT COLUMN: Regime · Macro · News (context layer) ──
-    var _leftCol =
-      '<div class="dash-col">' +
-        '<div class="dash-col-label"><span class="stage-num">01–02</span> regime · macro · catalysts</div>' +
-        finalRegime(e, align) +
-        group("Macro", secMacro(e)) +
-        group("Positioning", secPositioning(e)) +
-        group("News", secWeek(e)) +
-      '</div>';
-
-    // ── CENTER COLUMN: Stretch · Stars · Watchlist (rotation + price action) ──
-    var _centerCol =
-      '<div class="dash-col dash-col-center">' +
-        '<div class="dash-col-label"><span class="stage-num">03–04</span> rotation · price · cross-asset</div>' +
-        (_stretchWheel ? group("Watchlist stretch", secWide("Stretch — |z20|", _stretchWheel)) : "") +
-        group("Price", secStars(e)) +
-        group("Rest of watchlist", secWatchlist(e)) +
-      '</div>';
-
-    // ── RIGHT COLUMN: Sectors · Internals (structure layer) ──
-    var _rightCol =
-      '<div class="dash-col dash-col-right">' +
-        '<div class="dash-col-label"><span class="stage-num">05–06</span> sectors · structure</div>' +
-        group("Sectors and regime", secInternals(e)) +
-      '</div>';
-
-    var _dashBody =
-      '<div class="dash-pipeline">' + _leftCol + _centerCol + _rightCol + '</div>' +
-      "<footer>" + FULL.length + " logged session" + (FULL.length > 1 ? "s" : "") +
+    var _pipeFooter = "<footer>" + FULL.length + " logged session" + (FULL.length > 1 ? "s" : "") +
       " · " + (H.length - FULL.length) + " backfilled" +
-      " logged · append-only · history.js</footer>";
+      " · append-only · history.js</footer>";
+
+    // Pipeline header bar
+    var _pipeHeader = '<div class="p-header">' +
+      '<span class="p-title">Cross-Asset Research · <em>Pipeline v2</em></span>' +
+      '<div class="p-strip">' +
+      '<div class="p-ps">01 dash</div><div class="p-ps">02 regime</div>' +
+      '<div class="p-ps">03 rotate</div><div class="p-ps">04 scan</div>' +
+      '<div class="p-ps">05 horizon</div><div class="p-ps">06 opp</div>' +
+      '</div></div>';
+
+    // LEFT COLUMN: macro + regime + catalysts + positioning
+    var _leftCol = '<div class="p-panel">' +
+      secMacro(e) +
+      '<div class="p-sep"></div>' +
+      finalRegime(e, align) +
+      secPositioning(e) +
+      '</div>';
+
+    // CENTER COLUMN: rotation scanner + stretch wheel + star chart + correlations
+    var _centerCol = '<div class="p-panel">' +
+      secStars(e) +
+      (_stretchWheel ? '<div class="p-sep"></div>' +
+        '<div class="p-lbl"><span class="p-num">04</span> Stretch Wheel</div>' +
+        _stretchWheel : "") +
+      '</div>';
+
+    // RIGHT COLUMN: sectors + week ahead + watchlist
+    var _rightCol = '<div class="p-panel">' +
+      secInternals(e) +
+      '<div class="p-sep"></div>' +
+      secWeek(e) +
+      '<div class="p-sep"></div>' +
+      secWatchlist(e) +
+      '</div>';
+
+    var _dashBody = '<div class="p-page">' + _pipeHeader +
+      _leftCol + _centerCol + _rightCol +
+      _pipeFooter + '</div>';
 
     app.innerHTML = _header + tabBar() +
       (TAB === "nasdaq" ? ('<div class="flow">' + _qqqBody + "</div>") : _dashBody);
+
+    // Pipeline layout: expand .wrap to full width for the 3-column grid
+    if (TAB === "dash") {
+      app.classList.add("p-page-active");
+    } else {
+      app.classList.remove("p-page-active");
+    }
 
     document.getElementById("pick").addEventListener("change", function () {
       idx = parseInt(this.value, 10);
