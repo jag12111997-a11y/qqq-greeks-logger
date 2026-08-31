@@ -118,6 +118,7 @@
                              gap:12px; margin-bottom:7px; }
   .qqq-leverage-meter-title { color:var(--accent); font-size:9.5px; letter-spacing:1.25px;
                               text-transform:uppercase; }
+  .qqq-leverage-meter-title small { color:var(--faint); font-size:8px; letter-spacing:.55px; }
   .qqq-leverage-meter-state { color:var(--lev-color); font-size:10.5px; font-weight:700;
                               letter-spacing:.55px; white-space:nowrap; }
   .qqq-leverage-meter-row { display:grid; grid-template-columns:auto minmax(120px,1fr) auto;
@@ -127,17 +128,17 @@
   .qqq-leverage-meter-side:last-child { text-align:right; }
   .qqq-leverage-meter-side b { display:block; margin-top:1px; color:var(--txt);
                                font-size:11px; letter-spacing:0; }
-  .qqq-leverage-track { position:relative; height:9px; background:#202024; overflow:visible;
+  .qqq-leverage-track { display:flex; height:10px; background:#202024; overflow:hidden;
                         box-shadow:inset 0 0 0 1px rgba(255,255,255,.025); }
-  .qqq-leverage-track::before { content:""; position:absolute; inset:0;
-    background:linear-gradient(90deg,#00bfa5 0 12%,#ff9f0a 12% 30%,#55555d 30% 60%,#24242a 60% 100%); }
-  .qqq-leverage-track::after { content:""; position:absolute; top:-5px;
-    left:calc(var(--lev-position) - 5px); width:10px; height:19px;
-    background:var(--lev-color); clip-path:polygon(0 0,100% 50%,0 100%,28% 50%);
-    filter:drop-shadow(0 0 4px var(--lev-color)); }
+  .qqq-leverage-segment { height:100%; min-width:0; transition:width .35s ease; }
+  .qqq-leverage-segment.bear { background:#ff453a; }
+  .qqq-leverage-segment.balance { background:#66666f; }
+  .qqq-leverage-segment.bull { background:#00bfa5; }
   .qqq-leverage-meter-scale { display:flex; justify-content:space-between; margin:5px 118px 0;
                               color:var(--faint); font-size:7.5px; letter-spacing:.6px;
                               text-transform:uppercase; }
+  .qqq-leverage-meter-math { margin-top:4px; text-align:center; color:var(--faint);
+                             font-size:7.5px; letter-spacing:.35px; }
   .qqq-chart-chip { display:inline-flex; align-items:center; min-height:25px; padding:4px 8px;
                     border:1px solid var(--line); border-radius:6px; background:rgba(255,255,255,.025);
                     color:var(--dim); font-size:10.5px; letter-spacing:.35px; }
@@ -3306,35 +3307,64 @@
     return bits.join(" · ");
   }
 
-  // Compact replacement for the old source/exposure rows. The 3× twins are
-  // reduced to one directional balance: negative = SQQQ leads, positive =
-  // TQQQ leads. Daily percentage moves keep the meter responsive to live quotes.
+  // Compact replacement for the old source/exposure rows. First isolate the
+  // QQQ-equivalent move from the inverse 3× pair: (TQQQ% - SQQQ%) / 6. Then
+  // divide it by VIX / sqrt(252), the VIX-implied one-day move. The resulting
+  // signed sigma score becomes three weights whose colours visibly compete.
   function qqqLeverageMeter(M) {
     var mk = (M && M.mk) || {}, tq = mk.TQQQ || {}, sq = mk.SQQQ || {};
     var tqPct = Number(tq.pct_change), sqPct = Number(sq.pct_change);
-    var ready = isFinite(tqPct) && isFinite(sqPct);
-    var lean = ready ? (tqPct - sqPct) / 2 : 0;
-    var limit = 6;
-    var position = Math.max(0, Math.min(100, 50 + lean / limit * 50));
-    var state = "WAITING FOR TWIN QUOTES", color = "#6f3c68";
+    var vix = Number(M && M.vix);
+    var ready = isFinite(tqPct) && isFinite(sqPct) && isFinite(vix) && vix > 0;
+    var qqqEquivalent = ready ? (tqPct - sqPct) / 6 : 0;
+    var vixDay = ready ? vix / Math.sqrt(252) : 0;
+    var score = ready && vixDay > 0 ? qqqEquivalent / vixDay : 0;
+    var directional = Math.min(1, Math.abs(score));
+    var bearWeight = ready && score < 0 ? directional : 0;
+    var bullWeight = ready && score > 0 ? directional : 0;
+    var balanceWeight = ready ? 1 - directional : 1;
+    var bearPct = bearWeight * 100, balancePct = balanceWeight * 100, bullPct = bullWeight * 100;
+    var state = "WAITING FOR LIVE MATH", color = "#6f3c68";
     if (ready) {
-      if (lean >= .35) { state = "TQQQ LEADS · " + lean.toFixed(2) + "pp"; color = "#00bfa5"; }
-      else if (lean <= -.35) { state = "SQQQ LEADS · " + Math.abs(lean).toFixed(2) + "pp"; color = "#ff453a"; }
-      else { state = "BALANCED · " + (lean >= 0 ? "+" : "") + lean.toFixed(2) + "pp"; color = "#ff9f0a"; }
+      if (balanceWeight >= Math.max(bearWeight, bullWeight)) {
+        state = "BALANCED · " + Math.abs(score).toFixed(2) + "σ"; color = "#b06fa8";
+      } else if (bullWeight >= .75) {
+        state = "OVERLY BULLISH · +" + score.toFixed(2) + "σ"; color = "#00e676";
+      } else if (bullWeight > 0) {
+        state = "BULLISH LEAN · +" + score.toFixed(2) + "σ"; color = "#00bfa5";
+      } else if (bearWeight >= .75) {
+        state = "OVERLY BEARISH · " + score.toFixed(2) + "σ"; color = "#ff453a";
+      } else {
+        state = "BEARISH LEAN · " + score.toFixed(2) + "σ"; color = "#ff9f0a";
+      }
     }
+    var tqTime = Number(tq._live_src_time), sqTime = Number(sq._live_src_time);
+    var oldestTwinTime = isFinite(tqTime) && isFinite(sqTime) ? Math.min(tqTime, sqTime) : 0;
+    var live = tq._live_quote === true && sq._live_quote === true && oldestTwinTime > 0 &&
+      (Date.now() - oldestTwinTime) <= 30 * 60000;
+    var source = live ? "LIVE · 15S REFRESH" : "LAST SNAPSHOT";
     function side(label, value) {
       return '<div class="qqq-leverage-meter-side"><span>' + label + '</span><b>' +
         (isFinite(value) ? signed(value, 2, "%") : "&mdash;") + '</b></div>';
     }
     return '<div id="qqq-leverage-meter" class="qqq-leverage-meter" ' +
-      'style="--lev-position:' + position.toFixed(1) + '%;--lev-color:' + color + '" ' +
-      'role="img" aria-label="TQQQ versus SQQQ leverage balance: ' + esc(state) + '">' +
-      '<div class="qqq-leverage-meter-head"><span class="qqq-leverage-meter-title">3× leverage balance</span>' +
+      'style="--lev-color:' + color + '" role="img" aria-label="TQQQ versus SQQQ live regime: ' +
+      esc(state) + '; bearish ' + bearPct.toFixed(0) + ' percent, balanced ' + balancePct.toFixed(0) +
+      ' percent, bullish ' + bullPct.toFixed(0) + ' percent">' +
+      '<div class="qqq-leverage-meter-head"><span class="qqq-leverage-meter-title">3× leverage regime ' +
+      '<small>· ' + source + '</small></span>' +
       '<span class="qqq-leverage-meter-state">' + esc(state) + '</span></div>' +
       '<div class="qqq-leverage-meter-row">' + side("SQQQ · bearish", sqPct) +
-      '<div class="qqq-leverage-track" aria-hidden="true"></div>' +
+      '<div class="qqq-leverage-track" aria-hidden="true">' +
+        '<span class="qqq-leverage-segment bear" style="width:' + bearPct.toFixed(1) + '%"></span>' +
+        '<span class="qqq-leverage-segment balance" style="width:' + balancePct.toFixed(1) + '%"></span>' +
+        '<span class="qqq-leverage-segment bull" style="width:' + bullPct.toFixed(1) + '%"></span>' +
+      '</div>' +
       side("TQQQ · bullish", tqPct) + '</div>' +
-      '<div class="qqq-leverage-meter-scale"><span>SQQQ</span><span>balanced</span><span>TQQQ</span></div>' +
+      '<div class="qqq-leverage-meter-scale"><span>bear ' + bearPct.toFixed(0) + '%</span>' +
+      '<span>balanced ' + balancePct.toFixed(0) + '%</span><span>bull ' + bullPct.toFixed(0) + '%</span></div>' +
+      '<div class="qqq-leverage-meter-math">(TQQQ% − SQQQ%) ÷ 6 ÷ (VIX ÷ √252) · VIX ' +
+      (isFinite(vix) ? vix.toFixed(2) : "—") + '</div>' +
       '</div>';
   }
 
@@ -4129,6 +4159,13 @@
   function updateMountedQqqQuote(e) {
     if (idx !== FULL.length - 1) return;
     var M = qqqChartModel(e);
+    var leverageMeter = document.getElementById("qqq-leverage-meter");
+    if (leverageMeter) {
+      var meterTmp = document.createElement("div");
+      meterTmp.innerHTML = qqqLeverageMeter(M);
+      var freshMeter = meterTmp.firstElementChild;
+      if (freshMeter) leverageMeter.replaceWith(freshMeter);
+    }
     if (!M.quoteLive || M.quoteTime === null) return;
     var quoteBarTime = Math.floor(M.quoteTime / 60000) * 60;
     if (QQQ_TV) {
@@ -4179,13 +4216,6 @@
         }
         if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: M.quoteFresh ? "LIVE QQQ" : "QQQ" });
       } catch (err) {}
-    }
-    var leverageMeter = document.getElementById("qqq-leverage-meter");
-    if (leverageMeter) {
-      var meterTmp = document.createElement("div");
-      meterTmp.innerHTML = qqqLeverageMeter(M);
-      var freshMeter = meterTmp.firstElementChild;
-      if (freshMeter) leverageMeter.replaceWith(freshMeter);
     }
     // Live-update the unified cockpit below the chart + GEX pair.
     try {
@@ -5386,12 +5416,11 @@
       });
     }
 
-    // QQQ gets a faster lightweight quote-only refresh for the chart. This is
-    // four requests per minute and stays comfortably inside the free feed's
-    // limit; the heavier all-symbol dashboard refresh remains once per minute.
+    // QQQ plus the two 3× twins get a faster quote refresh. That keeps both the
+    // candle and the leverage-regime weights current without waiting a minute.
     function cycleQqq() {
       if (document.hidden) return;
-      fetchOne("QQQ").then(function () {
+      Promise.all([fetchOne("QQQ"), fetchOne("TQQQ"), fetchOne("SQQQ")]).then(function () {
         var info = applyLive();
         if (idx === FULL.length - 1) updateMountedQqqQuote(FULL[FULL.length - 1]);
         stamp(info);
