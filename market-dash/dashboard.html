@@ -112,11 +112,32 @@
   .flow details.read { margin-top:8px; }
   .qqq-chart-shell { position:relative; min-height:430px; margin-top:4px; }
   .qqq-chart-canvas { width:100%; height:430px; }
-  .qqq-chart-meta { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center;
-                    color:var(--dim); font-size:10.5px; margin:2px 0 10px; }
-  .qqq-chart-meta .tv-credit { margin-left:auto; color:var(--faint); }
-  .qqq-chart-meta .tv-credit a { color:var(--dim); text-decoration:none; }
-  .qqq-chart-status { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 10px; }
+  .qqq-leverage-meter { margin:2px 0 10px; padding:10px 12px 9px;
+                        border:1px solid #171722; border-radius:7px; background:#08080d; }
+  .qqq-leverage-meter-head { display:flex; align-items:baseline; justify-content:space-between;
+                             gap:12px; margin-bottom:7px; }
+  .qqq-leverage-meter-title { color:var(--accent); font-size:9.5px; letter-spacing:1.25px;
+                              text-transform:uppercase; }
+  .qqq-leverage-meter-state { color:var(--lev-color); font-size:10.5px; font-weight:700;
+                              letter-spacing:.55px; white-space:nowrap; }
+  .qqq-leverage-meter-row { display:grid; grid-template-columns:auto minmax(120px,1fr) auto;
+                            align-items:center; gap:10px; }
+  .qqq-leverage-meter-side { min-width:108px; color:var(--dim); font-size:9px;
+                             letter-spacing:.45px; white-space:nowrap; }
+  .qqq-leverage-meter-side:last-child { text-align:right; }
+  .qqq-leverage-meter-side b { display:block; margin-top:1px; color:var(--txt);
+                               font-size:11px; letter-spacing:0; }
+  .qqq-leverage-track { position:relative; height:9px; background:#202024; overflow:visible;
+                        box-shadow:inset 0 0 0 1px rgba(255,255,255,.025); }
+  .qqq-leverage-track::before { content:""; position:absolute; inset:0;
+    background:linear-gradient(90deg,#00bfa5 0 12%,#ff9f0a 12% 30%,#55555d 30% 60%,#24242a 60% 100%); }
+  .qqq-leverage-track::after { content:""; position:absolute; top:-5px;
+    left:calc(var(--lev-position) - 5px); width:10px; height:19px;
+    background:var(--lev-color); clip-path:polygon(0 0,100% 50%,0 100%,28% 50%);
+    filter:drop-shadow(0 0 4px var(--lev-color)); }
+  .qqq-leverage-meter-scale { display:flex; justify-content:space-between; margin:5px 118px 0;
+                              color:var(--faint); font-size:7.5px; letter-spacing:.6px;
+                              text-transform:uppercase; }
   .qqq-chart-chip { display:inline-flex; align-items:center; min-height:25px; padding:4px 8px;
                     border:1px solid var(--line); border-radius:6px; background:rgba(255,255,255,.025);
                     color:var(--dim); font-size:10.5px; letter-spacing:.35px; }
@@ -131,13 +152,6 @@
                cursor:pointer; }
   .qqq-layer[aria-pressed="true"] { color:var(--accent); border-color:rgba(255,43,224,.5);
                                      background:rgba(255,43,224,.07); }
-  .qqq-chart-exposure { display:grid; grid-template-columns:repeat(5,minmax(100px,1fr));
-                        gap:1px; margin:0 0 10px; overflow:hidden; border:1px solid var(--line);
-                        border-radius:7px; background:var(--line); }
-  .qqq-chart-exposure > span { background:#0c0c14; padding:7px 9px; color:var(--dim);
-                               font-size:10px; white-space:nowrap; overflow:hidden;
-                               text-overflow:ellipsis; }
-  .qqq-chart-exposure b { color:var(--txt); font-weight:500; }
   .qqq-chart-key { display:flex; flex-wrap:wrap; gap:7px 16px; margin-top:9px;
                    color:var(--dim); font-size:10.5px; }
   .qqq-chart-key i { display:inline-block; width:13px; height:2px; margin-right:6px;
@@ -469,8 +483,10 @@
     .read { font-size:12px; }
     .qqq-chart-shell { min-height:350px; }
     .qqq-chart-canvas { height:350px; }
-    .qqq-chart-meta .tv-credit { width:100%; margin-left:0; }
-    .qqq-chart-exposure { grid-template-columns:repeat(2,minmax(110px,1fr)); }
+    .qqq-leverage-meter-row { grid-template-columns:1fr; gap:5px; }
+    .qqq-leverage-meter-side { min-width:0; }
+    .qqq-leverage-meter-side:last-child { text-align:left; }
+    .qqq-leverage-meter-scale { margin:5px 0 0; }
     .qqq-chart-controls { margin-bottom:7px; }
     .qqq-top-grid { grid-template-columns:1fr; }
     .qqq-top-grid .qqq-chart-shell { min-height:270px; }
@@ -1316,6 +1332,7 @@
 
   // Focused leverage/volatility comparison for the QQQ tab.
   var NASDAQ_STARS = ["SQQQ", "TQQQ", "VIX"];
+  var NASDAQ_CHART_STARS = ["VIX"];
   var NASDAQ_COLOR = { SQQQ:"#ff453a", TQQQ:"#b388ff", VIX:"#ff00e5" };
 
   // Distinct line colours for the rest-of-watchlist overlay chart (cycled).
@@ -1902,7 +1919,7 @@
     var chart = "";
     if (showChart) {
       var _S = STARS, _C = STAR_COLOR;
-      STARS = NASDAQ_STARS; STAR_COLOR = NASDAQ_COLOR;
+      STARS = NASDAQ_CHART_STARS; STAR_COLOR = NASDAQ_COLOR;
       try {
         chart = starChart(e);   // correlation dropped — leveraged twins are ±1 by construction
       } finally {
@@ -1910,27 +1927,16 @@
       }
     }
 
-    var lines = [];
-    var q = by.QQQ, tq = by.TQQQ, sq = by.SQQQ;
-    if (q && has(q.pct_change)) {
-      lines.push("<div style='margin:5px 0'>QQQ is " + signed(q.pct_change, 2, "%") + " today. " +
-        "<b>TQQQ</b> is 3&times; long and <b>SQQQ</b> is 3&times; short QQQ &mdash; expect about " +
-        signed(q.pct_change * 3, 1, "%") + " and " + signed(-q.pct_change * 3, 1, "%") +
-        ((tq && has(tq.pct_change) && sq && has(sq.pct_change))
-          ? " (actual TQQQ " + signed(tq.pct_change, 2, "%") + ", SQQQ " + signed(sq.pct_change, 2, "%") + ")"
-          : "") +
-        ".</div>");
-    }
-    lines.push("<div style='margin:5px 0;color:var(--faint);font-size:11px'>Same Star-Players logic on the " +
-      "TQQQ / SQQQ leverage pair with VIX as the volatility context. The overlay rebases each to 100, so " +
-      "direction, leverage and fear can be compared on one scale.</div>");
+    var lines = ["<div style='margin:5px 0;color:var(--faint);font-size:11px'>VIX is kept as the " +
+      "standalone volatility history. TQQQ and SQQQ now feed the compact leverage meter inside the live " +
+      "QQQ chart.</div>"];
 
     var readHtml = '<details class="read" open><summary><b>Read</b></summary><div>' +
       lines.join("") + "</div></details>";
 
     var body = (showChart ? chart : "") + (showTable ? wlTable(rows, true) : "");
     var title = showChart && !showTable
-      ? "Nasdaq — SQQQ / TQQQ / VIX chart"
+      ? "Nasdaq — VIX"
       : showTable && !showChart
         ? "Nasdaq — SQQQ / TQQQ / VIX data"
         : "Nasdaq — SQQQ / TQQQ / VIX";
@@ -3300,31 +3306,40 @@
     return bits.join(" · ");
   }
 
+  // Compact replacement for the old source/exposure rows. The 3× twins are
+  // reduced to one directional balance: negative = SQQQ leads, positive =
+  // TQQQ leads. Daily percentage moves keep the meter responsive to live quotes.
+  function qqqLeverageMeter(M) {
+    var mk = (M && M.mk) || {}, tq = mk.TQQQ || {}, sq = mk.SQQQ || {};
+    var tqPct = Number(tq.pct_change), sqPct = Number(sq.pct_change);
+    var ready = isFinite(tqPct) && isFinite(sqPct);
+    var lean = ready ? (tqPct - sqPct) / 2 : 0;
+    var limit = 6;
+    var position = Math.max(0, Math.min(100, 50 + lean / limit * 50));
+    var state = "WAITING FOR TWIN QUOTES", color = "#6f3c68";
+    if (ready) {
+      if (lean >= .35) { state = "TQQQ LEADS · " + lean.toFixed(2) + "pp"; color = "#00bfa5"; }
+      else if (lean <= -.35) { state = "SQQQ LEADS · " + Math.abs(lean).toFixed(2) + "pp"; color = "#ff453a"; }
+      else { state = "BALANCED · " + (lean >= 0 ? "+" : "") + lean.toFixed(2) + "pp"; color = "#ff9f0a"; }
+    }
+    function side(label, value) {
+      return '<div class="qqq-leverage-meter-side"><span>' + label + '</span><b>' +
+        (isFinite(value) ? signed(value, 2, "%") : "&mdash;") + '</b></div>';
+    }
+    return '<div id="qqq-leverage-meter" class="qqq-leverage-meter" ' +
+      'style="--lev-position:' + position.toFixed(1) + '%;--lev-color:' + color + '" ' +
+      'role="img" aria-label="TQQQ versus SQQQ leverage balance: ' + esc(state) + '">' +
+      '<div class="qqq-leverage-meter-head"><span class="qqq-leverage-meter-title">3× leverage balance</span>' +
+      '<span class="qqq-leverage-meter-state">' + esc(state) + '</span></div>' +
+      '<div class="qqq-leverage-meter-row">' + side("SQQQ · bearish", sqPct) +
+      '<div class="qqq-leverage-track" aria-hidden="true"></div>' +
+      side("TQQQ · bullish", tqPct) + '</div>' +
+      '<div class="qqq-leverage-meter-scale"><span>SQQQ</span><span>balanced</span><span>TQQQ</span></div>' +
+      '</div>';
+  }
+
   function secQqqTradingChart(e, bodyOnly, chartModel) {
     var M = chartModel || qqqChartModel(e);
-    var liveBars = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
-      ? LIVE_AUCTION.candles.length : 0;
-    var source = qqqChartSource(M, liveBars);
-    var chips = M.statuses.filter(function (s) { return s.liveQuote; }).map(function (s) {
-      return '<span class="qqq-chart-chip ' + s.tone + '"' +
-        (s.liveQuote ? ' id="qqq-live-chip"' : "") + '>' + esc(s.text) + "</span>";
-    }).join("");
-    var liveBarState = qqqLiveBarState(M);
-    chips += '<span id="qqq-live-bar-chip" class="qqq-chart-chip ' + liveBarState.tone + '">' +
-      esc(liveBarState.text) + '</span>';
-    if (M.latest && LIVE_GEX_INTRADAY && LIVE_GEX_INTRADAY.points && LIVE_GEX_INTRADAY.points.length > 1) {
-      chips += '<span class="qqq-chart-chip up">GEX HISTORY · ' +
-        LIVE_GEX_INTRADAY.points.length + ' × 1M</span>';
-    }
-    var g = M.g || {};
-    var exposure = [
-      ["GEX", g.net_gex], ["DEX", g.net_dex], ["VEX", g.net_vex],
-      ["TEX", g.net_tex], ["G ratio", g.gamma_ratio]
-    ].map(function (x) {
-      var shown = x[0] === "G ratio" ? (has(x[1]) ? Number(x[1]).toFixed(3) : "—") :
-                  (has(x[1]) ? fmtBig(Number(x[1])) : "—");
-      return "<span>" + esc(x[0]) + " <b>" + shown + "</b></span>";
-    }).join("");
     function layerButton(id, label) {
       return '<button type="button" class="qqq-layer" data-qqq-layer="' + id +
         '" aria-pressed="' + (QQQ_LAYERS[id] ? "true" : "false") + '">' + esc(label) + "</button>";
@@ -3334,11 +3349,7 @@
         '" aria-pressed="' + (on ? "true" : "false") + '">' + esc(label) + "</button>";
     }
     var body =
-      '<div class="qqq-chart-meta"><span id="qqq-live-source">' + esc(source) + '</span>' +
-      '<span class="tv-credit">Includes <a href="https://www.tradingview.com/" target="_blank" rel="noopener">' +
-      'Lightweight Charts&trade; by TradingView, Inc.</a></span></div>' +
-      '<div class="qqq-chart-status">' + chartModel.statuses.filter(function(s){return s.liveQuote;}).map(function(s){return '<span class="status ' + s.tone + '">' + esc(s.text) + '</span>';}).join("") + "</div>" +
-      '<div class="qqq-chart-exposure">' + exposure + "</div>" +
+      qqqLeverageMeter(M) +
       '<div class="qqq-chart-controls"><span class="label">Chart</span>' +
         viewButton("data-qqq-mode", "raw", "Raw candles", QQQ_CHART_VIEW.mode === "raw") +
         viewButton("data-qqq-mode", "ha", "Heikin-Ashi", QQQ_CHART_VIEW.mode === "ha") +
@@ -4169,16 +4180,12 @@
         if (QQQ_TV.spotLine) QQQ_TV.spotLine.applyOptions({ price: M.spot, title: M.quoteFresh ? "LIVE QQQ" : "QQQ" });
       } catch (err) {}
     }
-    var sourceEl = document.getElementById("qqq-live-source");
-    var chipEl = document.getElementById("qqq-live-chip");
-    var barChipEl = document.getElementById("qqq-live-bar-chip");
-    var bars = LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles) ? LIVE_AUCTION.candles.length : 0;
-    if (sourceEl) sourceEl.textContent = qqqChartSource(M, bars);
-    if (chipEl) chipEl.textContent = (M.quoteFresh ? "QQQ LIVE $" : "QQQ LAST $") + M.spot.toFixed(2);
-    if (barChipEl) {
-      var barState = qqqLiveBarState(M);
-      barChipEl.textContent = barState.text;
-      barChipEl.className = "qqq-chart-chip " + barState.tone;
+    var leverageMeter = document.getElementById("qqq-leverage-meter");
+    if (leverageMeter) {
+      var meterTmp = document.createElement("div");
+      meterTmp.innerHTML = qqqLeverageMeter(M);
+      var freshMeter = meterTmp.firstElementChild;
+      if (freshMeter) leverageMeter.replaceWith(freshMeter);
     }
     // Live-update the unified cockpit below the chart + GEX pair.
     try {
@@ -5089,13 +5096,13 @@
       '<select id="pick">' + opts + "</select>" +
       "</header>";
 
-    // Focused leverage/volatility comparison first, followed by the complete
-    // QQQ live chart/profile/cockpit and then the preserved long calculations.
+    // VIX history first. The 3× twins move into the compact live meter inside
+    // the QQQ card, while their detailed rows remain at the bottom.
     var _qqqModel = qqqChartModel(e);
     var _leverageChart = secNasdaqStars(e, "chart");
     var _leverageTable = secNasdaqStars(e, "table");
     var _qqqBody =
-      (_leverageChart ? band("Leverage family · refine later") +
+      (_leverageChart ? band("Volatility · VIX") +
         '<div class="grid qqq-leverage-last">' + _leverageChart + '</div>' : "") +
       secQqqOpening(e, _qqqModel) +   // includes the live chart, GEX and unified cockpit
       secNasdaqDeepDive(e) +
