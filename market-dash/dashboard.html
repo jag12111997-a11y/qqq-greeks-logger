@@ -280,6 +280,15 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     text-align: center;
+    transition: border-color 0.4s, background 0.4s, box-shadow 0.4s;
+  }
+  .qqq-quad-hub.qqq-hub-pulse {
+    animation: qqqHubPulse 0.8s ease-out;
+  }
+  @keyframes qqqHubPulse {
+    0%   { box-shadow: 0 0 0 0 currentColor; transform: scale(1); }
+    40%  { box-shadow: 0 0 20px 6px currentColor; transform: scale(1.06); }
+    100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
   }
   .qqq-quad-hub .qh-label {
     font-size: 7px; letter-spacing: 2.5px; text-transform: uppercase;
@@ -360,7 +369,7 @@
     z-index: 10;
     pointer-events: none;
   }
-  .qqq-label-overlay > * { pointer-events: auto; }
+  /* children stay pointer-events:none (inherited) so clicks reach the chart */
   .qqq-live-lbl {
     position: absolute; right: 0; width: 76px;
     display: flex; align-items: center; justify-content: center;
@@ -400,7 +409,7 @@
   .qqq-key-lbl .ltag .lval { font-weight: 700; font-size: 10px; }
   .qqq-zone-bracket {
     position: absolute; right: 1px; width: 74px;
-    z-index: 12; cursor: pointer;
+    z-index: 12;
     transition: top 0.15s ease, height 0.15s ease;
   }
   .qqq-zone-body {
@@ -425,8 +434,7 @@
     transition: opacity 0.15s; z-index: 30;
     backdrop-filter: blur(8px);
   }
-  .qqq-zone-bracket:hover .qqq-zone-panel { opacity: 1; pointer-events: auto; }
-  .qqq-zone-bracket:hover .qqq-zone-body { background: rgba(255,255,255,.04); }
+  /* zone brackets are display-only — no hover; clicks pass through to chart */
   .qqq-zone-panel .zp-title {
     font-size: 7.5px; letter-spacing: 1.5px; text-transform: uppercase;
     margin-bottom: 5px; opacity: 0.6;
@@ -443,12 +451,29 @@
       grid-template-columns: 1fr;
       grid-template-rows: auto;
     }
-    .qqq-quad-hub-wrap { grid-row: auto; grid-column: auto; padding: 12px; }
+    .qqq-quad-hub-wrap { grid-row: auto; grid-column: auto; padding: 12px; cursor: pointer; }
+    .qqq-quad-hub-wrap::after {
+      content: "▼ tap to expand";
+      display: block; text-align: center;
+      font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--faint); margin-top: 6px;
+    }
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-hub-wrap::after {
+      content: "▲ tap to collapse";
+    }
     .qqq-quad-hub { width: 120px; height: 120px; }
     .qqq-quad-hub .qh-call { font-size: 15px; }
     .qqq-quad-tl, .qqq-quad-tr, .qqq-quad-bl, .qqq-quad-br {
-      border-radius: 0; border-right: 1px solid rgba(59,14,51,.25);
+      display: none; border-radius: 0; border-right: 1px solid rgba(59,14,51,.25);
     }
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-tl,
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-tr,
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-bl,
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-br {
+      display: block;
+    }
+    .qqq-compass-row { display: none; }
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-compass-row { display: flex; }
     .qqq-label-overlay { display: none; }
   }
 
@@ -1932,72 +1957,7 @@
              callColor:callColor, callBorder:callBorder };
   }
 
-  // Game-HUD command board for the Nasdaq tab — a glance dashboard (hero score,
-  // gauges, status lights, compact leverage bars) built from the same live data
-  // the cockpit uses. The heavy charts/tables live in the collapsed panels below.
-  function secNasdaqHUD(e, chartModel) {
-    var S = nasdaqCommandModel(e, chartModel);
-    var mk = S.mk, q = S.q, vix = S.vix, gx = S.g;
-    var g = S.geometry, dv = S.dv, vr2 = S.vr2, sp = S.spread, gpos = S.gpos;
-    var hostile = S.hostile, friendly = S.friendly;
-    var call = S.call;
-    function C(v) { return v >= 0 ? "#00e676" : "#ff453a"; }
-
-    var qz = q && has(q.z20) ? q.z20 : null;
-    var qMove = q && has(q.last) && isFinite(S.chart.prevClose) ? q.last - S.chart.prevClose : null;
-    var _tq = mk.TQQQ, _sq = mk.SQQQ;
-    var lv = (_tq && has(_tq.z20) && _sq && has(_sq.z20)) ? (_tq.z20 - _sq.z20) / 2 : null;
-    var lvWord = lv === null ? "—" : lv >= 0.5 ? "callish" : lv <= -0.5 ? "bearish" : "balanced";
-    var used = S.chart.used;
-    var usedPct = used === null ? 0 : Math.min(1, used);
-    var usedCol = used === null ? "#8b8ba6" : used < 0.5 ? "#00e676" : used < 1 ? "#ffd600" : "#ff453a";
-
-    // One compact visual language for every glance signal. These chips match
-    // the Auction / Context pills below and replace the old hero cards + gauges.
-    function chip(label, value, sub, tone, extra) {
-      return '<span class="qqq-hud-chip ' + (tone || "dim") + '">' +
-        (label ? '<span class="k">' + label + '</span>' : "") +
-        (value ? '<span class="v">' + value + '</span>' : "") +
-        (sub ? '<span class="sub">' + sub + '</span>' : "") +
-        (extra || "") + '</span>';
-    }
-    function light(txt, tone) {
-      return chip("", (tone === "dim" ? "" : "● ") + txt, "", tone);
-    }
-
-    // Stable left-to-right decision hierarchy: action first, then the signals
-    // that can veto a trade, then execution state, then supporting context.
-    // Positions never jump when a chip changes colour, which lowers scan load.
-    var chips = '<div class="qqq-command-chips">';
-    chips += chip("Call", "● " + call, hostile + " hostile · " + friendly + " friendly",
-      call === "STAND DOWN" ? "down" : call === "LEAN FADE" ? "up" : "warn");
-    if (dv !== null) chips += light("√det(G) " + num(dv, 3) + " · " + (dv < 0.15 ? "collapsed" : dv < 0.35 ? "thin" : "healthy"), dv < 0.15 ? "down" : dv < 0.35 ? "warn" : "up");
-    if (vr2 !== null) chips += light("VR(2) " + num(vr2, 2) + " · " + (vr2 > 1.1 ? "trending" : vr2 < 0.9 ? "revert" : "random"), vr2 > 1.1 ? "down" : vr2 < 0.9 ? "up" : "dim");
-    chips += chip("Range", '<span id="qqq-command-range-used" style="color:' + usedCol + '">' +
-      (used === null ? "—" : (used * 100).toFixed(0) + "%") + '</span>', "of 1σ", used === null ? "dim" : used < 0.5 ? "up" : used < 1 ? "warn" : "down",
-      '<i id="qqq-command-range-bar" class="qqq-mini-bar" style="width:' +
-      (usedPct * 100).toFixed(0) + '%;background:' + usedCol + '"></i>');
-    if (ok(gx) && has(gx.regime)) chips += light(gpos ? "+γ dampen" : "−γ amplify", gpos ? "up" : "down");
-    chips += chip("QQQ stretch", qz !== null ? "z " + signed(qz, 2) : "—",
-      '<span id="qqq-command-move">' +
-      (qMove !== null ? (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + " · " : "") +
-      '</span><span id="qqq-command-price">' + (q && has(q.last) ? num(q.last, 2) : "") + '</span>',
-      qz === null ? "dim" : qz >= 0 ? "up" : "down");
-    if (sp !== null) chips += light("edge " + signed(sp, 1, "pp"), sp > 0 ? "up" : "down");
-    chips += chip("Leverage", lv === null ? "—" : lvWord + " " + signed(lv, 2),
-      (_tq && _sq && has(_tq.z20) && has(_sq.z20))
-        ? "T " + signed(_tq.z20, 2) + " / S " + signed(_sq.z20, 2) : "TQQQ / SQQQ",
-      "accent");
-    if (has(vix)) chips += light("VIX " + num(vix, 2), vix >= 20 ? "warn" : "dim");
-    chips += "</div>";
-
-    // LEVERAGE FAMILY · TODAY bar strip removed 2026-08-17 (Q4). The full
-    // "Nasdaq — QQQ leverage family" Star-Players section (secNasdaqStars) is kept.
-
-    return '<div id="qqq-command-live" class="qqq-command-summary" data-prev-close="' +
-      (isFinite(S.chart.prevClose) ? S.chart.prevClose : "") + '" data-vix="' +
-      (isFinite(vix) ? vix : "") + '">' + chips + "</div>";
-  }
+  // secNasdaqHUD removed — replaced by secQuadrantCockpit (2026-08-30).
 
   function secNasdaqStars(e) {
     var all = get(e, "watchlist", []);
@@ -4017,8 +3977,12 @@
           title: "EMA 20", color: "#ff9f0a", lineWidth: 1,
           priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false
         });
-        ema9Series.setData(qqqEma(candles, 9));
-        ema20Series.setData(qqqEma(candles, 20));
+        var _ema9d = qqqEma(candles, 9), _ema20d = qqqEma(candles, 20);
+        ema9Series.setData(_ema9d);
+        ema20Series.setData(_ema20d);
+        // Stash last EMA values for the quadrant cockpit compass row
+        window._qqqEma9Last = _ema9d.length ? _ema9d[_ema9d.length - 1].value : null;
+        window._qqqEma20Last = _ema20d.length ? _ema20d[_ema20d.length - 1].value : null;
       }
 
       if (QQQ_CHART_VIEW.pane === "volume") {
@@ -4273,21 +4237,15 @@
     if (upside.length >= 1 && spot) {
       var uTop = Math.min.apply(null, upside.map(function (x) { return x.y; }));
       var uBot = spot.y;
-      var uH = Math.max(uBot - uTop, 20);
+      var uH = Math.max(uBot - uTop, 30);
       uTop = uBot - uH;
       if (uH >= 4) {
-        var uRows = upside.map(function (x) {
-          return '<div class="zp-row"><span class="zp-name">' + esc(x.title.replace(/\s*·?\s*\d+%$/, "")) +
-            '</span><span style="color:' + x.color + '">' + x.price.toFixed(2) + '</span></div>';
-        }).join("");
         html += '<div class="qqq-zone-bracket" style="top:' + uTop + 'px;height:' + uH + 'px">' +
           '<div class="qqq-zone-body" style="border-color:#00e676; color:#00e676">' +
           '<span class="zt">▲ UPSIDE</span>' +
           '<span class="zr">' + upside[upside.length - 1].price.toFixed(2) + ' – ' + upside[0].price.toFixed(2) + '</span>' +
           '<span class="zc">' + upside.length + ' levels</span>' +
-          '</div>' +
-          '<div class="qqq-zone-panel">' +
-          '<div class="zp-title">Upside levels</div>' + uRows + '</div></div>';
+          '</div></div>';
       }
     }
 
@@ -4295,21 +4253,15 @@
     if (downside.length >= 1 && spot) {
       var dTop = spot.y;
       var dBot = Math.max.apply(null, downside.map(function (x) { return x.y; }));
-      var dH = Math.max(dBot - dTop, 20);
+      var dH = Math.max(dBot - dTop, 30);
       dBot = dTop + dH;
       if (dH >= 4) {
-        var dRows = downside.map(function (x) {
-          return '<div class="zp-row"><span class="zp-name">' + esc(x.title.replace(/\s*·?\s*\d+%$/, "")) +
-            '</span><span style="color:' + x.color + '">' + x.price.toFixed(2) + '</span></div>';
-        }).join("");
         html += '<div class="qqq-zone-bracket" style="top:' + dTop + 'px;height:' + dH + 'px">' +
           '<div class="qqq-zone-body" style="border-color:#ffd600; color:#ffd600">' +
           '<span class="zt">▼ DOWNSIDE</span>' +
           '<span class="zr">' + downside[0].price.toFixed(2) + ' – ' + downside[downside.length - 1].price.toFixed(2) + '</span>' +
           '<span class="zc">' + downside.length + ' levels</span>' +
-          '</div>' +
-          '<div class="qqq-zone-panel">' +
-          '<div class="zp-title">Downside levels</div>' + dRows + '</div></div>';
+          '</div></div>';
       }
     }
 
@@ -4347,11 +4299,11 @@
             QQQ_TV.candleSeries.update(shown[shown.length - 1]);
             if (QQQ_TV.ema9Series) {
               var e9 = qqqEma(mergedLive, 9);
-              if (e9.length) QQQ_TV.ema9Series.update(e9[e9.length - 1]);
+              if (e9.length) { QQQ_TV.ema9Series.update(e9[e9.length - 1]); window._qqqEma9Last = e9[e9.length - 1].value; }
             }
             if (QQQ_TV.ema20Series) {
               var e20 = qqqEma(mergedLive, 20);
-              if (e20.length) QQQ_TV.ema20Series.update(e20[e20.length - 1]);
+              if (e20.length) { QQQ_TV.ema20Series.update(e20[e20.length - 1]); window._qqqEma20Last = e20[e20.length - 1].value; }
             }
             if (QQQ_TV.indicatorSeries) {
               if (QQQ_TV.paneType === "volume") {
@@ -4392,35 +4344,32 @@
       barChipEl.textContent = barState.text;
       barChipEl.className = "qqq-chart-chip " + barState.tone;
     }
-    // The command center follows the same fast quote without remounting the
-    // chart or rebuilding the cockpit.
-    var command = document.getElementById("qqq-command-live");
-    var commandPrice = document.getElementById("qqq-command-price");
-    var commandMove = document.getElementById("qqq-command-move");
-    var commandRange = document.getElementById("qqq-command-range-used");
-    var commandRangeBar = document.getElementById("qqq-command-range-bar");
-    if (commandPrice) commandPrice.textContent = M.spot.toFixed(2);
-    if (command) {
-      var prev = Number(command.getAttribute("data-prev-close"));
-      var cvix = Number(command.getAttribute("data-vix"));
-      if (commandMove && isFinite(prev)) {
-        var move = M.spot - prev;
-        commandMove.textContent = (move >= 0 ? "+$" : "−$") + Math.abs(move).toFixed(2) + " · ";
-      }
-      if (isFinite(prev) && prev > 0 && isFinite(cvix) && cvix > 0) {
-        var livePct = Math.abs((M.spot / prev - 1) * 100);
-        var liveUsed = livePct / (cvix / Math.sqrt(252));
-        var liveCol = liveUsed < .5 ? "#00e676" : liveUsed < 1 ? "#ffd600" : "#ff453a";
-        if (commandRange) {
-          commandRange.textContent = Math.round(liveUsed * 100) + "%";
-          commandRange.style.color = liveCol;
-        }
-        if (commandRangeBar) {
-          commandRangeBar.style.width = Math.min(100, liveUsed * 100).toFixed(0) + "%";
-          commandRangeBar.style.background = liveCol;
+    // Live-update the quadrant cockpit with current quote data
+    try {
+      var cockpitEl = document.getElementById("qqq-quad-cockpit");
+      if (cockpitEl) {
+        // Detect call-state change for pulse animation
+        var oldHub = cockpitEl.querySelector(".qqq-quad-hub .qh-call");
+        var oldCall = oldHub ? oldHub.textContent.trim() : "";
+        var freshCockpit = secQuadrantCockpit(e, M);
+        var tmpDiv = document.createElement("div");
+        tmpDiv.innerHTML = freshCockpit;
+        var newCockpit = tmpDiv.querySelector(".qqq-quad-cockpit");
+        if (newCockpit) {
+          cockpitEl.innerHTML = newCockpit.innerHTML;
+          // Pulse the hub if the call changed
+          var newHub = cockpitEl.querySelector(".qqq-quad-hub");
+          var newCallEl = cockpitEl.querySelector(".qqq-quad-hub .qh-call");
+          var newCall = newCallEl ? newCallEl.textContent.trim() : "";
+          if (newHub && oldCall && newCall && oldCall !== newCall) {
+            newHub.classList.add("qqq-hub-pulse");
+            newHub.addEventListener("animationend", function () {
+              newHub.classList.remove("qqq-hub-pulse");
+            }, { once: true });
+          }
         }
       }
-    }
+    } catch (err) {}
 
     // The profile's cyan spot row follows the same 15-second browser quote as
     // the chart; the gamma bars themselves only change with a real logger file.
@@ -4806,13 +4755,8 @@
         (qMove !== null ? '<div class="cs">' + (qMove >= 0 ? "+$" : "−$") + Math.abs(qMove).toFixed(2) + '</div>' : '') +
         '</div>';
     }
-    var ema9 = null, ema20 = null;
-    if (S.chart && S.chart.levels) {
-      S.chart.levels.forEach(function (lev) {
-        if (/EMA\s*9/i.test(lev.title)) ema9 = lev.price;
-        if (/EMA\s*20/i.test(lev.title)) ema20 = lev.price;
-      });
-    }
+    var ema9 = (typeof window._qqqEma9Last === "number") ? window._qqqEma9Last : null;
+    var ema20 = (typeof window._qqqEma20Last === "number") ? window._qqqEma20Last : null;
     if (ema9 !== null || ema20 !== null) {
       compass += '<div class="qqq-compass-chip" style="border-color:var(--warn); color:var(--warn);">' +
         '<div class="ck">EMA 9 / 20</div><div class="cv" style="font-size:11px">' +
@@ -4826,7 +4770,7 @@
     compass += '</div>';
 
     // ── ASSEMBLE ──
-    var cockpit = '<div class="qqq-quad-cockpit">' +
+    var cockpit = '<div id="qqq-quad-cockpit" class="qqq-quad-cockpit">' +
       '<div class="qqq-quad qqq-quad-tl">' + q1 + '</div>' +
       hub +
       '<div class="qqq-quad qqq-quad-tr">' + q2 + '</div>' +
@@ -4863,6 +4807,9 @@
     return cockpit + box + storyHtml + legend;
   }
 
+  // Full model detail — used by the deep dive "QQQ · full model detail" section.
+  // The glance view is secQuadrantCockpit() above; this one keeps the
+  // auction/context/news tiles for the expanded panel.
   function secCockpit(e, chartModel, omitPlan) {
     var S = nasdaqCommandModel(e, chartModel);
     function tile(label, big, sub, cn) {
@@ -5432,6 +5379,16 @@
     var y = window.scrollY;
     render();
     window.scrollTo(0, y);
+  });
+
+  // Mobile cockpit expand/collapse — delegated so it survives re-renders.
+  document.addEventListener("click", function (ev) {
+    var hw = (ev.target && ev.target.closest) ? ev.target.closest(".qqq-quad-hub-wrap") : null;
+    if (!hw) return;
+    // Only act at mobile width (matches the CSS @media rule)
+    if (window.innerWidth > 700) return;
+    var cockpit = hw.closest(".qqq-quad-cockpit");
+    if (cockpit) cockpit.classList.toggle("qqq-cockpit-open");
   });
 
   // ---------- LIVE PRICES (client-side, browser-only) ----------
