@@ -218,64 +218,64 @@
   .qqq-syn-sub { color:var(--dim); font-size:11.5px; margin-top:3px; }
   @media (max-width:720px) { .qqq-syn-row { grid-template-columns:1fr; gap:2px; } }
 
-  /* ── Quadrant Grid Cockpit ── */
+  /* ── Quadrant Grid Cockpit (compact) ── */
   .qqq-quad-cockpit {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     grid-template-rows: auto auto;
     gap: 0;
     border: 1px solid var(--line);
-    border-radius: 10px 10px 0 0;
+    border-radius: 8px 8px 0 0;
     overflow: hidden;
-    margin-top: 10px;
+    margin-top: 6px;
   }
   .qqq-quad {
-    padding: 10px;
+    padding: 5px 6px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 4px;
     background: var(--panel);
     border: 1px solid rgba(59,14,51,.25);
   }
-  .qqq-quad-tl { border-right: 0; border-bottom: 0; border-radius: 10px 0 0 0; }
-  .qqq-quad-tr { border-bottom: 0; border-radius: 0 10px 0 0; }
+  .qqq-quad-tl { border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
+  .qqq-quad-tr { border-bottom: 0; border-radius: 0 8px 0 0; }
   .qqq-quad-bl { border-right: 0; border-radius: 0; }
   .qqq-quad-br { border-radius: 0; }
   .qqq-quad-title {
     grid-column: 1 / -1;
-    font-size: 7px; letter-spacing: 2.5px; text-transform: uppercase;
-    display: flex; align-items: center; gap: 5px;
-    margin-bottom: 1px;
+    font-size: 6px; letter-spacing: 2px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 4px;
+    margin-bottom: 0;
   }
   .qqq-quad-title .qdot {
-    width: 5px; height: 5px; border-radius: 50%;
+    width: 4px; height: 4px; border-radius: 50%;
   }
   .qqq-qnode {
     background: rgba(10,2,16,.7);
-    border: 1px solid; border-radius: 5px;
-    padding: 5px 8px;
+    border: 1px solid; border-radius: 4px;
+    padding: 3px 5px;
     font-variant-numeric: tabular-nums;
   }
   .qqq-qnode .qk {
-    font-size: 7px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.6;
+    font-size: 6px; letter-spacing: 0.8px; text-transform: uppercase; opacity: 0.6;
   }
   .qqq-qnode .qv {
-    font-size: 12px; font-weight: 700; line-height: 1.25;
+    font-size: 10px; font-weight: 700; line-height: 1.2;
   }
   .qqq-qnode .qs {
-    font-size: 8px; opacity: 0.55; line-height: 1.25;
+    font-size: 7px; opacity: 0.55; line-height: 1.2;
   }
-  .qqq-qnode.sm .qv { font-size: 10.5px; }
-  .qqq-qnode.sm { padding: 4px 7px; }
+  .qqq-qnode.sm .qv { font-size: 9px; }
+  .qqq-qnode.sm { padding: 2px 5px; }
   .qqq-quad-hub-wrap {
     grid-row: 1 / 3;
     grid-column: 2;
     display: flex; align-items: center; justify-content: center;
-    padding: 16px 14px;
+    padding: 8px 8px;
     background: var(--panel);
   }
   .qqq-quad-hub {
-    width: 150px; height: 150px;
+    width: 100px; height: 100px;
     border-radius: 50%;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -287,68 +287,68 @@
   }
   @keyframes qqqHubPulse {
     0%   { box-shadow: 0 0 0 0 currentColor; transform: scale(1); }
-    40%  { box-shadow: 0 0 20px 6px currentColor; transform: scale(1.06); }
+    40%  { box-shadow: 0 0 14px 4px currentColor; transform: scale(1.05); }
     100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
   }
   .qqq-quad-hub .qh-label {
-    font-size: 7px; letter-spacing: 2.5px; text-transform: uppercase;
+    font-size: 6px; letter-spacing: 2px; text-transform: uppercase;
     color: var(--dim);
   }
   .qqq-quad-hub .qh-call {
-    font-size: 18px; font-weight: 800;
-    text-shadow: 0 0 16px currentColor;
-    line-height: 1.15; margin-top: 2px;
+    font-size: 13px; font-weight: 800;
+    text-shadow: 0 0 12px currentColor;
+    line-height: 1.15; margin-top: 1px;
   }
   .qqq-quad-hub .qh-count {
-    font-size: 8.5px; color: var(--dim); margin-top: 3px;
+    font-size: 7px; color: var(--dim); margin-top: 2px;
   }
   .qqq-quad-hub .qh-story {
-    font-size: 8px; color: var(--faint); margin-top: 4px;
-    line-height: 1.35; max-width: 135px;
+    font-size: 6.5px; color: var(--faint); margin-top: 2px;
+    line-height: 1.3; max-width: 90px;
   }
   .qqq-compass-row {
     grid-column: 1 / -1;
-    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
-    padding: 8px 14px;
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+    padding: 4px 10px;
     background: rgba(10,2,16,.5);
     border: 1px solid var(--line); border-top: 0;
   }
   .qqq-compass-chip {
-    border: 1.5px solid; border-radius: 5px;
-    padding: 4px 10px;
+    border: 1px solid; border-radius: 4px;
+    padding: 2px 7px;
     text-align: center; font-variant-numeric: tabular-nums;
   }
   .qqq-compass-chip .ck {
-    font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase;
+    font-size: 6px; letter-spacing: 1px; text-transform: uppercase;
   }
   .qqq-compass-chip .cv {
-    font-size: 14px; font-weight: 800; line-height: 1.2;
+    font-size: 11px; font-weight: 800; line-height: 1.2;
   }
   .qqq-compass-chip .cs {
-    font-size: 8.5px; opacity: 0.65;
+    font-size: 7px; opacity: 0.65;
   }
   .qqq-box-strip {
     border: 1px solid var(--line); border-top: 0;
     background: rgba(255,214,0,.05);
-    padding: 7px 16px;
-    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-    font-size: 10.5px;
+    padding: 4px 10px;
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    font-size: 9px;
   }
   .qqq-box-strip .bx-label {
-    font-size: 7.5px; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 6.5px; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--warn); flex-shrink: 0;
   }
   .qqq-box-strip .bx-body { color: var(--txt); }
   .qqq-box-strip .bx-body span { color: var(--dim); }
   .qqq-story-strip {
     border: 1px solid var(--line); border-top: 0;
-    border-radius: 0 0 10px 10px;
-    padding: 6px 16px;
-    font-size: 10px; color: var(--dim);
-    display: flex; align-items: baseline; gap: 10px;
+    border-radius: 0 0 8px 8px;
+    padding: 4px 10px;
+    font-size: 8.5px; color: var(--dim);
+    display: flex; align-items: baseline; gap: 8px;
   }
   .qqq-story-strip .sy-k {
-    font-size: 7.5px; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 6.5px; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--faint); flex-shrink: 0;
   }
   .qqq-signal-legend {
@@ -361,108 +361,25 @@
     border-radius: 50%; margin-right: 3px; vertical-align: 1px;
   }
 
-  /* ── Chart Label Overlay ── */
-  .qqq-label-overlay {
-    position: absolute;
-    top: 0; right: 0; bottom: 0;
-    width: 76px;
-    z-index: 10;
-    pointer-events: none;
-  }
-  /* children stay pointer-events:none (inherited) so clicks reach the chart */
-  .qqq-live-lbl {
-    position: absolute; right: 0; width: 76px;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 20; transition: top 0.15s ease;
-  }
-  .qqq-live-lbl .ltag {
-    background: rgba(0,229,255,.9); color: #000;
-    font-weight: 800; font-size: 12px;
-    padding: 4px 5px; border-radius: 3px;
-    width: 72px; text-align: center;
-    font-variant-numeric: tabular-nums;
-    box-shadow: 0 0 10px rgba(0,229,255,.3);
-  }
-  .qqq-live-lbl .ltag .lname {
-    font-size: 7px; letter-spacing: 1px; display: block;
-    font-weight: 600; opacity: 0.7;
-  }
-  .qqq-live-lbl .ldot {
-    display: inline-block; width: 4px; height: 4px;
-    border-radius: 50%; background: #000;
-    margin-right: 2px; vertical-align: 1px;
-    animation: qqq-blink 1.5s infinite;
-  }
-  @keyframes qqq-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .qqq-key-lbl {
-    position: absolute; right: 0; width: 76px;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 15; transition: top 0.15s ease;
-  }
-  .qqq-key-lbl .ltag {
-    padding: 2px 5px; border-radius: 2px;
-    font-size: 9px; font-variant-numeric: tabular-nums;
-    width: 68px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .qqq-key-lbl .ltag .lname { font-size: 7.5px; letter-spacing: 0.5px; font-weight: 600; }
-  .qqq-key-lbl .ltag .lval { font-weight: 700; font-size: 10px; }
-  .qqq-zone-bracket {
-    position: absolute; right: 1px; width: 74px;
-    z-index: 12;
-    transition: top 0.15s ease, height 0.15s ease;
-  }
-  .qqq-zone-body {
-    height: 100%;
-    border-right: 2px solid;
-    border-radius: 0 4px 4px 0;
-    padding: 3px 5px;
-    display: flex; flex-direction: column;
-    justify-content: space-between;
-    font-size: 8px;
-    transition: background 0.2s;
-  }
-  .qqq-zone-body .zt { font-size: 7px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
-  .qqq-zone-body .zr { font-size: 9px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .qqq-zone-body .zc { font-size: 7.5px; opacity: 0.5; }
-  .qqq-zone-panel {
-    position: absolute; right: 78px; top: 0;
-    background: rgba(23,6,34,.97); border: 1px solid var(--line);
-    border-radius: 6px; padding: 7px 9px;
-    min-width: 140px; white-space: nowrap;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.15s; z-index: 30;
-    backdrop-filter: blur(8px);
-  }
-  /* zone brackets are display-only — no hover; clicks pass through to chart */
-  .qqq-zone-panel .zp-title {
-    font-size: 7.5px; letter-spacing: 1.5px; text-transform: uppercase;
-    margin-bottom: 5px; opacity: 0.6;
-  }
-  .qqq-zone-panel .zp-row {
-    display: flex; justify-content: space-between; gap: 10px;
-    font-size: 10px; padding: 1.5px 0;
-    font-variant-numeric: tabular-nums;
-  }
-  .qqq-zone-panel .zp-row .zp-name { opacity: 0.6; }
+  /* Chart label overlay removed (2026-08-31) — reverted to plain TradingView chart */
 
   @media (max-width: 700px) {
     .qqq-quad-cockpit {
       grid-template-columns: 1fr;
       grid-template-rows: auto;
     }
-    .qqq-quad-hub-wrap { grid-row: auto; grid-column: auto; padding: 12px; cursor: pointer; }
+    .qqq-quad-hub-wrap { grid-row: auto; grid-column: auto; padding: 8px; cursor: pointer; }
     .qqq-quad-hub-wrap::after {
       content: "▼ tap to expand";
       display: block; text-align: center;
-      font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
-      color: var(--faint); margin-top: 6px;
+      font-size: 7px; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--faint); margin-top: 4px;
     }
     .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-hub-wrap::after {
       content: "▲ tap to collapse";
     }
-    .qqq-quad-hub { width: 120px; height: 120px; }
-    .qqq-quad-hub .qh-call { font-size: 15px; }
+    .qqq-quad-hub { width: 90px; height: 90px; }
+    .qqq-quad-hub .qh-call { font-size: 12px; }
     .qqq-quad-tl, .qqq-quad-tr, .qqq-quad-bl, .qqq-quad-br {
       display: none; border-radius: 0; border-right: 1px solid rgba(59,14,51,.25);
     }
@@ -474,7 +391,7 @@
     }
     .qqq-compass-row { display: none; }
     .qqq-quad-cockpit.qqq-cockpit-open .qqq-compass-row { display: flex; }
-    .qqq-label-overlay { display: none; }
+    /* label overlay removed */
   }
 
   .qqq-model-detail-inline { margin-top:7px; padding-top:7px; border-top:1px solid #1c1c28; }
@@ -3417,7 +3334,7 @@
         layerButton("flow", "Vanna / charm / theta history") + "</div>" +
       '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
       'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna, charm and theta overlays"></div>' +
-      '<div id="qqq-label-overlay" class="qqq-label-overlay"></div></div>' +
+      '</div>' +
       '<div class="qqq-chart-key">' +
         '<span style="color:#ffd600"><i></i>step lines = real logger history</span>' +
         '<span style="color:#29b6f6"><i></i>68% / 95% into close</span>' +
@@ -3645,9 +3562,9 @@
           '<small>shared QQQ price scale</small></div>' +
           secQqqGexProfile(e, true, chartModel) +
         '</aside>' +
-      '</div>' +
-      '<div class="qqq-model-detail-inline qqq-command-detail">' +
+      '<div class="qqq-cockpit-inline" style="grid-column:1/-1">' +
         secQuadrantCockpit(e, chartModel) +
+      '</div>' +
       '</div>' +
       secQqqPositioning(e);
     return secWide("QQQ · live price + synchronized GEX", body)
@@ -3698,7 +3615,6 @@
         }
       }
     } catch (saveRangeErr) {}
-    try { if (QQQ_TV.labelOverlayTimer) clearInterval(QQQ_TV.labelOverlayTimer); } catch (timerErr) {}
     try { if (QQQ_TV.resize) QQQ_TV.resize.disconnect(); } catch (err) {}
     try {
       if (QQQ_TV.el && QQQ_TV.interactionHandler) {
@@ -4177,107 +4093,11 @@
                mode: QQQ_CHART_VIEW.mode, rangeHandler: rangeHandler,
                spotLine: spotLine, lastCandleTime: lastCandleTime,
                quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60,
-               el: el, interactionHandler: interactionHandler, alignPending:false,
-               labelLevels: merged, labelOverlayTimer: null };
+               el: el, interactionHandler: interactionHandler, alignPending:false };
     scheduleQqqGexAlignment(series, chart);
-    qqqUpdateLabelOverlay();
   }
 
-  // ── Chart Label Overlay — hover zone brackets on the right rail ──
-  function qqqUpdateLabelOverlay() {
-    if (!QQQ_TV || !QQQ_TV.chart || !QQQ_TV.series) return;
-    var overlay = document.getElementById("qqq-label-overlay");
-    if (!overlay) return;
-    var series = QQQ_TV.series;
-    var merged = QQQ_TV.labelLevels || {};
-    var chart = QQQ_TV.chart;
-
-    // Gather all levels with their pixel positions
-    var items = [];
-    Object.keys(merged).forEach(function (k) {
-      var lev = merged[k];
-      var y = series.priceToCoordinate(lev.price);
-      if (y === null || !isFinite(y)) return;
-      items.push({ price: lev.price, y: y, title: lev.title, color: lev.color,
-                   group: lev.group, priority: lev.priority || 50 });
-    });
-
-    // Find spot / live price
-    var spot = items.filter(function (x) { return x.group === "spot"; })[0] || null;
-    // Key labels: priority < 25 (flip, call wall, put wall)
-    var keyLabels = items.filter(function (x) { return x.group !== "spot" && x.priority < 25; })
-      .sort(function (a, b) { return a.priority - b.priority; });
-
-    // Zone brackets: group levels above and below spot
-    var upside = items.filter(function (x) { return x.priority >= 25 && x.group !== "spot" && spot && x.price > spot.price; })
-      .sort(function (a, b) { return a.price - b.price; });
-    var downside = items.filter(function (x) { return x.priority >= 25 && x.group !== "spot" && spot && x.price < spot.price; })
-      .sort(function (a, b) { return b.price - a.price; });
-
-    var html = '';
-
-    // LIVE price label — biggest, cyan
-    if (spot) {
-      html += '<div class="qqq-live-lbl" style="top:' + (spot.y - 14) + 'px">' +
-        '<div class="ltag"><span class="lname"><span class="ldot"></span>LIVE</span>' +
-        spot.price.toFixed(2) + '</div></div>';
-    }
-
-    // Key labels — persistent smaller tags
-    keyLabels.forEach(function (lev) {
-      var name = lev.title.replace(/\s*·?\s*\d+%$/, "").replace(/\s+\d+\.\d+$/, "");
-      html += '<div class="qqq-key-lbl" style="top:' + (lev.y - 8) + 'px">' +
-        '<div class="ltag" style="background:' + lev.color + '22; border:1px solid ' + lev.color + '55; color:' + lev.color + '">' +
-        '<span class="lname">' + esc(name) + '</span>' +
-        '<span class="lval">' + lev.price.toFixed(2) + '</span>' +
-        '</div></div>';
-    });
-
-    // Upside zone bracket
-    if (upside.length >= 1 && spot) {
-      var uTop = Math.min.apply(null, upside.map(function (x) { return x.y; }));
-      var uBot = spot.y;
-      var uH = Math.max(uBot - uTop, 30);
-      uTop = uBot - uH;
-      if (uH >= 4) {
-        html += '<div class="qqq-zone-bracket" style="top:' + uTop + 'px;height:' + uH + 'px">' +
-          '<div class="qqq-zone-body" style="border-color:#00e676; color:#00e676">' +
-          '<span class="zt">▲ UPSIDE</span>' +
-          '<span class="zr">' + upside[upside.length - 1].price.toFixed(2) + ' – ' + upside[0].price.toFixed(2) + '</span>' +
-          '<span class="zc">' + upside.length + ' levels</span>' +
-          '</div></div>';
-      }
-    }
-
-    // Downside zone bracket
-    if (downside.length >= 1 && spot) {
-      var dTop = spot.y;
-      var dBot = Math.max.apply(null, downside.map(function (x) { return x.y; }));
-      var dH = Math.max(dBot - dTop, 30);
-      dBot = dTop + dH;
-      if (dH >= 4) {
-        html += '<div class="qqq-zone-bracket" style="top:' + dTop + 'px;height:' + dH + 'px">' +
-          '<div class="qqq-zone-body" style="border-color:#ffd600; color:#ffd600">' +
-          '<span class="zt">▼ DOWNSIDE</span>' +
-          '<span class="zr">' + downside[0].price.toFixed(2) + ' – ' + downside[downside.length - 1].price.toFixed(2) + '</span>' +
-          '<span class="zc">' + downside.length + ' levels</span>' +
-          '</div></div>';
-      }
-    }
-
-    overlay.innerHTML = html;
-
-    // Schedule continuous repositioning while the chart is alive
-    if (QQQ_TV && !QQQ_TV.labelOverlayTimer) {
-      QQQ_TV.labelOverlayTimer = setInterval(function () {
-        if (!QQQ_TV || !QQQ_TV.chart) {
-          clearInterval(QQQ_TV && QQQ_TV.labelOverlayTimer);
-          return;
-        }
-        qqqUpdateLabelOverlay();
-      }, 500);
-    }
-  }
+  // Chart label overlay removed (2026-08-31) — reverted to plain TradingView chart.
 
   function updateMountedQqqQuote(e) {
     if (idx !== FULL.length - 1) return;
