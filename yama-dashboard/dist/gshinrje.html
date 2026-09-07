@@ -201,6 +201,18 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 .cat-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
 .cat-question { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cat-count { font-size: 10px; color: rgba(140,40,40,0.25); margin-left: auto; }
+.cat-group { margin-bottom: 2px; }
+.cat-group > summary { list-style: none; }
+.cat-group > summary::-webkit-details-marker { display: none; }
+.cat-header {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px;
+  border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;
+  color: var(--text-secondary); transition: background 0.1s;
+}
+.cat-header:hover { background: rgba(140,20,20,0.10); }
+.cat-header::before { content: '▸'; font-size: 10px; color: var(--text-muted); width: 12px; flex-shrink: 0; }
+.cat-group[open] > .cat-header::before { content: '▾'; }
+.cat-header .cat-count { font-size: 10px; color: rgba(140,40,40,0.25); margin-left: auto; }
 .cat-widgets { margin-left: 20px; margin-top: 2px; }
 .widget-option {
   display: block; width: 100%; padding: 6px 10px; border-radius: 6px; border: none;
@@ -7052,30 +7064,37 @@ function renderPanel() {
   panel.id = 'addPanel';
   panel.className = 'add-panel';
 
-  // Flatten all widgets into one alphabetical list
   var lower = searchText.toLowerCase();
-  var allWidgets = [];
-  CATEGORIES.forEach(c => c.widgets.forEach(w => allWidgets.push(w)));
-  allWidgets.sort((a, b) => a.name.localeCompare(b.name));
-  if (searchText) {
-    allWidgets = allWidgets.filter(w => w.name.toLowerCase().includes(lower) || w.question.toLowerCase().includes(lower));
-  }
 
   var html = '<div class="add-panel-header"><h2>Add Widget</h2><button class="add-panel-close" onclick="panelOpen=false; renderPanel()">✕</button></div>';
   html += `<input class="search-box" id="panelSearch" placeholder="Search widgets..." value="${esc(searchText)}" oninput="searchText=this.value; renderPanel()">`;
-  html += '<div class="cat-list"><div class="cat-widgets">';
+  html += '<div class="cat-list">';
 
-  allWidgets.forEach(w => {
-    html += `<button class="widget-option" onclick="addWidget('${w.id}'); panelOpen=false; renderPanel()">`;
-    html += `<div class="wo-name">${esc(w.name)}</div>`;
-    html += `<div class="wo-q">${esc(w.question)}</div></button>`;
+  var totalShown = 0;
+  CATEGORIES.forEach(cat => {
+    var widgets = cat.widgets;
+    if (searchText) {
+      widgets = widgets.filter(w => w.name.toLowerCase().includes(lower) || w.question.toLowerCase().includes(lower));
+    }
+    if (widgets.length === 0) return;
+    totalShown += widgets.length;
+    var isOpen = searchText || expandedCat === cat.id;
+    html += `<details class="cat-group"${isOpen ? ' open' : ''}>`;
+    html += `<summary class="cat-header" onclick="expandedCat = expandedCat === '${cat.id}' ? null : '${cat.id}'">${esc(cat.label)}<span class="cat-count">${widgets.length}</span></summary>`;
+    html += '<div class="cat-widgets">';
+    widgets.forEach(w => {
+      html += `<button class="widget-option" onclick="addWidget('${w.id}'); panelOpen=false; renderPanel()">`;
+      html += `<div class="wo-name">${esc(w.name)}</div>`;
+      html += `<div class="wo-q">${esc(w.question)}</div></button>`;
+    });
+    html += '</div></details>';
   });
 
-  if (allWidgets.length === 0) {
+  if (totalShown === 0) {
     html += `<div class="no-results">No widgets match "${esc(searchText)}"</div>`;
   }
 
-  html += '</div></div>';
+  html += '</div>';
   panel.innerHTML = html;
   document.body.appendChild(panel);
 
