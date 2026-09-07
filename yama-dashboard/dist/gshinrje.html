@@ -404,6 +404,25 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 .widget-body .qqq-chart-key i {
   display:inline-block; width:10px; height:2px; border-radius:1px; background:currentColor;
 }
+/* ── QQQ top-grid: chart + GEX profile side-by-side ── */
+.widget-body .qqq-top-grid { display:grid; grid-template-columns:minmax(0,2.05fr) minmax(320px,.95fr);
+                gap:12px; align-items:stretch; margin:0; }
+.widget-body .qqq-top-grid > .qqq-primary-chart,
+.widget-body .qqq-top-grid > .qqq-gex-profile { min-width:0; }
+.widget-body .qqq-top-grid .qqq-chart-shell { min-height:300px; }
+.widget-body .qqq-top-grid .qqq-chart-canvas { height:300px; }
+.widget-body .qqq-gex-profile { height:100%; border-left:1px solid #1c1c28; padding-left:12px; }
+.widget-body .qqq-market-card { margin-bottom:0; }
+@media (max-width:720px) {
+  .widget-body .qqq-top-grid { grid-template-columns:1fr; }
+  .widget-body .qqq-top-grid .qqq-chart-shell { min-height:270px; }
+  .widget-body .qqq-top-grid .qqq-chart-canvas { height:270px; }
+  .widget-body .qqq-gex-profile { border-left:0; border-top:1px solid #1c1c28; padding:12px 0 0; }
+}
+@media (min-width:721px) and (max-width:1020px) {
+  .widget-body .qqq-top-grid { grid-template-columns:1fr; }
+  .widget-body .qqq-gex-profile { border-left:0; border-top:1px solid #1c1c28; padding:12px 0 0; }
+}
 
 </style>
 </head>
@@ -5786,6 +5805,10 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   window.secNasdaqCommandCenter = typeof secNasdaqCommandCenter !== 'undefined' ? secNasdaqCommandCenter : function() { return ''; };
   window.secQqqTradingChart = typeof secQqqTradingChart !== 'undefined' ? secQqqTradingChart : function() { return ''; };
   window.secQqqGexProfile = typeof secQqqGexProfile !== 'undefined' ? secQqqGexProfile : function() { return ''; };
+  window.secQqqOpening = typeof secQqqOpening !== 'undefined' ? secQqqOpening : function() { return ''; };
+  window.secQuadrantCockpit = typeof secQuadrantCockpit !== 'undefined' ? secQuadrantCockpit : function() { return ''; };
+  window.secQqqPositioning = typeof secQqqPositioning !== 'undefined' ? secQqqPositioning : function() { return ''; };
+  window.secWide = typeof secWide !== 'undefined' ? secWide : function(t,b) { return '<section class="wide"><h2>'+t+'</h2>'+b+'</section>'; };
   window.mountQqqChart = typeof mountQqqChart !== 'undefined' ? mountQqqChart : function() {};
   window.starChart = typeof starChart !== 'undefined' ? starChart : function() { return ''; };
   window.starCorrel = typeof starCorrel !== 'undefined' ? starCorrel : function() { return ''; };
@@ -6001,14 +6024,17 @@ function renderClockWidget() {
 // ═══════════════════════════════════════════════
 
 function renderGexChart(e) {
-  // Use the IIFE's real interactive TradingView chart instead of the old static SVG.
-  if (typeof window.secQqqTradingChart !== 'function') {
+  // Use the combined layout from secQqqOpening — chart + GEX profile side-by-side,
+  // cockpit strip, and options positioning, matching the reference dashboard.
+  if (typeof window.secQqqOpening !== 'function') {
     return '<div class="loading">Chart engine not loaded</div>';
   }
-  // secQqqTradingChart(e, bodyOnly) — bodyOnly=true strips the <section> wrapper
-  var html = '<div class="gex-chart-wrap" style="flex:1;min-height:0">' + window.secQqqTradingChart(e, true) + '</div>';
+  // secQqqOpening returns a <section class="wide qqq-market-card"> wrapper.
+  // Extract just the inner body for the widget by stripping the outer section.
+  var full = window.secQqqOpening(e);
+  var html = full.replace(/^<section[^>]*>/, '').replace(/<\/section>\s*$/, '');
 
-  // Collapsible notebook panel at the bottom of the chart
+  // Collapsible notebook panel at the bottom
   html += '<details class="gex-notebook-panel" style="flex-shrink:0;border-top:1px solid var(--line);margin-top:4px">';
   html += '<summary style="cursor:pointer;padding:4px 8px;font-size:10px;color:var(--accent);letter-spacing:1px;user-select:none;list-style:none;display:flex;align-items:center;gap:6px">';
   html += '<span style="font-size:8px">▶</span> TRADING NOTEBOOK</summary>';
@@ -6539,7 +6565,7 @@ var CATEGORIES = [
     { id:'contract-concentration',name:'Contract Concentration',  question:'Where are contracts clustering?',               dw:380, dh:300 },
     { id:'put-call-structure',    name:'Put / Call Structure',     question:'What is the put/call balance?',                dw:340, dh:240 },
     { id:'implied-distribution',  name:'Implied Distribution',    question:'What does the market imply about outcomes?',    dw:400, dh:300 },
-    { id:'gex-chart',             name:'GEX Chart',               question:'GEX levels + QQQ price history',                dw:500, dh:360 },
+    { id:'gex-chart',             name:'GEX Chart',               question:'GEX levels + QQQ price + synchronized GEX profile', dw:900, dh:500 },
   ]},
   { id:'volatility', label:'Volatility & Movement', question:'How much movement is implied, realized, spent, or still available?', widgets:[
     { id:'volatility-regime',     name:'Volatility Regime',       question:'Is volatility high, low, expanding?',           dw:340, dh:240 },
