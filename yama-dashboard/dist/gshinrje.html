@@ -5934,6 +5934,7 @@ function renderWidgetContent(defId) {
     case 'clock-session':        return renderClockWidget();
     case 'notes':                return renderNotes(e);
     case 'gex-chart':            return renderGexChart(e);
+    case 'volume-candles':       return renderVolumeCandles(e);
     case 'earnings-events':      return stripSec(secWeek(e));
     default:
       return '<div class="loading">Widget: ' + esc(defId) + '</div>';
@@ -6036,15 +6037,27 @@ function renderClockWidget() {
 // ═══════════════════════════════════════════════
 
 function renderGexChart(e) {
-  // Use the combined layout from secQqqOpening — chart + GEX profile side-by-side,
-  // cockpit strip, and options positioning, matching the reference dashboard.
-  if (typeof window.secQqqOpening !== 'function') {
+  // Build the combined layout directly from exposed sub-functions:
+  // chart + GEX profile side-by-side, cockpit strip below.
+  // This avoids stripping secQqqOpening's section/details/summary wrapper
+  // which previously left orphan tags inside the widget body.
+  if (typeof window.secQqqTradingChart !== 'function') {
     return '<div class="loading">Chart engine not loaded</div>';
   }
-  // secQqqOpening returns a <section class="wide qqq-market-card"> wrapper.
-  // Extract just the inner body for the widget by stripping the outer section.
-  var full = window.secQqqOpening(e);
-  var html = full.replace(/^<section[^>]*>/, '').replace(/<\/section>\s*$/, '');
+  var html =
+    '<div class="qqq-top-grid">' +
+      '<div class="qqq-primary-chart">' +
+        window.secQqqTradingChart(e, true) +
+      '</div>' +
+      '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile" ' +
+        'title="Strike price shares the QQQ chart scale.">' +
+        window.secQqqGexProfile(e, true) +
+      '</aside>' +
+    '</div>' +
+    '<div id="qqq-cockpit-block" class="qqq-call-strip">' +
+      window.secQuadrantCockpit(e) +
+    '</div>' +
+    (typeof window.secQqqPositioning === 'function' ? window.secQqqPositioning(e) : '');
 
   // Collapsible notebook panel at the bottom
   html += '<details class="gex-notebook-panel" style="flex-shrink:0;border-top:1px solid var(--line);margin-top:4px">';
@@ -6060,6 +6073,105 @@ function renderGexChart(e) {
       window.mountQqqChart(e);
     }
   }, 0);
+  return html;
+}
+
+function renderVolumeCandles(e) {
+  // Daily QQQ candles where candle WIDTH scales with total options volume.
+  // Thicker candle = heavier options activity that session.
+  var hist = (typeof FULL !== 'undefined' && FULL.length) ? FULL : [];
+  if (!hist.length) return '<div class="loading">No history data</div>';
+
+  // Collect daily data: price + options volume
+  var bars = [];
+  for (var i = 0; i < hist.length; i++) {
+    var h = hist[i];
+    var mk = {};
+    (h.watchlist || []).forEach(function(r) { mk[r.symbol] = r; });
+    var q = mk.QQQ || {};
+    var cl = Number(q.last);
+    if (!isFinite(cl) || cl <= 0) continue;
+    var mkt = (h.markets || {}).QQQ || {};
+    var pc = Number(mkt.prev_close);
+    var op = isFinite(pc) && pc > 0 ? pc : cl;
+    var tf = h.time_footprint || {};
+    var totals = tf.totals || {};
+    var vol = Number(totals.vol) || 0;
+    var dt = String(h.entry_date || '').slice(5);
+    var sess = String(h.session || '').toLowerCase();
+    bars.push({ o: op, c: cl, h: Math.max(op, cl) * 1.002, l: Math.min(op, cl) * 0.998, vol: vol, label: dt + (sess === 'pm' ? 'p' : '') });
+  }
+  if (!bars.length) return '<div class="loading">No QQQ price data</div>';
+
+  // Chart dimensions
+  var W = 560, candleH = 220, volH = 60, padL = 50, padR = 10, padT = 10, padB = 20;
+  var totalH = candleH + volH + padT + padB + 10;
+  var plotW = W - padL - padR;
+
+  // Price range
+  var pMin = Infinity, pMax = -Infinity;
+  bars.forEach(function(b) { if (b.l < pMin) pMin = b.l; if (b.h > pMax) pMax = b.h; });
+  var pSpan = Math.max(1, pMax - pMin);
+  pMin -= pSpan * 0.03; pMax += pSpan * 0.03; pSpan = pMax - pMin;
+
+  // Volume range
+  var vMax = Math.max.apply(null, bars.map(function(b) { return b.vol; })) || 1;
+
+  // Width scaling: each bar gets width proportional to its volume, with min/max
+  var minW = 4, maxW = Math.min(28, plotW / bars.length * 1.8);
+  var totalVol = bars.reduce(function(s, b) { return s + b.vol; }, 0) || bars.length;
+
+  function pY(p) { return padT + (1 - (p - pMin) / pSpan) * candleH; }
+  function vY(v) { return candleH + padT + 10 + volH * (1 - v / vMax); }
+
+  var svg = '';
+
+  // Price grid lines
+  var nGrid = 5;
+  for (var gi = 0; gi <= nGrid; gi++) {
+    var gp = pMin + (pSpan * gi / nGrid);
+    var gy = pY(gp);
+    svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="#171722" stroke-width="0.5"/>';
+    svg += '<text x="' + (padL - 4) + '" y="' + (gy + 3).toFixed(1) + '" text-anchor="end" fill="#55556b" font-size="9">$' + gp.toFixed(0) + '</text>';
+  }
+
+  // Draw candles
+  var x = padL;
+  bars.forEach(function(b, idx) {
+    var w = Math.max(minW, Math.min(maxW, (b.vol / totalVol) * plotW * bars.length * 0.7));
+    if (x + w > W - padR) w = Math.max(minW, W - padR - x);
+    var up = b.c >= b.o;
+    var color = up ? '#00e676' : '#ff453a';
+    var bodyTop = pY(Math.max(b.o, b.c));
+    var bodyBot = pY(Math.min(b.o, b.c));
+    var bodyH = Math.max(1, bodyBot - bodyTop);
+    var wickTop = pY(b.h);
+    var wickBot = pY(b.l);
+    var cx = x + w / 2;
+
+    // Wick
+    svg += '<line x1="' + cx.toFixed(1) + '" x2="' + cx.toFixed(1) + '" y1="' + wickTop.toFixed(1) + '" y2="' + wickBot.toFixed(1) + '" stroke="' + color + '" stroke-width="1"/>';
+    // Body
+    svg += '<rect x="' + x.toFixed(1) + '" y="' + bodyTop.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + bodyH.toFixed(1) + '" fill="' + color + '" opacity="0.88" rx="1">' +
+      '<title>' + b.label + ' O:$' + b.o.toFixed(2) + ' C:$' + b.c.toFixed(2) + ' Vol:' + (b.vol ? b.vol.toLocaleString() : 'N/A') + '</title></rect>';
+    // Volume bar below
+    var vy = vY(b.vol);
+    var vBarH = candleH + padT + 10 + volH - vy;
+    svg += '<rect x="' + x.toFixed(1) + '" y="' + vy.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(0.5, vBarH).toFixed(1) + '" fill="' + color + '" opacity="0.35" rx="1"/>';
+
+    x += w + 2;
+  });
+
+  // Separator line between candles and volume
+  svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + (candleH + padT + 5) + '" y2="' + (candleH + padT + 5) + '" stroke="#343444" stroke-width="0.5"/>';
+  // Volume label
+  svg += '<text x="' + padL + '" y="' + (candleH + padT + 10 + volH + 12) + '" fill="#55556b" font-size="8">OPTIONS VOL</text>';
+
+  var html = '<div style="overflow-x:auto">';
+  html += '<svg viewBox="0 0 ' + W + ' ' + totalH + '" style="width:100%;min-width:400px;height:auto;display:block">';
+  html += svg;
+  html += '</svg></div>';
+  html += '<div style="padding:4px 8px;font-size:9px;color:var(--faint)">Candle width ∝ total options volume · wider = heavier activity · ' + bars.length + ' sessions</div>';
   return html;
 }
 
@@ -6578,6 +6690,7 @@ var CATEGORIES = [
     { id:'put-call-structure',    name:'Put / Call Structure',     question:'What is the put/call balance?',                dw:340, dh:240 },
     { id:'implied-distribution',  name:'Implied Distribution',    question:'What does the market imply about outcomes?',    dw:400, dh:300 },
     { id:'gex-chart',             name:'GEX Chart',               question:'GEX levels + QQQ price + synchronized GEX profile', dw:900, dh:500 },
+    { id:'volume-candles',        name:'Volume Candles',           question:'Daily QQQ candles sized by options volume',        dw:600, dh:400 },
   ]},
   { id:'volatility', label:'Volatility & Movement', question:'How much movement is implied, realized, spent, or still available?', widgets:[
     { id:'volatility-regime',     name:'Volatility Regime',       question:'Is volatility high, low, expanding?',           dw:340, dh:240 },
