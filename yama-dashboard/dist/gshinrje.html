@@ -3242,7 +3242,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // hides — it can never break the page.
   var LIVE_GEX = null;
   function loadLiveGex() {
-    return fetch("gex_live.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("../../market-dash/gex_live.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && !j.error) {
@@ -3261,7 +3261,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // today's final level because doing that would make the past look predictive.
   var LIVE_GEX_INTRADAY = null;
   function loadGexIntraday() {
-    return fetch("gex_intraday.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("../../market-dash/gex_intraday.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && Array.isArray(j.points)) {
@@ -3280,7 +3280,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // pattern as Live GEX — missing file just hides the tiles, never breaks the page.
   var LIVE_AUCTION = null;
   function loadAuction() {
-    return fetch("auction_live.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("../../market-dash/auction_live.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && !j.error) {
@@ -3300,6 +3300,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // snapshot includes candles, the same chart falls back to real logged QQQ
   // session prices instead of inventing OHLC bars.
   var QQQ_TV = null;
+  var QQQ_TIMEFRAME = null;
   // Once the user pans or zooms, keep that exact horizontal view through any
   // real data remount. The ordinary 60-second quote refresh no longer remounts
   // the chart at all while the user is working in it.
@@ -4076,6 +4077,36 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     return out;
   }
 
+  // Aggregate source bars before Heikin-Ashi and indicators are calculated.
+  function qqqAggregateCandles(bars, timeframe) {
+    var minutes = { "1m":1, "5m":5, "15m":15, "1H":60, "4H":240 }[timeframe];
+    var groups = {};
+    bars.forEach(function (b) {
+      var key;
+      if (minutes) {
+        key = Math.floor(Number(b.time) / (minutes * 60)) * minutes * 60;
+      } else {
+        var day = typeof b.time === "string" ? b.time : new Intl.DateTimeFormat("en-CA", {
+          timeZone:"America/New_York", year:"numeric", month:"2-digit", day:"2-digit"
+        }).format(new Date(b.time * 1000));
+        key = day;
+        if (timeframe === "1M") key = day.slice(0, 7) + "-01";
+        if (timeframe === "1W") {
+          var d = new Date(day + "T00:00:00Z");
+          d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7);
+          key = d.toISOString().slice(0, 10);
+        }
+      }
+      var bar = groups[key];
+      if (!bar) groups[key] = { time:key, open:b.open, high:b.high, low:b.low, close:b.close, volume:b.volume || 0 };
+      else { bar.high = Math.max(bar.high, b.high); bar.low = Math.min(bar.low, b.low);
+        bar.close = b.close; bar.volume += b.volume || 0; }
+    });
+    return Object.keys(groups).sort(function (a, b) {
+      return minutes ? Number(a) - Number(b) : a.localeCompare(b);
+    }).map(function (key) { return groups[key]; });
+  }
+
   function mountQqqChart(e, chartModel) {
     destroyQqqChart();
     var el = document.getElementById("qqq-tv-chart");
@@ -4087,6 +4118,15 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       return;
     }
 
+    var widget = el.closest(".widget");
+    var selector = widget && widget.querySelector(".widget-select");
+    var timeframe = selector ? selector.value : "1D";
+    var intraday = ["1m", "5m", "15m", "1H", "4H"].indexOf(timeframe) >= 0;
+    el.innerHTML = "";
+    if (QQQ_TIMEFRAME !== timeframe) {
+      QQQ_VIEW_STATE = { userAdjusted:false, logicalRange:null };
+      QQQ_TIMEFRAME = timeframe;
+    }
     var chart = TV.createChart(el, {
       width: Math.max(el.clientWidth, 280),
       height: el.clientHeight || 430,
@@ -4113,7 +4153,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       rightPriceScale: { borderColor: "#1e1e2a", minimumWidth: 74 },
       timeScale: {
         borderColor: "#1e1e2a",
-        timeVisible: true,
+        timeVisible: intraday,
         secondsVisible: false,
         rightOffset: 4,
         barSpacing: 7,
@@ -4140,17 +4180,23 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       if (good) seen[b.time] = 1;
       return good;
     }).sort(function (a, b) { return a.time - b.time; });
-    var candles = qqqMergeLiveCandle(baseCandles, M);
+    var minuteCandles = baseCandles.length ? qqqMergeLiveCandle(baseCandles, M) : [];
+    var candles = intraday ? qqqAggregateCandles(minuteCandles, timeframe) : [];
+    if (intraday && !candles.length) {
+      chart.remove();
+      el.innerHTML = '<div style="padding:54px 16px;text-align:center;color:var(--dim)">' +
+        timeframe + ' candles unavailable for this session. The minute-bar feed has no data. Choose 1D, 1W or 1M for saved history.</div>';
+      return;
+    }
     var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : qqqRawDisplay(candles);
 
     var series, ema9Series = null, ema20Series = null, indicatorSeries = null;
     var gexTrailSeries = [];
     var trailRows = M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points)
       ? LIVE_GEX_INTRADAY.points.slice() : [];
-    var hasGexTrail = candles.length >= 10 && trailRows.length >= 2;
-    // Need enough live candles for a meaningful intraday chart;
-    // otherwise fall through to daily OHLC candles from HISTORY_DATA.
-    if (candles.length >= 10) {
+    var hasGexTrail = candles.length > 0 && trailRows.length >= 2;
+    // Intraday selections use only actual minute bars. Calendar selections use saved history.
+    if (candles.length > 0) {
       series = chart.addSeries(TV.CandlestickSeries, {
         upColor: "#00e676", downColor: "#ff453a",
         borderUpColor: "#00e676", borderDownColor: "#ff453a",
@@ -4230,6 +4276,12 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         return { time: day, open: open, high: high, low: low, close: close, volume: 0 };
       });
 
+      dailyCandles = qqqAggregateCandles(dailyCandles, timeframe);
+      var notice = document.createElement("div");
+      notice.textContent = timeframe + " · Estimated OHLC from saved daily closes";
+      notice.style.cssText = "position:absolute;top:4px;left:8px;z-index:2;color:#8b8ba6;font-size:11px;pointer-events:none";
+      el.style.position = "relative";
+      el.appendChild(notice);
       if (dailyCandles.length) {
         var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(dailyCandles) : qqqRawDisplay(dailyCandles);
         series = chart.addSeries(TV.CandlestickSeries, {
@@ -4254,7 +4306,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         }
 
         // Daily volume histogram from history venue data
-        if (QQQ_CHART_VIEW.pane === "volume") {
+        if (QQQ_CHART_VIEW.pane === "volume" && timeframe === "1D") {
           var volData = [];
           hist.forEach(function(entry) {
             if (!entry.entry_date) return;
@@ -4418,8 +4470,8 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       el.addEventListener(name, interactionHandler, { passive:true });
     });
     QQQ_TV = { chart: chart, resize: ro, quoteSeries: null,
-               series: series, candleSeries: candles.length >= 10 ? series : null,
-               rawCandles: candles, ema9Series: ema9Series, ema20Series: ema20Series,
+               series: series, candleSeries: candles.length > 0 ? series : null,
+               rawCandles: minuteCandles, timeframe: timeframe, ema9Series: ema9Series, ema20Series: ema20Series,
                indicatorSeries: indicatorSeries, paneType: QQQ_CHART_VIEW.pane,
                gexTrailSeries: gexTrailSeries,
                mode: QQQ_CHART_VIEW.mode, rangeHandler: rangeHandler,
@@ -4454,14 +4506,16 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
             after.high !== before.high || after.low !== before.low);
           if (changed) {
             QQQ_TV.rawCandles = mergedLive;
-            var shown = QQQ_TV.mode === "ha" ? qqqHaCandles(mergedLive) : qqqRawDisplay(mergedLive);
+            var aggregated = qqqAggregateCandles(mergedLive, QQQ_TV.timeframe);
+            after = aggregated[aggregated.length - 1];
+            var shown = QQQ_TV.mode === "ha" ? qqqHaCandles(aggregated) : qqqRawDisplay(aggregated);
             QQQ_TV.candleSeries.update(shown[shown.length - 1]);
             if (QQQ_TV.ema9Series) {
-              var e9 = qqqEma(mergedLive, 9);
+              var e9 = qqqEma(aggregated, 9);
               if (e9.length) { QQQ_TV.ema9Series.update(e9[e9.length - 1]); window._qqqEma9Last = e9[e9.length - 1].value; }
             }
             if (QQQ_TV.ema20Series) {
-              var e20 = qqqEma(mergedLive, 20);
+              var e20 = qqqEma(aggregated, 20);
               if (e20.length) { QQQ_TV.ema20Series.update(e20[e20.length - 1]); window._qqqEma20Last = e20[e20.length - 1].value; }
             }
             if (QQQ_TV.indicatorSeries) {
@@ -4469,10 +4523,10 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
                 QQQ_TV.indicatorSeries.update({ time:after.time, value:after.volume || 0,
                   color:after.close >= after.open ? "rgba(0,230,118,.55)" : "rgba(255,69,58,.55)" });
               } else if (QQQ_TV.paneType === "adl") {
-                var ad = qqqAdl(mergedLive);
+                var ad = qqqAdl(aggregated);
                 if (ad.length) QQQ_TV.indicatorSeries.update(ad[ad.length - 1]);
               } else if (QQQ_TV.paneType === "rsi") {
-                var rsi = qqqRsi(mergedLive, 14);
+                var rsi = qqqRsi(aggregated, 14);
                 if (rsi.length) QQQ_TV.indicatorSeries.update(rsi[rsi.length - 1]);
               }
             }
