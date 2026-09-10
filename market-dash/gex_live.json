@@ -1,13 +1,13 @@
 {
   "symbol": "QQQ",
   "spot": 708.73,
-  "net_gex": -782633125.98,
-  "net_dex": -583447280.52,
-  "net_vex": 3302.61,
-  "net_tex": -194146.0,
-  "net_vannaex": 56650.73,
-  "net_charmex": -35152976598.01,
-  "gamma_ratio": 0.1752,
+  "net_gex": -789289722.54,
+  "net_dex": -584566308.5,
+  "net_vex": 3271.27,
+  "net_tex": -192709.0,
+  "net_vannaex": 55060.01,
+  "net_charmex": -33963292030.61,
+  "gamma_ratio": 0.1706,
   "gamma_flip": 702.0,
   "gamma_flip_method": "nearest-to-zero (no crossing in window)",
   "regime": "NEGATIVE GAMMA",
@@ -137,16 +137,16 @@
     },
     {
       "strike": 711.0,
-      "call_gex": 9925412.69,
+      "call_gex": 6341816.32,
       "put_gex": -87035521.92,
-      "net_gex": -77110109.23,
+      "net_gex": -80693705.6,
       "call_oi": 260,
       "put_oi": 1779,
-      "dex": -113332702.46,
-      "vex": 310.64,
-      "tex": -14122.5,
-      "vannaex": 25529.51,
-      "charmex": -11506493354.73
+      "dex": -113850500.6,
+      "vex": 297.64,
+      "tex": -13602.5,
+      "vannaex": 24830.64,
+      "charmex": -11081020362.84
     },
     {
       "strike": 712.0,
@@ -163,29 +163,29 @@
     },
     {
       "strike": 713.0,
-      "call_gex": 5325727.31,
+      "call_gex": 3780386.76,
       "put_gex": -15010428.65,
-      "net_gex": -9684701.34,
+      "net_gex": -11230041.88,
       "call_oi": 398,
       "put_oi": 590,
-      "dex": -37483255.54,
-      "vex": 112.38,
-      "tex": -8171.0,
-      "vannaex": 6026.14,
-      "charmex": -4535463960.51
+      "dex": -37768150.83,
+      "vex": 104.42,
+      "tex": -7773.0,
+      "vannaex": 5591.55,
+      "charmex": -4190893930.52
     },
     {
       "strike": 714.0,
-      "call_gex": 5101757.56,
+      "call_gex": 3574097.91,
       "put_gex": -13237557.06,
-      "net_gex": -8135799.5,
+      "net_gex": -9663459.15,
       "call_oi": 519,
       "put_oi": 738,
-      "dex": -48320346.75,
-      "vex": 114.51,
-      "tex": -7680.0,
-      "vannaex": 6009.43,
-      "charmex": -5044253741.81
+      "dex": -48636681.3,
+      "vex": 104.13,
+      "tex": -7161.0,
+      "vannaex": 5552.17,
+      "charmex": -4624612196.29
     },
     {
       "strike": 715.0,
@@ -204,5 +204,5 @@
   "contracts_used": 28,
   "dealer_convention": "dealers long call gamma, short put gamma",
   "source": "5-min greeks logger (calls + puts, 0DTE)",
-  "generated_utc": "2026-09-10 20:00:55"
+  "generated_utc": "2026-09-10 20:05:58"
 }
