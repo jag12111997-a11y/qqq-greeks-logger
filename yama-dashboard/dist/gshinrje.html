@@ -489,7 +489,7 @@ var HISTORY_DATA = []; // loaded async from history_data.json
 
 // Load history data from external JSON file (async)
 function loadHistoryData() {
-  fetch("history_data.json?v=" + Date.now(), { cache: "no-store" })
+  fetch("history_data.json?v=" + Date.now())
     .then(function(r) { return r.ok ? r.json() : Promise.reject("HTTP " + r.status); })
     .then(function(data) {
       HISTORY_DATA = data;
@@ -3262,7 +3262,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
 
   function loadLiveGex() {
     if (!_gexAvailable) return Promise.resolve();
-    return fetch("gex_live.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("gex_live.json?t=" + Date.now())
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && !j.error) {
@@ -3282,7 +3282,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   var LIVE_GEX_INTRADAY = null;
   function loadGexIntraday() {
     if (!_intradayAvailable) return Promise.resolve();
-    return fetch("gex_intraday.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("gex_intraday.json?t=" + Date.now())
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && Array.isArray(j.points)) {
@@ -3302,7 +3302,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   var LIVE_AUCTION = null;
   function loadAuction() {
     if (!_auctionAvailable) return Promise.resolve();
-    return fetch("auction_live.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("auction_live.json?t=" + Date.now())
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && !j.error) {
@@ -5670,7 +5670,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     }
 
     function fetchOne(sym) {
-      return fetch(BASE + sym + "&token=" + FINNHUB_KEY, { cache: "no-store" })
+      return fetch(BASE + sym + "&token=" + FINNHUB_KEY)
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (q) {
           // Finnhub quote: c=current, d=$ change, dp=% change, t=unix seconds.
@@ -5692,7 +5692,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     // if the CDN blocks cross-origin, in which case VIX just keeps the snapshot.
     function fetchVix() {
       return fetch("https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json?t=" + Date.now(),
-                   { cache: "no-store" })
+                   )
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
           var d = j && j.data;
