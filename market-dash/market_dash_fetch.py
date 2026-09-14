@@ -1803,6 +1803,22 @@ def build_entry():
     return entry
 
 
+def _sanitize_nan(obj):
+    """Recursively replace float('nan') and float('inf') with None.
+    
+    Python's json.dumps allows NaN by default (allow_nan=True), but NaN is
+    NOT valid JSON. Browsers choke on it with 'SyntaxError: unexpected token'.
+    """
+    import math
+    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+        return None
+    if isinstance(obj, dict):
+        return {k: _sanitize_nan(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_nan(v) for v in obj]
+    return obj
+
+
 def write_dated_json(entry):
     date = entry["entry_date"]
     session = entry.get("session", "am")
@@ -1810,8 +1826,9 @@ def write_dated_json(entry):
     os.makedirs(folder, exist_ok=True)
     path = os.path.join(folder, f"market_dash_{date}_{session}.json")
 
+    clean = _sanitize_nan(entry)
     with open(path, "w") as f:
-        json.dump(entry, f, indent=2)
+        json.dump(clean, f, indent=2, allow_nan=False)
 
     return path
 
@@ -1827,8 +1844,9 @@ def append_history(entry):
     """
     path = os.path.join(BASE_DIR, "history.js")
     key = entry.get("entry_key", entry["entry_date"])
+    clean = _sanitize_nan(entry)
     line = ("window.MARKET_DASH_HISTORY.push("
-            + json.dumps(entry, separators=(",", ":")) + ");")
+            + json.dumps(clean, separators=(",", ":"), allow_nan=False) + ");")
 
     if not os.path.exists(path):
         with open(path, "w") as f:
@@ -1894,6 +1912,49 @@ def print_summary(entry):
     log("=" * 52)
 
 
+
+def rebuild_history_data_json():
+    """Re-derive yama-dashboard/dist/history_data.json from history.js.
+    
+    history.js is the append-only source of truth. The dashboard's HTML
+    fetches history_data.json at runtime (pure JSON, no JS wrapper).
+    """
+    import math
+    hist_path = os.path.join(BASE_DIR, "history.js")
+    out_path = os.path.join(os.path.dirname(BASE_DIR), "yama-dashboard", "dist", "history_data.json")
+
+    if not os.path.exists(hist_path):
+        return None
+
+    # Parse each .push({...}); line
+    entries = []
+    with open(hist_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("window.MARKET_DASH_HISTORY.push(") and line.endswith(");"):
+                json_str = line[len("window.MARKET_DASH_HISTORY.push("):-len(");")]
+                try:
+                    entry = json.loads(json_str)
+                    entries.append(entry)
+                except json.JSONDecodeError:
+                    # Might contain NaN from older runs — fix inline
+                    json_str = json_str.replace("NaN", "null")
+                    json_str = json_str.replace("Infinity", "null")
+                    json_str = json_str.replace("-Infinity", "null")
+                    try:
+                        entry = json.loads(json_str)
+                        entries.append(entry)
+                    except json.JSONDecodeError:
+                        continue
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    clean = _sanitize_nan(entries)
+    with open(out_path, "w") as f:
+        json.dump(clean, f, separators=(",", ":"), allow_nan=False)
+
+    return out_path
+
+
 def main():
     log("")
     log("MARKET DASH FETCH — starting")
@@ -1903,6 +1964,7 @@ def main():
 
     json_path = write_dated_json(entry)
     hist_path = append_history(entry)
+    json_path2 = rebuild_history_data_json()
 
     print_summary(entry)
 
@@ -1910,6 +1972,8 @@ def main():
     log(f"Session:  {entry.get('session','?').upper()}  ({entry.get('fetched_pt','?')})")
     log(f"Wrote:    {json_path}")
     log(f"Appended: {hist_path}")
+    if json_path2:
+        log(f"Synced:   {json_path2}")
     log("")
 
 

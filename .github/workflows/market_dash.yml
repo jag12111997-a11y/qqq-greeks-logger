@@ -60,6 +60,6 @@ jobs:
         run: |
           git config user.name "market-dash-bot"
           git config user.email "actions@github.com"
-          git add market-dash/data market-dash/history.js
+          git add market-dash/data market-dash/history.js yama-dashboard/dist/history_data.json
           git commit -m "Market dash $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
           git push
