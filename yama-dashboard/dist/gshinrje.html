@@ -6727,31 +6727,11 @@ function renderClockWidget() {
 // ═══════════════════════════════════════════════
 
 function renderGexChart(e) {
-  // Use the combined layout from secQqqOpening — chart + GEX profile side-by-side,
-  // cockpit strip, and options positioning, matching the reference dashboard.
-  if (typeof window.secQqqOpening !== 'function') {
-    return '<div class="loading">Chart engine not loaded</div>';
+  // Simplified: show only the GEX strike profile (horizontal bars + levels)
+  if (typeof window.secQqqGexProfile !== 'function') {
+    return '<div class="loading">GEX data not loaded</div>';
   }
-  // secQqqOpening returns a <section class="wide qqq-market-card"> wrapper.
-  // Extract just the inner body for the widget by stripping the outer section.
-  var full = window.secQqqOpening(e);
-  var html = full.replace(/^<section[^>]*>/, '').replace(/<\/section>\s*$/, '');
-
-  // Collapsible notebook panel at the bottom
-  html += '<details class="gex-notebook-panel" style="flex-shrink:0;border-top:1px solid var(--line);margin-top:4px">';
-  html += '<summary style="cursor:pointer;padding:4px 8px;font-size:10px;color:var(--accent);letter-spacing:1px;user-select:none;list-style:none;display:flex;align-items:center;gap:6px">';
-  html += '<span style="font-size:8px">▶</span> TRADING NOTEBOOK</summary>';
-  html += '<div style="padding:6px 8px;max-height:220px;overflow-y:auto">' + renderNotebook(e) + '</div>';
-  html += '</details>';
-
-  // mountQqqChart needs #qqq-tv-chart in the DOM. Since this returns a string
-  // that gets assigned to innerHTML, schedule the mount for after the DOM update.
-  setTimeout(function() {
-    if (document.getElementById('qqq-tv-chart')) {
-      window.mountQqqChart(e);
-    }
-  }, 0);
-  return html;
+  return window.secQqqGexProfile(e, true);
 }
 
 function renderMarketStructure(e) {
