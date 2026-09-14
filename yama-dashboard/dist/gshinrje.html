@@ -431,8 +431,13 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
   .widget-body .qqq-top-grid .qqq-chart-canvas { height:270px; }
   .widget-body .qqq-gex-profile { border-left:0; border-top:1px solid #1c1c28; padding:12px 0 0; }
 }
-/* 721-1020 override removed — widget-body is wide enough for side-by-side */
+@media (min-width:721px) and (max-width:1020px) {
+  .widget-body .qqq-top-grid { grid-template-columns:1fr; }
+  .widget-body .qqq-gex-profile { border-left:0; border-top:1px solid #1c1c28; padding:12px 0 0; }
+}
 
+.exit-calc-widget select:focus,.exit-calc-widget input:focus{outline:1px solid var(--accent,#00e5cc);outline-offset:-1px}
+.exit-calc-widget td{vertical-align:top;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -3242,7 +3247,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // hides — it can never break the page.
   var LIVE_GEX = null;
   function loadLiveGex() {
-    return fetch("../../market-dash/gex_live.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("gex_live.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && !j.error) {
@@ -3261,7 +3266,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // today's final level because doing that would make the past look predictive.
   var LIVE_GEX_INTRADAY = null;
   function loadGexIntraday() {
-    return fetch("../../market-dash/gex_intraday.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("gex_intraday.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && Array.isArray(j.points)) {
@@ -3280,7 +3285,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // pattern as Live GEX — missing file just hides the tiles, never breaks the page.
   var LIVE_AUCTION = null;
   function loadAuction() {
-    return fetch("../../market-dash/auction_live.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("auction_live.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && !j.error) {
@@ -3300,7 +3305,6 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // snapshot includes candles, the same chart falls back to real logged QQQ
   // session prices instead of inventing OHLC bars.
   var QQQ_TV = null;
-  var QQQ_TIMEFRAME = null;
   // Once the user pans or zooms, keep that exact horizontal view through any
   // real data remount. The ordinary 60-second quote refresh no longer remounts
   // the chart at all while the user is working in it.
@@ -4077,36 +4081,6 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     return out;
   }
 
-  // Aggregate source bars before Heikin-Ashi and indicators are calculated.
-  function qqqAggregateCandles(bars, timeframe) {
-    var minutes = { "1m":1, "5m":5, "15m":15, "1H":60, "4H":240 }[timeframe];
-    var groups = {};
-    bars.forEach(function (b) {
-      var key;
-      if (minutes) {
-        key = Math.floor(Number(b.time) / (minutes * 60)) * minutes * 60;
-      } else {
-        var day = typeof b.time === "string" ? b.time : new Intl.DateTimeFormat("en-CA", {
-          timeZone:"America/New_York", year:"numeric", month:"2-digit", day:"2-digit"
-        }).format(new Date(b.time * 1000));
-        key = day;
-        if (timeframe === "1M") key = day.slice(0, 7) + "-01";
-        if (timeframe === "1W") {
-          var d = new Date(day + "T00:00:00Z");
-          d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7);
-          key = d.toISOString().slice(0, 10);
-        }
-      }
-      var bar = groups[key];
-      if (!bar) groups[key] = { time:key, open:b.open, high:b.high, low:b.low, close:b.close, volume:b.volume || 0 };
-      else { bar.high = Math.max(bar.high, b.high); bar.low = Math.min(bar.low, b.low);
-        bar.close = b.close; bar.volume += b.volume || 0; }
-    });
-    return Object.keys(groups).sort(function (a, b) {
-      return minutes ? Number(a) - Number(b) : a.localeCompare(b);
-    }).map(function (key) { return groups[key]; });
-  }
-
   function mountQqqChart(e, chartModel) {
     destroyQqqChart();
     var el = document.getElementById("qqq-tv-chart");
@@ -4118,15 +4092,6 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       return;
     }
 
-    var widget = el.closest(".widget");
-    var selector = widget && widget.querySelector(".widget-select");
-    var timeframe = selector ? selector.value : "1D";
-    var intraday = ["1m", "5m", "15m", "1H", "4H"].indexOf(timeframe) >= 0;
-    el.innerHTML = "";
-    if (QQQ_TIMEFRAME !== timeframe) {
-      QQQ_VIEW_STATE = { userAdjusted:false, logicalRange:null };
-      QQQ_TIMEFRAME = timeframe;
-    }
     var chart = TV.createChart(el, {
       width: Math.max(el.clientWidth, 280),
       height: el.clientHeight || 430,
@@ -4153,7 +4118,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       rightPriceScale: { borderColor: "#1e1e2a", minimumWidth: 74 },
       timeScale: {
         borderColor: "#1e1e2a",
-        timeVisible: intraday,
+        timeVisible: true,
         secondsVisible: false,
         rightOffset: 4,
         barSpacing: 7,
@@ -4180,23 +4145,17 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       if (good) seen[b.time] = 1;
       return good;
     }).sort(function (a, b) { return a.time - b.time; });
-    var minuteCandles = baseCandles.length ? qqqMergeLiveCandle(baseCandles, M) : [];
-    var candles = intraday ? qqqAggregateCandles(minuteCandles, timeframe) : [];
-    if (intraday && !candles.length) {
-      chart.remove();
-      el.innerHTML = '<div style="padding:54px 16px;text-align:center;color:var(--dim)">' +
-        timeframe + ' candles unavailable for this session. The minute-bar feed has no data. Choose 1D, 1W or 1M for saved history.</div>';
-      return;
-    }
+    var candles = qqqMergeLiveCandle(baseCandles, M);
     var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : qqqRawDisplay(candles);
 
     var series, ema9Series = null, ema20Series = null, indicatorSeries = null;
     var gexTrailSeries = [];
     var trailRows = M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points)
       ? LIVE_GEX_INTRADAY.points.slice() : [];
-    var hasGexTrail = candles.length > 0 && trailRows.length >= 2;
-    // Intraday selections use only actual minute bars. Calendar selections use saved history.
-    if (candles.length > 0) {
+    var hasGexTrail = candles.length >= 10 && trailRows.length >= 2;
+    // Need enough live candles for a meaningful intraday chart;
+    // otherwise fall through to daily OHLC candles from HISTORY_DATA.
+    if (candles.length >= 10) {
       series = chart.addSeries(TV.CandlestickSeries, {
         upColor: "#00e676", downColor: "#ff453a",
         borderUpColor: "#00e676", borderDownColor: "#ff453a",
@@ -4276,12 +4235,6 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         return { time: day, open: open, high: high, low: low, close: close, volume: 0 };
       });
 
-      dailyCandles = qqqAggregateCandles(dailyCandles, timeframe);
-      var notice = document.createElement("div");
-      notice.textContent = timeframe + " · Estimated OHLC from saved daily closes";
-      notice.style.cssText = "position:absolute;top:4px;left:8px;z-index:2;color:#8b8ba6;font-size:11px;pointer-events:none";
-      el.style.position = "relative";
-      el.appendChild(notice);
       if (dailyCandles.length) {
         var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(dailyCandles) : qqqRawDisplay(dailyCandles);
         series = chart.addSeries(TV.CandlestickSeries, {
@@ -4306,7 +4259,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         }
 
         // Daily volume histogram from history venue data
-        if (QQQ_CHART_VIEW.pane === "volume" && timeframe === "1D") {
+        if (QQQ_CHART_VIEW.pane === "volume") {
           var volData = [];
           hist.forEach(function(entry) {
             if (!entry.entry_date) return;
@@ -4470,8 +4423,8 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       el.addEventListener(name, interactionHandler, { passive:true });
     });
     QQQ_TV = { chart: chart, resize: ro, quoteSeries: null,
-               series: series, candleSeries: candles.length > 0 ? series : null,
-               rawCandles: minuteCandles, timeframe: timeframe, ema9Series: ema9Series, ema20Series: ema20Series,
+               series: series, candleSeries: candles.length >= 10 ? series : null,
+               rawCandles: candles, ema9Series: ema9Series, ema20Series: ema20Series,
                indicatorSeries: indicatorSeries, paneType: QQQ_CHART_VIEW.pane,
                gexTrailSeries: gexTrailSeries,
                mode: QQQ_CHART_VIEW.mode, rangeHandler: rangeHandler,
@@ -4506,16 +4459,14 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
             after.high !== before.high || after.low !== before.low);
           if (changed) {
             QQQ_TV.rawCandles = mergedLive;
-            var aggregated = qqqAggregateCandles(mergedLive, QQQ_TV.timeframe);
-            after = aggregated[aggregated.length - 1];
-            var shown = QQQ_TV.mode === "ha" ? qqqHaCandles(aggregated) : qqqRawDisplay(aggregated);
+            var shown = QQQ_TV.mode === "ha" ? qqqHaCandles(mergedLive) : qqqRawDisplay(mergedLive);
             QQQ_TV.candleSeries.update(shown[shown.length - 1]);
             if (QQQ_TV.ema9Series) {
-              var e9 = qqqEma(aggregated, 9);
+              var e9 = qqqEma(mergedLive, 9);
               if (e9.length) { QQQ_TV.ema9Series.update(e9[e9.length - 1]); window._qqqEma9Last = e9[e9.length - 1].value; }
             }
             if (QQQ_TV.ema20Series) {
-              var e20 = qqqEma(aggregated, 20);
+              var e20 = qqqEma(mergedLive, 20);
               if (e20.length) { QQQ_TV.ema20Series.update(e20[e20.length - 1]); window._qqqEma20Last = e20[e20.length - 1].value; }
             }
             if (QQQ_TV.indicatorSeries) {
@@ -4523,10 +4474,10 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
                 QQQ_TV.indicatorSeries.update({ time:after.time, value:after.volume || 0,
                   color:after.close >= after.open ? "rgba(0,230,118,.55)" : "rgba(255,69,58,.55)" });
               } else if (QQQ_TV.paneType === "adl") {
-                var ad = qqqAdl(aggregated);
+                var ad = qqqAdl(mergedLive);
                 if (ad.length) QQQ_TV.indicatorSeries.update(ad[ad.length - 1]);
               } else if (QQQ_TV.paneType === "rsi") {
-                var rsi = qqqRsi(aggregated, 14);
+                var rsi = qqqRsi(mergedLive, 14);
                 if (rsi.length) QQQ_TV.indicatorSeries.update(rsi[rsi.length - 1]);
               }
             }
@@ -5893,6 +5844,551 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
 // WIDGET CONTENT DISPATCHER
 // ═══════════════════════════════════════════════
 
+
+// ═══ གཤིན་རྗེ — PERFORMANCE DATA & WIDGETS v5 (filterable) ═══
+// གཤིན་རྗེ Performance Data Bundle
+// Auto-generated from eve_trading.db
+var PERF = {"equity": [{"trade_date": "2025-05-22", "day_pnl": -4.0, "cum_pnl": -4.0, "lots": 3, "wins": 0}, {"trade_date": "2025-06-12", "day_pnl": -9.0, "cum_pnl": -13.0, "lots": 1, "wins": 0}, {"trade_date": "2025-06-13", "day_pnl": -17.0, "cum_pnl": -30.0, "lots": 2, "wins": 0}, {"trade_date": "2025-06-24", "day_pnl": -33.0, "cum_pnl": -63.0, "lots": 2, "wins": 0}, {"trade_date": "2025-06-25", "day_pnl": 54.0, "cum_pnl": -9.0, "lots": 1, "wins": 1}, {"trade_date": "2025-06-26", "day_pnl": -72.0, "cum_pnl": -81.0, "lots": 2, "wins": 0}, {"trade_date": "2025-06-27", "day_pnl": -22.0, "cum_pnl": -103.0, "lots": 3, "wins": 0}, {"trade_date": "2025-06-30", "day_pnl": -36.0, "cum_pnl": -139.0, "lots": 2, "wins": 0}, {"trade_date": "2025-07-01", "day_pnl": 88.0, "cum_pnl": -51.0, "lots": 3, "wins": 3}, {"trade_date": "2025-07-02", "day_pnl": -48.0, "cum_pnl": -99.0, "lots": 5, "wins": 0}, {"trade_date": "2025-07-03", "day_pnl": 14.0, "cum_pnl": -85.0, "lots": 4, "wins": 2}, {"trade_date": "2025-07-07", "day_pnl": -16.0, "cum_pnl": -101.0, "lots": 3, "wins": 0}, {"trade_date": "2025-07-08", "day_pnl": -29.0, "cum_pnl": -130.0, "lots": 5, "wins": 0}, {"trade_date": "2025-07-09", "day_pnl": -19.0, "cum_pnl": -149.0, "lots": 2, "wins": 0}, {"trade_date": "2025-07-10", "day_pnl": -18.0, "cum_pnl": -167.0, "lots": 3, "wins": 0}, {"trade_date": "2025-07-14", "day_pnl": -32.0, "cum_pnl": -199.0, "lots": 1, "wins": 0}, {"trade_date": "2025-07-29", "day_pnl": -10.0, "cum_pnl": -209.0, "lots": 1, "wins": 0}, {"trade_date": "2025-07-30", "day_pnl": 15.0, "cum_pnl": -194.0, "lots": 1, "wins": 1}, {"trade_date": "2025-07-31", "day_pnl": 30.0, "cum_pnl": -164.0, "lots": 1, "wins": 1}, {"trade_date": "2025-08-05", "day_pnl": -55.0, "cum_pnl": -219.0, "lots": 2, "wins": 0}, {"trade_date": "2025-08-06", "day_pnl": 10.0, "cum_pnl": -209.0, "lots": 2, "wins": 2}, {"trade_date": "2025-08-26", "day_pnl": 7.0, "cum_pnl": -202.0, "lots": 1, "wins": 1}, {"trade_date": "2025-08-27", "day_pnl": 5.0, "cum_pnl": -197.0, "lots": 1, "wins": 1}, {"trade_date": "2025-08-29", "day_pnl": -11.0, "cum_pnl": -208.0, "lots": 1, "wins": 0}, {"trade_date": "2025-09-02", "day_pnl": -2.0, "cum_pnl": -210.0, "lots": 1, "wins": 0}, {"trade_date": "2025-09-03", "day_pnl": 58.0, "cum_pnl": -152.0, "lots": 1, "wins": 1}, {"trade_date": "2025-09-09", "day_pnl": 19.0, "cum_pnl": -133.0, "lots": 3, "wins": 3}, {"trade_date": "2025-09-22", "day_pnl": -5.0, "cum_pnl": -138.0, "lots": 1, "wins": 0}, {"trade_date": "2025-10-15", "day_pnl": 50.0, "cum_pnl": -88.0, "lots": 1, "wins": 1}, {"trade_date": "2025-10-16", "day_pnl": 1.0, "cum_pnl": -87.0, "lots": 2, "wins": 1}, {"trade_date": "2025-10-22", "day_pnl": 25.0, "cum_pnl": -62.0, "lots": 1, "wins": 1}, {"trade_date": "2025-10-23", "day_pnl": 30.0, "cum_pnl": -32.0, "lots": 1, "wins": 1}, {"trade_date": "2025-10-27", "day_pnl": -16.0, "cum_pnl": -48.0, "lots": 1, "wins": 0}, {"trade_date": "2025-10-29", "day_pnl": -23.0, "cum_pnl": -71.0, "lots": 3, "wins": 0}, {"trade_date": "2025-10-31", "day_pnl": 51.0, "cum_pnl": -20.0, "lots": 2, "wins": 2}, {"trade_date": "2025-11-03", "day_pnl": 325.0, "cum_pnl": 305.0, "lots": 1, "wins": 1}, {"trade_date": "2025-11-05", "day_pnl": 38.0, "cum_pnl": 343.0, "lots": 2, "wins": 1}, {"trade_date": "2025-11-10", "day_pnl": 2.0, "cum_pnl": 345.0, "lots": 2, "wins": 1}, {"trade_date": "2025-11-11", "day_pnl": 20.0, "cum_pnl": 365.0, "lots": 1, "wins": 1}, {"trade_date": "2025-11-12", "day_pnl": -7.0, "cum_pnl": 358.0, "lots": 2, "wins": 0}, {"trade_date": "2025-11-13", "day_pnl": 7.0, "cum_pnl": 365.0, "lots": 4, "wins": 3}, {"trade_date": "2025-11-14", "day_pnl": -14.0, "cum_pnl": 351.0, "lots": 2, "wins": 0}, {"trade_date": "2025-11-17", "day_pnl": -8.0, "cum_pnl": 343.0, "lots": 1, "wins": 0}, {"trade_date": "2025-11-18", "day_pnl": -57.0, "cum_pnl": 286.0, "lots": 5, "wins": 0}, {"trade_date": "2025-11-19", "day_pnl": 0.0, "cum_pnl": 286.0, "lots": 1, "wins": 0}, {"trade_date": "2025-11-20", "day_pnl": -27.0, "cum_pnl": 259.0, "lots": 5, "wins": 2}, {"trade_date": "2025-11-21", "day_pnl": 2.0, "cum_pnl": 261.0, "lots": 1, "wins": 1}, {"trade_date": "2025-11-24", "day_pnl": 11.0, "cum_pnl": 272.0, "lots": 4, "wins": 3}, {"trade_date": "2025-11-28", "day_pnl": -35.0, "cum_pnl": 237.0, "lots": 1, "wins": 0}, {"trade_date": "2025-12-01", "day_pnl": -62.0, "cum_pnl": 175.0, "lots": 5, "wins": 0}, {"trade_date": "2025-12-02", "day_pnl": -1.0, "cum_pnl": 174.0, "lots": 2, "wins": 1}, {"trade_date": "2025-12-03", "day_pnl": 30.0, "cum_pnl": 204.0, "lots": 2, "wins": 1}, {"trade_date": "2025-12-04", "day_pnl": -3.0, "cum_pnl": 201.0, "lots": 3, "wins": 1}, {"trade_date": "2025-12-09", "day_pnl": -12.0, "cum_pnl": 189.0, "lots": 1, "wins": 0}, {"trade_date": "2025-12-11", "day_pnl": 69.0, "cum_pnl": 258.0, "lots": 1, "wins": 1}, {"trade_date": "2025-12-16", "day_pnl": -9.0, "cum_pnl": 249.0, "lots": 1, "wins": 0}, {"trade_date": "2025-12-17", "day_pnl": 6.0, "cum_pnl": 255.0, "lots": 2, "wins": 1}, {"trade_date": "2025-12-18", "day_pnl": -78.0, "cum_pnl": 177.0, "lots": 2, "wins": 1}, {"trade_date": "2025-12-19", "day_pnl": 10.0, "cum_pnl": 187.0, "lots": 1, "wins": 1}, {"trade_date": "2025-12-22", "day_pnl": -15.0, "cum_pnl": 172.0, "lots": 3, "wins": 0}, {"trade_date": "2025-12-23", "day_pnl": -8.0, "cum_pnl": 164.0, "lots": 3, "wins": 1}, {"trade_date": "2025-12-26", "day_pnl": 5.0, "cum_pnl": 169.0, "lots": 1, "wins": 1}, {"trade_date": "2025-12-30", "day_pnl": 5.0, "cum_pnl": 174.0, "lots": 1, "wins": 1}, {"trade_date": "2026-01-02", "day_pnl": 10.0, "cum_pnl": 184.0, "lots": 3, "wins": 1}, {"trade_date": "2026-01-05", "day_pnl": -10.0, "cum_pnl": 174.0, "lots": 1, "wins": 0}, {"trade_date": "2026-01-06", "day_pnl": -15.0, "cum_pnl": 159.0, "lots": 1, "wins": 0}, {"trade_date": "2026-01-07", "day_pnl": -35.0, "cum_pnl": 124.0, "lots": 3, "wins": 0}, {"trade_date": "2026-01-08", "day_pnl": -20.0, "cum_pnl": 104.0, "lots": 1, "wins": 0}, {"trade_date": "2026-01-09", "day_pnl": 13.0, "cum_pnl": 117.0, "lots": 4, "wins": 1}, {"trade_date": "2026-01-13", "day_pnl": 45.0, "cum_pnl": 162.0, "lots": 1, "wins": 1}, {"trade_date": "2026-01-14", "day_pnl": -54.0, "cum_pnl": 108.0, "lots": 4, "wins": 3}, {"trade_date": "2026-01-15", "day_pnl": -15.0, "cum_pnl": 93.0, "lots": 1, "wins": 0}, {"trade_date": "2026-01-16", "day_pnl": -71.0, "cum_pnl": 22.0, "lots": 5, "wins": 0}, {"trade_date": "2026-01-20", "day_pnl": 46.0, "cum_pnl": 68.0, "lots": 5, "wins": 5}, {"trade_date": "2026-01-21", "day_pnl": -15.0, "cum_pnl": 53.0, "lots": 1, "wins": 0}, {"trade_date": "2026-01-22", "day_pnl": -34.0, "cum_pnl": 19.0, "lots": 4, "wins": 0}, {"trade_date": "2026-01-26", "day_pnl": 25.0, "cum_pnl": 44.0, "lots": 3, "wins": 2}, {"trade_date": "2026-01-28", "day_pnl": -45.0, "cum_pnl": -1.0, "lots": 3, "wins": 0}, {"trade_date": "2026-02-06", "day_pnl": -12.0, "cum_pnl": -13.0, "lots": 1, "wins": 0}, {"trade_date": "2026-02-10", "day_pnl": -9.0, "cum_pnl": -22.0, "lots": 1, "wins": 0}, {"trade_date": "2026-04-02", "day_pnl": 6.0, "cum_pnl": -16.0, "lots": 1, "wins": 1}, {"trade_date": "2026-04-07", "day_pnl": -19.0, "cum_pnl": -35.0, "lots": 1, "wins": 0}, {"trade_date": "2026-04-08", "day_pnl": -56.0, "cum_pnl": -91.0, "lots": 4, "wins": 0}, {"trade_date": "2026-04-09", "day_pnl": 125.0, "cum_pnl": 34.0, "lots": 2, "wins": 1}, {"trade_date": "2026-04-10", "day_pnl": -15.0, "cum_pnl": 19.0, "lots": 4, "wins": 1}, {"trade_date": "2026-04-14", "day_pnl": -28.0, "cum_pnl": -9.0, "lots": 3, "wins": 0}, {"trade_date": "2026-04-15", "day_pnl": 21.0, "cum_pnl": 12.0, "lots": 2, "wins": 1}, {"trade_date": "2026-04-16", "day_pnl": -38.0, "cum_pnl": -26.0, "lots": 4, "wins": 0}, {"trade_date": "2026-04-17", "day_pnl": -6.0, "cum_pnl": -32.0, "lots": 4, "wins": 1}, {"trade_date": "2026-04-21", "day_pnl": -6.0, "cum_pnl": -38.0, "lots": 4, "wins": 1}, {"trade_date": "2026-04-22", "day_pnl": -36.0, "cum_pnl": -74.0, "lots": 3, "wins": 1}, {"trade_date": "2026-04-23", "day_pnl": 2.0, "cum_pnl": -72.0, "lots": 5, "wins": 1}, {"trade_date": "2026-04-24", "day_pnl": -10.0, "cum_pnl": -82.0, "lots": 4, "wins": 1}, {"trade_date": "2026-04-28", "day_pnl": -9.0, "cum_pnl": -91.0, "lots": 3, "wins": 1}, {"trade_date": "2026-04-29", "day_pnl": -40.0, "cum_pnl": -131.0, "lots": 5, "wins": 1}, {"trade_date": "2026-04-30", "day_pnl": -10.0, "cum_pnl": -141.0, "lots": 4, "wins": 2}, {"trade_date": "2026-05-01", "day_pnl": -15.0, "cum_pnl": -156.0, "lots": 3, "wins": 1}, {"trade_date": "2026-05-04", "day_pnl": -27.0, "cum_pnl": -183.0, "lots": 3, "wins": 0}, {"trade_date": "2026-05-05", "day_pnl": 30.0, "cum_pnl": -153.0, "lots": 2, "wins": 1}, {"trade_date": "2026-05-07", "day_pnl": -11.0, "cum_pnl": -164.0, "lots": 3, "wins": 0}, {"trade_date": "2026-05-08", "day_pnl": 0.0, "cum_pnl": -164.0, "lots": 3, "wins": 1}, {"trade_date": "2026-05-11", "day_pnl": -9.0, "cum_pnl": -173.0, "lots": 1, "wins": 0}, {"trade_date": "2026-05-12", "day_pnl": 28.0, "cum_pnl": -145.0, "lots": 1, "wins": 1}, {"trade_date": "2026-05-13", "day_pnl": 10.0, "cum_pnl": -135.0, "lots": 2, "wins": 1}, {"trade_date": "2026-05-14", "day_pnl": 19.0, "cum_pnl": -116.0, "lots": 2, "wins": 2}, {"trade_date": "2026-05-15", "day_pnl": -52.0, "cum_pnl": -168.0, "lots": 5, "wins": 0}, {"trade_date": "2026-05-18", "day_pnl": -30.0, "cum_pnl": -198.0, "lots": 3, "wins": 0}, {"trade_date": "2026-05-19", "day_pnl": -46.0, "cum_pnl": -244.0, "lots": 5, "wins": 0}, {"trade_date": "2026-05-20", "day_pnl": 14.0, "cum_pnl": -230.0, "lots": 2, "wins": 1}, {"trade_date": "2026-05-21", "day_pnl": -12.0, "cum_pnl": -242.0, "lots": 1, "wins": 0}, {"trade_date": "2026-05-22", "day_pnl": 8.0, "cum_pnl": -234.0, "lots": 4, "wins": 2}, {"trade_date": "2026-05-26", "day_pnl": 12.0, "cum_pnl": -222.0, "lots": 3, "wins": 1}, {"trade_date": "2026-05-27", "day_pnl": -7.0, "cum_pnl": -229.0, "lots": 2, "wins": 0}, {"trade_date": "2026-05-28", "day_pnl": 7.0, "cum_pnl": -222.0, "lots": 2, "wins": 1}, {"trade_date": "2026-05-29", "day_pnl": -4.0, "cum_pnl": -226.0, "lots": 4, "wins": 2}, {"trade_date": "2026-06-02", "day_pnl": 24.0, "cum_pnl": -202.0, "lots": 4, "wins": 2}, {"trade_date": "2026-06-03", "day_pnl": -22.0, "cum_pnl": -224.0, "lots": 2, "wins": 0}, {"trade_date": "2026-06-04", "day_pnl": 8.0, "cum_pnl": -216.0, "lots": 1, "wins": 1}, {"trade_date": "2026-06-05", "day_pnl": -28.0, "cum_pnl": -244.0, "lots": 3, "wins": 0}, {"trade_date": "2026-06-08", "day_pnl": -8.0, "cum_pnl": -252.0, "lots": 1, "wins": 0}, {"trade_date": "2026-06-09", "day_pnl": -51.0, "cum_pnl": -303.0, "lots": 5, "wins": 0}, {"trade_date": "2026-06-10", "day_pnl": -14.0, "cum_pnl": -317.0, "lots": 2, "wins": 0}, {"trade_date": "2026-06-18", "day_pnl": 2484.0, "cum_pnl": 2167.0, "lots": 4, "wins": 4}, {"trade_date": "2026-06-22", "day_pnl": 6498.0, "cum_pnl": 8665.0, "lots": 13, "wins": 13}, {"trade_date": "2026-06-23", "day_pnl": -4638.0, "cum_pnl": 4027.0, "lots": 39, "wins": 0}, {"trade_date": "2026-07-08", "day_pnl": 272.0, "cum_pnl": 4299.0, "lots": 2, "wins": 2}, {"trade_date": "2026-07-09", "day_pnl": 113.0, "cum_pnl": 4412.0, "lots": 5, "wins": 3}, {"trade_date": "2026-07-10", "day_pnl": 363.0, "cum_pnl": 4775.0, "lots": 6, "wins": 6}, {"trade_date": "2026-07-14", "day_pnl": 833.0, "cum_pnl": 5608.0, "lots": 9, "wins": 9}, {"trade_date": "2026-07-15", "day_pnl": -1784.0, "cum_pnl": 3824.0, "lots": 17, "wins": 0}, {"trade_date": "2026-07-17", "day_pnl": 155.0, "cum_pnl": 3979.0, "lots": 2, "wins": 2}, {"trade_date": "2026-07-21", "day_pnl": 184.0, "cum_pnl": 4163.0, "lots": 3, "wins": 3}, {"trade_date": "2026-07-24", "day_pnl": 243.0, "cum_pnl": 4406.0, "lots": 2, "wins": 2}, {"trade_date": "2026-07-28", "day_pnl": 275.0, "cum_pnl": 4681.0, "lots": 3, "wins": 3}, {"trade_date": "2026-07-30", "day_pnl": -75.0, "cum_pnl": 4606.0, "lots": 7, "wins": 0}, {"trade_date": "2026-07-31", "day_pnl": -622.0, "cum_pnl": 3984.0, "lots": 5, "wins": 0}, {"trade_date": "2026-08-18", "day_pnl": -95, "cum_pnl": 3889.0, "lots": 2, "wins": 0}, {"trade_date": "2026-08-19", "day_pnl": 93, "cum_pnl": 3982.0, "lots": 2, "wins": 2}, {"trade_date": "2026-08-20", "day_pnl": 93, "cum_pnl": 4075.0, "lots": 3, "wins": 3}, {"trade_date": "2026-08-21", "day_pnl": -138, "cum_pnl": 3937.0, "lots": 3, "wins": 0}, {"trade_date": "2026-08-25", "day_pnl": -97, "cum_pnl": 3840.0, "lots": 3, "wins": 0}, {"trade_date": "2026-08-26", "day_pnl": 51, "cum_pnl": 3891.0, "lots": 1, "wins": 1}, {"trade_date": "2026-08-27", "day_pnl": -47, "cum_pnl": 3844.0, "lots": 3, "wins": 0}, {"trade_date": "2026-09-04", "day_pnl": -95, "cum_pnl": 3749.0, "lots": 2, "wins": 0}, {"trade_date": "2026-09-08", "day_pnl": -76, "cum_pnl": 3673.0, "lots": 2, "wins": 0}, {"trade_date": "2026-09-11", "day_pnl": 92, "cum_pnl": 3765.0, "lots": 1, "wins": 1}], "winrate": {"total": 432, "wins": 142, "losses": 275, "be": 15, "net_pnl": 3765.0, "expectancy": 8.72, "by_type": [{"option_type": "call", "total": 262, "wins": 95, "pnl": 2787.0}, {"option_type": "put", "total": 170, "wins": 47, "pnl": 978.0}]}, "edges": [{"option_type": "put", "hold_bucket": "15-29min", "n": 22, "wins": 14, "gross_win": 5416.0, "gross_loss": -133.0, "pnl": 5283.0}, {"option_type": "call", "hold_bucket": "5-14min", "n": 53, "wins": 23, "gross_win": 3337.0, "gross_loss": -364.0, "pnl": 2973.0}, {"option_type": "call", "hold_bucket": "15-29min", "n": 50, "wins": 22, "gross_win": 1302.0, "gross_loss": -318.0, "pnl": 984.0}, {"option_type": "put", "hold_bucket": "5-14min", "n": 24, "wins": 8, "gross_win": 1060.0, "gross_loss": -275.0, "pnl": 785.0}, {"option_type": "call", "hold_bucket": "30-59min", "n": 38, "wins": 17, "gross_win": 844.0, "gross_loss": -284.0, "pnl": 560.0}, {"option_type": "put", "hold_bucket": "<5min", "n": 35, "wins": 8, "gross_win": 180.0, "gross_loss": -253.0, "pnl": -73.0}, {"option_type": "put", "hold_bucket": "30-59min", "n": 15, "wins": 2, "gross_win": 16.0, "gross_loss": -176.0, "pnl": -160.0}, {"option_type": "call", "hold_bucket": "<5min", "n": 39, "wins": 6, "gross_win": 132.0, "gross_loss": -417.0, "pnl": -285.0}, {"option_type": "call", "hold_bucket": "60+min", "n": 82, "wins": 27, "gross_win": 1281.0, "gross_loss": -2726.0, "pnl": -1445.0}, {"option_type": "put", "hold_bucket": "60+min", "n": 74, "wins": 15, "gross_win": 101.0, "gross_loss": -4958.0, "pnl": -4857.0}], "heatmap": [{"dow": "Mon", "dow_num": 1, "session": "afternoon", "n": 5, "wins": 2, "pnl": 21.0}, {"dow": "Mon", "dow_num": 1, "session": "midday", "n": 30, "wins": 11, "pnl": 5406.0}, {"dow": "Mon", "dow_num": 1, "session": "morning", "n": 12, "wins": 7, "pnl": 1208.0}, {"dow": "Mon", "dow_num": 1, "session": "pre", "n": 2, "wins": 0, "pnl": -48.0}, {"dow": "Tue", "dow_num": 2, "session": "afternoon", "n": 8, "wins": 6, "pnl": 86.0}, {"dow": "Tue", "dow_num": 2, "session": "midday", "n": 21, "wins": 6, "pnl": -117.0}, {"dow": "Tue", "dow_num": 2, "session": "morning", "n": 70, "wins": 24, "pnl": 224.0}, {"dow": "Tue", "dow_num": 2, "session": "pre", "n": 33, "wins": 3, "pnl": -3882.0}, {"dow": "Wed", "dow_num": 3, "session": "afternoon", "n": 8, "wins": 3, "pnl": -43.0}, {"dow": "Wed", "dow_num": 3, "session": "midday", "n": 27, "wins": 9, "pnl": -55.0}, {"dow": "Wed", "dow_num": 3, "session": "morning", "n": 44, "wins": 11, "pnl": -1350.0}, {"dow": "Wed", "dow_num": 3, "session": "pre", "n": 5, "wins": 1, "pnl": -5.0}, {"dow": "Thu", "dow_num": 4, "session": "afternoon", "n": 9, "wins": 3, "pnl": -64.0}, {"dow": "Thu", "dow_num": 4, "session": "midday", "n": 17, "wins": 6, "pnl": -13.0}, {"dow": "Thu", "dow_num": 4, "session": "morning", "n": 52, "wins": 20, "pnl": 2610.0}, {"dow": "Thu", "dow_num": 4, "session": "pre", "n": 7, "wins": 3, "pnl": 2.0}, {"dow": "Fri", "dow_num": 5, "session": "afternoon", "n": 6, "wins": 4, "pnl": 70.0}, {"dow": "Fri", "dow_num": 5, "session": "midday", "n": 14, "wins": 3, "pnl": -30.0}, {"dow": "Fri", "dow_num": 5, "session": "morning", "n": 51, "wins": 17, "pnl": -438.0}, {"dow": "Fri", "dow_num": 5, "session": "pre", "n": 11, "wins": 3, "pnl": 183.0}], "revenge": [{"category": "normal", "n": 316, "wins": 130, "pnl": 10705.0, "avg_pnl": 33.88}, {"category": "revenge", "n": 116, "wins": 12, "pnl": -6940.0, "avg_pnl": -59.83}], "streaks": [{"streak_type": "loss", "streak_len": 39, "started": "2026-06-23 13:53:57", "ended": "2026-06-23 14:16:34"}, {"streak_type": "win", "streak_len": 17, "started": "2026-06-18 14:24:13", "ended": "2026-06-22 18:32:32"}, {"streak_type": "loss", "streak_len": 17, "started": "2026-07-15 14:21:26", "ended": "2026-07-15 14:36:22"}, {"streak_type": "loss", "streak_len": 15, "started": "2025-07-07 18:25:59", "ended": "2025-07-29 19:07:36"}, {"streak_type": "win", "streak_len": 15, "started": "2026-07-10 14:22:17", "ended": "2026-07-14 14:49:53"}, {"streak_type": "loss", "streak_len": 14, "started": "2026-05-15 13:36:12", "ended": "2026-05-20 13:49:36"}, {"streak_type": "loss", "streak_len": 11, "started": "2026-06-05 15:45:03", "ended": "2026-06-10 15:12:19"}, {"streak_type": "loss", "streak_len": 11, "started": "2026-07-30 14:54:05", "ended": "2026-07-31 14:06:09"}, {"streak_type": "win", "streak_len": 10, "started": "2026-07-17 15:03:47", "ended": "2026-07-28 14:36:16"}, {"streak_type": "loss", "streak_len": 9, "started": "2026-01-05 20:08:31", "ended": "2026-01-09 18:08:32"}, {"streak_type": "loss", "streak_len": 8, "started": "2025-11-14 14:30:00", "ended": "2025-11-18 20:00:23"}, {"streak_type": "loss", "streak_len": 7, "started": "2025-06-26 14:20:47", "ended": "2025-06-30 17:55:21"}, {"streak_type": "loss", "streak_len": 7, "started": "2026-04-16 15:28:43", "ended": "2026-04-17 16:00:49"}, {"streak_type": "loss", "streak_len": 6, "started": "2025-05-22 18:06:11", "ended": "2025-06-24 15:54:26"}, {"streak_type": "loss", "streak_len": 6, "started": "2025-07-02 14:50:58", "ended": "2025-07-03 13:51:45"}, {"streak_type": "loss", "streak_len": 6, "started": "2025-11-28 14:58:03", "ended": "2025-12-01 17:35:42"}, {"streak_type": "loss", "streak_len": 5, "started": "2026-01-15 20:24:32", "ended": "2026-01-16 18:09:48"}, {"streak_type": "win", "streak_len": 5, "started": "2026-01-20 14:42:55", "ended": "2026-01-20 20:59:51"}, {"streak_type": "loss", "streak_len": 5, "started": "2026-01-21 19:37:24", "ended": "2026-01-22 20:15:01"}, {"streak_type": "loss", "streak_len": 5, "started": "2026-01-28 19:31:32", "ended": "2026-02-10 16:27:59"}], "current_streak": {"streak_type": "win", "streak_len": 1}, "max_win_streak": 17, "max_loss_streak": 39, "r_dist": [{"bucket": "-$200 to -$100", "n": 44, "pnl": -6088.0}, {"bucket": "-$100 to -$50", "n": 11, "pnl": -798.0}, {"bucket": "-$50 to $0", "n": 220, "pnl": -3018.0}, {"bucket": "$0 to $50", "n": 104, "pnl": 1410.0}, {"bucket": "$50 to $100", "n": 26, "pnl": 1859.0}, {"bucket": "$100 to $200", "n": 9, "pnl": 1093.0}, {"bucket": "$200 to $500", "n": 6, "pnl": 1567.0}, {"bucket": "$500+", "n": 12, "pnl": 7740.0}], "hold_time": [{"hold_bucket": "<5min", "n": 74, "wins": 14, "pnl": -358.0, "avg_pnl": -4.84, "pf": 0.59}, {"hold_bucket": "5-14min", "n": 77, "wins": 31, "pnl": 3758.0, "avg_pnl": 48.81, "pf": 7.71}, {"hold_bucket": "15-29min", "n": 72, "wins": 36, "pnl": 6267.0, "avg_pnl": 87.04, "pf": 23.48}, {"hold_bucket": "30-59min", "n": 53, "wins": 19, "pnl": 400.0, "avg_pnl": 7.55, "pf": 2.36}, {"hold_bucket": "60+min", "n": 156, "wins": 42, "pnl": -6302.0, "avg_pnl": -40.4, "pf": 0.18}], "rules": [{"type": "stop", "rule": "No revenge trades (<5min re-entry after loss, same direction)", "cost": "-$6,759"}, {"type": "stop", "rule": "No Tuesday pre-market", "cost": "-$3,882"}, {"type": "stop", "rule": "No puts in pre-market", "cost": "-$4,039"}, {"type": "stop", "rule": "Hard stop at -1R on every trade", "cost": "saves +$2,803"}, {"type": "stop", "rule": "No trades after 10+ consecutive losses", "cost": "-$55/lot avg"}, {"type": "do", "rule": "Hold winners 15-29 min (PF 23.48, +$99.90/lot)", "edge": "+$6,294"}, {"type": "do", "rule": "Focus $1-$2 entry price (48% WR, PF 4.05)", "edge": "+$7,270"}, {"type": "do", "rule": "Monday midday 15-29min setups (PF 150.2)", "edge": "+$5,221"}, {"type": "do", "rule": "Last trade of day gets extra size (41.9% WR, PF 3.4)", "edge": "PF 3.4"}], "monthly": [{"month": "2025-05", "pnl": -4.0, "lots": 3, "wins": 0}, {"month": "2025-06", "pnl": -135.0, "lots": 13, "wins": 1}, {"month": "2025-07", "pnl": -25.0, "lots": 29, "wins": 7}, {"month": "2025-08", "pnl": -44.0, "lots": 7, "wins": 4}, {"month": "2025-09", "pnl": 70.0, "lots": 6, "wins": 4}, {"month": "2025-10", "pnl": 118.0, "lots": 11, "wins": 6}, {"month": "2025-11", "pnl": 257.0, "lots": 32, "wins": 13}, {"month": "2025-12", "pnl": -63.0, "lots": 28, "wins": 10}, {"month": "2026-01", "pnl": -175.0, "lots": 40, "wins": 13}, {"month": "2026-02", "pnl": -21.0, "lots": 2, "wins": 0}, {"month": "2026-04", "pnl": -119.0, "lots": 53, "wins": 13}, {"month": "2026-05", "pnl": -85.0, "lots": 51, "wins": 14}, {"month": "2026-06", "pnl": 4253.0, "lots": 74, "wins": 20}, {"month": "2026-07", "pnl": -43.0, "lots": 61, "wins": 30}, {"month": "2026-08", "pnl": -140, "lots": 17, "wins": 6}, {"month": "2026-09", "pnl": -79, "lots": 5, "wins": 1}]};
+
+var PERF_LOTS=[["2025-05-22",0.0,0,4,3,1,0,"2025-05-22 16:29:29","2025-05-22 17:33:51"],["2025-05-22",0.0,0,3,3,1,0,"2025-05-22 16:47:25","2025-05-22 17:33:51"],["2025-05-22",-4.0,0,4,3,2,-1,"2025-05-22 18:06:11","2025-05-22 19:26:37"],["2025-06-12",-9.0,1,0,3,0,-1,"2025-06-12 13:52:57","2025-06-12 13:53:53"],["2025-06-13",-7.0,1,0,4,1,-1,"2025-06-13 16:40:03","2025-06-13 16:41:44"],["2025-06-13",-10.0,1,0,4,1,-1,"2025-06-13 16:52:50","2025-06-13 16:53:59"],["2025-06-24",-22.0,1,2,1,1,-1,"2025-06-24 14:53:27","2025-06-24 15:23:13"],["2025-06-24",-11.0,1,4,1,1,-1,"2025-06-24 15:54:26","2025-06-25 15:04:28"],["2025-06-25",54.0,1,2,2,1,1,"2025-06-25 14:45:28","2025-06-25 15:04:14"],["2025-06-26",-42.0,1,3,3,1,-1,"2025-06-26 14:20:47","2025-06-26 15:16:18"],["2025-06-26",-30.0,1,1,3,2,-1,"2025-06-26 19:19:00","2025-06-26 19:24:59"],["2025-06-27",-11.0,1,1,4,1,-1,"2025-06-27 16:05:19","2025-06-27 16:12:52"],["2025-06-27",-4.0,0,2,4,1,-1,"2025-06-27 16:18:59","2025-06-27 16:44:02"],["2025-06-27",-7.0,0,2,4,1,-1,"2025-06-27 16:18:59","2025-06-27 16:48:09"],["2025-06-30",-23.0,0,3,0,2,-1,"2025-06-30 17:02:20","2025-06-30 17:33:32"],["2025-06-30",-13.0,0,0,0,2,-1,"2025-06-30 17:55:21","2025-06-30 17:57:08"],["2025-07-01",34.0,0,1,1,1,1,"2025-07-01 15:14:50","2025-07-01 15:26:31"],["2025-07-01",27.0,0,2,1,1,1,"2025-07-01 15:14:50","2025-07-01 15:32:36"],["2025-07-01",27.0,0,2,1,1,1,"2025-07-01 15:14:50","2025-07-01 15:36:38"],["2025-07-02",-5.0,1,3,2,1,-1,"2025-07-02 14:50:58","2025-07-02 15:37:26"],["2025-07-02",-7.0,1,3,2,1,-1,"2025-07-02 14:50:58","2025-07-02 15:46:52"],["2025-07-02",-9.0,1,4,2,1,-1,"2025-07-02 14:50:58","2025-07-02 16:38:01"],["2025-07-02",-14.0,1,3,2,2,-1,"2025-07-02 18:30:18","2025-07-02 19:21:30"],["2025-07-02",-13.0,1,3,2,2,-1,"2025-07-02 18:30:25","2025-07-02 19:21:59"],["2025-07-03",-10.0,1,0,3,0,-1,"2025-07-03 13:51:45","2025-07-03 13:55:22"],["2025-07-03",13.0,0,3,3,0,1,"2025-07-03 13:59:49","2025-07-03 14:40:48"],["2025-07-03",11.0,0,4,3,0,1,"2025-07-03 13:59:52","2025-07-03 15:01:03"],["2025-07-03",0.0,0,3,3,1,0,"2025-07-03 14:05:11","2025-07-03 15:02:30"],["2025-07-07",-7.0,1,1,0,2,-1,"2025-07-07 18:25:59","2025-07-07 18:37:18"],["2025-07-07",-6.0,1,0,0,2,-1,"2025-07-07 18:37:17","2025-07-07 18:40:40"],["2025-07-07",-3.0,1,0,0,2,-1,"2025-07-07 19:00:52","2025-07-07 19:01:02"],["2025-07-08",-6.0,0,0,1,0,-1,"2025-07-08 13:31:43","2025-07-08 13:34:54"],["2025-07-08",-4.0,0,2,1,0,-1,"2025-07-08 13:34:08","2025-07-08 14:02:15"],["2025-07-08",-4.0,0,2,1,0,-1,"2025-07-08 13:34:19","2025-07-08 14:03:02"],["2025-07-08",-8.0,0,1,1,1,-1,"2025-07-08 14:18:07","2025-07-08 14:24:29"],["2025-07-08",-7.0,0,2,1,1,-1,"2025-07-08 14:34:08","2025-07-08 14:50:19"],["2025-07-09",-9.0,0,1,2,0,-1,"2025-07-09 13:55:56","2025-07-09 14:08:13"],["2025-07-09",-10.0,0,2,2,0,-1,"2025-07-09 13:56:40","2025-07-09 14:19:50"],["2025-07-10",-7.0,0,1,3,0,-1,"2025-07-10 13:49:37","2025-07-10 13:58:50"],["2025-07-10",-6.0,0,1,3,0,-1,"2025-07-10 13:52:27","2025-07-10 13:58:50"],["2025-07-10",-5.0,0,3,3,1,-1,"2025-07-10 14:19:46","2025-07-10 15:09:08"],["2025-07-14",-32.0,0,4,0,0,-1,"2025-07-14 13:42:41","2025-07-16 14:10:46"],["2025-07-29",-10.0,1,1,1,2,-1,"2025-07-29 19:07:36","2025-07-29 19:16:35"],["2025-07-30",15.0,1,1,2,2,1,"2025-07-30 18:35:40","2025-07-30 18:41:15"],["2025-07-31",30.0,0,1,3,2,1,"2025-07-31 18:06:58","2025-07-31 18:21:14"],["2025-08-05",-45.0,0,2,1,2,-1,"2025-08-05 18:48:21","2025-08-05 19:16:39"],["2025-08-05",-10.0,1,1,1,2,-1,"2025-08-05 19:20:05","2025-08-05 19:33:26"],["2025-08-06",5.0,0,3,2,2,1,"2025-08-06 17:30:27","2025-08-06 18:08:07"],["2025-08-06",5.0,0,2,2,2,1,"2025-08-06 18:06:43","2025-08-06 18:24:06"],["2025-08-26",7.0,1,2,1,2,1,"2025-08-26 17:25:01","2025-08-26 17:43:45"],["2025-08-27",5.0,0,3,2,2,1,"2025-08-27 19:12:42","2025-08-27 19:42:56"],["2025-08-29",-11.0,1,4,4,2,-1,"2025-08-29 17:42:15","2025-08-29 19:12:59"],["2025-09-02",-2.0,0,4,1,2,-1,"2025-09-02 18:15:19","2025-09-02 19:50:00"],["2025-09-03",58.0,0,4,2,2,1,"2025-09-03 18:20:32","2025-09-03 20:00:28"],["2025-09-09",5.0,0,4,1,2,1,"2025-09-09 18:10:13","2025-09-09 19:55:45"],["2025-09-09",5.0,0,4,1,2,1,"2025-09-09 18:10:13","2025-09-09 19:55:45"],["2025-09-09",9.0,0,4,1,2,1,"2025-09-09 18:39:26","2025-09-09 19:55:45"],["2025-09-22",-5.0,0,4,0,2,-1,"2025-09-22 17:16:34","2025-09-23 15:55:15"],["2025-10-15",50.0,0,4,2,2,1,"2025-10-15 17:27:35","2025-10-15 18:37:08"],["2025-10-16",3.0,1,4,3,1,1,"2025-10-16 16:49:17","2025-10-17 19:47:02"],["2025-10-16",-2.0,0,4,3,2,-1,"2025-10-16 19:29:25","2025-11-21 17:10:13"],["2025-10-22",25.0,0,0,2,2,1,"2025-10-22 19:59:04","2025-10-22 19:59:27"],["2025-10-23",30.0,1,0,3,2,1,"2025-10-23 19:56:38","2025-10-23 19:57:10"],["2025-10-27",-16.0,0,4,0,0,-1,"2025-10-27 13:30:01","2025-12-01 18:03:34"],["2025-10-29",-16.0,0,2,2,2,-1,"2025-10-29 18:35:30","2025-10-29 18:54:06"],["2025-10-29",-4.0,1,2,2,2,-1,"2025-10-29 18:55:15","2025-10-29 19:22:57"],["2025-10-29",-3.0,1,2,2,2,-1,"2025-10-29 18:57:35","2025-10-29 19:23:17"],["2025-10-31",6.0,0,4,4,0,1,"2025-10-31 13:30:17","2025-11-25 14:45:53"],["2025-10-31",45.0,1,2,4,2,1,"2025-10-31 19:34:31","2025-10-31 19:58:12"],["2025-11-03",325.0,0,4,0,2,1,"2025-11-03 19:07:17","2025-11-06 14:39:31"],["2025-11-05",-3.0,0,4,2,1,-1,"2025-11-05 14:30:01","2025-12-01 18:03:34"],["2025-11-05",41.0,1,2,2,3,1,"2025-11-05 20:40:08","2025-11-05 20:57:22"],["2025-11-10",-8.0,0,4,0,1,-1,"2025-11-10 15:34:42","2025-12-02 20:24:29"],["2025-11-10",10.0,0,0,0,3,1,"2025-11-10 20:22:20","2025-11-10 20:25:23"],["2025-11-11",20.0,1,1,1,3,1,"2025-11-11 20:50:55","2025-11-11 20:58:46"],["2025-11-12",-7.0,0,4,2,1,-1,"2025-11-12 14:30:01","2025-12-01 18:03:34"],["2025-11-12",0.0,1,4,2,1,0,"2025-11-12 14:34:55","2025-12-08 14:31:10"],["2025-11-13",-6.0,0,4,3,2,-1,"2025-11-13 18:35:51","2025-12-09 19:45:10"],["2025-11-13",3.0,0,4,3,2,1,"2025-11-13 19:55:06","2025-11-28 14:35:37"],["2025-11-13",5.0,1,4,3,3,1,"2025-11-13 20:40:30","2025-12-09 15:36:11"],["2025-11-13",5.0,1,4,3,3,1,"2025-11-13 20:40:30","2025-12-10 18:08:08"],["2025-11-14",-4.0,0,4,4,1,-1,"2025-11-14 14:30:00","2025-12-09 19:45:49"],["2025-11-14",-10.0,0,4,4,1,-1,"2025-11-14 14:30:32","2026-03-12 13:30:23"],["2025-11-17",-8.0,0,4,0,1,-1,"2025-11-17 14:30:51","2026-03-12 13:30:23"],["2025-11-18",-14.0,1,4,1,1,-1,"2025-11-18 16:20:51","2025-11-18 18:24:09"],["2025-11-18",-10.0,1,4,1,1,-1,"2025-11-18 16:26:51","2025-11-18 17:41:38"],["2025-11-18",-5.0,1,0,1,2,-1,"2025-11-18 17:39:33","2025-11-18 17:41:38"],["2025-11-18",-15.0,1,1,1,2,-1,"2025-11-18 17:49:18","2025-11-18 17:56:51"],["2025-11-18",-13.0,1,4,1,3,-1,"2025-11-18 20:00:23","2025-11-19 16:44:22"],["2025-11-19",0.0,1,4,2,3,0,"2025-11-19 20:28:10","2025-12-03 14:40:20"],["2025-11-20",8.0,0,4,3,1,1,"2025-11-20 14:30:06","2025-12-01 18:03:34"],["2025-11-20",2.0,1,4,3,1,1,"2025-11-20 15:54:52","2025-12-03 14:40:20"],["2025-11-20",-7.0,0,2,3,1,-1,"2025-11-20 16:17:16","2025-11-20 16:32:41"],["2025-11-20",-6.0,0,4,3,2,-1,"2025-11-20 19:51:22","2025-12-09 19:45:21"],["2025-11-20",-24.0,0,4,3,3,-1,"2025-11-20 20:41:04","2025-11-21 15:29:49"],["2025-11-21",2.0,0,4,4,1,1,"2025-11-21 14:30:01","2025-12-09 19:45:49"],["2025-11-24",-6.0,0,4,0,1,-1,"2025-11-24 14:30:02","2026-03-12 13:30:23"],["2025-11-24",6.0,1,4,0,1,1,"2025-11-24 15:15:25","2025-12-03 14:40:20"],["2025-11-24",7.0,1,4,0,1,1,"2025-11-24 15:37:40","2025-11-25 14:30:06"],["2025-11-24",4.0,1,4,0,2,1,"2025-11-24 18:13:13","2025-11-25 14:45:35"],["2025-11-28",-35.0,1,4,4,1,-1,"2025-11-28 14:58:03","2025-11-28 16:30:43"],["2025-12-01",-14.0,1,4,0,1,-1,"2025-12-01 14:34:25","2025-12-03 16:30:18"],["2025-12-01",-11.0,1,4,0,1,-1,"2025-12-01 16:57:29","2025-12-01 18:23:45"],["2025-12-01",-10.0,1,4,0,2,-1,"2025-12-01 17:07:49","2025-12-01 18:23:45"],["2025-12-01",-14.0,1,4,0,2,-1,"2025-12-01 17:16:41","2025-12-01 18:23:45"],["2025-12-01",-13.0,1,3,0,2,-1,"2025-12-01 17:35:42","2025-12-01 18:23:23"],["2025-12-02",10.0,1,4,1,3,1,"2025-12-02 20:30:44","2025-12-03 14:30:01"],["2025-12-02",-11.0,0,4,1,3,-1,"2025-12-02 20:54:50","2025-12-03 16:33:35"],["2025-12-03",30.0,1,0,2,1,1,"2025-12-03 14:30:02","2025-12-03 14:33:48"],["2025-12-03",0.0,0,0,2,3,0,"2025-12-03 20:14:05","2025-12-03 20:17:48"],["2025-12-04",-16.0,0,4,3,1,-1,"2025-12-04 14:30:00","2025-12-04 17:09:26"],["2025-12-04",14.0,0,4,3,2,1,"2025-12-04 19:20:17","2025-12-05 14:31:46"],["2025-12-04",-1.0,1,4,3,2,-1,"2025-12-04 19:33:22","2025-12-08 16:34:50"],["2025-12-09",-12.0,0,4,1,1,-1,"2025-12-09 14:59:04","2025-12-09 18:20:06"],["2025-12-11",69.0,0,4,3,2,1,"2025-12-11 19:26:02","2025-12-12 17:06:20"],["2025-12-16",-9.0,1,4,1,1,-1,"2025-12-16 14:32:17","2025-12-16 16:30:00"],["2025-12-17",-9.0,0,4,2,3,-1,"2025-12-17 20:35:46","2025-12-18 19:29:10"],["2025-12-17",15.0,1,0,2,3,1,"2025-12-17 20:54:07","2025-12-17 20:55:27"],["2025-12-18",-89.0,1,4,3,2,-1,"2025-12-18 19:38:40","2025-12-19 14:45:15"],["2025-12-18",11.0,1,3,3,3,1,"2025-12-18 20:34:45","2025-12-18 21:13:07"],["2025-12-19",10.0,1,0,4,3,1,"2025-12-19 20:53:22","2025-12-19 20:54:15"],["2025-12-22",-7.0,0,0,0,2,-1,"2025-12-22 17:42:00","2025-12-22 17:42:09"],["2025-12-22",-8.0,0,2,0,2,-1,"2025-12-22 17:44:22","2025-12-22 18:07:18"],["2025-12-22",0.0,0,1,0,3,0,"2025-12-22 20:46:50","2025-12-22 20:54:40"],["2025-12-23",-13.0,1,3,1,2,-1,"2025-12-23 18:59:03","2025-12-23 19:29:24"],["2025-12-23",0.0,0,2,1,2,0,"2025-12-23 19:03:29","2025-12-23 19:24:50"],["2025-12-23",5.0,0,1,1,3,1,"2025-12-23 20:53:10","2025-12-23 20:58:39"],["2025-12-26",5.0,0,0,4,3,1,"2025-12-26 20:55:03","2025-12-26 20:58:07"],["2025-12-30",5.0,1,0,1,3,1,"2025-12-30 20:55:57","2025-12-30 20:56:03"],["2026-01-02",-5.0,1,0,4,3,-1,"2026-01-02 20:35:52","2026-01-02 20:38:45"],["2026-01-02",-5.0,1,0,4,3,-1,"2026-01-02 20:50:23","2026-01-02 20:50:37"],["2026-01-02",20.0,1,0,4,3,1,"2026-01-02 20:51:14","2026-01-02 20:51:45"],["2026-01-05",-10.0,1,0,0,3,-1,"2026-01-05 20:08:31","2026-01-05 20:08:42"],["2026-01-06",-15.0,1,0,1,2,-1,"2026-01-06 18:13:34","2026-01-06 18:15:47"],["2026-01-07",-5.0,0,1,2,1,-1,"2026-01-07 15:01:29","2026-01-07 15:14:30"],["2026-01-07",-15.0,0,1,2,2,-1,"2026-01-07 18:19:10","2026-01-07 18:29:32"],["2026-01-07",-15.0,0,1,2,2,-1,"2026-01-07 19:16:11","2026-01-07 19:26:42"],["2026-01-08",-20.0,0,0,3,3,-1,"2026-01-08 20:16:44","2026-01-08 20:17:44"],["2026-01-09",-6.0,1,4,4,2,-1,"2026-01-09 17:22:47","2026-01-09 19:13:33"],["2026-01-09",-10.0,1,0,4,2,-1,"2026-01-09 18:04:28","2026-01-09 18:05:47"],["2026-01-09",-16.0,1,4,4,2,-1,"2026-01-09 18:08:32","2026-01-09 19:13:33"],["2026-01-09",45.0,0,0,4,3,1,"2026-01-09 20:59:41","2026-01-09 20:59:55"],["2026-01-13",45.0,1,0,1,3,1,"2026-01-13 20:59:33","2026-01-13 20:59:48"],["2026-01-14",12.0,1,4,2,1,1,"2026-01-14 14:30:01","2026-01-14 20:06:53"],["2026-01-14",9.0,1,4,2,2,1,"2026-01-14 18:40:12","2026-01-14 20:06:53"],["2026-01-14",-100.0,1,1,2,3,-1,"2026-01-14 20:32:04","2026-01-14 20:39:44"],["2026-01-14",25.0,1,0,2,3,1,"2026-01-14 20:59:33","2026-01-14 20:59:35"],["2026-01-15",-15.0,0,0,3,3,-1,"2026-01-15 20:24:32","2026-01-15 20:25:04"],["2026-01-16",0.0,0,4,4,1,0,"2026-01-16 15:39:06","2026-01-16 16:56:08"],["2026-01-16",-20.0,0,0,4,1,-1,"2026-01-16 16:54:42","2026-01-16 16:56:05"],["2026-01-16",-21.0,0,1,4,2,-1,"2026-01-16 17:52:26","2026-01-16 17:59:57"],["2026-01-16",-15.0,1,0,4,2,-1,"2026-01-16 18:04:42","2026-01-16 18:06:53"],["2026-01-16",-15.0,1,1,4,2,-1,"2026-01-16 18:09:48","2026-01-16 18:15:40"],["2026-01-20",3.0,1,4,1,1,1,"2026-01-20 14:42:55","2026-01-20 16:05:28"],["2026-01-20",4.0,1,4,1,1,1,"2026-01-20 14:42:55","2026-01-20 20:58:05"],["2026-01-20",5.0,1,4,1,1,1,"2026-01-20 14:42:55","2026-01-21 14:30:05"],["2026-01-20",9.0,1,4,1,1,1,"2026-01-20 14:42:55","2026-01-22 14:30:00"],["2026-01-20",25.0,0,0,1,3,1,"2026-01-20 20:59:51","2026-01-20 20:59:53"],["2026-01-21",-15.0,1,0,2,2,-1,"2026-01-21 19:37:24","2026-01-21 19:37:56"],["2026-01-22",-8.0,0,4,3,2,-1,"2026-01-22 18:57:33","2026-01-22 19:59:05"],["2026-01-22",-6.0,0,1,3,3,-1,"2026-01-22 20:01:53","2026-01-22 20:07:17"],["2026-01-22",-10.0,1,0,3,3,-1,"2026-01-22 20:11:22","2026-01-22 20:12:44"],["2026-01-22",-10.0,1,0,3,3,-1,"2026-01-22 20:15:01","2026-01-22 20:15:05"],["2026-01-26",4.0,0,1,0,2,1,"2026-01-26 18:39:28","2026-01-26 18:51:19"],["2026-01-26",21.0,0,4,0,3,1,"2026-01-26 20:00:02","2026-01-27 16:18:59"],["2026-01-26",0.0,0,4,0,3,0,"2026-01-26 20:32:00","2026-01-28 16:24:48"],["2026-01-28",-20.0,1,3,2,2,-1,"2026-01-28 19:31:32","2026-01-28 20:09:08"],["2026-01-28",-10.0,1,2,2,2,-1,"2026-01-28 19:49:14","2026-01-28 20:09:08"],["2026-01-28",-15.0,1,1,2,3,-1,"2026-01-28 20:12:53","2026-01-28 20:22:07"],["2026-02-06",-12.0,1,3,4,2,-1,"2026-02-06 17:07:24","2026-02-06 18:05:27"],["2026-02-10",-9.0,0,3,1,1,-1,"2026-02-10 16:27:59","2026-02-10 17:02:22"],["2026-04-02",6.0,0,1,3,2,1,"2026-04-02 17:47:52","2026-04-02 18:01:27"],["2026-04-07",-19.0,0,1,1,2,-1,"2026-04-07 18:43:13","2026-04-07 18:55:23"],["2026-04-08",-8.0,1,1,2,2,-1,"2026-04-08 17:51:37","2026-04-08 17:58:14"],["2026-04-08",-13.0,1,0,2,2,-1,"2026-04-08 18:03:16","2026-04-08 18:07:29"],["2026-04-08",-13.0,0,1,2,2,-1,"2026-04-08 18:12:38","2026-04-08 18:18:10"],["2026-04-08",-22.0,0,3,2,2,-1,"2026-04-08 18:41:10","2026-04-08 19:28:02"],["2026-04-09",130.0,0,2,3,1,1,"2026-04-09 15:37:39","2026-04-09 16:03:34"],["2026-04-09",-5.0,1,3,3,2,-1,"2026-04-09 19:08:57","2026-04-09 20:06:57"],["2026-04-10",-16.0,0,2,4,1,-1,"2026-04-10 14:25:12","2026-04-10 14:42:55"],["2026-04-10",7.0,0,1,4,1,1,"2026-04-10 14:55:18","2026-04-10 15:05:47"],["2026-04-10",-6.0,0,1,4,1,-1,"2026-04-10 16:20:21","2026-04-10 16:32:53"],["2026-04-10",0.0,1,3,4,2,0,"2026-04-10 19:13:07","2026-04-10 19:50:26"],["2026-04-14",-12.0,1,1,1,1,-1,"2026-04-14 16:18:50","2026-04-14 16:27:13"],["2026-04-14",-9.0,0,0,1,1,-1,"2026-04-14 16:54:06","2026-04-14 16:56:58"],["2026-04-14",-7.0,1,0,1,2,-1,"2026-04-14 17:16:36","2026-04-14 17:19:23"],["2026-04-15",-10.0,0,0,2,0,-1,"2026-04-15 13:41:52","2026-04-15 13:42:29"],["2026-04-15",31.0,0,3,2,0,1,"2026-04-15 13:46:58","2026-04-15 14:34:12"],["2026-04-16",-16.0,0,0,3,1,-1,"2026-04-16 15:28:43","2026-04-16 15:29:28"],["2026-04-16",-8.0,0,0,3,1,-1,"2026-04-16 15:29:28","2026-04-16 15:30:00"],["2026-04-16",-7.0,0,4,3,1,-1,"2026-04-16 15:31:58","2026-04-16 16:33:07"],["2026-04-16",-7.0,0,0,3,2,-1,"2026-04-16 17:11:25","2026-04-16 17:14:40"],["2026-04-17",-7.0,0,0,4,1,-1,"2026-04-17 15:54:59","2026-04-17 15:58:34"],["2026-04-17",-6.0,1,0,4,1,-1,"2026-04-17 16:00:11","2026-04-17 16:00:31"],["2026-04-17",-10.0,1,0,4,1,-1,"2026-04-17 16:00:49","2026-04-17 16:01:31"],["2026-04-17",17.0,1,4,4,1,1,"2026-04-17 16:08:21","2026-04-17 17:38:00"],["2026-04-21",30.0,1,1,1,1,1,"2026-04-21 15:14:26","2026-04-21 15:28:00"],["2026-04-21",-8.0,0,0,1,1,-1,"2026-04-21 15:31:11","2026-04-21 15:35:33"],["2026-04-21",-10.0,1,0,1,1,-1,"2026-04-21 15:52:22","2026-04-21 15:57:01"],["2026-04-21",-18.0,1,0,1,2,-1,"2026-04-21 17:38:52","2026-04-21 17:38:53"],["2026-04-22",10.0,0,3,2,1,1,"2026-04-22 16:30:02","2026-04-22 17:11:43"],["2026-04-22",-9.0,1,2,2,2,-1,"2026-04-22 17:22:13","2026-04-22 17:43:01"],["2026-04-22",-37.0,1,4,2,2,-1,"2026-04-22 17:47:42","2026-04-22 19:50:00"],["2026-04-23",-10.0,0,1,3,1,-1,"2026-04-23 14:33:56","2026-04-23 14:41:58"],["2026-04-23",-6.0,1,0,3,1,-1,"2026-04-23 14:43:19","2026-04-23 14:45:08"],["2026-04-23",0.0,0,4,3,1,0,"2026-04-23 14:46:32","2026-04-23 16:03:31"],["2026-04-23",-1.0,0,1,3,1,-1,"2026-04-23 15:54:35","2026-04-23 16:03:34"],["2026-04-23",19.0,0,3,3,1,1,"2026-04-23 16:05:49","2026-04-23 16:47:37"],["2026-04-24",-8.0,1,0,4,1,-1,"2026-04-24 14:34:43","2026-04-24 14:38:45"],["2026-04-24",-23.0,1,3,4,1,-1,"2026-04-24 15:44:41","2026-04-24 16:31:17"],["2026-04-24",-9.0,1,3,4,1,-1,"2026-04-24 16:55:20","2026-04-24 17:37:05"],["2026-04-24",30.0,0,2,4,2,1,"2026-04-24 18:57:44","2026-04-24 19:14:19"],["2026-04-28",-11.0,0,0,1,1,-1,"2026-04-28 14:32:08","2026-04-28 14:35:54"],["2026-04-28",11.0,1,2,1,1,1,"2026-04-28 16:25:04","2026-04-28 16:50:18"],["2026-04-28",-9.0,1,1,1,2,-1,"2026-04-28 17:34:41","2026-04-28 17:42:02"],["2026-04-29",-18.0,0,1,2,1,-1,"2026-04-29 15:00:50","2026-04-29 15:08:59"],["2026-04-29",-12.0,0,4,2,1,-1,"2026-04-29 16:30:03","2026-04-29 18:31:04"],["2026-04-29",-10.0,0,4,2,1,-1,"2026-04-29 16:30:27","2026-04-29 18:31:04"],["2026-04-29",-2.0,0,2,2,2,-1,"2026-04-29 18:36:13","2026-04-29 19:05:32"],["2026-04-29",2.0,0,2,2,2,1,"2026-04-29 18:43:54","2026-04-29 19:06:00"],["2026-04-30",2.0,1,2,3,1,1,"2026-04-30 15:24:58","2026-04-30 15:49:52"],["2026-04-30",-10.0,1,4,3,1,-1,"2026-04-30 15:55:36","2026-04-30 17:13:22"],["2026-04-30",5.0,1,3,3,1,1,"2026-04-30 16:26:47","2026-04-30 17:00:16"],["2026-04-30",-7.0,1,1,3,2,-1,"2026-04-30 17:09:22","2026-04-30 17:19:46"],["2026-05-01",-10.0,0,0,4,1,-1,"2026-05-01 14:34:23","2026-05-01 14:36:03"],["2026-05-01",4.0,0,2,4,1,1,"2026-05-01 15:29:18","2026-05-01 15:50:30"],["2026-05-01",-9.0,0,0,4,2,-1,"2026-05-01 18:43:28","2026-05-01 18:46:25"],["2026-05-04",-8.0,0,1,0,2,-1,"2026-05-04 18:15:12","2026-05-04 18:27:00"],["2026-05-04",-10.0,0,2,0,2,-1,"2026-05-04 18:27:30","2026-05-04 18:43:27"],["2026-05-04",-9.0,0,0,0,2,-1,"2026-05-04 18:59:46","2026-05-04 19:01:10"],["2026-05-05",-10.0,0,1,1,1,-1,"2026-05-05 14:05:43","2026-05-05 14:10:51"],["2026-05-05",40.0,0,1,1,1,1,"2026-05-05 14:13:53","2026-05-05 14:25:06"],["2026-05-07",-1.0,0,2,3,1,-1,"2026-05-07 15:22:27","2026-05-07 15:41:01"],["2026-05-07",-9.0,0,0,3,1,-1,"2026-05-07 15:55:23","2026-05-07 15:57:49"],["2026-05-07",-1.0,0,2,3,1,-1,"2026-05-07 16:15:01","2026-05-07 16:39:25"],["2026-05-08",-6.0,0,0,4,0,-1,"2026-05-08 13:49:17","2026-05-08 13:49:42"],["2026-05-08",-10.0,0,0,4,0,-1,"2026-05-08 13:53:31","2026-05-08 13:53:50"],["2026-05-08",16.0,0,3,4,1,1,"2026-05-08 14:30:40","2026-05-08 15:04:48"],["2026-05-11",-9.0,0,2,0,2,-1,"2026-05-11 18:20:13","2026-05-11 18:40:19"],["2026-05-12",28.0,0,1,1,0,1,"2026-05-12 13:39:13","2026-05-12 13:45:52"],["2026-05-13",10.0,0,2,2,1,1,"2026-05-13 15:25:49","2026-05-13 15:49:13"],["2026-05-13",0.0,0,4,2,2,0,"2026-05-13 19:50:29","2026-05-14 14:20:31"],["2026-05-14",10.0,0,2,3,0,1,"2026-05-14 13:37:43","2026-05-14 13:53:25"],["2026-05-14",9.0,0,3,3,1,1,"2026-05-14 14:17:32","2026-05-14 14:54:23"],["2026-05-15",-9.0,0,0,4,0,-1,"2026-05-15 13:36:12","2026-05-15 13:38:17"],["2026-05-15",-9.0,0,0,4,0,-1,"2026-05-15 13:40:43","2026-05-15 13:42:33"],["2026-05-15",-9.0,0,0,4,0,-1,"2026-05-15 13:44:27","2026-05-15 13:45:47"],["2026-05-15",-10.0,0,1,4,0,-1,"2026-05-15 13:49:24","2026-05-15 13:59:31"],["2026-05-15",-15.0,0,2,4,1,-1,"2026-05-15 15:22:36","2026-05-15 15:44:24"],["2026-05-18",-10.0,0,3,0,2,-1,"2026-05-18 17:22:04","2026-05-18 18:02:03"],["2026-05-18",-11.0,1,0,0,2,-1,"2026-05-18 18:24:04","2026-05-18 18:25:28"],["2026-05-18",-9.0,1,0,0,2,-1,"2026-05-18 18:26:44","2026-05-18 18:28:45"],["2026-05-19",-9.0,0,0,1,1,-1,"2026-05-19 14:05:42","2026-05-19 14:07:30"],["2026-05-19",-10.0,1,1,1,1,-1,"2026-05-19 16:39:36","2026-05-19 16:45:37"],["2026-05-19",-9.0,1,2,1,1,-1,"2026-05-19 16:46:45","2026-05-19 17:02:26"],["2026-05-19",-9.0,1,1,1,2,-1,"2026-05-19 17:08:13","2026-05-19 17:17:40"],["2026-05-19",-9.0,0,1,1,2,-1,"2026-05-19 17:18:33","2026-05-19 17:26:39"],["2026-05-20",-7.0,0,0,2,0,-1,"2026-05-20 13:49:36","2026-05-20 13:51:04"],["2026-05-20",21.0,0,3,2,1,1,"2026-05-20 14:32:51","2026-05-20 15:17:49"],["2026-05-21",-12.0,0,3,3,1,-1,"2026-05-21 14:18:39","2026-05-21 15:05:57"],["2026-05-22",-4.0,0,0,4,0,-1,"2026-05-22 13:57:40","2026-05-22 14:00:55"],["2026-05-22",2.0,0,4,4,1,1,"2026-05-22 14:21:10","2026-05-22 15:22:31"],["2026-05-22",-12.0,0,2,4,2,-1,"2026-05-22 17:30:03","2026-05-22 17:45:14"],["2026-05-22",22.0,0,0,4,2,1,"2026-05-22 18:38:18","2026-05-22 18:41:26"],["2026-05-26",29.0,0,2,1,1,1,"2026-05-26 14:13:01","2026-05-26 14:28:08"],["2026-05-26",-10.0,0,1,1,1,-1,"2026-05-26 15:36:54","2026-05-26 15:49:51"],["2026-05-26",-7.0,0,2,1,1,-1,"2026-05-26 16:42:48","2026-05-26 17:09:08"],["2026-05-27",-7.0,0,3,2,1,-1,"2026-05-27 14:32:17","2026-05-27 15:15:18"],["2026-05-27",0.0,0,1,2,1,0,"2026-05-27 15:26:47","2026-05-27 15:35:54"],["2026-05-28",-14.0,0,1,3,1,-1,"2026-05-28 14:14:09","2026-05-28 14:22:23"],["2026-05-28",21.0,0,1,3,1,1,"2026-05-28 14:23:45","2026-05-28 14:31:13"],["2026-05-29",-9.0,0,2,4,0,-1,"2026-05-29 13:50:21","2026-05-29 14:10:05"],["2026-05-29",-9.0,0,0,4,1,-1,"2026-05-29 14:21:00","2026-05-29 14:25:33"],["2026-05-29",1.0,0,1,4,1,1,"2026-05-29 14:26:05","2026-05-29 14:36:13"],["2026-05-29",13.0,0,1,4,1,1,"2026-05-29 14:42:28","2026-05-29 14:53:52"],["2026-06-02",-9.0,0,0,1,1,-1,"2026-06-02 14:22:53","2026-06-02 14:26:40"],["2026-06-02",-10.0,0,4,1,1,-1,"2026-06-02 14:43:26","2026-06-02 16:21:18"],["2026-06-02",9.0,0,4,1,2,1,"2026-06-02 17:16:09","2026-06-02 20:05:11"],["2026-06-02",34.0,0,4,1,2,1,"2026-06-02 18:04:22","2026-06-02 20:05:11"],["2026-06-03",-13.0,0,2,2,1,-1,"2026-06-03 15:22:56","2026-06-03 15:45:55"],["2026-06-03",-9.0,0,3,2,1,-1,"2026-06-03 15:46:14","2026-06-03 16:23:36"],["2026-06-04",8.0,0,1,3,1,1,"2026-06-04 15:09:43","2026-06-04 15:18:29"],["2026-06-05",-10.0,0,3,4,1,-1,"2026-06-05 15:45:03","2026-06-05 16:16:08"],["2026-06-05",-8.0,0,2,4,1,-1,"2026-06-05 16:23:29","2026-06-05 16:39:39"],["2026-06-05",-10.0,1,0,4,1,-1,"2026-06-05 16:52:14","2026-06-05 16:52:56"],["2026-06-08",-8.0,0,2,0,2,-1,"2026-06-08 18:41:09","2026-06-08 19:01:31"],["2026-06-09",-9.0,0,1,1,0,-1,"2026-06-09 13:54:31","2026-06-09 14:00:40"],["2026-06-09",-6.0,0,1,1,1,-1,"2026-06-09 14:03:31","2026-06-09 14:10:31"],["2026-06-09",-6.0,0,1,1,1,-1,"2026-06-09 14:23:12","2026-06-09 14:29:36"],["2026-06-09",-9.0,0,1,1,1,-1,"2026-06-09 14:32:22","2026-06-09 14:43:55"],["2026-06-09",-21.0,0,1,1,1,-1,"2026-06-09 15:12:43","2026-06-09 15:23:49"],["2026-06-10",-7.0,0,3,2,1,-1,"2026-06-10 15:04:01","2026-06-10 15:49:02"],["2026-06-10",-7.0,1,1,2,1,-1,"2026-06-10 15:12:19","2026-06-10 15:24:11"],["2026-06-18",810.0,1,1,3,1,1,"2026-06-18 14:24:13","2026-06-18 14:30:23"],["2026-06-18",540.0,0,1,3,1,1,"2026-06-18 15:46:00","2026-06-18 15:52:45"],["2026-06-18",552.0,0,1,3,1,1,"2026-06-18 15:46:08","2026-06-18 15:52:45"],["2026-06-18",582.0,0,1,3,1,1,"2026-06-18 15:46:13","2026-06-18 15:52:45"],["2026-06-22",210.0,0,1,0,1,1,"2026-06-22 16:45:14","2026-06-22 16:57:15"],["2026-06-22",258.0,0,1,0,1,1,"2026-06-22 16:45:17","2026-06-22 16:57:15"],["2026-06-22",264.0,0,1,0,1,1,"2026-06-22 16:45:21","2026-06-22 16:57:15"],["2026-06-22",264.0,0,1,0,1,1,"2026-06-22 16:45:24","2026-06-22 16:57:15"],["2026-06-22",246.0,0,1,0,1,1,"2026-06-22 16:45:27","2026-06-22 16:57:15"],["2026-06-22",654.0,1,2,0,2,1,"2026-06-22 18:31:49","2026-06-22 18:57:19"],["2026-06-22",660.0,1,2,0,2,1,"2026-06-22 18:31:52","2026-06-22 18:57:19"],["2026-06-22",642.0,1,2,0,2,1,"2026-06-22 18:31:57","2026-06-22 18:57:19"],["2026-06-22",654.0,1,2,0,2,1,"2026-06-22 18:32:01","2026-06-22 18:57:19"],["2026-06-22",666.0,1,2,0,2,1,"2026-06-22 18:32:12","2026-06-22 18:57:19"],["2026-06-22",678.0,1,2,0,2,1,"2026-06-22 18:32:19","2026-06-22 18:57:19"],["2026-06-22",654.0,1,2,0,2,1,"2026-06-22 18:32:28","2026-06-22 18:57:19"],["2026-06-22",648.0,1,2,0,2,1,"2026-06-22 18:32:32","2026-06-22 18:57:19"],["2026-06-23",-174.0,1,4,1,0,-1,"2026-06-23 13:53:57","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:07","2026-06-23 15:52:50"],["2026-06-23",-162.0,1,4,1,0,-1,"2026-06-23 13:54:11","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:17","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:19","2026-06-23 15:52:50"],["2026-06-23",-150.0,1,4,1,0,-1,"2026-06-23 13:54:21","2026-06-23 15:52:50"],["2026-06-23",-150.0,1,4,1,0,-1,"2026-06-23 13:54:22","2026-06-23 15:52:50"],["2026-06-23",-150.0,1,4,1,0,-1,"2026-06-23 13:54:23","2026-06-23 15:52:50"],["2026-06-23",-150.0,1,4,1,0,-1,"2026-06-23 13:54:25","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:26","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:27","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:28","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:29","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:30","2026-06-23 15:52:50"],["2026-06-23",-144.0,1,4,1,0,-1,"2026-06-23 13:54:31","2026-06-23 15:52:50"],["2026-06-23",-144.0,1,4,1,0,-1,"2026-06-23 13:54:32","2026-06-23 15:52:50"],["2026-06-23",-144.0,1,4,1,0,-1,"2026-06-23 13:54:33","2026-06-23 15:52:50"],["2026-06-23",-150.0,1,4,1,0,-1,"2026-06-23 13:54:34","2026-06-23 15:52:50"],["2026-06-23",-150.0,1,4,1,0,-1,"2026-06-23 13:54:36","2026-06-23 15:52:50"],["2026-06-23",-150.0,1,4,1,0,-1,"2026-06-23 13:54:37","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:38","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:39","2026-06-23 15:52:50"],["2026-06-23",-156.0,1,4,1,0,-1,"2026-06-23 13:54:41","2026-06-23 15:52:50"],["2026-06-23",-162.0,1,4,1,0,-1,"2026-06-23 13:54:43","2026-06-23 15:52:50"],["2026-06-23",-162.0,1,4,1,0,-1,"2026-06-23 13:54:45","2026-06-23 15:52:50"],["2026-06-23",-162.0,1,4,1,0,-1,"2026-06-23 13:54:47","2026-06-23 15:52:50"],["2026-06-23",-42.0,1,4,1,1,-1,"2026-06-23 14:16:19","2026-06-23 15:53:08"],["2026-06-23",-48.0,1,4,1,1,-1,"2026-06-23 14:16:21","2026-06-23 15:53:08"],["2026-06-23",-42.0,1,4,1,1,-1,"2026-06-23 14:16:23","2026-06-23 15:53:08"],["2026-06-23",-54.0,1,4,1,1,-1,"2026-06-23 14:16:23","2026-06-23 15:53:08"],["2026-06-23",-54.0,1,4,1,1,-1,"2026-06-23 14:16:24","2026-06-23 15:53:08"],["2026-06-23",-54.0,1,4,1,1,-1,"2026-06-23 14:16:25","2026-06-23 15:53:08"],["2026-06-23",-54.0,1,4,1,1,-1,"2026-06-23 14:16:27","2026-06-23 15:53:08"],["2026-06-23",-48.0,1,4,1,1,-1,"2026-06-23 14:16:28","2026-06-23 15:53:08"],["2026-06-23",-48.0,1,4,1,1,-1,"2026-06-23 14:16:29","2026-06-23 15:53:08"],["2026-06-23",-48.0,1,4,1,1,-1,"2026-06-23 14:16:30","2026-06-23 15:53:08"],["2026-06-23",-42.0,1,4,1,1,-1,"2026-06-23 14:16:31","2026-06-23 15:53:08"],["2026-06-23",-42.0,1,4,1,1,-1,"2026-06-23 14:16:33","2026-06-23 15:53:08"],["2026-06-23",-42.0,1,4,1,1,-1,"2026-06-23 14:16:34","2026-06-23 15:53:08"],["2026-07-08",113.0,0,3,2,1,1,"2026-07-08 15:34:29","2026-07-08 16:18:14"],["2026-07-08",159.0,0,3,2,1,1,"2026-07-08 15:49:48","2026-07-08 16:21:35"],["2026-07-09",62.0,0,4,3,1,1,"2026-07-09 14:15:08","2026-07-09 17:10:45"],["2026-07-09",79.0,0,4,3,1,1,"2026-07-09 14:15:08","2026-07-09 17:20:04"],["2026-07-09",-32.0,0,4,3,1,-1,"2026-07-09 14:15:08","2026-07-09 22:21:48"],["2026-07-09",7.0,0,4,3,1,1,"2026-07-09 14:16:47","2026-07-09 22:21:48"],["2026-07-09",-3.0,0,4,3,1,-1,"2026-07-09 14:17:29","2026-07-09 22:21:48"],["2026-07-10",68.0,0,4,4,1,1,"2026-07-10 14:22:17","2026-07-10 15:27:38"],["2026-07-10",46.0,0,4,4,1,1,"2026-07-10 14:22:27","2026-07-10 15:29:50"],["2026-07-10",50.0,0,4,4,1,1,"2026-07-10 14:22:35","2026-07-10 15:29:52"],["2026-07-10",50.0,0,4,4,1,1,"2026-07-10 14:22:41","2026-07-10 15:29:57"],["2026-07-10",45.0,0,4,4,1,1,"2026-07-10 14:22:50","2026-07-10 15:30:01"],["2026-07-10",104.0,0,3,4,1,1,"2026-07-10 14:56:26","2026-07-10 15:30:09"],["2026-07-14",65.0,0,1,1,1,1,"2026-07-14 14:49:27","2026-07-14 15:00:04"],["2026-07-14",82.0,0,2,1,1,1,"2026-07-14 14:49:31","2026-07-14 15:05:07"],["2026-07-14",86.0,0,2,1,1,1,"2026-07-14 14:49:33","2026-07-14 15:05:10"],["2026-07-14",88.0,0,2,1,1,1,"2026-07-14 14:49:36","2026-07-14 15:05:15"],["2026-07-14",96.0,0,2,1,1,1,"2026-07-14 14:49:38","2026-07-14 15:05:22"],["2026-07-14",103.0,0,2,1,1,1,"2026-07-14 14:49:42","2026-07-14 15:05:25"],["2026-07-14",100.0,0,2,1,1,1,"2026-07-14 14:49:45","2026-07-14 15:06:15"],["2026-07-14",97.0,0,2,1,1,1,"2026-07-14 14:49:48","2026-07-14 15:06:18"],["2026-07-14",116.0,0,2,1,1,1,"2026-07-14 14:49:53","2026-07-14 15:06:30"],["2026-07-15",-112.0,0,4,2,1,-1,"2026-07-15 14:21:26","2026-07-15 22:28:25"],["2026-07-15",-109.0,0,4,2,1,-1,"2026-07-15 14:21:32","2026-07-15 22:28:25"],["2026-07-15",-108.0,0,4,2,1,-1,"2026-07-15 14:21:37","2026-07-15 22:28:25"],["2026-07-15",-109.0,0,4,2,1,-1,"2026-07-15 14:21:42","2026-07-15 22:28:25"],["2026-07-15",-108.0,0,4,2,1,-1,"2026-07-15 14:21:46","2026-07-15 22:28:25"],["2026-07-15",-111.0,0,4,2,1,-1,"2026-07-15 14:21:49","2026-07-15 22:28:25"],["2026-07-15",-109.0,0,4,2,1,-1,"2026-07-15 14:21:50","2026-07-15 22:28:25"],["2026-07-15",-113.0,0,4,2,1,-1,"2026-07-15 14:21:53","2026-07-15 22:28:25"],["2026-07-15",-113.0,0,4,2,1,-1,"2026-07-15 14:21:55","2026-07-15 22:28:25"],["2026-07-15",-114.0,0,4,2,1,-1,"2026-07-15 14:21:58","2026-07-15 22:28:25"],["2026-07-15",-114.0,0,4,2,1,-1,"2026-07-15 14:22:00","2026-07-15 22:28:25"],["2026-07-15",-117.0,0,4,2,1,-1,"2026-07-15 14:22:03","2026-07-15 22:28:25"],["2026-07-15",-109.0,0,4,2,1,-1,"2026-07-15 14:22:06","2026-07-15 22:28:25"],["2026-07-15",-93.0,0,4,2,1,-1,"2026-07-15 14:23:14","2026-07-15 22:28:25"],["2026-07-15",-96.0,0,4,2,1,-1,"2026-07-15 14:23:17","2026-07-15 22:28:25"],["2026-07-15",-96.0,0,4,2,1,-1,"2026-07-15 14:23:20","2026-07-15 22:28:25"],["2026-07-15",-53.0,0,4,2,1,-1,"2026-07-15 14:36:22","2026-07-15 22:28:25"],["2026-07-17",68.0,0,3,4,1,1,"2026-07-17 15:03:47","2026-07-17 15:38:57"],["2026-07-17",87.0,0,3,4,1,1,"2026-07-17 15:03:50","2026-07-17 15:54:10"],["2026-07-21",58.0,0,3,1,0,1,"2026-07-21 13:59:32","2026-07-21 14:35:22"],["2026-07-21",75.0,0,3,1,0,1,"2026-07-21 13:59:38","2026-07-21 14:45:22"],["2026-07-21",51.0,0,3,1,1,1,"2026-07-21 14:03:04","2026-07-21 14:51:38"],["2026-07-24",91.0,0,4,4,0,1,"2026-07-24 13:58:23","2026-07-24 15:15:09"],["2026-07-24",152.0,0,4,4,0,1,"2026-07-24 13:58:36","2026-07-24 16:04:33"],["2026-07-28",64.0,0,1,1,1,1,"2026-07-28 14:36:13","2026-07-28 14:48:22"],["2026-07-28",95.0,0,1,1,1,1,"2026-07-28 14:36:14","2026-07-28 14:50:13"],["2026-07-28",116.0,0,2,1,1,1,"2026-07-28 14:36:16","2026-07-28 14:51:31"],["2026-07-30",-19.0,0,3,3,1,-1,"2026-07-30 14:54:05","2026-07-30 15:49:01"],["2026-07-30",-14.0,0,3,3,1,-1,"2026-07-30 14:54:28","2026-07-30 15:49:07"],["2026-07-30",-13.0,0,3,3,1,-1,"2026-07-30 14:54:41","2026-07-30 15:49:12"],["2026-07-30",-14.0,0,3,3,1,-1,"2026-07-30 14:54:51","2026-07-30 15:49:28"],["2026-07-30",-12.0,0,3,3,1,-1,"2026-07-30 14:55:02","2026-07-30 15:49:40"],["2026-07-30",0.0,0,3,3,1,0,"2026-07-30 14:55:19","2026-07-30 15:49:47"],["2026-07-30",-3.0,0,3,3,1,-1,"2026-07-30 14:55:25","2026-07-30 15:49:49"],["2026-07-31",-119.0,0,4,4,1,-1,"2026-07-31 14:05:42","2026-07-31 22:28:00"],["2026-07-31",-123.0,0,4,4,1,-1,"2026-07-31 14:05:52","2026-07-31 22:28:00"],["2026-07-31",-125.0,0,4,4,1,-1,"2026-07-31 14:05:57","2026-07-31 22:28:00"],["2026-07-31",-122.0,0,4,4,1,-1,"2026-07-31 14:06:03","2026-07-31 22:28:00"],["2026-07-31",-133.0,0,4,4,1,-1,"2026-07-31 14:06:09","2026-07-31 22:28:00"],["2026-08-18",-48,0,2,1,1,-1,"2026-08-18 14:53:12","2026-08-18 15:10:03"],["2026-08-18",-47,0,4,1,1,-1,"2026-08-18 14:53:25","2026-08-18 17:46:58"],["2026-08-19",20,0,2,2,1,1,"2026-08-19 14:07:49","2026-08-19 14:36:09"],["2026-08-19",73,0,2,2,1,1,"2026-08-19 14:12:14","2026-08-19 14:39:08"],["2026-08-20",29,1,1,3,1,1,"2026-08-20 14:12:10","2026-08-20 14:17:30"],["2026-08-20",31,1,1,3,1,1,"2026-08-20 14:12:20","2026-08-20 14:18:10"],["2026-08-20",33,1,1,3,1,1,"2026-08-20 14:12:45","2026-08-20 14:17:59"],["2026-08-21",-38,0,1,4,1,-1,"2026-08-21 14:08:27","2026-08-21 14:14:03"],["2026-08-21",-55,0,1,4,1,-1,"2026-08-21 14:08:55","2026-08-21 14:14:03"],["2026-08-21",-45,0,0,4,1,-1,"2026-08-21 14:09:39","2026-08-21 14:14:03"],["2026-08-25",-49,0,0,1,1,-1,"2026-08-25 14:28:04","2026-08-25 14:30:29"],["2026-08-25",-46,0,0,1,1,-1,"2026-08-25 14:28:27","2026-08-25 14:30:30"],["2026-08-25",-2,0,0,1,1,-1,"2026-08-25 14:30:03","2026-08-25 14:34:54"],["2026-08-26",51,0,2,2,1,1,"2026-08-26 14:26:11","2026-08-26 14:53:37"],["2026-08-27",-22,0,2,3,1,-1,"2026-08-27 14:23:54","2026-08-27 14:49:28"],["2026-08-27",-24,0,2,3,1,-1,"2026-08-27 14:24:12","2026-08-27 14:49:28"],["2026-08-27",-1,0,2,3,1,-1,"2026-08-27 14:27:03","2026-08-27 14:49:28"],["2026-09-04",-49,0,3,4,1,-1,"2026-09-04 14:42:53","2026-09-04 15:18:27"],["2026-09-04",-46,0,3,4,1,-1,"2026-09-04 14:43:35","2026-09-04 15:18:27"],["2026-09-08",-50,1,2,1,1,-1,"2026-09-08 14:48:12","2026-09-08 15:11:27"],["2026-09-08",-26,1,2,1,1,-1,"2026-09-08 15:16:57","2026-09-08 15:41:26"],["2026-09-11",92,1,1,4,1,1,"2026-09-11 14:30:44","2026-09-11 14:38:58"]];
+// [0]=date [1]=pnl [2]=type(0c/1p) [3]=hold(0-4) [4]=dow(0-4) [5]=session(0-3) [6]=wl(1/0/-1) [7]=entry [8]=exit
+
+// ═══════════════════════════════════════════════
+// གཤིན་རྗེ — PERFORMANCE WIDGETS v4 (filterable)
+// ═══════════════════════════════════════════════
+
+// ── Filter state per widget (independent) ──
+var PERF_FILTER = {
+  'perf-performance': 'ALL',
+  'perf-discipline':  'ALL'
+};
+
+// ── Lot field indices ──
+var L={DATE:0,PNL:1,TYPE:2,HOLD:3,DOW:4,SES:5,WL:6,ENTRY:7,EXIT:8};
+var HOLD_LABELS=['<5min','5-14min','15-29min','30-59min','60+min'];
+var DOW_LABELS=['Mon','Tue','Wed','Thu','Fri'];
+var SES_LABELS=['pre','morning','midday','afternoon'];
+var TYPE_LABELS=['call','put'];
+
+// ── Date helpers ──
+function _today(){return new Date().toISOString().slice(0,10);}
+function _daysAgo(n){var d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10);}
+function _yearStart(){return new Date().getFullYear()+'-01-01';}
+
+// ── Get available months from PERF_LOTS ──
+function _getMonths(){
+  var m={};
+  for(var i=0;i<PERF_LOTS.length;i++) m[PERF_LOTS[i][L.DATE].slice(0,7)]=1;
+  return Object.keys(m).sort();
+}
+
+// ── Filter lots by date range ──
+function _filterLots(filter){
+  if(filter==='ALL') return null; // signal to use PERF directly
+  var from,to='9999-12-31';
+  if(filter==='1W'){from=_daysAgo(7);}
+  else if(filter==='1M'){from=_daysAgo(30);}
+  else if(filter==='3M'){from=_daysAgo(90);}
+  else if(filter==='6M'){from=_daysAgo(180);}
+  else if(filter==='YTD'){from=_yearStart();}
+  else{from=filter+'-01';to=filter+'-31';}// month like "2026-06"
+  var out=[];
+  for(var i=0;i<PERF_LOTS.length;i++){
+    var d=PERF_LOTS[i][L.DATE];
+    if(d>=from&&d<=to) out.push(PERF_LOTS[i]);
+  }
+  return out;
+}
+
+// ═══════════════════════════════════════════════
+// COMPUTE PERF-LIKE OBJECT FROM FILTERED LOTS
+// ═══════════════════════════════════════════════
+function _computePerf(lots){
+  if(!lots||!lots.length) return null;
+
+  // ── Equity ──
+  var dayMap={};
+  lots.forEach(function(l){
+    var d=l[L.DATE];
+    if(!dayMap[d]) dayMap[d]={trade_date:d,day_pnl:0,lots:0,wins:0};
+    dayMap[d].day_pnl+=l[L.PNL];
+    dayMap[d].lots++;
+    if(l[L.WL]===1) dayMap[d].wins++;
+  });
+  var equity=Object.values(dayMap).sort(function(a,b){return a.trade_date<b.trade_date?-1:1;});
+  var cum=0;
+  equity.forEach(function(e){cum+=e.day_pnl;e.cum_pnl=cum;});
+
+  // ── Winrate ──
+  var total=lots.length, wins=0, losses=0, be=0, net=0;
+  var byType={call:{total:0,wins:0,pnl:0},put:{total:0,wins:0,pnl:0}};
+  lots.forEach(function(l){
+    net+=l[L.PNL];
+    if(l[L.WL]===1) wins++;
+    else if(l[L.WL]===-1) losses++;
+    else be++;
+    var t=TYPE_LABELS[l[L.TYPE]];
+    byType[t].total++;
+    if(l[L.WL]===1) byType[t].wins++;
+    byType[t].pnl+=l[L.PNL];
+  });
+  var winrate={total:total,wins:wins,losses:losses,be:be,net_pnl:Math.round(net),
+    expectancy:total?Math.round(net/total*100)/100:0,
+    by_type:[{option_type:'call',total:byType.call.total,wins:byType.call.wins,pnl:Math.round(byType.call.pnl)},
+             {option_type:'put',total:byType.put.total,wins:byType.put.wins,pnl:Math.round(byType.put.pnl)}]};
+
+  // ── Edges ──
+  var edgeMap={};
+  lots.forEach(function(l){
+    var key=TYPE_LABELS[l[L.TYPE]]+'_'+HOLD_LABELS[l[L.HOLD]];
+    if(!edgeMap[key]) edgeMap[key]={option_type:TYPE_LABELS[l[L.TYPE]],hold_bucket:HOLD_LABELS[l[L.HOLD]],n:0,wins:0,gross_win:0,gross_loss:0,pnl:0};
+    edgeMap[key].n++;
+    if(l[L.WL]===1){edgeMap[key].wins++;edgeMap[key].gross_win+=l[L.PNL];}
+    else if(l[L.PNL]<0) edgeMap[key].gross_loss+=l[L.PNL];
+    edgeMap[key].pnl+=l[L.PNL];
+  });
+  var edges=Object.values(edgeMap);
+  edges.sort(function(a,b){return b.pnl-a.pnl;});
+
+  // ── Heatmap ──
+  var heatMap={};
+  lots.forEach(function(l){
+    var key=DOW_LABELS[l[L.DOW]]+'_'+SES_LABELS[l[L.SES]];
+    if(!heatMap[key]) heatMap[key]={dow:DOW_LABELS[l[L.DOW]],dow_num:l[L.DOW]+1,session:SES_LABELS[l[L.SES]],n:0,wins:0,pnl:0};
+    heatMap[key].n++;
+    if(l[L.WL]===1) heatMap[key].wins++;
+    heatMap[key].pnl+=l[L.PNL];
+  });
+  var heatmap=Object.values(heatMap);
+
+  // ── Hold time ──
+  var holdMap={};
+  HOLD_LABELS.forEach(function(hb){holdMap[hb]={hold_bucket:hb,n:0,wins:0,pnl:0};});
+  lots.forEach(function(l){
+    var hb=HOLD_LABELS[l[L.HOLD]];
+    holdMap[hb].n++;
+    if(l[L.WL]===1) holdMap[hb].wins++;
+    holdMap[hb].pnl+=l[L.PNL];
+  });
+  var hold_time=HOLD_LABELS.map(function(hb){
+    var h=holdMap[hb];
+    h.avg_pnl=h.n?Math.round(h.pnl/h.n*100)/100:0;
+    return h;
+  });
+
+  // ── R Distribution ──
+  var buckets=[
+    {bucket:'-$200 to -$100',lo:-Infinity,hi:-100},
+    {bucket:'-$100 to -$50',lo:-100,hi:-50},
+    {bucket:'-$50 to $0',lo:-50,hi:0},
+    {bucket:'$0 to $50',lo:0,hi:50},
+    {bucket:'$50 to $100',lo:50,hi:100},
+    {bucket:'$100 to $200',lo:100,hi:200},
+    {bucket:'$200 to $500',lo:200,hi:500},
+    {bucket:'$500+',lo:500,hi:Infinity}
+  ];
+  var r_dist=buckets.map(function(b){return{bucket:b.bucket,n:0,pnl:0,_lo:b.lo,_hi:b.hi};});
+  lots.forEach(function(l){
+    var p=l[L.PNL];
+    for(var i=0;i<r_dist.length;i++){
+      if(p>=r_dist[i]._lo&&p<r_dist[i]._hi){r_dist[i].n++;r_dist[i].pnl+=p;break;}
+    }
+  });
+  // Edge case: exactly 0 goes in -$50 to $0
+  // $500+ bucket: >=500
+  r_dist.forEach(function(b){delete b._lo;delete b._hi;});
+
+  // ── Monthly ──
+  var mMap={};
+  lots.forEach(function(l){
+    var m=l[L.DATE].slice(0,7);
+    if(!mMap[m]) mMap[m]={month:m,pnl:0,lots:0,wins:0};
+    mMap[m].pnl+=l[L.PNL];mMap[m].lots++;
+    if(l[L.WL]===1) mMap[m].wins++;
+  });
+  var monthly=Object.values(mMap).sort(function(a,b){return a.month<b.month?-1:1;});
+
+  // ── Revenge (simplified: re-entry within 5min after a loss) ──
+  var revN=0,revWins=0,revPnl=0,normN=0,normWins=0,normPnl=0;
+  for(var i=0;i<lots.length;i++){
+    var isRevenge=false;
+    if(i>0&&lots[i-1][L.WL]===-1){
+      var prevExit=lots[i-1][L.EXIT],curEntry=lots[i][L.ENTRY];
+      if(prevExit&&curEntry){
+        var pe=new Date(prevExit.replace(' ','T')),ce=new Date(curEntry.replace(' ','T'));
+        var diff=(ce-pe)/60000;
+        if(diff>=0&&diff<=5) isRevenge=true;
+      }
+    }
+    if(isRevenge){revN++;if(lots[i][L.WL]===1)revWins++;revPnl+=lots[i][L.PNL];}
+    else{normN++;if(lots[i][L.WL]===1)normWins++;normPnl+=lots[i][L.PNL];}
+  }
+  var revenge=[
+    {category:'normal',n:normN,wins:normWins,pnl:Math.round(normPnl),avg_pnl:normN?Math.round(normPnl/normN*100)/100:0},
+    {category:'revenge',n:revN,wins:revWins,pnl:Math.round(revPnl),avg_pnl:revN?Math.round(revPnl/revN*100)/100:0}
+  ];
+
+  // ── Streaks ──
+  var streaks=[], curStreak=null;
+  lots.forEach(function(l){
+    var type=l[L.WL]===1?'win':'loss';
+    if(l[L.WL]===0) type='loss'; // breakeven = loss for streaks
+    if(!curStreak){curStreak={streak_type:type,streak_len:1,started:l[L.ENTRY],ended:l[L.EXIT]};}
+    else if(curStreak.streak_type===type){curStreak.streak_len++;curStreak.ended=l[L.EXIT];}
+    else{streaks.push(curStreak);curStreak={streak_type:type,streak_len:1,started:l[L.ENTRY],ended:l[L.EXIT]};}
+  });
+  if(curStreak) streaks.push(curStreak);
+  streaks.sort(function(a,b){return b.streak_len-a.streak_len;});
+  var current_streak=curStreak?{streak_type:curStreak.streak_type,streak_len:curStreak.streak_len}:{streak_type:'loss',streak_len:0};
+  var maxW=0,maxL=0;
+  streaks.forEach(function(s){if(s.streak_type==='win'&&s.streak_len>maxW)maxW=s.streak_len;if(s.streak_type==='loss'&&s.streak_len>maxL)maxL=s.streak_len;});
+
+  return {equity:equity,winrate:winrate,edges:edges,heatmap:heatmap,
+    revenge:revenge,streaks:streaks.slice(0,20),current_streak:current_streak,
+    max_win_streak:maxW,max_loss_streak:maxL,r_dist:r_dist,hold_time:hold_time,
+    rules:PERF.rules,monthly:monthly};
+}
+
+// ═══════════════════════════════════════════════
+// GET DATA FOR A WIDGET (filtered or ALL)
+// ═══════════════════════════════════════════════
+function _getPerfData(widgetId){
+  var f=PERF_FILTER[widgetId]||'ALL';
+  if(f==='ALL') return PERF;
+  var lots=_filterLots(f);
+  if(!lots||!lots.length) return null;
+  return _computePerf(lots);
+}
+
+// ═══════════════════════════════════════════════
+// FILTER BAR
+// ═══════════════════════════════════════════════
+function _filterBar(widgetId){
+  var cur=PERF_FILTER[widgetId]||'ALL';
+  var presets=['1W','1M','3M','6M','YTD','ALL'];
+  var months=_getMonths();
+  var isMonth=cur.length===7&&cur.indexOf('-')===4; // "2026-06" format
+
+  var html='<div style="display:flex;align-items:center;gap:3px;margin-bottom:6px;flex-wrap:wrap">';
+  presets.forEach(function(p){
+    var active=cur===p;
+    var bg=active?'rgba(0,229,204,0.18)':'rgba(140,20,20,0.08)';
+    var col=active?'#00e5cc':'rgba(200,160,160,0.5)';
+    var bdr=active?'1px solid rgba(0,229,204,0.3)':'1px solid rgba(140,20,20,0.12)';
+    html+='<button onclick="perfSetFilter(\''+widgetId+'\',\''+p+'\')" style="background:'+bg+';color:'+col+';border:'+bdr+';border-radius:3px;padding:2px 6px;font-size:8px;font-family:ui-monospace,monospace;cursor:pointer;letter-spacing:0.05em">'+p+'</button>';
+  });
+  // Month dropdown
+  html+='<select onchange="perfSetFilter(\''+widgetId+'\',this.value)" style="background:rgba(140,20,20,0.08);color:'+(isMonth?'#00e5cc':'rgba(200,160,160,0.5)')+';border:1px solid '+(isMonth?'rgba(0,229,204,0.3)':'rgba(140,20,20,0.12)')+';border-radius:3px;padding:2px 4px;font-size:8px;font-family:ui-monospace,monospace;cursor:pointer">';
+  html+='<option value=""'+(isMonth?'':' selected')+'>Month</option>';
+  months.forEach(function(m){
+    var label=m.slice(2); // "25-06"
+    html+='<option value="'+m+'"'+(cur===m?' selected':'')+'>'+label+'</option>';
+  });
+  html+='</select>';
+  html+='</div>';
+  return html;
+}
+
+// ── Global filter setter + re-render ──
+function perfSetFilter(widgetId, value){
+  if(!value) return;
+  PERF_FILTER[widgetId]=value;
+  // Find widget instances with this definitionId via the layout data
+  var lay=activeLayout();
+  if(!lay||!lay.widgets) return;
+  lay.widgets.forEach(function(w){
+    if(w.definitionId===widgetId){
+      var el=document.querySelector('.widget[data-wid="'+w.id+'"] .widget-body');
+      if(el) el.innerHTML=PERF_WIDGETS[widgetId]();
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function perfSvg(w, h) { return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">'; }
+function perfNum(n) { return n >= 0 ? '+$'+Math.abs(Math.round(n)).toLocaleString() : '-$'+Math.abs(Math.round(n)).toLocaleString(); }
+function perfPct(n, d) { return d ? (100*n/d).toFixed(1)+'%' : '0%'; }
+function perfLabel(t) { return '<div style="color:rgba(200,160,160,0.45);font-size:8px;letter-spacing:0.15em;margin-bottom:3px">'+t+'</div>'; }
+
+// ═══════════════════════════════════════════════
+// WIDGET 1: PERFORMANCE
+// ═══════════════════════════════════════════════
+function renderPerformanceWidget() {
+  var D=_getPerfData('perf-performance');
+  var css='font-family:ui-monospace,monospace;font-size:10px;display:grid;gap:6px;height:100%;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto auto;';
+  var html='<div style="'+css+'">';
+  html+='<div style="grid-column:1/-1">'+_filterBar('perf-performance')+'</div>';
+  if(!D){html+='<div style="grid-column:1/-1;color:rgba(200,160,160,0.5);font-size:11px;padding:20px;text-align:center">No trades in this period</div></div>';return html;}
+  html+='<div style="grid-column:1/-1">'+_miniEquity(D)+'</div>';
+  html+='<div style="padding:2px">'+_compactWinRate(D)+'</div>';
+  html+='<div style="padding:2px">'+perfLabel('MONTHLY')+_compactMonthly(D)+'</div>';
+  html+='<div style="padding:2px">'+perfLabel('EDGES & LEAKS')+_compactEdges(D)+'</div>';
+  html+='<div style="padding:2px">'+perfLabel('HOLD TIME')+_compactHoldTime(D)+perfLabel('R DISTRIBUTION')+_compactRDist(D)+'</div>';
+  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('SESSION HEATMAP')+_compactHeatmap(D)+'</div>';
+  html+='</div>';
+  return html;
+}
+
+// ═══════════════════════════════════════════════
+// WIDGET 2: DISCIPLINE
+// ═══════════════════════════════════════════════
+function renderDisciplineWidget() {
+  var D=_getPerfData('perf-discipline');
+  var css='font-family:ui-monospace,monospace;font-size:10px;display:grid;gap:6px;height:100%;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto;';
+  var html='<div style="'+css+'">';
+  html+='<div style="grid-column:1/-1">'+_filterBar('perf-discipline')+'</div>';
+  if(!D){html+='<div style="grid-column:1/-1;color:rgba(200,160,160,0.5);font-size:11px;padding:20px;text-align:center">No trades in this period</div></div>';return html;}
+  html+='<div style="padding:2px">'+_compactRevenge(D)+'</div>';
+  html+='<div style="padding:2px">'+_compactStreaks(D)+'</div>';
+  html+='<div style="grid-column:1/-1;padding:2px">'+_compactRules(D)+'</div>';
+  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('SESSION HEATMAP')+_compactHeatmap(D)+'</div>';
+  html+='</div>';
+  return html;
+}
+
+// ═══════════════════════════════════════════════
+// SECTION RENDERERS (all take data param D)
+// ═══════════════════════════════════════════════
+
+function _miniEquity(D) {
+  var d=D.equity;
+  if(!d||!d.length) return '';
+  var W=520,H=120,pad={top:8,right:46,bottom:18,left:4};
+  var pW=W-pad.left-pad.right,pH=H-pad.top-pad.bottom;
+  var yMin=Infinity,yMax=-Infinity;
+  for(var i=0;i<d.length;i++){if(d[i].cum_pnl<yMin)yMin=d[i].cum_pnl;if(d[i].cum_pnl>yMax)yMax=d[i].cum_pnl;}
+  var yPad=(yMax-yMin)*0.1||100;yMin-=yPad;yMax+=yPad;
+  function x(i){return pad.left+i/(Math.max(1,d.length-1))*pW;}
+  function y(v){return pad.top+(1-(v-yMin)/(yMax-yMin))*pH;}
+  var svg=perfSvg(W,H);
+  for(var g=0;g<=3;g++){
+    var gy=pad.top+g/3*pH,gv=yMax-g/3*(yMax-yMin);
+    svg+='<line x1="'+pad.left+'" y1="'+gy.toFixed(1)+'" x2="'+(pad.left+pW)+'" y2="'+gy.toFixed(1)+'" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>';
+    svg+='<text x="'+(W-pad.right+3)+'" y="'+(gy+3).toFixed(1)+'" fill="rgba(255,255,255,0.2)" font-size="7" font-family="ui-monospace,monospace">'+perfNum(Math.round(gv))+'</text>';
+  }
+  if(yMin<0&&yMax>0){var zy=y(0);svg+='<line x1="'+pad.left+'" y1="'+zy.toFixed(1)+'" x2="'+(pad.left+pW)+'" y2="'+zy.toFixed(1)+'" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" stroke-dasharray="3,3"/>';}
+  var pts='';for(var i=0;i<d.length;i++){pts+=x(i).toFixed(1)+','+y(d[i].cum_pnl).toFixed(1)+' ';}
+  var last=d[d.length-1].cum_pnl;
+  var aCol=last>=0?'0,229,204':'204,17,17';
+  var lCol=last>=0?'#00e5cc':'#cc1111';
+  svg+='<polygon points="'+x(0).toFixed(1)+','+y(0).toFixed(1)+' '+pts+x(d.length-1).toFixed(1)+','+y(0).toFixed(1)+'" fill="rgba('+aCol+',0.06)"/>';
+  var path='M';for(var i=0;i<d.length;i++){path+=(i?'L':'')+x(i).toFixed(1)+','+y(d[i].cum_pnl).toFixed(1);}
+  svg+='<path d="'+path+'" fill="none" stroke="'+lCol+'" stroke-width="1.5"/>';
+  svg+='<circle cx="'+x(d.length-1).toFixed(1)+'" cy="'+y(last).toFixed(1)+'" r="2.5" fill="'+lCol+'"/>';
+  svg+='<text x="'+x(d.length-1).toFixed(1)+'" y="'+(y(last)-6).toFixed(1)+'" fill="'+lCol+'" font-size="9" font-family="ui-monospace,monospace" text-anchor="middle" font-weight="600">'+perfNum(Math.round(last))+'</text>';
+  var step=Math.max(1,Math.floor(d.length/5));
+  for(var i=0;i<d.length;i+=step){svg+='<text x="'+x(i).toFixed(1)+'" y="'+(H-3)+'" fill="rgba(255,255,255,0.18)" font-size="6" font-family="ui-monospace,monospace" text-anchor="middle">'+d[i].trade_date.slice(5)+'</text>';}
+  svg+='</svg>';
+  return svg;
+}
+
+function _compactWinRate(D) {
+  var d=D.winrate;if(!d||!d.total)return '';
+  var wr=(100*d.wins/d.total).toFixed(1);
+  var html='<div style="text-align:center">';
+  html+='<div style="font-size:28px;font-weight:700;color:#00e5cc;line-height:1">'+wr+'%</div>';
+  html+='<div style="font-size:8px;color:rgba(200,160,160,0.45);margin:1px 0 6px">WIN RATE · '+d.total+' lots</div>';
+  html+='<div style="display:flex;gap:8px;justify-content:center;font-size:9px">';
+  html+='<span style="color:rgba(200,160,160,0.45)">Net</span><span style="color:'+(d.net_pnl>=0?'#00e5cc':'#cc1111')+'">'+perfNum(d.net_pnl)+'</span>';
+  html+='<span style="color:rgba(200,160,160,0.45)">Exp</span><span style="color:'+(d.expectancy>=0?'#00e5cc':'#cc1111')+'">'+perfNum(d.expectancy)+'/lot</span>';
+  html+='</div>';
+  if(d.by_type){
+    html+='<div style="display:flex;gap:10px;justify-content:center;margin-top:4px;font-size:8px">';
+    d.by_type.forEach(function(t){
+      if(!t.total) return;
+      var twr=(100*t.wins/t.total).toFixed(1);
+      html+='<span style="color:rgba(200,160,160,0.4)">'+t.option_type+'s '+twr+'% <span style="color:'+(t.pnl>=0?'#00e5cc':'#cc1111')+'">'+perfNum(t.pnl)+'</span></span>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function _compactMonthly(D) {
+  var d=D.monthly;if(!d||!d.length)return '';
+  var maxAbs=0;d.forEach(function(m){if(Math.abs(m.pnl)>maxAbs)maxAbs=Math.abs(m.pnl);});
+  var W=240,H=90,pad={top:4,right:4,bottom:16,left:4};
+  var pW=W-pad.left-pad.right,pH=H-pad.top-pad.bottom;
+  var barW=pW/d.length-2;
+  var zeroY=pad.top+pH/2;
+  var svg=perfSvg(W,H);
+  svg+='<line x1="'+pad.left+'" y1="'+zeroY.toFixed(1)+'" x2="'+(pad.left+pW)+'" y2="'+zeroY.toFixed(1)+'" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" stroke-dasharray="2,2"/>';
+  d.forEach(function(m,i){
+    var bx=pad.left+i*(pW/d.length)+1;
+    var bh=maxAbs?Math.abs(m.pnl)/maxAbs*(pH/2):0;
+    var col=m.pnl>=0?'rgba(0,229,204,0.55)':'rgba(204,17,17,0.45)';
+    var by=m.pnl>=0?zeroY-bh:zeroY;
+    svg+='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+Math.max(1,barW).toFixed(1)+'" height="'+Math.max(1,bh).toFixed(1)+'" rx="1" fill="'+col+'"/>';
+    if(i%2===0||d.length<=8){svg+='<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(H-2)+'" fill="rgba(200,160,160,0.3)" font-size="6" font-family="ui-monospace,monospace" text-anchor="middle">'+m.month.slice(5)+'</text>';}
+  });
+  svg+='</svg>';
+  return svg;
+}
+
+function _compactEdges(D) {
+  var d=D.edges;if(!d||!d.length)return '';
+  var maxAbs=0;d.forEach(function(e){if(Math.abs(e.pnl)>maxAbs)maxAbs=Math.abs(e.pnl);});
+  var html='';
+  d.slice(0,6).forEach(function(e){
+    var pct=maxAbs?Math.abs(e.pnl)/maxAbs*100:0;
+    var col=e.pnl>=0?'#00e5cc':'#cc1111';
+    var bgCol=e.pnl>=0?'rgba(0,229,204,0.12)':'rgba(204,17,17,0.12)';
+    html+='<div style="margin-bottom:2px">';
+    html+='<div style="display:flex;justify-content:space-between;font-size:9px">';
+    html+='<span style="color:rgba(230,200,200,0.8)">'+e.option_type+' · '+e.hold_bucket+'</span>';
+    html+='<span style="color:'+col+';font-weight:600">'+perfNum(e.pnl)+'</span></div>';
+    html+='<div style="height:3px;background:rgba(140,20,20,0.08);border-radius:2px;margin:1px 0">';
+    html+='<div style="width:'+pct.toFixed(1)+'%;height:100%;background:'+bgCol+';border-radius:2px;'+(e.pnl<0?'margin-left:auto':'')+'"></div></div>';
+    html+='</div>';
+  });
+  return html;
+}
+
+function _compactHoldTime(D) {
+  var d=D.hold_time;if(!d||!d.length)return '';
+  var maxAbs=0;d.forEach(function(h){if(Math.abs(h.pnl)>maxAbs)maxAbs=Math.abs(h.pnl);});
+  var html='';
+  d.forEach(function(h){
+    var pct=maxAbs?Math.abs(h.pnl)/maxAbs*100:0;
+    var col=h.pnl>=0?'#00e5cc':'#cc1111';
+    var bgCol=h.pnl>=0?'rgba(0,229,204,0.18)':'rgba(204,17,17,0.13)';
+    html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;font-size:9px">';
+    html+='<span style="color:rgba(230,200,200,0.75);width:52px;flex-shrink:0">'+h.hold_bucket+'</span>';
+    html+='<div style="flex:1;height:4px;background:rgba(140,20,20,0.06);border-radius:2px"><div style="width:'+pct.toFixed(1)+'%;height:100%;background:'+bgCol+';border-radius:2px;'+(h.pnl<0?'margin-left:auto':'')+'"></div></div>';
+    html+='<span style="color:'+col+';font-weight:600;width:50px;text-align:right;flex-shrink:0">'+perfNum(h.pnl)+'</span>';
+    html+='</div>';
+  });
+  return html;
+}
+
+function _compactRDist(D) {
+  var d=D.r_dist;if(!d||!d.length)return '';
+  var maxN=0;d.forEach(function(b){if(b.n>maxN)maxN=b.n;});
+  var W=240,H=70,pad={top:4,right:4,bottom:16,left:4};
+  var pW=W-pad.left-pad.right,pH=H-pad.top-pad.bottom;
+  var barW=pW/d.length-3;
+  var svg=perfSvg(W,H);
+  d.forEach(function(b,i){
+    var bx=pad.left+i*(pW/d.length)+1.5;
+    var bh=maxN?(b.n/maxN)*pH:0;
+    var by=pad.top+pH-bh;
+    var col=b.pnl>=0?'rgba(0,229,204,0.55)':'rgba(204,17,17,0.45)';
+    svg+='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(0.5,bh).toFixed(1)+'" rx="1.5" fill="'+col+'"/>';
+    if(b.n>0) svg+='<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(by-2).toFixed(1)+'" fill="rgba(230,200,200,0.6)" font-size="7" font-family="ui-monospace,monospace" text-anchor="middle">'+b.n+'</text>';
+    svg+='<text x="'+(bx+barW/2).toFixed(1)+'" y="'+(H-2)+'" fill="rgba(200,160,160,0.3)" font-size="5" font-family="ui-monospace,monospace" text-anchor="middle" transform="rotate(-25 '+(bx+barW/2).toFixed(1)+','+(H-2)+')">'+b.bucket.replace(/\$/g,'')+'</text>';
+  });
+  svg+='</svg>';
+  return svg;
+}
+
+function _compactHeatmap(D) {
+  var d=D.heatmap;if(!d||!d.length)return '';
+  var dows=['Mon','Tue','Wed','Thu','Fri'];
+  var sessions=['pre','morning','midday','afternoon'];
+  var sessLabels={'pre':'Pre','morning':'AM','midday':'Mid','afternoon':'PM'};
+  var grid={};var maxAbs=0;
+  d.forEach(function(h){grid[h.dow+'_'+h.session]=h;if(Math.abs(h.pnl)>maxAbs)maxAbs=Math.abs(h.pnl);});
+  var cw=56,ch=28,gap=2,lw=30,th=12;
+  var W=lw+dows.length*(cw+gap),H=th+sessions.length*(ch+gap);
+  var svg=perfSvg(W,H);
+  dows.forEach(function(dow,i){svg+='<text x="'+(lw+i*(cw+gap)+cw/2)+'" y="10" fill="rgba(200,160,160,0.45)" font-size="8" font-family="ui-monospace,monospace" text-anchor="middle">'+dow+'</text>';});
+  sessions.forEach(function(sess,si){
+    var cy=th+si*(ch+gap);
+    svg+='<text x="1" y="'+(cy+ch/2+3)+'" fill="rgba(200,160,160,0.4)" font-size="7" font-family="ui-monospace,monospace">'+sessLabels[sess]+'</text>';
+    dows.forEach(function(dow,di){
+      var cx=lw+di*(cw+gap);var cell=grid[dow+'_'+sess];
+      var pnl=cell?cell.pnl:0,n=cell?cell.n:0;
+      var intensity=maxAbs?Math.min(1,Math.abs(pnl)/maxAbs):0;
+      var fill=(!cell||n===0)?'rgba(140,20,20,0.05)':pnl>=0?'rgba(0,229,204,'+(0.04+intensity*0.35).toFixed(2)+')':'rgba(204,17,17,'+(0.04+intensity*0.35).toFixed(2)+')';
+      svg+='<rect x="'+cx+'" y="'+cy+'" width="'+cw+'" height="'+ch+'" rx="2" fill="'+fill+'"/>';
+      if(cell&&n>0){
+        svg+='<text x="'+(cx+cw/2)+'" y="'+(cy+ch/2+1)+'" fill="rgba(230,200,200,0.75)" font-size="8" font-family="ui-monospace,monospace" text-anchor="middle" font-weight="600">'+perfNum(Math.round(pnl))+'</text>';
+        svg+='<text x="'+(cx+cw/2)+'" y="'+(cy+ch/2+9)+'" fill="rgba(200,160,160,0.3)" font-size="6" font-family="ui-monospace,monospace" text-anchor="middle">'+n+'</text>';
+      }
+    });
+  });
+  svg+='</svg>';
+  return svg;
+}
+
+function _compactRevenge(D) {
+  var d=D.revenge;if(!d||!d.length)return '';
+  var rev=d.find(function(r){return r.category==='revenge';})||{n:0,wins:0,pnl:0,avg_pnl:0};
+  var norm=d.find(function(r){return r.category==='normal';})||{n:0,wins:0,pnl:0,avg_pnl:0};
+  var html='<div style="text-align:center">';
+  html+=perfLabel('REVENGE TRADES');
+  html+='<div style="font-size:28px;font-weight:700;color:#cc1111;line-height:1">'+rev.n+'</div>';
+  html+='<div style="display:flex;gap:2px;margin-top:6px">';
+  html+='<div style="flex:1;background:rgba(204,17,17,0.08);border-radius:4px;padding:4px">';
+  html+='<div style="font-size:8px;color:rgba(204,17,17,0.55);letter-spacing:0.1em">REVENGE</div>';
+  html+='<div style="font-size:13px;color:#cc1111;font-weight:600">'+perfNum(rev.pnl)+'</div>';
+  html+='<div style="font-size:8px;color:rgba(200,160,160,0.35)">'+perfPct(rev.wins,rev.n)+' WR · '+(rev.avg_pnl||0).toFixed(0)+'/lot</div>';
+  html+='</div>';
+  html+='<div style="flex:1;background:rgba(0,229,204,0.04);border-radius:4px;padding:4px">';
+  html+='<div style="font-size:8px;color:rgba(0,229,204,0.55);letter-spacing:0.1em">NORMAL</div>';
+  html+='<div style="font-size:13px;color:#00e5cc;font-weight:600">'+perfNum(norm.pnl)+'</div>';
+  html+='<div style="font-size:8px;color:rgba(200,160,160,0.35)">'+perfPct(norm.wins,norm.n)+' WR · '+(norm.avg_pnl||0).toFixed(0)+'/lot</div>';
+  html+='</div>';
+  html+='</div></div>';
+  return html;
+}
+
+function _compactStreaks(D) {
+  var html='<div style="text-align:center">';
+  var cur=D.current_streak||{};
+  var isWin=cur.streak_type==='win';
+  var col=isWin?'#00e5cc':'#cc1111';
+  html+=perfLabel('CURRENT STREAK');
+  html+='<div style="font-size:28px;font-weight:700;color:'+col+';line-height:1">'+(cur.streak_len||0)+(isWin?' W':' L')+'</div>';
+  html+='<div style="display:flex;gap:10px;justify-content:center;margin-top:4px;font-size:9px">';
+  html+='<span style="color:rgba(200,160,160,0.4)">Best</span><span style="color:#00e5cc;font-weight:600">'+(D.max_win_streak||0)+'W</span>';
+  html+='<span style="color:rgba(200,160,160,0.4)">Worst</span><span style="color:#cc1111;font-weight:600">'+(D.max_loss_streak||0)+'L</span>';
+  html+='</div>';
+  var top=(D.streaks||[]).slice(0,5);
+  html+='<div style="margin-top:4px;text-align:left;font-size:8px">';
+  top.forEach(function(s){
+    var sc=s.streak_type==='win'?'#00e5cc':'#cc1111';
+    html+='<div style="display:flex;justify-content:space-between;padding:1px 0;border-bottom:1px solid rgba(140,20,20,0.06)">';
+    html+='<span style="color:'+sc+'">'+s.streak_len+(s.streak_type==='win'?'W':'L')+'</span>';
+    html+='<span style="color:rgba(200,160,160,0.35)">'+(s.started||'').slice(0,10)+'</span></div>';
+  });
+  html+='</div></div>';
+  return html;
+}
+
+function _compactRules(D) {
+  var d=D.rules;if(!d||!d.length)return '';
+  var html='<div style="display:flex;gap:8px">';
+  html+='<div style="flex:1">';
+  html+='<div style="color:rgba(204,17,17,0.6);font-size:8px;letter-spacing:0.1em;margin-bottom:3px">STOP</div>';
+  d.filter(function(r){return r.type==='stop';}).forEach(function(r){
+    html+='<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(140,20,20,0.06);font-size:9px">';
+    html+='<span style="color:rgba(230,200,200,0.7);flex:1">'+r.rule+'</span>';
+    html+='<span style="color:#cc1111;white-space:nowrap;margin-left:6px;font-weight:500">'+r.cost+'</span></div>';
+  });
+  html+='</div>';
+  html+='<div style="flex:1">';
+  html+='<div style="color:rgba(0,229,204,0.6);font-size:8px;letter-spacing:0.1em;margin-bottom:3px">DO MORE</div>';
+  d.filter(function(r){return r.type==='do';}).forEach(function(r){
+    html+='<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(140,20,20,0.06);font-size:9px">';
+    html+='<span style="color:rgba(230,200,200,0.7);flex:1">'+r.rule+'</span>';
+    html+='<span style="color:#00e5cc;white-space:nowrap;margin-left:6px;font-weight:500">'+r.edge+'</span></div>';
+  });
+  html+='</div>';
+  html+='</div>';
+  return html;
+}
+
+// ── Registry ──
+var PERF_WIDGETS = {
+  'perf-performance':  renderPerformanceWidget,
+  'perf-discipline':   renderDisciplineWidget
+};
+
+
 function renderWidgetContent(defId) {
   if (DATA_ERROR) {
     return '<div class="loading">' + esc(DATA_ERROR) + '</div>';
@@ -5985,12 +6481,155 @@ function renderWidgetContent(defId) {
     case 'clock-session':        return renderClockWidget();
     case 'notes':                return renderNotes(e);
     case 'gex-chart':            return renderGexChart(e);
-    case 'volume-candles':       return renderVolumeCandles(e);
     case 'earnings-events':      return stripSec(secWeek(e));
+        case 'qqq-exit-calc':     return renderExitCalcWidget();
+        // ── Performance widgets v5 ──
+    case 'perf-performance':  return PERF_WIDGETS['perf-performance']();
+    case 'perf-discipline':   return PERF_WIDGETS['perf-discipline']();
     default:
       return '<div class="loading">Widget: ' + esc(defId) + '</div>';
   }
 }
+
+// ── QQQ Exit Calculator widget ──────────────────────────
+(function(){
+// Contract data: Sep 11, 2026 snapshots (test data — expired)
+var EXIT_CONTRACTS=[{"id":"2026-09-11-calls-702.0","kind":"call","expiration":"2026-09-11","strike":702,"spot":716.99,"mid":15.255,"delta":0.9406,"gamma":0.0121,"iv":61.84,"theta":-0.265,"volume":183,"bid":15.12,"ask":15.39,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-702.0","kind":"put","expiration":"2026-09-11","strike":702,"spot":716.99,"mid":0.055,"delta":-0.0201,"gamma":0.00657,"iv":46.95,"theta":-0.055,"volume":8391,"bid":0.05,"ask":0.06,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-703.0","kind":"call","expiration":"2026-09-11","strike":703,"spot":716.99,"mid":14.145,"delta":0.9581,"gamma":0.0109,"iv":51.98,"theta":-0.155,"volume":110,"bid":13.8,"ask":14.49,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-703.0","kind":"put","expiration":"2026-09-11","strike":703,"spot":716.99,"mid":0.035,"delta":-0.0151,"gamma":0.00581,"iv":41.4,"theta":-0.035,"volume":11354,"bid":0.01,"ask":0.06,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-705.0","kind":"call","expiration":"2026-09-11","strike":705,"spot":716.99,"mid":12.2,"delta":0.9415,"gamma":0.01507,"iv":49.1,"theta":-0.21,"volume":605,"bid":12.09,"ask":12.31,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-705.0","kind":"put","expiration":"2026-09-11","strike":705,"spot":716.99,"mid":0.065,"delta":-0.027,"gamma":0.00989,"iv":39.88,"theta":-0.065,"volume":19357,"bid":0.06,"ask":0.07,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-706.0","kind":"call","expiration":"2026-09-11","strike":706,"spot":716.99,"mid":11.25,"delta":0.9279,"gamma":0.01802,"iv":48.28,"theta":-0.26,"volume":377,"bid":11.15,"ask":11.35,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-706.0","kind":"put","expiration":"2026-09-11","strike":706,"spot":716.99,"mid":0.025,"delta":-0.014,"gamma":0.00707,"iv":32.03,"theta":-0.025,"volume":16667,"bid":0.02,"ask":0.03,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-708.0","kind":"call","expiration":"2026-09-11","strike":708,"spot":716.99,"mid":9.235,"delta":0.9211,"gamma":0.02286,"iv":40.76,"theta":-0.245,"volume":1221,"bid":9.12,"ask":9.35,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-708.0","kind":"put","expiration":"2026-09-11","strike":708,"spot":716.99,"mid":0.045,"delta":-0.0255,"gamma":0.01277,"iv":29.46,"theta":-0.045,"volume":23788,"bid":0.04,"ask":0.05,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-710.0","kind":"call","expiration":"2026-09-11","strike":710,"spot":716.99,"mid":7.225,"delta":0.91,"gamma":0.03084,"iv":33.34,"theta":-0.235,"volume":7280,"bid":7.18,"ask":7.27,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-710.0","kind":"put","expiration":"2026-09-11","strike":710,"spot":716.99,"mid":0.085,"delta":-0.0482,"gamma":0.0236,"iv":26.86,"theta":-0.085,"volume":70435,"bid":0.08,"ask":0.09,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-712.0","kind":"call","expiration":"2026-09-11","strike":712,"spot":716.99,"mid":5.185,"delta":0.902,"gamma":0.04442,"iv":24.65,"theta":-0.195,"volume":8478,"bid":5.06,"ask":5.31,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-712.0","kind":"put","expiration":"2026-09-11","strike":712,"spot":716.99,"mid":0.155,"delta":-0.0893,"gamma":0.04316,"iv":23.7,"theta":-0.155,"volume":86237,"bid":0.15,"ask":0.16,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-713.0","kind":"call","expiration":"2026-09-11","strike":713,"spot":716.99,"mid":4.295,"delta":0.8533,"gamma":0.05994,"iv":24.27,"theta":-0.305,"volume":23679,"bid":4.23,"ask":4.36,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-713.0","kind":"put","expiration":"2026-09-11","strike":713,"spot":716.99,"mid":0.255,"delta":-0.1367,"gamma":0.05958,"iv":23.28,"theta":-0.255,"volume":120200,"bid":0.25,"ask":0.26,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-714.0","kind":"call","expiration":"2026-09-11","strike":714,"spot":716.99,"mid":3.335,"delta":0.818,"gamma":0.07945,"iv":21.07,"theta":-0.345,"volume":64792,"bid":3.29,"ask":3.38,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-714.0","kind":"put","expiration":"2026-09-11","strike":714,"spot":716.99,"mid":0.345,"delta":-0.186,"gamma":0.07919,"iv":21.42,"theta":-0.345,"volume":215595,"bid":0.34,"ask":0.35,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-715.0","kind":"call","expiration":"2026-09-11","strike":715,"spot":716.99,"mid":2.55,"delta":0.7299,"gamma":0.10051,"iv":20.84,"theta":-0.56,"volume":166550,"bid":2.52,"ask":2.58,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-715.0","kind":"put","expiration":"2026-09-11","strike":715,"spot":716.99,"mid":0.495,"delta":-0.2604,"gamma":0.10347,"iv":19.87,"theta":-0.495,"volume":235881,"bid":0.49,"ask":0.5,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-716.0","kind":"call","expiration":"2026-09-11","strike":716,"spot":716.99,"mid":1.76,"delta":0.6326,"gamma":0.12612,"iv":18.92,"theta":-0.77,"volume":216874,"bid":1.73,"ask":1.79,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-716.0","kind":"put","expiration":"2026-09-11","strike":716,"spot":716.99,"mid":0.735,"delta":-0.3651,"gamma":0.12815,"iv":18.58,"theta":-0.735,"volume":167334,"bid":0.73,"ask":0.74,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-717.0","kind":"call","expiration":"2026-09-11","strike":717,"spot":716.99,"mid":1.155,"delta":0.5015,"gamma":0.13809,"iv":18.3,"theta":-1.155,"volume":169338,"bid":1.15,"ask":1.16,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-717.0","kind":"put","expiration":"2026-09-11","strike":717,"spot":716.99,"mid":1.06,"delta":-0.4985,"gamma":0.1498,"iv":16.87,"theta":-1.05,"volume":75409,"bid":1.05,"ask":1.07,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-718.0","kind":"call","expiration":"2026-09-11","strike":718,"spot":716.99,"mid":0.635,"delta":0.3546,"gamma":0.14029,"iv":16.8,"theta":-0.635,"volume":116980,"bid":0.63,"ask":0.64,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-718.0","kind":"put","expiration":"2026-09-11","strike":718,"spot":716.99,"mid":1.625,"delta":-0.6461,"gamma":0.14091,"iv":16.72,"theta":-0.615,"volume":21577,"bid":1.62,"ask":1.63,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-719.0","kind":"call","expiration":"2026-09-11","strike":719,"spot":716.99,"mid":0.325,"delta":0.2202,"gamma":0.11499,"iv":16.32,"theta":-0.325,"volume":65468,"bid":0.32,"ask":0.33,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-719.0","kind":"put","expiration":"2026-09-11","strike":719,"spot":716.99,"mid":2.28,"delta":-0.7925,"gamma":0.11733,"iv":15.45,"theta":-0.27,"volume":6264,"bid":2.25,"ask":2.31,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-720.0","kind":"call","expiration":"2026-09-11","strike":720,"spot":716.99,"mid":0.195,"delta":0.1393,"gamma":0.08056,"iv":17.45,"theta":-0.195,"volume":62973,"bid":0.19,"ask":0.2,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-720.0","kind":"put","expiration":"2026-09-11","strike":720,"spot":716.99,"mid":3.21,"delta":-0.853,"gamma":0.08092,"iv":18.01,"theta":-0.2,"volume":4610,"bid":3.13,"ask":3.29,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-722.0","kind":"call","expiration":"2026-09-11","strike":722,"spot":716.99,"mid":0.045,"delta":0.0395,"gamma":0.03014,"iv":17.93,"theta":-0.045,"volume":15913,"bid":0.02,"ask":0.07,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-722.0","kind":"put","expiration":"2026-09-11","strike":722,"spot":716.99,"mid":5.005,"delta":-0.9871,"gamma":0.01493,"iv":14.14,"theta":0.005,"volume":1611,"bid":5.0,"ask":5.01,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-725.0","kind":"call","expiration":"2026-09-11","strike":725,"spot":716.99,"mid":0.035,"delta":0.0234,"gamma":0.01386,"iv":25.3,"theta":-0.035,"volume":6870,"bid":0.03,"ask":0.04,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-725.0","kind":"put","expiration":"2026-09-11","strike":725,"spot":716.99,"mid":8.025,"delta":-0.9791,"gamma":0.0129,"iv":24.72,"theta":-0.015,"volume":446,"bid":7.79,"ask":8.26,"stamp":"2026-09-11 15:45:11"}];
+
+function _exitEstimate(mid,delta,gamma,move){
+  var v=mid+delta*move+0.5*gamma*move*move;
+  if(!isFinite(v)||delta*(delta+gamma*move)<0||Math.abs(delta+gamma*move)>1)return null;
+  return Math.max(0,v);
+}
+function _exitMoney(v){return v==null?'—':'$'+v.toFixed(2);}
+
+function renderExitCalcWidget(){
+  // Get saved state from widget
+  var wEl=document.querySelector('[data-def-id="qqq-exit-calc"]');
+  var wid=wEl?wEl.dataset.wid:'';
+  var w=wid?activeLayout().widgets.find(function(x){return x.id===wid;}):null;
+  var saved=(w&&w.exitCalcState)||{};
+  var selIdx=saved.contractIdx||0;
+  var entryVal=saved.entry||'';
+  var movesVal=saved.moves||'6.50, 3.25, 1.625, 0.81, 0.40';
+
+  var h='<div class="exit-calc-widget" data-exit-root="1">';
+  h+='<div style="font-size:10px;letter-spacing:1.5px;color:var(--accent,#00e5cc);margin-bottom:6px">CONTRACT PICKER · HISTORICAL TEST</div>';
+  h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:10px">Sep 11, 2026 snapshots — expired test data</div>';
+
+  // Dropdown + entry in a row
+  h+='<div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:8px">';
+  h+='<label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">QQQ contract<select data-exit-field="contract" style="width:100%;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px system-ui">';
+  for(var i=0;i<EXIT_CONTRACTS.length;i++){
+    var c=EXIT_CONTRACTS[i];
+    var inc=c.mid===null||c.delta===null||c.gamma===null;
+    h+='<option value="'+i+'"'+(i===selIdx?' selected':'')+'>$'+c.strike+' '+c.kind.toUpperCase()+(inc?' · incomplete':'')+'</option>';
+  }
+  h+='</select></label>';
+  h+='<label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">Bought at ($/share)<input data-exit-field="entry" type="number" min="0" step="0.01" placeholder="Your fill" value="'+esc(entryVal)+'" style="width:100%;box-sizing:border-box;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px ui-monospace,monospace"></label>';
+  h+='</div>';
+
+  // Contract summary + spot
+  var cur=EXIT_CONTRACTS[selIdx];
+  h+='<div style="font-size:18px;font-weight:600;margin:6px 0">QQQ '+_exitMoney(cur.spot)+'<span style="font-size:10px;font-weight:400;color:var(--dim,#bda7ab);margin-left:8px">'+cur.stamp+' UTC</span></div>';
+  h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:8px">Mid '+_exitMoney(cur.mid)+' · '+(cur.kind==='call'?'Call: stop below QQQ, target above':'Put: stop above QQQ, target below')+'</div>';
+
+  // Results
+  h+='<div data-exit-results="1">'+_exitCalcResults(cur,entryVal,movesVal)+'</div>';
+
+  // Dollar moves input
+  h+='<div style="margin-top:10px"><label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">QQQ dollar moves<input data-exit-field="moves" type="text" value="'+esc(movesVal)+'" style="width:100%;box-sizing:border-box;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px ui-monospace,monospace"></label></div>';
+
+  // Greeks grid — always visible
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;font-size:11px;color:var(--dim,#bda7ab)">';
+  var gk=[['Mid',_exitMoney(cur.mid)],['Delta',cur.delta],['Gamma',cur.gamma],['IV',cur.iv==null?'—':cur.iv.toFixed(1)+'%'],['Theta',cur.theta],['Vol',cur.volume==null?'—':cur.volume.toLocaleString()],['Bid',_exitMoney(cur.bid)],['Ask',_exitMoney(cur.ask)]];
+  for(var g=0;g<gk.length;g++){
+    h+='<div>'+gk[g][0]+'<b style="display:block;color:var(--fg,#f4eaea)">'+(gk[g][1]==null?'—':gk[g][1])+'</b></div>';
+  }
+  h+='</div>';
+
+  h+='<div style="font-size:10px;color:var(--dim,#bda7ab);line-height:1.5;margin-top:6px">Mid + Delta × move + ½ Gamma × move². IV and time unchanged. P/L from your entry.</div>';
+  h+='</div>';
+  return h;
+}
+
+function _exitCalcResults(cur,entryVal,movesVal){
+  if(cur.mid===null||cur.delta===null||cur.gamma===null)return '<div style="padding:16px 0;text-align:center;color:var(--dim,#bda7ab);font-size:12px">Incomplete quote — choose another contract.</div>';
+  if(!entryVal||!String(entryVal).trim())return '<div style="padding:16px 0;text-align:center;color:var(--dim,#bda7ab);font-size:12px">Enter your purchase price ↑</div>';
+  var entry=Number(entryVal);
+  if(!isFinite(entry)||entry<=0)return '<div style="color:#ff8995;font-size:12px">Entry must be positive.</div>';
+  var raw=String(movesVal||'6.50, 3.25, 1.625, 0.81, 0.40').trim();
+  var moves=raw.split(/[,;\s]+/).map(Number);
+  if(!raw||moves.some(function(m){return !isFinite(m)||m<=0||m>=cur.spot;}))return '<div style="color:#ff8995;font-size:12px">Invalid moves.</div>';
+
+  var price=function(n){return '$'+(Math.round((n+Number.EPSILON*Math.max(1,Math.abs(n)))*100)/100).toFixed(2);};
+  var level=function(m,isStop){
+    var s=isStop?-Math.sign(cur.delta)*m:Math.sign(cur.delta)*m;
+    var est=_exitEstimate(cur.mid,cur.delta,cur.gamma,s);
+    var qqq='QQQ '+price(cur.spot+s);
+    if(est===null)return '<td>'+qqq+'<small style="display:block;color:var(--dim,#bda7ab);font-size:9px;margin-top:2px">Outside range</small></td>';
+    var pnl=est-entry;
+    var cls=pnl<0?'color:#ff8995':'color:#00e5cc';
+    return '<td>'+qqq+'<strong style="display:block;font-size:15px;margin-top:2px;'+cls+'">'+price(est)+'</strong><small style="display:block;color:var(--dim,#bda7ab);font-size:9px;margin-top:1px">'+(pnl>=0?'+':'−')+price(Math.abs(pnl))+' ('+( pnl>=0?'+':'')+( pnl/entry*100).toFixed(1)+'%)'+(est===0?' · $0 floor':'')+'</small></td>';
+  };
+
+  var t='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed"><thead><tr><th style="text-align:left;padding:6px 6px 6px 0;color:var(--dim,#c8b8b8);font-size:9px;text-transform:uppercase;letter-spacing:0.5px;width:16%">Move</th><th style="text-align:left;padding:6px 6px 6px 0;color:var(--dim,#c8b8b8);font-size:9px;text-transform:uppercase;letter-spacing:0.5px">Stop side</th><th style="text-align:left;padding:6px 6px 6px 0;color:var(--dim,#c8b8b8);font-size:9px;text-transform:uppercase;letter-spacing:0.5px">Target side</th></tr></thead><tbody>';
+  for(var i=0;i<moves.length;i++){
+    t+='<tr><td style="padding:8px 6px 8px 0;border-top:1px solid var(--bdr,#382029);vertical-align:top">$'+moves[i]+'</td>'+level(moves[i],true)+level(moves[i],false)+'</tr>';
+  }
+  t+='</tbody></table></div>';
+  t+='<div style="font-size:9px;color:var(--dim,#bda7ab);margin-top:4px">P/L before fees. Stops use adverse QQQ direction; puts reverse it.</div>';
+  return t;
+}
+
+// Event delegation for the exit calc widget
+document.addEventListener('input',function(ev){
+  var root=ev.target.closest('[data-exit-root]');
+  if(!root)return;
+  var widget=root.closest('.widget');
+  if(!widget)return;
+  var wid=widget.dataset.wid;
+  var w=activeLayout().widgets.find(function(x){return x.id===wid;});
+  if(!w)return;
+
+  // Read current state
+  var sel=root.querySelector('[data-exit-field="contract"]');
+  var entryIn=root.querySelector('[data-exit-field="entry"]');
+  var movesIn=root.querySelector('[data-exit-field="moves"]');
+  var idx=sel?Number(sel.value):0;
+  var entryVal=entryIn?entryIn.value:'';
+  var movesVal=movesIn?movesIn.value:'6.50, 3.25, 1.625, 0.81, 0.40';
+
+  // Save state
+  w.exitCalcState={contractIdx:idx,entry:entryVal,moves:movesVal};
+  save();
+
+  // Re-render results only
+  var cur=EXIT_CONTRACTS[idx];
+  var res=root.querySelector('[data-exit-results]');
+  if(res)res.innerHTML=_exitCalcResults(cur,entryVal,movesVal);
+});
+
+// Also handle contract change (re-renders the whole widget to update greeks)
+document.addEventListener('change',function(ev){
+  if(!ev.target.matches('[data-exit-field="contract"]'))return;
+  var root=ev.target.closest('[data-exit-root]');
+  if(!root)return;
+  var widget=root.closest('.widget');
+  if(!widget)return;
+  var wid=widget.dataset.wid;
+  var w=activeLayout().widgets.find(function(x){return x.id===wid;});
+  if(!w)return;
+  var idx=Number(ev.target.value);
+  var entryIn=root.querySelector('[data-exit-field="entry"]');
+  var movesIn=root.querySelector('[data-exit-field="moves"]');
+  w.exitCalcState={contractIdx:idx,entry:entryIn?entryIn.value:'',moves:movesIn?movesIn.value:'6.50, 3.25, 1.625, 0.81, 0.40'};
+  save();
+  // Re-render the whole body to update greeks display
+  var body=widget.querySelector('.widget-body');
+  if(body)body.innerHTML=renderExitCalcWidget();
+});
+})();
 
 // ── QQQ Buy / Sell Volume widget ──────────────────────────
 function renderQqqVolume() {
@@ -6088,27 +6727,15 @@ function renderClockWidget() {
 // ═══════════════════════════════════════════════
 
 function renderGexChart(e) {
-  // Build the combined layout directly from exposed sub-functions:
-  // chart + GEX profile side-by-side, cockpit strip below.
-  // This avoids stripping secQqqOpening's section/details/summary wrapper
-  // which previously left orphan tags inside the widget body.
-  if (typeof window.secQqqTradingChart !== 'function') {
+  // Use the combined layout from secQqqOpening — chart + GEX profile side-by-side,
+  // cockpit strip, and options positioning, matching the reference dashboard.
+  if (typeof window.secQqqOpening !== 'function') {
     return '<div class="loading">Chart engine not loaded</div>';
   }
-  var html =
-    '<div class="qqq-top-grid">' +
-      '<div class="qqq-primary-chart">' +
-        window.secQqqTradingChart(e, true) +
-      '</div>' +
-      '<aside class="qqq-gex-profile" aria-label="Synchronized GEX strike profile" ' +
-        'title="Strike price shares the QQQ chart scale.">' +
-        window.secQqqGexProfile(e, true) +
-      '</aside>' +
-    '</div>' +
-    '<div id="qqq-cockpit-block" class="qqq-call-strip">' +
-      window.secQuadrantCockpit(e) +
-    '</div>' +
-    (typeof window.secQqqPositioning === 'function' ? window.secQqqPositioning(e) : '');
+  // secQqqOpening returns a <section class="wide qqq-market-card"> wrapper.
+  // Extract just the inner body for the widget by stripping the outer section.
+  var full = window.secQqqOpening(e);
+  var html = full.replace(/^<section[^>]*>/, '').replace(/<\/section>\s*$/, '');
 
   // Collapsible notebook panel at the bottom
   html += '<details class="gex-notebook-panel" style="flex-shrink:0;border-top:1px solid var(--line);margin-top:4px">';
@@ -6124,105 +6751,6 @@ function renderGexChart(e) {
       window.mountQqqChart(e);
     }
   }, 0);
-  return html;
-}
-
-function renderVolumeCandles(e) {
-  // Daily QQQ candles where candle WIDTH scales with total options volume.
-  // Thicker candle = heavier options activity that session.
-  var hist = (typeof FULL !== 'undefined' && FULL.length) ? FULL : [];
-  if (!hist.length) return '<div class="loading">No history data</div>';
-
-  // Collect daily data: price + options volume
-  var bars = [];
-  for (var i = 0; i < hist.length; i++) {
-    var h = hist[i];
-    var mk = {};
-    (h.watchlist || []).forEach(function(r) { mk[r.symbol] = r; });
-    var q = mk.QQQ || {};
-    var cl = Number(q.last);
-    if (!isFinite(cl) || cl <= 0) continue;
-    var mkt = (h.markets || {}).QQQ || {};
-    var pc = Number(mkt.prev_close);
-    var op = isFinite(pc) && pc > 0 ? pc : cl;
-    var tf = h.time_footprint || {};
-    var totals = tf.totals || {};
-    var vol = Number(totals.vol) || 0;
-    var dt = String(h.entry_date || '').slice(5);
-    var sess = String(h.session || '').toLowerCase();
-    bars.push({ o: op, c: cl, h: Math.max(op, cl) * 1.002, l: Math.min(op, cl) * 0.998, vol: vol, label: dt + (sess === 'pm' ? 'p' : '') });
-  }
-  if (!bars.length) return '<div class="loading">No QQQ price data</div>';
-
-  // Chart dimensions
-  var W = 560, candleH = 220, volH = 60, padL = 50, padR = 10, padT = 10, padB = 20;
-  var totalH = candleH + volH + padT + padB + 10;
-  var plotW = W - padL - padR;
-
-  // Price range
-  var pMin = Infinity, pMax = -Infinity;
-  bars.forEach(function(b) { if (b.l < pMin) pMin = b.l; if (b.h > pMax) pMax = b.h; });
-  var pSpan = Math.max(1, pMax - pMin);
-  pMin -= pSpan * 0.03; pMax += pSpan * 0.03; pSpan = pMax - pMin;
-
-  // Volume range
-  var vMax = Math.max.apply(null, bars.map(function(b) { return b.vol; })) || 1;
-
-  // Width scaling: each bar gets width proportional to its volume, with min/max
-  var minW = 4, maxW = Math.min(28, plotW / bars.length * 1.8);
-  var totalVol = bars.reduce(function(s, b) { return s + b.vol; }, 0) || bars.length;
-
-  function pY(p) { return padT + (1 - (p - pMin) / pSpan) * candleH; }
-  function vY(v) { return candleH + padT + 10 + volH * (1 - v / vMax); }
-
-  var svg = '';
-
-  // Price grid lines
-  var nGrid = 5;
-  for (var gi = 0; gi <= nGrid; gi++) {
-    var gp = pMin + (pSpan * gi / nGrid);
-    var gy = pY(gp);
-    svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="#171722" stroke-width="0.5"/>';
-    svg += '<text x="' + (padL - 4) + '" y="' + (gy + 3).toFixed(1) + '" text-anchor="end" fill="#55556b" font-size="9">$' + gp.toFixed(0) + '</text>';
-  }
-
-  // Draw candles
-  var x = padL;
-  bars.forEach(function(b, idx) {
-    var w = Math.max(minW, Math.min(maxW, (b.vol / totalVol) * plotW * bars.length * 0.7));
-    if (x + w > W - padR) w = Math.max(minW, W - padR - x);
-    var up = b.c >= b.o;
-    var color = up ? '#00e676' : '#ff453a';
-    var bodyTop = pY(Math.max(b.o, b.c));
-    var bodyBot = pY(Math.min(b.o, b.c));
-    var bodyH = Math.max(1, bodyBot - bodyTop);
-    var wickTop = pY(b.h);
-    var wickBot = pY(b.l);
-    var cx = x + w / 2;
-
-    // Wick
-    svg += '<line x1="' + cx.toFixed(1) + '" x2="' + cx.toFixed(1) + '" y1="' + wickTop.toFixed(1) + '" y2="' + wickBot.toFixed(1) + '" stroke="' + color + '" stroke-width="1"/>';
-    // Body
-    svg += '<rect x="' + x.toFixed(1) + '" y="' + bodyTop.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + bodyH.toFixed(1) + '" fill="' + color + '" opacity="0.88" rx="1">' +
-      '<title>' + b.label + ' O:$' + b.o.toFixed(2) + ' C:$' + b.c.toFixed(2) + ' Vol:' + (b.vol ? b.vol.toLocaleString() : 'N/A') + '</title></rect>';
-    // Volume bar below
-    var vy = vY(b.vol);
-    var vBarH = candleH + padT + 10 + volH - vy;
-    svg += '<rect x="' + x.toFixed(1) + '" y="' + vy.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(0.5, vBarH).toFixed(1) + '" fill="' + color + '" opacity="0.35" rx="1"/>';
-
-    x += w + 2;
-  });
-
-  // Separator line between candles and volume
-  svg += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + (candleH + padT + 5) + '" y2="' + (candleH + padT + 5) + '" stroke="#343444" stroke-width="0.5"/>';
-  // Volume label
-  svg += '<text x="' + padL + '" y="' + (candleH + padT + 10 + volH + 12) + '" fill="#55556b" font-size="8">OPTIONS VOL</text>';
-
-  var html = '<div style="overflow-x:auto">';
-  html += '<svg viewBox="0 0 ' + W + ' ' + totalH + '" style="width:100%;min-width:400px;height:auto;display:block">';
-  html += svg;
-  html += '</svg></div>';
-  html += '<div style="padding:4px 8px;font-size:9px;color:var(--faint)">Candle width ∝ total options volume · wider = heavier activity · ' + bars.length + ' sessions</div>';
   return html;
 }
 
@@ -6741,7 +7269,7 @@ var CATEGORIES = [
     { id:'put-call-structure',    name:'Put / Call Structure',     question:'What is the put/call balance?',                dw:340, dh:240 },
     { id:'implied-distribution',  name:'Implied Distribution',    question:'What does the market imply about outcomes?',    dw:400, dh:300 },
     { id:'gex-chart',             name:'GEX Chart',               question:'GEX levels + QQQ price + synchronized GEX profile', dw:900, dh:500 },
-    { id:'volume-candles',        name:'Volume Candles',           question:'Daily QQQ candles sized by options volume',        dw:600, dh:400 },
+    { id:'qqq-exit-calc',         name:'QQQ Stop / Take Profit',  question:'What are my stop-loss and take-profit levels for this contract?', dw:820, dh:600 },
   ]},
   { id:'volatility', label:'Volatility & Movement', question:'How much movement is implied, realized, spent, or still available?', widgets:[
     { id:'volatility-regime',     name:'Volatility Regime',       question:'Is volatility high, low, expanding?',           dw:340, dh:240 },
@@ -6780,6 +7308,10 @@ var CATEGORIES = [
   { id:'process', label:'Process & Review', question:'What was observed, why did it matter, and what was learned?', widgets:[
     { id:'thesis-builder',        name:'Thesis Builder',          question:'What is the current thesis?',                   dw:400, dh:320 },
     { id:'trading-notebook',      name:'Trading Notebook',        question:'Journal, notes, scorecard & observations',      dw:440, dh:380 },
+  ]},
+  { id:'performance', label:'Performance', question:'How am I performing and what patterns emerge from my trading history?', widgets:[
+    { id:'perf-performance',  name:'Performance',  question:'Full performance picture: equity, win rate, edges, timing, distribution',  dw:680, dh:860 },
+    { id:'perf-discipline',   name:'Discipline',   question:'Revenge trades, streaks, rules, and session patterns',                     dw:680, dh:560 },
   ]},
   { id:'utilities', label:'Utilities', question:'Supporting tools', widgets:[
     { id:'watchlist',             name:'Watchlist',               question:'Which assets am I tracking?',                   dw:300, dh:400 },
