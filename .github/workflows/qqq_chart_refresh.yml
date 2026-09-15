@@ -45,6 +45,7 @@ jobs:
           git config user.name "qqq-logger-bot"
           git config user.email "actions@github.com"
           git add market-dash/gex_live.json market-dash/gex_intraday.json market-dash/auction_live.json
+          if [ -f market-dash/qqq_candle_history.json ]; then git add market-dash/qqq_candle_history.json; fi
           git diff --cached --quiet && exit 0
           git commit -m "Refresh live QQQ chart $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           git pull --rebase --autostash origin main

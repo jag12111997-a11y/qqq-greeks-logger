@@ -748,7 +748,8 @@ def push_live_snapshots():
             _git("config", "user.name", "qqq-logger-bot")
             _git("config", "user.email", "actions@github.com")
             _git_ready[0] = True
-        _git("add", GEX_LIVE_PATH, GEX_INTRADAY_PATH, AUCTION_LIVE_PATH)
+        paths = [GEX_LIVE_PATH, GEX_INTRADAY_PATH, AUCTION_LIVE_PATH, "market-dash/qqq_candle_history.json"]
+        _git("add", *[path for path in paths if os.path.exists(path)])
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%SZ")
         c = _git("commit", "-m", f"live snapshot {stamp}")
         if "nothing to commit" in (c.stdout + c.stderr).lower():
@@ -792,6 +793,15 @@ def main():
     if not API_KEY or not API_SECRET:
         print("STOP: ALPACA_API_KEY / ALPACA_API_SECRET not set.")
         return
+
+    # Once per run, fetch history for every chart interval. A failed data request
+    # leaves the prior file intact and must not stop options logging.
+    try:
+        from qqq_candle_history import update_history
+        history = update_history(HEADERS)
+        print(f"Candle history: {len(history['daily'])} daily, {len(history['minute'])} minute bars")
+    except Exception as exc:
+        print(f"Candle history skipped (keeping previous data): {exc}")
 
     # Single snapshot mode. Calls AND puts (separate files) + live GEX.
     if INTERVAL_SECONDS <= 0 or DURATION_SECONDS <= 0:
