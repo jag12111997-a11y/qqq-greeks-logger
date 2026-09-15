@@ -489,9 +489,21 @@ var HISTORY_DATA = []; // loaded async from history_data.json
 
 // Load history data from external JSON file (async)
 function loadHistoryData() {
+  // Numeric-looking null becomes NaN so .toFixed() keeps working (server writes JSON-safe null; JS code expects NaN)
+  function nullsToNaN(obj) {
+    if (obj === null) return NaN;
+    if (Array.isArray(obj)) return obj.map(nullsToNaN);
+    if (obj && typeof obj === 'object') {
+      var out = {};
+      for (var k in obj) out[k] = nullsToNaN(obj[k]);
+      return out;
+    }
+    return obj;
+  }
   fetch("history_data.json?v=" + Date.now())
     .then(function(r) { return r.ok ? r.json() : Promise.reject("HTTP " + r.status); })
     .then(function(data) {
+      data = nullsToNaN(data);
       HISTORY_DATA = data;
       H = data;
       window.MARKET_DASH_HISTORY = data;
