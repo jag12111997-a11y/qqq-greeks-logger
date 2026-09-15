@@ -518,6 +518,7 @@ function loadHistoryData() {
       FULL = H.filter(function(x) { return !x.partial; });
       if (!FULL.length) FULL = H.slice();
 
+      syncDashboardHistory(H);
       DATA_LOADED = true;
       DATA_ERROR = null;
       renderAllWidgets();
@@ -548,7 +549,7 @@ function renderAllWidgets() {
     lay.widgets.forEach(function(w) {
       var el = document.querySelector('.widget[data-wid="' + w.id + '"] .widget-body');
       if (el) {
-        el.innerHTML = renderWidgetContent(w.definitionId);
+        el.innerHTML = renderWidgetContent(w.definitionId, w);
       }
     });
   }, 250);
@@ -707,6 +708,14 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   var FULL = H.filter(function (x) { return !x.partial; });
   if (!FULL.length) FULL = H.slice();
   var idx = FULL.length - 1;
+
+  // Refresh the engine's private history after the asynchronous fetch completes.
+  window.syncDashboardHistory = function(entries) {
+    H = entries.slice();
+    FULL = H.filter(function(x) { return !x.partial; });
+    if (!FULL.length) FULL = H.slice();
+    idx = FULL.length - 1;
+  };
 
   // ---------- freshness: blank slow daily sources when a PM session
   //            re-fetched the SAME thing the morning already logged ----------
@@ -4466,7 +4475,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // Chart label overlay removed (2026-08-31) — reverted to plain TradingView chart.
 
   function updateMountedQqqQuote(e) {
-    if (idx !== FULL.length - 1) return;
+    if (!e || idx !== FULL.length - 1) return;
     var M = qqqChartModel(e);
     var leverageMeter = document.getElementById("qqq-leverage-meter");
     if (leverageMeter) {
@@ -6436,7 +6445,16 @@ var PERF_WIDGETS = {
 };
 
 
-function renderWidgetContent(defId) {
+function renderWidgetContent(defId, widget) {
+  try {
+    return renderWidgetBody(defId, widget);
+  } catch (err) {
+    console.error('Could not render widget ' + defId, err);
+    return '<div class="loading">This widget could not load. You can remove it or use another widget.</div>';
+  }
+}
+
+function renderWidgetBody(defId, widget) {
   if (DATA_ERROR) {
     return '<div class="loading">' + esc(DATA_ERROR) + '</div>';
   }
@@ -6529,7 +6547,7 @@ function renderWidgetContent(defId) {
     case 'notes':                return renderNotes(e);
     case 'gex-chart':            return renderGexChart(e);
     case 'earnings-events':      return stripSec(secWeek(e));
-        case 'qqq-exit-calc':     return renderExitCalcWidget();
+        case 'qqq-exit-calc':     return renderExitCalcWidget(widget);
         // ── Performance widgets v5 ──
     case 'perf-performance':  return PERF_WIDGETS['perf-performance']();
     case 'perf-discipline':   return PERF_WIDGETS['perf-discipline']();
@@ -6550,11 +6568,7 @@ function _exitEstimate(mid,delta,gamma,move){
 }
 function _exitMoney(v){return v==null?'—':'$'+v.toFixed(2);}
 
-function renderExitCalcWidget(){
-  // Get saved state from widget
-  var wEl=document.querySelector('[data-def-id="qqq-exit-calc"]');
-  var wid=wEl?wEl.dataset.wid:'';
-  var w=wid?activeLayout().widgets.find(function(x){return x.id===wid;}):null;
+function renderExitCalcWidget(w){
   var saved=(w&&w.exitCalcState)||{};
   var selIdx=saved.contractIdx||0;
   var entryVal=saved.entry||'';
@@ -6629,6 +6643,8 @@ function _exitCalcResults(cur,entryVal,movesVal){
   return t;
 }
 
+window.renderExitCalcWidget = renderExitCalcWidget;
+
 // Event delegation for the exit calc widget
 document.addEventListener('input',function(ev){
   var root=ev.target.closest('[data-exit-root]');
@@ -6674,7 +6690,7 @@ document.addEventListener('change',function(ev){
   save();
   // Re-render the whole body to update greeks display
   var body=widget.querySelector('.widget-body');
-  if(body)body.innerHTML=renderExitCalcWidget();
+  if(body)body.innerHTML=renderExitCalcWidget(w);
 });
 })();
 
@@ -7573,7 +7589,7 @@ function renderCanvas() {
     html += '</div></div>'; // controls, header
 
     // Body
-    html += `<div class="widget-body">${renderWidgetContent(w.definitionId)}</div>`;
+    html += `<div class="widget-body">${renderWidgetContent(w.definitionId, w)}</div>`;
 
     // Resize handles — all 4 corners
     html += `<div class="resize-handle se" onmousedown="startResize(event, '${w.id}', 'se')"><svg viewBox="0 0 16 16" style="width:100%;height:100%;color:rgba(140,40,40,0.4)"><path d="M14 14L14 6M14 14L6 14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>`;
