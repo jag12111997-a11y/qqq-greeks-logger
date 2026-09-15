@@ -549,7 +549,17 @@ function renderAllWidgets() {
     lay.widgets.forEach(function(w) {
       var el = document.querySelector('.widget[data-wid="' + w.id + '"] .widget-body');
       if (el) {
-        el.innerHTML = renderWidgetContent(w.definitionId, w);
+        // Do not replace controls while the user is typing or selecting text.
+        if (el.contains(document.activeElement)) return;
+        var notebook = el.querySelector('[data-notebook-root]');
+        var panel = el.querySelector('.gex-notebook-panel');
+        var fresh = document.createElement('div');
+        fresh.innerHTML = renderWidgetContent(w.definitionId, w);
+        var replacement = fresh.querySelector('[data-notebook-root]');
+        if (notebook && replacement) replacement.replaceWith(notebook);
+        var freshPanel = fresh.querySelector('.gex-notebook-panel');
+        if (panel && freshPanel) freshPanel.open = panel.open;
+        el.replaceChildren.apply(el, Array.from(fresh.childNodes));
       }
     });
   }, 250);
@@ -6537,15 +6547,15 @@ function renderWidgetBody(defId, widget) {
     case 'implied-distribution': return renderImpliedDistribution(e);
     case 'similar-sessions':     return renderSimilarSessions(e);
     case 'regime-history':       return renderRegimeHistory(e);
-    case 'observation-notes':    return renderNotebook(e);
-    case 'trade-journal':        return renderNotebook(e);
-    case 'process-scorecard':    return renderNotebook(e);
-    case 'trading-notebook':     return renderNotebook(e);
+    case 'observation-notes':    return renderNotebook(e, widget);
+    case 'trade-journal':        return renderNotebook(e, widget);
+    case 'process-scorecard':    return renderNotebook(e, widget);
+    case 'trading-notebook':     return renderNotebook(e, widget);
     case 'qqq-volume':           return renderQqqVolume();
     case 'alerts':               return renderAlerts(e);
     case 'clock-session':        return renderClockWidget();
-    case 'notes':                return renderNotes(e);
-    case 'gex-chart':            return renderGexChart(e);
+    case 'notes':                return renderNotes(e, widget);
+    case 'gex-chart':            return renderGexChart(e, widget);
     case 'earnings-events':      return stripSec(secWeek(e));
         case 'qqq-exit-calc':     return renderExitCalcWidget(widget);
         // ── Performance widgets v5 ──
@@ -6789,7 +6799,7 @@ function renderClockWidget() {
 // གཤིན་རྗེ — GAP WIDGETS (14 new)
 // ═══════════════════════════════════════════════
 
-function renderGexChart(e) {
+function renderGexChart(e, widget) {
   // Use the combined layout from secQqqOpening — chart + GEX profile side-by-side,
   // cockpit strip, and options positioning, matching the reference dashboard.
   if (typeof window.secQqqOpening !== 'function') {
@@ -6804,7 +6814,7 @@ function renderGexChart(e) {
   html += '<details class="gex-notebook-panel" style="flex-shrink:0;border-top:1px solid var(--line);margin-top:4px">';
   html += '<summary style="cursor:pointer;padding:4px 8px;font-size:10px;color:var(--accent);letter-spacing:1px;user-select:none;list-style:none;display:flex;align-items:center;gap:6px">';
   html += '<span style="font-size:8px">▶</span> TRADING NOTEBOOK</summary>';
-  html += '<div style="padding:6px 8px;max-height:220px;overflow-y:auto">' + renderNotebook(e) + '</div>';
+  html += '<div style="padding:6px 8px;max-height:220px;overflow-y:auto">' + renderNotebook(e, widget) + '</div>';
   html += '</details>';
 
   // mountQqqChart needs #qqq-tv-chart in the DOM. Since this returns a string
@@ -7107,16 +7117,16 @@ function renderRegimeHistory(e) {
   return html;
 }
 
-function renderObservationNotes(e) {
-  return renderNotebook(e);
+function renderObservationNotes(e, widget) {
+  return renderNotebook(e, widget);
 }
 
-function renderTradeJournal(e) {
-  return renderNotebook(e);
+function renderTradeJournal(e, widget) {
+  return renderNotebook(e, widget);
 }
 
-function renderProcessScorecard(e) {
-  return renderNotebook(e);
+function renderProcessScorecard(e, widget) {
+  return renderNotebook(e, widget);
 }
 
 function renderAlerts(e) {
@@ -7211,82 +7221,108 @@ function removeCustomAlert(label) {
   } catch(ex) {}
 }
 
-function renderNotes(e) {
-  return renderNotebook(e);
+function renderNotes(e, widget) {
+  return renderNotebook(e, widget);
 }
 
 // ── Combined Notebook Widget (Trade Journal + Notes + Scorecard + Observations) ──
-function renderNotebook(e) {
-  var html = '';
-  html += '<div class="notebook-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:8px;flex-shrink:0">';
-  var tabs = [
-    { id:'nb-journal', label:'Journal' },
-    { id:'nb-notes', label:'Notes' },
-    { id:'nb-scorecard', label:'Scorecard' },
-    { id:'nb-observations', label:'Observations' }
-  ];
-  tabs.forEach(function(t, i) {
-    html += '<button onclick="switchNotebookTab(\'' + t.id + '\')" id="nbt-' + t.id + '" style="flex:1;padding:6px 4px;border:none;background:' + (i===0?'rgba(0,229,204,0.10)':'transparent') + ';color:' + (i===0?'var(--accent)':'var(--dim)') + ';font-size:10px;letter-spacing:0.5px;cursor:pointer;font-family:var(--font);border-bottom:2px solid ' + (i===0?'var(--accent)':'transparent') + '">' + t.label + '</button>';
+var notebookDrafts = Object.create(null);
+function notebookAttr(value) { return esc(value == null ? '' : String(value)).replace(/"/g, '&quot;'); }
+function readNotebookDraft(key, date) {
+  if (notebookDrafts[key]) return notebookDrafts[key];
+  var draft;
+  try { draft = JSON.parse(localStorage.getItem(key)); } catch (err) {}
+  if (!draft || typeof draft !== 'object' || Array.isArray(draft)) draft = {};
+  if (!draft.fields || typeof draft.fields !== 'object') draft.fields = {};
+  if (!draft.scores || typeof draft.scores !== 'object') draft.scores = {};
+  // Import the old Save-button notes without deleting the originals.
+  try {
+    if (draft.fields.notes == null) draft.fields.notes = localStorage.getItem('gshinrje-quicknotes') || '';
+    if (draft.fields.observations == null) draft.fields.observations = localStorage.getItem('gshinrje-notes-' + date) || '';
+  } catch (err) {}
+  notebookDrafts[key] = draft;
+  return draft;
+}
+function saveNotebookDraft(root) {
+  var key = root.dataset.notebookKey;
+  var draft = notebookDrafts[key];
+  var status = root.querySelector('[data-notebook-status]');
+  try {
+    localStorage.setItem(key, JSON.stringify(draft));
+    if (status) status.textContent = 'Saved in this browser';
+  } catch (err) {
+    if (status) status.textContent = 'Could not save. Copy your text before leaving this page.';
+  }
+}
+document.addEventListener('input', function(event) {
+  var field = event.target.closest('[data-notebook-field]');
+  if (!field) return;
+  var root = field.closest('[data-notebook-root]');
+  notebookDrafts[root.dataset.notebookKey].fields[field.dataset.notebookField] = field.value;
+  saveNotebookDraft(root);
+});
+function switchNotebookTab(button) {
+  var root = button.closest('[data-notebook-root]');
+  var tab = button.dataset.notebookTab;
+  notebookDrafts[root.dataset.notebookKey].tab = tab;
+  root.querySelectorAll('[data-notebook-pane]').forEach(function(pane) {
+    pane.hidden = pane.dataset.notebookPane !== tab;
   });
-  html += '</div>';
-
-  // Journal tab
-  html += '<div id="nb-journal" class="nb-pane" style="width:100%">';
+  root.querySelectorAll('[data-notebook-tab]').forEach(function(item) {
+    var selected = item.dataset.notebookTab === tab;
+    item.setAttribute('aria-selected', selected);
+    item.style.color = selected ? 'var(--accent)' : 'var(--dim)';
+    item.style.background = selected ? 'rgba(0,229,204,0.10)' : 'transparent';
+  });
+  saveNotebookDraft(root);
+}
+function scoreNotebook(button) {
+  var root = button.closest('[data-notebook-root]');
+  var name = button.dataset.notebookScore;
+  notebookDrafts[root.dataset.notebookKey].scores[name] = Number(button.dataset.score);
+  button.parentElement.querySelectorAll('button').forEach(function(item) {
+    var selected = item === button;
+    item.setAttribute('aria-pressed', selected);
+    item.style.background = selected ? 'var(--accent)' : 'var(--line)';
+    item.style.color = selected ? '#000' : 'var(--dim)';
+  });
+  saveNotebookDraft(root);
+}
+function renderNotebook(e, widget) {
+  var key = 'gshinrje-notebook-v1-' + (widget ? widget.id : 'shared');
+  var draft = readNotebookDraft(key, e.entry_date || 'today');
+  var tab = draft.tab || 'journal';
+  var controlStyle = 'width:100%;box-sizing:border-box;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:3px;padding:6px;font:11px ui-monospace,monospace';
+  function textarea(field, placeholder, height) {
+    return '<textarea aria-label="' + notebookAttr(placeholder) + '" data-notebook-field="' + field + '" placeholder="' + notebookAttr(placeholder) + '" style="' + controlStyle + ';height:' + height + 'px;resize:vertical">' + esc(draft.fields[field] || '') + '</textarea>';
+  }
+  function pane(name) { return '<div data-notebook-pane="' + name + '"' + (name !== tab ? ' hidden' : '') + '>'; }
+  var html = '<div data-notebook-root data-notebook-key="' + notebookAttr(key) + '">';
+  html += '<div class="notebook-tabs" role="tablist" aria-label="Notebook sections" style="display:flex;border-bottom:1px solid var(--line);margin-bottom:8px">';
+  [['journal','Journal'],['notes','Notes'],['scorecard','Scorecard'],['observations','Observations']].forEach(function(item) {
+    var selected = item[0] === tab;
+    html += '<button role="tab" aria-selected="' + selected + '" data-notebook-tab="' + item[0] + '" onclick="switchNotebookTab(this)" style="flex:1;padding:6px 4px;border:none;background:' + (selected ? 'rgba(0,229,204,0.10)' : 'transparent') + ';color:' + (selected ? 'var(--accent)' : 'var(--dim)') + ';cursor:pointer">' + item[1] + '</button>';
+  });
+  html += '</div>' + pane('journal');
   html += '<div style="font-size:11px;color:var(--dim);margin-bottom:6px">' + esc(e.entry_date || '') + ' · ' + esc(e.session || '') + '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">';
-  ['Ticker','Direction','Entry','Exit','Size','P/L'].forEach(function(f) {
-    html += '<input placeholder="' + f + '" style="background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:3px;padding:3px 5px;font-size:10px" />';
+  ['Ticker','Direction','Entry','Exit','Size','P/L'].forEach(function(field) {
+    html += '<input aria-label="' + field + '" data-notebook-field="' + field + '" placeholder="' + field + '" value="' + notebookAttr(draft.fields[field]) + '" style="' + controlStyle + '" />';
   });
-  html += '</div>';
-  html += '<textarea placeholder="Thesis & notes..." style="width:100%;height:50px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:3px;padding:5px;font:10px ui-monospace,monospace;resize:vertical"></textarea>';
-  var qqq = (e.markets || {}).QQQ || {};
-  var vix = (e.markets || {}).VIX || {};
-  html += '<div style="margin-top:6px;font-size:10px;color:var(--dim)">QQQ $' + num(qqq.last||0) + ' (' + signed(qqq.pct_change||0) + '%) · VIX ' + num(vix.last||0) + '</div>';
-  html += '</div>';
-
-  // Notes tab
-  var notesKey = 'gshinrje-quicknotes';
-  html += '<div id="nb-notes" class="nb-pane" style="display:none;width:100%">';
-  html += '<textarea id="nbQuickNotes" style="width:100%;height:120px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:3px;padding:6px;font:11px ui-monospace,monospace;resize:vertical" placeholder="Scratch pad..."></textarea>';
-  html += '<div style="display:flex;justify-content:flex-end;margin-top:4px"><button onclick="(function(){try{localStorage.setItem(\'' + notesKey + '\',document.getElementById(\'nbQuickNotes\').value)}catch(e){}})()" style="background:var(--line);color:var(--txt);border:none;padding:3px 8px;border-radius:3px;font-size:10px;cursor:pointer">Save</button></div>';
-  html += '</div>';
-
-  // Scorecard tab
-  html += '<div id="nb-scorecard" class="nb-pane" style="display:none;width:100%">';
-  html += '<div style="font-size:10px;color:var(--dim);margin-bottom:6px">Rate your process (not your P/L)</div>';
-  [{n:'Waited for setup',i:'⏳'},{n:'Followed thesis',i:'🎯'},{n:'Sized correctly',i:'📐'},{n:'Managed risk',i:'🛡'},{n:'No revenge trades',i:'🧘'},{n:'Accepted outcome',i:'✓'}].forEach(function(item) {
-    html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--line)">';
-    html += '<span style="font-size:12px">' + item.i + '</span><span style="flex:1;font-size:11px">' + item.n + '</span>';
-    html += '<div style="display:flex;gap:2px">';
-    for (var s=1;s<=5;s++) html += '<div onclick="this.style.background=\'var(--accent)\';this.style.color=\'#000\'" style="width:14px;height:14px;border-radius:2px;background:var(--line);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--faint)" title="'+s+'/5">'+s+'</div>';
+  html += '</div>' + textarea('journal', 'Thesis & notes...', 100) + '</div>';
+  html += pane('notes') + textarea('notes', 'Scratch pad...', 120) + '</div>';
+  html += pane('scorecard') + '<div style="font-size:10px;color:var(--dim);margin-bottom:6px">Rate your process (not your P/L)</div>';
+  ['Waited for setup','Followed thesis','Sized correctly','Managed risk','No revenge trades','Accepted outcome'].forEach(function(name) {
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0"><span style="flex:1;font-size:11px">' + name + '</span><div style="display:flex;gap:2px">';
+    for (var score = 1; score <= 5; score++) {
+      var selected = draft.scores[name] === score;
+      html += '<button aria-label="' + name + ': ' + score + '/5" aria-pressed="' + selected + '" data-notebook-score="' + name + '" data-score="' + score + '" onclick="scoreNotebook(this)" style="border:none;border-radius:2px;cursor:pointer;background:' + (selected ? 'var(--accent)' : 'var(--line)') + ';color:' + (selected ? '#000' : 'var(--dim)') + '">' + score + '</button>';
+    }
     html += '</div></div>';
   });
-  html += '</div>';
-
-  // Observations tab
-  var obsKey = 'gshinrje-notes-' + (e.entry_date || 'today');
-  html += '<div id="nb-observations" class="nb-pane" style="display:none;width:100%">';
-  html += '<div style="font-size:10px;color:var(--dim);margin-bottom:4px">Session: ' + esc(e.entry_date||'') + ' ' + esc(e.session||'') + '</div>';
-  html += '<textarea id="nbObsNotes" style="width:100%;height:100px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:3px;padding:6px;font:11px ui-monospace,monospace;resize:vertical" placeholder="What do you notice?"></textarea>';
-  html += '<div style="display:flex;justify-content:flex-end;margin-top:4px"><button onclick="(function(){try{localStorage.setItem(\'' + obsKey + '\',document.getElementById(\'nbObsNotes\').value)}catch(e){}})()" style="background:var(--line);color:var(--txt);border:none;padding:3px 8px;border-radius:3px;font-size:10px;cursor:pointer">Save</button></div>';
-  html += '</div>';
-
-  // Load saved notes
-  html += '<script>try{var n=localStorage.getItem("' + notesKey + '");if(n&&document.getElementById("nbQuickNotes"))document.getElementById("nbQuickNotes").value=n}catch(e){}try{var o=localStorage.getItem("' + obsKey + '");if(o&&document.getElementById("nbObsNotes"))document.getElementById("nbObsNotes").value=o}catch(e){}<\/script>';
-
+  html += '</div>' + pane('observations') + textarea('observations', 'What do you notice?', 100) + '</div>';
+  html += '<div data-notebook-status role="status" style="font-size:10px;color:var(--dim);margin-top:6px">Drafts save automatically in this browser</div></div>';
   return html;
-}
-
-function switchNotebookTab(id) {
-  document.querySelectorAll('.nb-pane').forEach(function(p) { p.style.display = 'none'; });
-  var target = document.getElementById(id);
-  if (target) target.style.display = 'block';
-  document.querySelectorAll('.notebook-tabs button').forEach(function(b) {
-    var isActive = b.id === 'nbt-' + id;
-    b.style.background = isActive ? 'rgba(0,229,204,0.10)' : 'transparent';
-    b.style.color = isActive ? 'var(--accent)' : 'var(--dim)';
-    b.style.borderBottom = '2px solid ' + (isActive ? 'var(--accent)' : 'transparent');
-  });
 }
 
 
