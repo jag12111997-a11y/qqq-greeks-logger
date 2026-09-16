@@ -6600,22 +6600,6 @@ window.loadExitContracts = function() {
     }).catch(function() { EXIT_ERROR = 'Could not refresh options; showing the last available snapshot.'; renderAllWidgets(); });
 };
 var EXIT_HISTORY = {};
-var EXIT_LOCAL_FILES = {};
-var EXIT_LOCAL_NOTICE = '';
-function _exitChooseFiles(files){
-  var indexed={},count=0;
-  Array.from(files||[]).forEach(function(file){
-    var match=/^qqq_greeks_(calls|puts)_(\d{4}-\d\d-\d\d)_(am|pm)\.csv$/i.exec(file.name);
-    if(!match)return;
-    (indexed[match[2]]||(indexed[match[2]]=[])).push({file:file,kind:match[1].toLowerCase()==='calls'?'call':'put'});
-    count++;
-  });
-  if(!count){EXIT_LOCAL_NOTICE='No supported logs found. Select the data folder or dated qqq_greeks_calls / qqq_greeks_puts CSV files. Previous selection kept.';return;}
-  EXIT_LOCAL_FILES=indexed;
-  EXIT_HISTORY={};
-  EXIT_LOCAL_NOTICE='Computer logs selected: '+count+' files across '+Object.keys(indexed).length+' dates. Files stay in this browser tab. Re-select after logs change or the page reloads.';
-}
-
 function _exitTime(value,zone){
   if(!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(value||''))return NaN;
   var wall=Date.parse(value+':00Z'), utc=wall;
@@ -6636,13 +6620,7 @@ function _exitCsv(text,kind){
 }
 function _exitLoadHistory(date){
   if(EXIT_HISTORY[date])return;
-  var local=EXIT_LOCAL_FILES[date];
-  var state=EXIT_HISTORY[date]={loading:true,rows:[],failed:false,source:local?'computer':'website'};
-  if(local){
-    return Promise.all(local.map(function(item){
-      return item.file.text().then(function(text){return _exitCsv(text,item.kind);}).catch(function(){state.failed=true;return [];});
-    })).then(function(groups){state.rows=groups.flat();state.loading=false;renderAllWidgets();});
-  }
+  var state=EXIT_HISTORY[date]={loading:true,rows:[],failed:false};
   return Promise.all(['am','pm'].flatMap(function(session){return ['calls','puts'].map(function(side){
     var path='../../data/'+date+'/'+session+'/qqq_greeks_'+side+'_'+date+'_'+session+'.csv';
     return fetch(new URL(path,location.href).href+'?t='+Date.now()).then(function(r){if(r.status===404)return '';if(!r.ok)throw Error('History unavailable');return r.text();}).then(function(t){return t?_exitCsv(t,side==='calls'?'call':'put'):[];}).catch(function(){state.failed=true;return [];});
@@ -6714,11 +6692,6 @@ function renderExitCalcWidget(w){
   h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:10px">'+esc(label)+'<br>Indicative feed · published about every 5 minutes while logging · not streaming</div>';
   if(EXIT_ERROR)h+='<div style="color:var(--warn);font-size:11px">'+esc(EXIT_ERROR)+'</div>';
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><label>Entry date & time (Pacific)<input data-exit-time type="datetime-local" value="'+_exitAttr(saved.entryTime||'')+'" style="display:block;background:var(--bg2);color:var(--fg);border:1px solid var(--bdr);padding:8px"></label><button type="button" data-exit-apply-time>Use entry time</button><button type="button" data-exit-live aria-pressed="'+(!historical&&saved.spotMode!=='custom')+'">Live quotes</button></div>';
-  h+='<div style="margin:8px 0;font-size:12px;line-height:1.6;color:var(--fg,#f4eaea)"><label style="display:inline-block;padding:6px 10px;border:1px solid var(--bdr);border-radius:5px;cursor:pointer">Load computer logs<input type="file" data-exit-local-folder webkitdirectory multiple style="display:block;max-width:100%;font-size:11px"></label> <label style="display:inline-block;padding:6px 10px;border:1px solid var(--bdr);border-radius:5px">Or choose CSV files<input type="file" data-exit-local-files accept=".csv" multiple style="display:block;max-width:100%;font-size:11px"></label>';
-  if(Object.keys(EXIT_LOCAL_FILES).length)h+='<button type="button" data-exit-clear-local>Use website logs</button>';
-  h+='<div role="status">'+esc(EXIT_LOCAL_NOTICE||'Select option data history → data to use logs saved on your computer.')+'</div>';
-  if(historical)h+='<div>History source: '+(EXIT_LOCAL_FILES[(saved.entryTime||'').slice(0,10)]?'computer logs':'website logs (no computer files selected for this date)')+'</div>';
-  h+='</div>';
   if(historical)h+='<div style="color:var(--accent);margin:8px 0">Entry-time mode · '+esc(saved.entryTime)+' · '+'Pacific'+'<br>Your fill anchors the option value. Historical Greeks estimate immediate moves; time and IV are held unchanged.</div>';
   if(!contracts.length)return h+'<div role="status" aria-live="polite" style="margin:12px 0;padding:12px;border:1px solid var(--bdr,#553039);border-radius:6px;color:var(--fg,#f4eaea);font-size:12px;line-height:1.6;white-space:normal;overflow-wrap:anywhere">'+esc(historical?historical.message:'Waiting for options data.')+'</div></div>';
 
@@ -6799,20 +6772,8 @@ function _exitCalcResults(cur,entryVal,movesVal,saved){
 window.renderExitCalcWidget = renderExitCalcWidget;
 
 // Event delegation for the exit calc widget
-document.addEventListener('change',function(ev){
-  if(!ev.target.matches('[data-exit-local-folder], [data-exit-local-files]'))return;
-  if(!ev.target.files||!ev.target.files.length)return;
-  _exitChooseFiles(ev.target.files);
-  renderAllWidgets();
-});
-document.addEventListener('click',function(ev){
-  if(!ev.target.closest('[data-exit-clear-local]'))return;
-  EXIT_LOCAL_FILES={};EXIT_HISTORY={};EXIT_LOCAL_NOTICE='Using website logs.';
-  renderAllWidgets();
-});
-
 document.addEventListener('input',function(ev){
-  if(ev.target.matches('[data-exit-field="contract"], [data-exit-time], [data-exit-zone], [data-exit-local-folder], [data-exit-local-files]'))return;
+  if(ev.target.matches('[data-exit-field="contract"], [data-exit-time], [data-exit-zone]'))return;
   var root=ev.target.closest('[data-exit-root]');
   if(!root)return;
   var widget=root.closest('.widget');

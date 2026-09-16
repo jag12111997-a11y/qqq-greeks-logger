@@ -59,26 +59,3 @@ assert.match(c._exitHistorical(early).message,/No option history is available fo
 c.EXIT_HISTORY['2026-09-15'].failed=true;
 assert.match(c._exitHistorical(early).message,/Click Use entry time to retry/);
 console.log('PASS: early entry, coverage in Pacific, empty history, retry and visible status');
-(async function(){
-  let renders=0;
-  c.renderAllWidgets=()=>renders++;
-  const csv='run_time,spot,expiration,strike,bid,ask,delta,gamma\n2026-09-15 14:00:30,705,2026-09-15,705,1,1.2,-0.5,0.02';
-  const files=[{name:'qqq_greeks_puts_2026-09-15_am.csv',text:async()=>csv},{name:'unrelated.csv',text:async()=>{throw Error('must not read');}}];
-  c._exitChooseFiles(files);
-  assert.equal(Object.keys(c.EXIT_LOCAL_FILES).length,1);
-  assert.equal(c.EXIT_LOCAL_FILES['2026-09-15'].length,1);
-  await c._exitLoadHistory('2026-09-15');
-  assert.equal(c.EXIT_HISTORY['2026-09-15'].source,'computer');
-  assert.equal(c._exitHistorical(early).contracts.length,1);
-  assert.equal(c._exitHistorical(early).contracts[0].kind,'put');
-  assert.equal(renders,1);
-  assert.match(c.renderExitCalcWidget({exitCalcState:early}),/History source: computer logs/);
-  c._exitChooseFiles([{name:'wrong.csv'}]);
-  assert.equal(c.EXIT_LOCAL_FILES['2026-09-15'].length,1);
-  assert.match(c.EXIT_LOCAL_NOTICE,/Previous selection kept/);
-  c._exitChooseFiles([{name:files[0].name,text:async()=>'<html>not CSV</html>'}]);
-  await c._exitLoadHistory('2026-09-15');
-  assert.equal(c.EXIT_HISTORY['2026-09-15'].failed,true);
-  assert.equal(c.EXIT_HISTORY['2026-09-15'].rows.length,0);
-  console.log('PASS: local folder filtering, CSV reading, source selection, cache reset and malformed file errors');
-})().catch(error=>{console.error(error);process.exitCode=1;});
