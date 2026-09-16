@@ -320,6 +320,7 @@ def build_snapshot_rows(opt_type="call", spot=None):
             pass
 
         rows.append({
+            "quote_time": quote.get("t"),
             "run_time": now_utc.strftime("%Y-%m-%d %H:%M:%S"),
             "spot": round(spot, 2),
             "expiration": exp_date,
@@ -363,7 +364,7 @@ def write_rows(new_rows, opt_type="call"):
         w = csv.DictWriter(f, fieldnames=FIELDNAMES)
         if is_new:
             w.writeheader()
-        w.writerows(new_rows)
+        w.writerows({key: row.get(key, "") for key in FIELDNAMES} for row in new_rows)
 
 
 def compute_gex_live(call_rows, put_rows, spot):
@@ -748,7 +749,7 @@ def push_live_snapshots():
             _git("config", "user.name", "qqq-logger-bot")
             _git("config", "user.email", "actions@github.com")
             _git_ready[0] = True
-        paths = [GEX_LIVE_PATH, GEX_INTRADAY_PATH, AUCTION_LIVE_PATH, "market-dash/qqq_candle_history.json"]
+        paths = [GEX_LIVE_PATH, GEX_INTRADAY_PATH, AUCTION_LIVE_PATH, "market-dash/qqq_candle_history.json", "market-dash/options_latest.json"]
         _git("add", *[path for path in paths if os.path.exists(path)])
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%SZ")
         c = _git("commit", "-m", f"live snapshot {stamp}")
@@ -778,6 +779,12 @@ def snapshot_and_write(spot):
             append_gex_intraday(live_gex)
     except Exception as e:
         print(f"live GEX skipped (continuing): {e}")
+
+    try:
+        from qqq_option_snapshot import write_option_snapshot
+        write_option_snapshot(got.get("call"), got.get("put"))
+    except Exception as exc:
+        print(f"Options snapshot skipped (keeping previous data): {exc}")
 
     # Auction metrics — fully isolated; a failure here must not affect anything above.
     try:

@@ -6481,6 +6481,7 @@ function renderWidgetContent(defId, widget) {
 }
 
 function renderWidgetBody(defId, widget) {
+  if (defId === 'qqq-exit-calc') return renderExitCalcWidget(widget);
   if (DATA_ERROR) {
     return '<div class="loading">' + esc(DATA_ERROR) + '</div>';
   }
@@ -6584,8 +6585,33 @@ function renderWidgetBody(defId, widget) {
 
 // ── QQQ Exit Calculator widget ──────────────────────────
 (function(){
-// Contract data: Sep 11, 2026 snapshots (test data — expired)
-var EXIT_CONTRACTS=[{"id":"2026-09-11-calls-702.0","kind":"call","expiration":"2026-09-11","strike":702,"spot":716.99,"mid":15.255,"delta":0.9406,"gamma":0.0121,"iv":61.84,"theta":-0.265,"volume":183,"bid":15.12,"ask":15.39,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-702.0","kind":"put","expiration":"2026-09-11","strike":702,"spot":716.99,"mid":0.055,"delta":-0.0201,"gamma":0.00657,"iv":46.95,"theta":-0.055,"volume":8391,"bid":0.05,"ask":0.06,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-703.0","kind":"call","expiration":"2026-09-11","strike":703,"spot":716.99,"mid":14.145,"delta":0.9581,"gamma":0.0109,"iv":51.98,"theta":-0.155,"volume":110,"bid":13.8,"ask":14.49,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-703.0","kind":"put","expiration":"2026-09-11","strike":703,"spot":716.99,"mid":0.035,"delta":-0.0151,"gamma":0.00581,"iv":41.4,"theta":-0.035,"volume":11354,"bid":0.01,"ask":0.06,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-705.0","kind":"call","expiration":"2026-09-11","strike":705,"spot":716.99,"mid":12.2,"delta":0.9415,"gamma":0.01507,"iv":49.1,"theta":-0.21,"volume":605,"bid":12.09,"ask":12.31,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-705.0","kind":"put","expiration":"2026-09-11","strike":705,"spot":716.99,"mid":0.065,"delta":-0.027,"gamma":0.00989,"iv":39.88,"theta":-0.065,"volume":19357,"bid":0.06,"ask":0.07,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-706.0","kind":"call","expiration":"2026-09-11","strike":706,"spot":716.99,"mid":11.25,"delta":0.9279,"gamma":0.01802,"iv":48.28,"theta":-0.26,"volume":377,"bid":11.15,"ask":11.35,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-706.0","kind":"put","expiration":"2026-09-11","strike":706,"spot":716.99,"mid":0.025,"delta":-0.014,"gamma":0.00707,"iv":32.03,"theta":-0.025,"volume":16667,"bid":0.02,"ask":0.03,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-708.0","kind":"call","expiration":"2026-09-11","strike":708,"spot":716.99,"mid":9.235,"delta":0.9211,"gamma":0.02286,"iv":40.76,"theta":-0.245,"volume":1221,"bid":9.12,"ask":9.35,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-708.0","kind":"put","expiration":"2026-09-11","strike":708,"spot":716.99,"mid":0.045,"delta":-0.0255,"gamma":0.01277,"iv":29.46,"theta":-0.045,"volume":23788,"bid":0.04,"ask":0.05,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-710.0","kind":"call","expiration":"2026-09-11","strike":710,"spot":716.99,"mid":7.225,"delta":0.91,"gamma":0.03084,"iv":33.34,"theta":-0.235,"volume":7280,"bid":7.18,"ask":7.27,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-710.0","kind":"put","expiration":"2026-09-11","strike":710,"spot":716.99,"mid":0.085,"delta":-0.0482,"gamma":0.0236,"iv":26.86,"theta":-0.085,"volume":70435,"bid":0.08,"ask":0.09,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-712.0","kind":"call","expiration":"2026-09-11","strike":712,"spot":716.99,"mid":5.185,"delta":0.902,"gamma":0.04442,"iv":24.65,"theta":-0.195,"volume":8478,"bid":5.06,"ask":5.31,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-712.0","kind":"put","expiration":"2026-09-11","strike":712,"spot":716.99,"mid":0.155,"delta":-0.0893,"gamma":0.04316,"iv":23.7,"theta":-0.155,"volume":86237,"bid":0.15,"ask":0.16,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-713.0","kind":"call","expiration":"2026-09-11","strike":713,"spot":716.99,"mid":4.295,"delta":0.8533,"gamma":0.05994,"iv":24.27,"theta":-0.305,"volume":23679,"bid":4.23,"ask":4.36,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-713.0","kind":"put","expiration":"2026-09-11","strike":713,"spot":716.99,"mid":0.255,"delta":-0.1367,"gamma":0.05958,"iv":23.28,"theta":-0.255,"volume":120200,"bid":0.25,"ask":0.26,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-714.0","kind":"call","expiration":"2026-09-11","strike":714,"spot":716.99,"mid":3.335,"delta":0.818,"gamma":0.07945,"iv":21.07,"theta":-0.345,"volume":64792,"bid":3.29,"ask":3.38,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-714.0","kind":"put","expiration":"2026-09-11","strike":714,"spot":716.99,"mid":0.345,"delta":-0.186,"gamma":0.07919,"iv":21.42,"theta":-0.345,"volume":215595,"bid":0.34,"ask":0.35,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-715.0","kind":"call","expiration":"2026-09-11","strike":715,"spot":716.99,"mid":2.55,"delta":0.7299,"gamma":0.10051,"iv":20.84,"theta":-0.56,"volume":166550,"bid":2.52,"ask":2.58,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-715.0","kind":"put","expiration":"2026-09-11","strike":715,"spot":716.99,"mid":0.495,"delta":-0.2604,"gamma":0.10347,"iv":19.87,"theta":-0.495,"volume":235881,"bid":0.49,"ask":0.5,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-716.0","kind":"call","expiration":"2026-09-11","strike":716,"spot":716.99,"mid":1.76,"delta":0.6326,"gamma":0.12612,"iv":18.92,"theta":-0.77,"volume":216874,"bid":1.73,"ask":1.79,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-716.0","kind":"put","expiration":"2026-09-11","strike":716,"spot":716.99,"mid":0.735,"delta":-0.3651,"gamma":0.12815,"iv":18.58,"theta":-0.735,"volume":167334,"bid":0.73,"ask":0.74,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-717.0","kind":"call","expiration":"2026-09-11","strike":717,"spot":716.99,"mid":1.155,"delta":0.5015,"gamma":0.13809,"iv":18.3,"theta":-1.155,"volume":169338,"bid":1.15,"ask":1.16,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-717.0","kind":"put","expiration":"2026-09-11","strike":717,"spot":716.99,"mid":1.06,"delta":-0.4985,"gamma":0.1498,"iv":16.87,"theta":-1.05,"volume":75409,"bid":1.05,"ask":1.07,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-718.0","kind":"call","expiration":"2026-09-11","strike":718,"spot":716.99,"mid":0.635,"delta":0.3546,"gamma":0.14029,"iv":16.8,"theta":-0.635,"volume":116980,"bid":0.63,"ask":0.64,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-718.0","kind":"put","expiration":"2026-09-11","strike":718,"spot":716.99,"mid":1.625,"delta":-0.6461,"gamma":0.14091,"iv":16.72,"theta":-0.615,"volume":21577,"bid":1.62,"ask":1.63,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-719.0","kind":"call","expiration":"2026-09-11","strike":719,"spot":716.99,"mid":0.325,"delta":0.2202,"gamma":0.11499,"iv":16.32,"theta":-0.325,"volume":65468,"bid":0.32,"ask":0.33,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-719.0","kind":"put","expiration":"2026-09-11","strike":719,"spot":716.99,"mid":2.28,"delta":-0.7925,"gamma":0.11733,"iv":15.45,"theta":-0.27,"volume":6264,"bid":2.25,"ask":2.31,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-720.0","kind":"call","expiration":"2026-09-11","strike":720,"spot":716.99,"mid":0.195,"delta":0.1393,"gamma":0.08056,"iv":17.45,"theta":-0.195,"volume":62973,"bid":0.19,"ask":0.2,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-720.0","kind":"put","expiration":"2026-09-11","strike":720,"spot":716.99,"mid":3.21,"delta":-0.853,"gamma":0.08092,"iv":18.01,"theta":-0.2,"volume":4610,"bid":3.13,"ask":3.29,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-722.0","kind":"call","expiration":"2026-09-11","strike":722,"spot":716.99,"mid":0.045,"delta":0.0395,"gamma":0.03014,"iv":17.93,"theta":-0.045,"volume":15913,"bid":0.02,"ask":0.07,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-722.0","kind":"put","expiration":"2026-09-11","strike":722,"spot":716.99,"mid":5.005,"delta":-0.9871,"gamma":0.01493,"iv":14.14,"theta":0.005,"volume":1611,"bid":5.0,"ask":5.01,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-calls-725.0","kind":"call","expiration":"2026-09-11","strike":725,"spot":716.99,"mid":0.035,"delta":0.0234,"gamma":0.01386,"iv":25.3,"theta":-0.035,"volume":6870,"bid":0.03,"ask":0.04,"stamp":"2026-09-11 15:45:11"},{"id":"2026-09-11-puts-725.0","kind":"put","expiration":"2026-09-11","strike":725,"spot":716.99,"mid":8.025,"delta":-0.9791,"gamma":0.0129,"iv":24.72,"theta":-0.015,"volume":446,"bid":7.79,"ask":8.26,"stamp":"2026-09-11 15:45:11"}];
+var EXIT_CONTRACTS = [];
+var EXIT_UPDATED = null;
+var EXIT_ERROR = null;
+window.loadExitContracts = function() {
+  return fetch(new URL('../../market-dash/options_latest.json', location.href).href + '?t=' + Date.now())
+    .then(function(response) { if (!response.ok) throw new Error('Snapshot unavailable'); return response.json(); })
+    .then(function(data) {
+      if (!Array.isArray(data.contracts) || !data.contracts.length) throw new Error('No contracts');
+      EXIT_CONTRACTS = data.contracts;
+      EXIT_UPDATED = data.generated_utc;
+      EXIT_ERROR = null;
+      renderAllWidgets();
+    }).catch(function() { EXIT_ERROR = 'Could not refresh options; showing the last available snapshot.'; renderAllWidgets(); });
+};
+function _exitAttr(value) { return esc(String(value == null ? '' : value)).replace(/"/g, '&quot;'); }
+function _exitExpired(contract, now) {
+  if (!contract) return false;
+  var parts = new Intl.DateTimeFormat('en-US', {timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hourCycle:'h23'}).formatToParts(now || new Date());
+  var p={};parts.forEach(function(part){p[part.type]=part.value;});
+  var today=p.year+'-'+p.month+'-'+p.day;
+  return contract.expiration < today || (contract.expiration === today && Number(p.hour) >= 16);
+}
+function _exitSelected(root) {
+  var select=root.querySelector('[data-exit-field="contract"]');
+  var option=select && select.selectedOptions[0];
+  try { return option && option.dataset.contract ? JSON.parse(option.dataset.contract) : null; } catch(err) { return null; }
+}
 
 function _exitEstimate(mid,delta,gamma,move){
   var v=mid+delta*move+0.5*gamma*move*move;
@@ -6596,36 +6622,42 @@ function _exitMoney(v){return v==null?'—':'$'+v.toFixed(2);}
 
 function renderExitCalcWidget(w){
   var saved=(w&&w.exitCalcState)||{};
-  var selIdx=saved.contractIdx||0;
-  var entryVal=saved.entry||'';
+  var selectedId=saved.contractId||'';
+  var cur=EXIT_CONTRACTS.find(function(c){return c.id===selectedId;}) || null;
+  var entryVal=(saved.entryByContract||{})[selectedId] || (selectedId ? saved.entry : '') || '';
   var movesVal=saved.moves||'6.50, 3.25, 1.625, 0.81, 0.40';
 
   var h='<div class="exit-calc-widget" data-exit-root="1">';
-  h+='<div style="font-size:10px;letter-spacing:1.5px;color:var(--accent,#00e5cc);margin-bottom:6px">CONTRACT PICKER · HISTORICAL TEST</div>';
-  h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:10px">Sep 11, 2026 snapshots — expired test data</div>';
+  h+='<div style="font-size:10px;letter-spacing:1.5px;color:var(--accent,#00e5cc);margin-bottom:6px">CONTRACT PICKER · LATEST LOGGER SNAPSHOT</div>';
+  var age=EXIT_UPDATED ? (Date.now()-Date.parse(EXIT_UPDATED))/60000 : Infinity;
+  var label=EXIT_UPDATED ? 'Captured '+new Date(EXIT_UPDATED).toLocaleString()+(age>15?' · STALE':'') : 'Waiting for the first options snapshot';
+  h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:10px">'+esc(label)+'<br>Indicative feed · published about every 5 minutes while logging · not streaming</div>';
+  if(EXIT_ERROR)h+='<div style="color:var(--warn);font-size:11px">'+esc(EXIT_ERROR)+'</div>';
+  if(!EXIT_CONTRACTS.length)return h+'</div>';
 
   // Dropdown + entry in a row
   h+='<div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:8px">';
   h+='<label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">QQQ contract<select data-exit-field="contract" style="width:100%;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px system-ui">';
+  h+='<option value=""'+(!cur?' selected':'')+'>'+ (selectedId && !cur ? 'Selected contract unavailable — choose a contract' : 'Choose a contract') +'</option>';
   for(var i=0;i<EXIT_CONTRACTS.length;i++){
     var c=EXIT_CONTRACTS[i];
     var inc=c.mid===null||c.delta===null||c.gamma===null;
-    h+='<option value="'+i+'"'+(i===selIdx?' selected':'')+'>$'+c.strike+' '+c.kind.toUpperCase()+(inc?' · incomplete':'')+'</option>';
+    h+='<option value="'+_exitAttr(c.id)+'" data-contract="'+_exitAttr(JSON.stringify(c))+'"'+(c.id===selectedId?' selected':'')+'>$'+c.strike+' '+c.kind.toUpperCase()+' · '+esc(c.expiration)+(inc?' · incomplete':'')+(_exitExpired(c)?' · expired':'')+'</option>';
   }
   h+='</select></label>';
-  h+='<label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">Bought at ($/share)<input data-exit-field="entry" type="number" min="0" step="0.01" placeholder="Your fill" value="'+esc(entryVal)+'" style="width:100%;box-sizing:border-box;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px ui-monospace,monospace"></label>';
+  h+='<label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">Bought at ($/share)<input data-exit-field="entry" type="number" min="0" step="0.01" placeholder="Your fill" value="'+_exitAttr(entryVal)+'" style="width:100%;box-sizing:border-box;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px ui-monospace,monospace"></label>';
   h+='</div>';
 
   // Contract summary + spot
-  var cur=EXIT_CONTRACTS[selIdx];
-  h+='<div style="font-size:18px;font-weight:600;margin:6px 0">QQQ '+_exitMoney(cur.spot)+'<span style="font-size:10px;font-weight:400;color:var(--dim,#bda7ab);margin-left:8px">'+cur.stamp+' UTC</span></div>';
+  if(!cur) return h+'<div class="loading">Choose a contract to see its latest quote and estimates.</div></div>';
+  h+='<div style="font-size:18px;font-weight:600;margin:6px 0">QQQ '+_exitMoney(cur.spot)+'<span style="font-size:10px;font-weight:400;color:var(--dim,#bda7ab);margin-left:8px">'+esc(cur.stamp||'')+' UTC</span></div>';
   h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:8px">Mid '+_exitMoney(cur.mid)+' · '+(cur.kind==='call'?'Call: stop below QQQ, target above':'Put: stop above QQQ, target below')+'</div>';
 
   // Results
   h+='<div data-exit-results="1">'+_exitCalcResults(cur,entryVal,movesVal)+'</div>';
 
   // Dollar moves input
-  h+='<div style="margin-top:10px"><label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">QQQ dollar moves<input data-exit-field="moves" type="text" value="'+esc(movesVal)+'" style="width:100%;box-sizing:border-box;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px ui-monospace,monospace"></label></div>';
+  h+='<div style="margin-top:10px"><label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">QQQ dollar moves<input data-exit-field="moves" type="text" value="'+_exitAttr(movesVal)+'" style="width:100%;box-sizing:border-box;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px ui-monospace,monospace"></label></div>';
 
   // Greeks grid — always visible
   h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;font-size:11px;color:var(--dim,#bda7ab)">';
@@ -6641,6 +6673,8 @@ function renderExitCalcWidget(w){
 }
 
 function _exitCalcResults(cur,entryVal,movesVal){
+  if(!cur)return '<div class="loading">Choose a contract.</div>';
+  if(_exitExpired(cur))return '<div class="loading">This contract has expired. Choose a current expiration.</div>';
   if(cur.mid===null||cur.delta===null||cur.gamma===null)return '<div style="padding:16px 0;text-align:center;color:var(--dim,#bda7ab);font-size:12px">Incomplete quote — choose another contract.</div>';
   if(!entryVal||!String(entryVal).trim())return '<div style="padding:16px 0;text-align:center;color:var(--dim,#bda7ab);font-size:12px">Enter your purchase price ↑</div>';
   var entry=Number(entryVal);
@@ -6673,6 +6707,7 @@ window.renderExitCalcWidget = renderExitCalcWidget;
 
 // Event delegation for the exit calc widget
 document.addEventListener('input',function(ev){
+  if(ev.target.matches('[data-exit-field="contract"]'))return;
   var root=ev.target.closest('[data-exit-root]');
   if(!root)return;
   var widget=root.closest('.widget');
@@ -6685,16 +6720,19 @@ document.addEventListener('input',function(ev){
   var sel=root.querySelector('[data-exit-field="contract"]');
   var entryIn=root.querySelector('[data-exit-field="entry"]');
   var movesIn=root.querySelector('[data-exit-field="moves"]');
-  var idx=sel?Number(sel.value):0;
+  var contractId=sel?sel.value:'';
   var entryVal=entryIn?entryIn.value:'';
   var movesVal=movesIn?movesIn.value:'6.50, 3.25, 1.625, 0.81, 0.40';
 
   // Save state
-  w.exitCalcState={contractIdx:idx,entry:entryVal,moves:movesVal};
+  var saved=w.exitCalcState||{};
+  var entries=saved.entryByContract||{};
+  if(contractId)entries[contractId]=entryVal;
+  w.exitCalcState=Object.assign({},saved,{contractId:contractId,entry:entryVal,entryByContract:entries,moves:movesVal});
   save();
 
   // Re-render results only
-  var cur=EXIT_CONTRACTS[idx];
+  var cur=_exitSelected(root);
   var res=root.querySelector('[data-exit-results]');
   if(res)res.innerHTML=_exitCalcResults(cur,entryVal,movesVal);
 });
@@ -6709,10 +6747,13 @@ document.addEventListener('change',function(ev){
   var wid=widget.dataset.wid;
   var w=activeLayout().widgets.find(function(x){return x.id===wid;});
   if(!w)return;
-  var idx=Number(ev.target.value);
+  var contractId=ev.target.value;
   var entryIn=root.querySelector('[data-exit-field="entry"]');
   var movesIn=root.querySelector('[data-exit-field="moves"]');
-  w.exitCalcState={contractIdx:idx,entry:entryIn?entryIn.value:'',moves:movesIn?movesIn.value:'6.50, 3.25, 1.625, 0.81, 0.40'};
+  var saved=w.exitCalcState||{};
+  var entries=saved.entryByContract||{};
+  if(saved.contractId && entryIn)entries[saved.contractId]=entryIn.value;
+  w.exitCalcState=Object.assign({},saved,{contractId:contractId,entry:entries[contractId]||'',entryByContract:entries,moves:movesIn?movesIn.value:(saved.moves||'6.50, 3.25, 1.625, 0.81, 0.40')});
   save();
   // Re-render the whole body to update greeks display
   var body=widget.querySelector('.widget-body');
@@ -8163,6 +8204,8 @@ function lmRenameKey(e) {
 // ── Init ──
 render();
 loadHistoryData();
+loadExitContracts();
+setInterval(loadExitContracts, 60000);
 
 // Refresh clock widgets every second
 setInterval(function() {

@@ -1,0 +1,24 @@
+const assert = require('node:assert/strict');
+const fs = require('fs'), vm = require('vm');
+const html = fs.readFileSync(require('path').join(__dirname,'../yama-dashboard/dist/gshinrje.html'),'utf8');
+const code = html.slice(html.indexOf('var EXIT_CONTRACTS = []'),html.indexOf('// Event delegation for the exit calc widget'));
+class FixedDate extends Date { constructor(...args){super(...(args.length?args:['2026-09-15T15:00:00Z']));} static now(){return Date.parse('2026-09-15T15:00:00Z');} }
+const c=vm.createContext({Date:FixedDate,Intl,window:{},esc:x=>String(x??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')});
+vm.runInContext(code,c);
+const call={id:'2026-09-15-call-705',expiration:'2026-09-15',kind:'call',strike:705,spot:705,mid:2,delta:.5,gamma:.02,theta:-.2,iv:25,bid:1.9,ask:2.1,volume:100,stamp:'2026-09-15 14:59:00'};
+const put={...call,id:'2026-09-15-put-705',kind:'put',delta:-.5};
+c.EXIT_CONTRACTS=[call,put];c.EXIT_UPDATED='2026-09-15T14:59:00Z';
+const widget={exitCalcState:{contractId:call.id,entryByContract:{[call.id]:'1.25'},moves:'1'}};
+assert.match(c.renderExitCalcWidget(widget),/value="1.25"/);
+c.EXIT_CONTRACTS.reverse();
+assert.match(c.renderExitCalcWidget(widget),new RegExp('value="'+call.id+'"[^>]* selected'));
+assert.match(c._exitCalcResults(call,'1.25','1'),/QQQ \$706.00/);
+assert.match(c._exitCalcResults({...call,delta:null},'1.25','1'),/Incomplete quote/);
+assert.match(c._exitCalcResults({...call,expiration:'2026-09-14'},'1.25','1'),/has expired/);
+assert.equal(c._exitExpired(call,new Date('2026-09-15T19:59:00Z')),false);
+assert.equal(c._exitExpired(call,new Date('2026-09-15T20:00:00Z')),true);
+c.EXIT_CONTRACTS=[put];
+assert.match(c.renderExitCalcWidget(widget),/Selected contract unavailable/);
+assert.doesNotMatch(c.renderExitCalcWidget(widget),/Stop side/);
+assert.equal(widget.exitCalcState.entryByContract[call.id],'1.25');
+console.log('PASS: stable selection after reorder, saved entry, valid estimates, missing Greeks, expiry, missing contract');
