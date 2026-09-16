@@ -22,3 +22,15 @@ assert.match(c.renderExitCalcWidget(widget),/Selected contract unavailable/);
 assert.doesNotMatch(c.renderExitCalcWidget(widget),/Stop side/);
 assert.equal(widget.exitCalcState.entryByContract[call.id],'1.25');
 console.log('PASS: stable selection after reorder, saved entry, valid estimates, missing Greeks, expiry, missing contract');
+const custom={spotMode:'custom',customSpot:'700'};
+assert.match(c._exitCalcResults(call,'1.25','1',custom),/QQQ \$699.00/);
+assert.match(c._exitCalcResults(call,'1.25','1',custom),/QQQ \$701.00/);
+// A 701 target is four dollars BELOW the quote's 705 spot, not a $1 rally.
+assert.match(c._exitCalcResults(call,'1.25','1',custom),/\$0.16/);
+assert.match(c._exitCalcResults(put,'1.25','1',custom),/QQQ \$701.00/);
+assert.match(c._exitCalcResults(call,'1.25','1',{spotMode:'custom',customSpot:''}),/positive custom/);
+assert.match(c._exitCalcResults(call,'1.25','1',{spotMode:'live',customSpot:'700'}),/QQQ \$706.00/);
+c.EXIT_CONTRACTS=[call];
+assert.match(c.renderExitCalcWidget({exitCalcState:{...widget.exitCalcState,...custom}}),/aria-pressed="false"/);
+assert.match(c.renderExitCalcWidget(widget),/aria-pressed="true"/);
+console.log('PASS: custom levels, quote-relative valuation, invalid custom input and Live reset');

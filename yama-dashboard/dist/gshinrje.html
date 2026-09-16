@@ -6620,6 +6620,11 @@ function _exitEstimate(mid,delta,gamma,move){
 }
 function _exitMoney(v){return v==null?'—':'$'+v.toFixed(2);}
 
+function _exitSpot(cur,saved){
+  if(!saved || saved.spotMode!=='custom')return cur.spot;
+  var spot=Number(saved.customSpot);
+  return isFinite(spot)&&spot>0 ? spot : null;
+}
 function renderExitCalcWidget(w){
   var saved=(w&&w.exitCalcState)||{};
   var selectedId=saved.contractId||'';
@@ -6650,11 +6655,13 @@ function renderExitCalcWidget(w){
 
   // Contract summary + spot
   if(!cur) return h+'<div class="loading">Choose a contract to see its latest quote and estimates.</div></div>';
+  h+='<div style="display:flex;gap:8px;align-items:end;margin:10px 0"><label style="flex:1;color:var(--dim);font-size:11px">Custom QQQ spot price<input data-exit-field="spot" type="number" min="0" step="0.01" placeholder="Latest logged spot" value="'+_exitAttr(saved.spotMode==='custom'?saved.customSpot:'')+'" style="display:block;width:100%;box-sizing:border-box;background:var(--bg2);color:var(--fg);border:1px solid var(--bdr);border-radius:5px;padding:8px;margin-top:4px"></label><button type="button" data-exit-live="1" aria-pressed="'+(saved.spotMode!=='custom')+'" style="padding:8px;border:1px solid var(--bdr);border-radius:5px;background:var(--bg2);color:var(--accent)">'+(saved.spotMode==='custom'?'Live':'Live · On')+'</button></div>';
+  h+='<div data-exit-spot-status style="font-size:11px;color:var(--dim)">'+(saved.spotMode==='custom'?'Custom spot anchors the QQQ levels. Estimates still use the latest logged option quote and Greeks.':'Live uses the latest logged QQQ spot; quotes are not streaming.')+'</div>';
   h+='<div style="font-size:18px;font-weight:600;margin:6px 0">QQQ '+_exitMoney(cur.spot)+'<span style="font-size:10px;font-weight:400;color:var(--dim,#bda7ab);margin-left:8px">'+esc(cur.stamp||'')+' UTC</span></div>';
   h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:8px">Mid '+_exitMoney(cur.mid)+' · '+(cur.kind==='call'?'Call: stop below QQQ, target above':'Put: stop above QQQ, target below')+'</div>';
 
   // Results
-  h+='<div data-exit-results="1">'+_exitCalcResults(cur,entryVal,movesVal)+'</div>';
+  h+='<div data-exit-results="1">'+_exitCalcResults(cur,entryVal,movesVal,saved)+'</div>';
 
   // Dollar moves input
   h+='<div style="margin-top:10px"><label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">QQQ dollar moves<input data-exit-field="moves" type="text" value="'+_exitAttr(movesVal)+'" style="width:100%;box-sizing:border-box;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px ui-monospace,monospace"></label></div>';
@@ -6672,22 +6679,24 @@ function renderExitCalcWidget(w){
   return h;
 }
 
-function _exitCalcResults(cur,entryVal,movesVal){
+function _exitCalcResults(cur,entryVal,movesVal,saved){
   if(!cur)return '<div class="loading">Choose a contract.</div>';
   if(_exitExpired(cur))return '<div class="loading">This contract has expired. Choose a current expiration.</div>';
   if(cur.mid===null||cur.delta===null||cur.gamma===null)return '<div style="padding:16px 0;text-align:center;color:var(--dim,#bda7ab);font-size:12px">Incomplete quote — choose another contract.</div>';
   if(!entryVal||!String(entryVal).trim())return '<div style="padding:16px 0;text-align:center;color:var(--dim,#bda7ab);font-size:12px">Enter your purchase price ↑</div>';
   var entry=Number(entryVal);
   if(!isFinite(entry)||entry<=0)return '<div style="color:#ff8995;font-size:12px">Entry must be positive.</div>';
+  var spot=_exitSpot(cur,saved);
+  if(spot===null)return '<div class="loading">Enter a positive custom QQQ spot price or click Live.</div>';
   var raw=String(movesVal||'6.50, 3.25, 1.625, 0.81, 0.40').trim();
   var moves=raw.split(/[,;\s]+/).map(Number);
-  if(!raw||moves.some(function(m){return !isFinite(m)||m<=0||m>=cur.spot;}))return '<div style="color:#ff8995;font-size:12px">Invalid moves.</div>';
+  if(!raw||moves.some(function(m){return !isFinite(m)||m<=0||m>=spot;}))return '<div style="color:#ff8995;font-size:12px">Invalid moves.</div>';
 
   var price=function(n){return '$'+(Math.round((n+Number.EPSILON*Math.max(1,Math.abs(n)))*100)/100).toFixed(2);};
   var level=function(m,isStop){
     var s=isStop?-Math.sign(cur.delta)*m:Math.sign(cur.delta)*m;
-    var est=_exitEstimate(cur.mid,cur.delta,cur.gamma,s);
-    var qqq='QQQ '+price(cur.spot+s);
+    var est=_exitEstimate(cur.mid,cur.delta,cur.gamma,spot+s-cur.spot);
+    var qqq='QQQ '+price(spot+s);
     if(est===null)return '<td>'+qqq+'<small style="display:block;color:var(--dim,#bda7ab);font-size:9px;margin-top:2px">Outside range</small></td>';
     var pnl=est-entry;
     var cls=pnl<0?'color:#ff8995':'color:#00e5cc';
@@ -6726,6 +6735,13 @@ document.addEventListener('input',function(ev){
 
   // Save state
   var saved=w.exitCalcState||{};
+  if(ev.target.matches('[data-exit-field="spot"]')){
+    saved=Object.assign({},saved,{spotMode:'custom',customSpot:ev.target.value});
+    var live=root.querySelector('[data-exit-live]');
+    if(live){live.setAttribute('aria-pressed','false');live.textContent='Live';}
+    var status=root.querySelector('[data-exit-spot-status]');
+    if(status)status.textContent='Custom spot anchors the QQQ levels. Estimates still use the latest logged option quote and Greeks.';
+  }
   var entries=saved.entryByContract||{};
   if(contractId)entries[contractId]=entryVal;
   w.exitCalcState=Object.assign({},saved,{contractId:contractId,entry:entryVal,entryByContract:entries,moves:movesVal});
@@ -6734,7 +6750,20 @@ document.addEventListener('input',function(ev){
   // Re-render results only
   var cur=_exitSelected(root);
   var res=root.querySelector('[data-exit-results]');
-  if(res)res.innerHTML=_exitCalcResults(cur,entryVal,movesVal);
+  if(res)res.innerHTML=_exitCalcResults(cur,entryVal,movesVal,w.exitCalcState);
+});
+
+document.addEventListener('click',function(ev){
+  var button=ev.target.closest('[data-exit-live]');
+  if(!button)return;
+  var widget=button.closest('.widget');
+  if(!widget)return;
+  var w=activeLayout().widgets.find(function(x){return x.id===widget.dataset.wid;});
+  if(!w)return;
+  w.exitCalcState=Object.assign({},w.exitCalcState||{},{spotMode:'live',customSpot:''});
+  save();
+  var body=widget.querySelector('.widget-body');
+  if(body)body.innerHTML=renderExitCalcWidget(w);
 });
 
 // Also handle contract change (re-renders the whole widget to update greeks)
