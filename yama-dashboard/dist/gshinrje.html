@@ -6599,6 +6599,45 @@ window.loadExitContracts = function() {
       renderAllWidgets();
     }).catch(function() { EXIT_ERROR = 'Could not refresh options; showing the last available snapshot.'; renderAllWidgets(); });
 };
+var EXIT_HISTORY = {};
+function _exitTime(value,zone){
+  if(!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(value||''))return NaN;
+  var wall=Date.parse(value+':00Z'), utc=wall;
+  var fmt=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  function local(t){var p={};fmt.formatToParts(new Date(t)).forEach(function(x){p[x.type]=x.value;});return p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;}
+  for(var i=0;i<3;i++)utc+=wall-Date.parse(local(utc)+':00Z');
+  return local(utc)===value?utc:NaN;
+}
+function _exitCsv(text,kind){
+  // Logger CSV fields are scalar numbers, dates and timestamps, without commas.
+  var lines=text.trim().split(/\r?\n/), keys=lines.shift().split(',');
+  return lines.filter(Boolean).map(function(line){
+    var values=line.split(','),r={};keys.forEach(function(k,i){r[k]=values[i];});
+    function n(k){return r[k]!==''&&r[k]!=null&&isFinite(Number(r[k]))?Number(r[k]):null;}
+    return {id:r.expiration+'-'+kind+'-'+n('strike'),expiration:r.expiration,kind:kind,strike:n('strike'),spot:n('spot'),bid:n('bid'),ask:n('ask'),mid:n('bid')>0&&n('ask')>=n('bid')?(n('bid')+n('ask'))/2:null,delta:n('delta'),gamma:n('gamma'),theta:n('theta'),iv:n('iv')===null?null:n('iv')*100,volume:n('volume'),stamp:r.run_time};
+  });
+}
+function _exitLoadHistory(date){
+  if(EXIT_HISTORY[date])return;
+  var state=EXIT_HISTORY[date]={loading:true,rows:[],failed:false};
+  Promise.all(['am','pm'].flatMap(function(session){return ['calls','puts'].map(function(side){
+    var path='../../data/'+date+'/'+session+'/qqq_greeks_'+side+'_'+date+'_'+session+'.csv';
+    return fetch(new URL(path,location.href).href+'?t='+Date.now()).then(function(r){if(r.status===404)return '';if(!r.ok)throw Error('History unavailable');return r.text();}).then(function(t){return t?_exitCsv(t,side==='calls'?'call':'put'):[];}).catch(function(){state.failed=true;return [];});
+  });})).then(function(groups){state.rows=groups.flat();state.loading=false;renderAllWidgets();});
+}
+function _exitHistorical(saved){
+  var time=_exitTime(saved.entryTime,'America/Los_Angeles');
+  if(!isFinite(time))return {contracts:[],message:'Choose a valid entry date and time.'};
+  var date=saved.entryTime.slice(0,10), history=EXIT_HISTORY[date];
+  if(!history){_exitLoadHistory(date);return {contracts:[],message:'Loading historical option snapshots…'};}
+  if(history.loading)return {contracts:[],message:'Loading historical option snapshots…'};
+  var matches={};
+  history.rows.forEach(function(c){
+    var t=Date.parse(c.stamp.replace(' ','T')+'Z'),age=time-t;
+    if(age>=0&&age<=120000&&(!matches[c.id]||c.stamp>matches[c.id].stamp))matches[c.id]=c;
+  });
+  return {contracts:Object.values(matches),message:history.failed?'Some history could not be loaded. Click Use entry time to retry.':'No matching snapshot in the two minutes at or before this time. No latest-data substitute is used.'};
+}
 function _exitAttr(value) { return esc(String(value == null ? '' : value)).replace(/"/g, '&quot;'); }
 function _exitExpired(contract, now) {
   if (!contract) return false;
@@ -6628,35 +6667,41 @@ function _exitSpot(cur,saved){
 function renderExitCalcWidget(w){
   var saved=(w&&w.exitCalcState)||{};
   var selectedId=saved.contractId||'';
-  var cur=EXIT_CONTRACTS.find(function(c){return c.id===selectedId;}) || null;
+  var historical=saved.timeMode==='entry'?_exitHistorical(saved):null;
+  var contracts=historical?historical.contracts:EXIT_CONTRACTS;
+  var cur=contracts.find(function(c){return c.id===selectedId;}) || null;
   var entryVal=(saved.entryByContract||{})[selectedId] || (selectedId ? saved.entry : '') || '';
   var movesVal=saved.moves||'6.50, 3.25, 1.625, 0.81, 0.40';
 
   var h='<div class="exit-calc-widget" data-exit-root="1">';
-  h+='<div style="font-size:10px;letter-spacing:1.5px;color:var(--accent,#00e5cc);margin-bottom:6px">CONTRACT PICKER · LATEST LOGGER SNAPSHOT</div>';
+  h+='<div style="font-size:10px;letter-spacing:1.5px;color:var(--accent,#00e5cc);margin-bottom:6px">CONTRACT PICKER · '+(historical?'ENTRY-TIME SNAPSHOT':'LATEST LOGGER SNAPSHOT')+'</div>';
   var age=EXIT_UPDATED ? (Date.now()-Date.parse(EXIT_UPDATED))/60000 : Infinity;
-  var label=EXIT_UPDATED ? 'Captured '+new Date(EXIT_UPDATED).toLocaleString()+(age>15?' · STALE':'') : 'Waiting for the first options snapshot';
+  var label=historical ? 'Historical lookup · nearest snapshot at or before entry, within 2 minutes' : EXIT_UPDATED ? 'Captured '+new Date(EXIT_UPDATED).toLocaleString()+(age>15?' · STALE':'') : 'Waiting for the first options snapshot';
   h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:10px">'+esc(label)+'<br>Indicative feed · published about every 5 minutes while logging · not streaming</div>';
   if(EXIT_ERROR)h+='<div style="color:var(--warn);font-size:11px">'+esc(EXIT_ERROR)+'</div>';
-  if(!EXIT_CONTRACTS.length)return h+'</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><label>Entry date & time (Pacific)<input data-exit-time type="datetime-local" value="'+_exitAttr(saved.entryTime||'')+'" style="display:block;background:var(--bg2);color:var(--fg);border:1px solid var(--bdr);padding:8px"></label><button type="button" data-exit-apply-time>Use entry time</button><button type="button" data-exit-live aria-pressed="'+(!historical&&saved.spotMode!=='custom')+'">Live quotes</button></div>';
+  if(historical)h+='<div style="color:var(--accent);margin:8px 0">Entry-time mode · '+esc(saved.entryTime)+' · '+'Pacific'+'<br>Your fill anchors the option value. Historical Greeks estimate immediate moves; time and IV are held unchanged.</div>';
+  if(!contracts.length)return h+'<div class="loading">'+esc(historical?historical.message:'Waiting for options data.')+'</div></div>';
+
 
   // Dropdown + entry in a row
   h+='<div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:8px">';
   h+='<label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">QQQ contract<select data-exit-field="contract" style="width:100%;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px system-ui">';
   h+='<option value=""'+(!cur?' selected':'')+'>'+ (selectedId && !cur ? 'Selected contract unavailable — choose a contract' : 'Choose a contract') +'</option>';
-  for(var i=0;i<EXIT_CONTRACTS.length;i++){
-    var c=EXIT_CONTRACTS[i];
+  for(var i=0;i<contracts.length;i++){
+    var c=contracts[i];
     var inc=c.mid===null||c.delta===null||c.gamma===null;
-    h+='<option value="'+_exitAttr(c.id)+'" data-contract="'+_exitAttr(JSON.stringify(c))+'"'+(c.id===selectedId?' selected':'')+'>$'+c.strike+' '+c.kind.toUpperCase()+' · '+esc(c.expiration)+(inc?' · incomplete':'')+(_exitExpired(c)?' · expired':'')+'</option>';
+    h+='<option value="'+_exitAttr(c.id)+'" data-contract="'+_exitAttr(JSON.stringify(c))+'"'+(c.id===selectedId?' selected':'')+'>$'+c.strike+' '+c.kind.toUpperCase()+' · '+esc(c.expiration)+(inc?' · incomplete':'')+(!historical&&_exitExpired(c)?' · expired':'')+'</option>';
   }
   h+='</select></label>';
   h+='<label style="display:block;color:var(--dim,#c8b8b8);font-size:11px">Bought at ($/share)<input data-exit-field="entry" type="number" min="0" step="0.01" placeholder="Your fill" value="'+_exitAttr(entryVal)+'" style="width:100%;box-sizing:border-box;background:var(--bg2,#090507);border:1px solid var(--bdr,#553039);color:var(--fg,#f4eaea);border-radius:5px;padding:8px;margin-top:4px;font:13px ui-monospace,monospace"></label>';
   h+='</div>';
 
   // Contract summary + spot
-  if(!cur) return h+'<div class="loading">Choose a contract to see its latest quote and estimates.</div></div>';
-  h+='<div style="display:flex;gap:8px;align-items:end;margin:10px 0"><label style="flex:1;color:var(--dim);font-size:11px">Custom QQQ spot price<input data-exit-field="spot" type="number" min="0" step="0.01" placeholder="Latest logged spot" value="'+_exitAttr(saved.spotMode==='custom'?saved.customSpot:'')+'" style="display:block;width:100%;box-sizing:border-box;background:var(--bg2);color:var(--fg);border:1px solid var(--bdr);border-radius:5px;padding:8px;margin-top:4px"></label><button type="button" data-exit-live="1" aria-pressed="'+(saved.spotMode!=='custom')+'" style="padding:8px;border:1px solid var(--bdr);border-radius:5px;background:var(--bg2);color:var(--accent)">'+(saved.spotMode==='custom'?'Live':'Live · On')+'</button></div>';
-  h+='<div data-exit-spot-status style="font-size:11px;color:var(--dim)">'+(saved.spotMode==='custom'?'Custom spot anchors the QQQ levels. Estimates still use the latest logged option quote and Greeks.':'Live uses the latest logged QQQ spot; quotes are not streaming.')+'</div>';
+  if(!cur) return h+'<div class="loading">'+(historical?'Choose the exact contract from the available historical snapshots. Your previously selected contract may not have been logged at this time.':'Choose a contract to see its latest quote and estimates.')+'</div></div>';
+  if(historical)h+='<div>Matched snapshot: '+esc(cur.stamp)+' UTC · QQQ '+_exitMoney(cur.spot)+'</div>';
+  if(!historical)h+='<div style="display:flex;gap:8px;align-items:end;margin:10px 0"><label style="flex:1;color:var(--dim);font-size:11px">Custom QQQ spot price<input data-exit-field="spot" type="number" min="0" step="0.01" placeholder="Latest logged spot" value="'+_exitAttr(saved.spotMode==='custom'?saved.customSpot:'')+'" style="display:block;width:100%;box-sizing:border-box;background:var(--bg2);color:var(--fg);border:1px solid var(--bdr);border-radius:5px;padding:8px;margin-top:4px"></label><button type="button" data-exit-live="1" aria-pressed="'+(saved.spotMode!=='custom')+'" style="padding:8px;border:1px solid var(--bdr);border-radius:5px;background:var(--bg2);color:var(--accent)">'+(saved.spotMode==='custom'?'Live':'Live · On')+'</button></div>';
+  if(!historical)h+='<div data-exit-spot-status style="font-size:11px;color:var(--dim)">'+(saved.spotMode==='custom'?'Custom spot anchors the QQQ levels. Estimates still use the latest logged option quote and Greeks.':'Live uses the latest logged QQQ spot; quotes are not streaming.')+'</div>';
   h+='<div style="font-size:18px;font-weight:600;margin:6px 0">QQQ '+_exitMoney(cur.spot)+'<span style="font-size:10px;font-weight:400;color:var(--dim,#bda7ab);margin-left:8px">'+esc(cur.stamp||'')+' UTC</span></div>';
   h+='<div style="color:var(--dim,#bda7ab);font-size:11px;margin-bottom:8px">Mid '+_exitMoney(cur.mid)+' · '+(cur.kind==='call'?'Call: stop below QQQ, target above':'Put: stop above QQQ, target below')+'</div>';
 
@@ -6674,14 +6719,14 @@ function renderExitCalcWidget(w){
   }
   h+='</div>';
 
-  h+='<div style="font-size:10px;color:var(--dim,#bda7ab);line-height:1.5;margin-top:6px">Mid + Delta × move + ½ Gamma × move². IV and time unchanged. P/L from your entry.</div>';
+  h+='<div style="font-size:10px;color:var(--dim,#bda7ab);line-height:1.5;margin-top:6px">Base option price + Delta × move + ½ Gamma × move². Base is your fill in entry-time mode, otherwise the logged mid. IV and time unchanged. P/L from your entry.</div>';
   h+='</div>';
   return h;
 }
 
 function _exitCalcResults(cur,entryVal,movesVal,saved){
   if(!cur)return '<div class="loading">Choose a contract.</div>';
-  if(_exitExpired(cur))return '<div class="loading">This contract has expired. Choose a current expiration.</div>';
+  if(_exitExpired(cur,saved&&saved.timeMode==='entry'?new Date(_exitTime(saved.entryTime,'America/Los_Angeles')):undefined))return '<div class="loading">This contract has expired. Choose a current expiration.</div>';
   if(cur.mid===null||cur.delta===null||cur.gamma===null)return '<div style="padding:16px 0;text-align:center;color:var(--dim,#bda7ab);font-size:12px">Incomplete quote — choose another contract.</div>';
   if(!entryVal||!String(entryVal).trim())return '<div style="padding:16px 0;text-align:center;color:var(--dim,#bda7ab);font-size:12px">Enter your purchase price ↑</div>';
   var entry=Number(entryVal);
@@ -6695,7 +6740,7 @@ function _exitCalcResults(cur,entryVal,movesVal,saved){
   var price=function(n){return '$'+(Math.round((n+Number.EPSILON*Math.max(1,Math.abs(n)))*100)/100).toFixed(2);};
   var level=function(m,isStop){
     var s=isStop?-Math.sign(cur.delta)*m:Math.sign(cur.delta)*m;
-    var est=_exitEstimate(cur.mid,cur.delta,cur.gamma,spot+s-cur.spot);
+    var est=_exitEstimate(saved&&saved.timeMode==='entry'?entry:cur.mid,cur.delta,cur.gamma,spot+s-cur.spot);
     var qqq='QQQ '+price(spot+s);
     if(est===null)return '<td>'+qqq+'<small style="display:block;color:var(--dim,#bda7ab);font-size:9px;margin-top:2px">Outside range</small></td>';
     var pnl=est-entry;
@@ -6716,7 +6761,7 @@ window.renderExitCalcWidget = renderExitCalcWidget;
 
 // Event delegation for the exit calc widget
 document.addEventListener('input',function(ev){
-  if(ev.target.matches('[data-exit-field="contract"]'))return;
+  if(ev.target.matches('[data-exit-field="contract"], [data-exit-time], [data-exit-zone]'))return;
   var root=ev.target.closest('[data-exit-root]');
   if(!root)return;
   var widget=root.closest('.widget');
@@ -6760,7 +6805,22 @@ document.addEventListener('click',function(ev){
   if(!widget)return;
   var w=activeLayout().widgets.find(function(x){return x.id===widget.dataset.wid;});
   if(!w)return;
-  w.exitCalcState=Object.assign({},w.exitCalcState||{},{spotMode:'live',customSpot:''});
+  w.exitCalcState=Object.assign({},w.exitCalcState||{},{spotMode:'live',customSpot:'',timeMode:'live'});
+  save();
+  var body=widget.querySelector('.widget-body');
+  if(body)body.innerHTML=renderExitCalcWidget(w);
+});
+
+document.addEventListener('click',function(ev){
+  if(!ev.target.closest('[data-exit-apply-time]'))return;
+  var widget=ev.target.closest('.widget'),root=ev.target.closest('[data-exit-root]');
+  if(!widget||!root)return;
+  var w=activeLayout().widgets.find(function(x){return x.id===widget.dataset.wid;});
+  if(!w)return;
+  var value=root.querySelector('[data-exit-time]').value,zone='America/Los_Angeles';
+  w.exitCalcState=Object.assign({},w.exitCalcState||{},{entryTime:value,entryZone:zone,timeMode:'entry',spotMode:'live',customSpot:''});
+  var cache=EXIT_HISTORY[value.slice(0,10)];
+  if(cache&&!cache.loading)delete EXIT_HISTORY[value.slice(0,10)];
   save();
   var body=widget.querySelector('.widget-body');
   if(body)body.innerHTML=renderExitCalcWidget(w);
