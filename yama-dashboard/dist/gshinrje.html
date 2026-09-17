@@ -7450,21 +7450,6 @@ document.addEventListener('input', function(event) {
   notebookDrafts[root.dataset.notebookKey].fields[field.dataset.notebookField] = field.value;
   saveNotebookDraft(root);
 });
-function switchNotebookTab(button) {
-  var root = button.closest('[data-notebook-root]');
-  var tab = button.dataset.notebookTab;
-  notebookDrafts[root.dataset.notebookKey].tab = tab;
-  root.querySelectorAll('[data-notebook-pane]').forEach(function(pane) {
-    pane.hidden = pane.dataset.notebookPane !== tab;
-  });
-  root.querySelectorAll('[data-notebook-tab]').forEach(function(item) {
-    var selected = item.dataset.notebookTab === tab;
-    item.setAttribute('aria-selected', selected);
-    item.style.color = selected ? 'var(--accent)' : 'var(--dim)';
-    item.style.background = selected ? 'rgba(0,229,204,0.10)' : 'transparent';
-  });
-  saveNotebookDraft(root);
-}
 function scoreNotebook(button) {
   var root = button.closest('[data-notebook-root]');
   var name = button.dataset.notebookScore;
@@ -7565,31 +7550,18 @@ function exportNotebook(button) {
 function renderNotebook(e, widget) {
   var key = 'gshinrje-notebook-v1-' + (widget ? widget.id : 'shared');
   var draft = readNotebookDraft(key, e.entry_date || 'today');
-  var tab = draft.tab || 'journal';
   var controlStyle = 'width:100%;box-sizing:border-box;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:3px;padding:6px;font:11px ui-monospace,monospace';
   function textarea(field, placeholder, height) {
     return '<textarea aria-label="' + notebookAttr(placeholder) + '" data-notebook-field="' + field + '" placeholder="' + notebookAttr(placeholder) + '" style="' + controlStyle + ';height:' + height + 'px;resize:vertical">' + esc(draft.fields[field] || '') + '</textarea>';
   }
-  function pane(name) { return '<div data-notebook-pane="' + name + '"' + (name !== tab ? ' hidden' : '') + '>'; }
+  function section(name, label) { return '<section data-notebook-section="' + name + '" style="margin-top:18px;padding-top:12px;border-top:1px solid var(--line)"><h3 style="font-size:13px;color:var(--accent);margin:0 0 10px">' + label + '</h3>'; }
   var html = '<div data-notebook-root data-notebook-key="' + notebookAttr(key) + '" style="width:100%;height:100%;overflow:auto;box-sizing:border-box;padding:2px">';
   html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><label>Entry date <input aria-label="Entry date" data-notebook-date type="date" value="' + notebookAttr(draft.entryDate) + '" onchange="setNotebookDate(this)" style="color-scheme:dark;padding:6px"></label><button type="button" onclick="archiveNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(0,229,204,0.08);color:var(--accent);font:inherit;cursor:pointer">Save entry</button><button type="button" onclick="exportNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(0,229,204,0.08);color:var(--accent);font:inherit;cursor:pointer">Export backup</button></div>';
-  html += '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Drafts autosave on this device. Save entry keeps a dated copy of all four tabs. Each save adds a new copy.</div>';
+  html += '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Drafts autosave on this device. Save entry keeps a dated copy of your notebook. Each save adds a new copy.</div>';
   html += '<div data-notebook-last-entry style="font-size:11px;margin-bottom:8px">' + (draft.lastEntrySavedAt ? 'Last entry saved: ' + esc(notebookTime(draft.lastEntrySavedAt)) : 'No dated entry saved from this notebook yet.') + '</div>';
   html += '<details ontoggle="openNotebookArchive(this)" style="border:1px solid var(--line);padding:8px;margin-bottom:10px"><summary style="cursor:pointer;padding:4px">Browse by date</summary><label style="display:block;margin-top:8px">Saved entry date <input aria-label="Browse saved entry date" data-notebook-browse-date type="date" onchange="browseNotebook(this)" style="color-scheme:dark;padding:6px"></label><button type="button" style="margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--text-secondary);font:inherit;cursor:pointer" onclick="var input=this.parentElement.querySelector(\'[data-notebook-browse-date]\');input.value=\'\';browseNotebook(input)">Show all entries</button><div data-notebook-entries style="font-size:12px"></div></details>';
-  html += '<div class="notebook-tabs" role="tablist" aria-label="Notebook sections" style="display:flex;border-bottom:1px solid var(--line);margin-bottom:8px">';
-  [['journal','Journal'],['notes','Notes'],['scorecard','Scorecard'],['observations','Observations']].forEach(function(item) {
-    var selected = item[0] === tab;
-    html += '<button role="tab" aria-selected="' + selected + '" data-notebook-tab="' + item[0] + '" onclick="switchNotebookTab(this)" style="flex:1;padding:6px 4px;border:none;background:' + (selected ? 'rgba(0,229,204,0.10)' : 'transparent') + ';color:' + (selected ? 'var(--accent)' : 'var(--dim)') + ';cursor:pointer">' + item[1] + '</button>';
-  });
-  html += '</div>' + pane('journal');
-  html += '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">' + 'Trade details' + '</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">';
-  ['Ticker','Direction','Entry','Exit','Size','P/L'].forEach(function(field) {
-    html += '<input aria-label="' + field + '" data-notebook-field="' + field + '" placeholder="' + field + '" value="' + notebookAttr(draft.fields[field]) + '" style="' + controlStyle + '" />';
-  });
-  html += '</div>' + textarea('journal', 'Thesis & notes...', 100) + '</div>';
-  html += pane('notes') + textarea('notes', 'Scratch pad...', 120) + '</div>';
-  html += pane('scorecard') + '<div style="font-size:10px;color:var(--text-secondary);margin-bottom:6px">Rate your process (not your P/L)</div>';
+  html += section('notes', 'Notes') + textarea('notes', 'Scratch pad...', 160) + '</section>';
+  html += section('scorecard', 'Scorecard') + '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">Rate your process (not your P/L)</div>';
   ['Waited for setup','Followed thesis','Sized correctly','Managed risk','No revenge trades','Accepted outcome'].forEach(function(name) {
     html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0"><span style="flex:1;font-size:11px">' + name + '</span><div style="display:flex;gap:2px">';
     for (var score = 1; score <= 5; score++) {
@@ -7598,7 +7570,7 @@ function renderNotebook(e, widget) {
     }
     html += '</div></div>';
   });
-  html += '</div>' + pane('observations') + textarea('observations', 'What do you notice?', 100) + '</div>';
+  html += '</section>' + section('observations', 'Observations') + textarea('observations', 'What do you notice?', 140) + '</section>';
   html += '<div data-notebook-status role="status" style="font-size:10px;color:var(--text-secondary);margin-top:6px">' + (draft.updatedAt ? 'Draft saved on this device · ' + esc(notebookTime(draft.updatedAt)) : 'Drafts save automatically on this device') + '</div><div style="font-size:10px;color:var(--text-secondary);margin-top:6px">Stored in this browser’s website data. No automatic sync between devices. Export a backup before clearing website data.</div></div>';
   return html;
 }
