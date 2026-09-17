@@ -65,24 +65,15 @@ jobs:
           DURATION_SECONDS: '7200'
         run: python qqq_greeks_logger_alpaca.py
 
-      - name: Commit updated data back to repo
+      - name: Back up captured CSVs before publishing
         if: always() && steps.guard.outputs.run == 'true'
-        run: |
-          git config user.name "qqq-logger-bot"
-          git config user.email "actions@github.com"
-          git add data market-dash/gex_live.json market-dash/gex_intraday.json market-dash/auction_live.json
-          if [ -f market-dash/qqq_candle_history.json ]; then git add market-dash/qqq_candle_history.json; fi
-          if [ -f market-dash/options_latest.json ]; then git add market-dash/options_latest.json; fi
-          git commit -m "Morning session $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
-          # Abort any stuck rebase left over from a previous attempt
-          git rebase --abort 2>/dev/null || true
-          # Retry loop: handles concurrent pushes from other workflows
-          for attempt in 1 2 3; do
-            git pull --rebase --autostash origin main || {
-              echo "Rebase failed (attempt \$attempt), cleaning up..."
-              git rebase --abort 2>/dev/null || true
-              sleep \$((attempt * 5))
-              continue
-            }
-            git push && break || sleep \$((attempt * 5))
-          done
+        uses: actions/upload-artifact@v4
+        with:
+          name: option-history-am-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/**/am/*.csv
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish captured history safely
+        if: always() && steps.guard.outputs.run == 'true'
+        run: python publish_history.py --session am

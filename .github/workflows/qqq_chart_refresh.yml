@@ -54,10 +54,12 @@ jobs:
           # Retry loop: handles concurrent pushes from other workflows
           for attempt in 1 2 3; do
             git pull --rebase --autostash origin main || {
-              echo "Rebase failed (attempt \$attempt), cleaning up..."
+              echo "Rebase failed (attempt $attempt), cleaning up..."
               git rebase --abort 2>/dev/null || true
-              sleep \$((attempt * 5))
+              sleep $((attempt * 5))
               continue
             }
-            git push origin HEAD:main && break || sleep \$((attempt * 5))
+            git push origin HEAD:main && break || sleep $((attempt * 5))
           done
+          echo "Publishing failed after 3 attempts" >&2
+          exit 1

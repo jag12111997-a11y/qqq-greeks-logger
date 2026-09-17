@@ -738,33 +738,15 @@ def _git(*args):
 
 
 def push_live_snapshots():
-    """CI only: commit + push live JSONs and current session CSVs so the dashboard refreshes every
-    few minutes during the session. Best-effort — pulls-with-rebase before pushing
-    so it never collides with the other bots, and never raises (a failed push must
-    not stop logging). The end-of-run workflow commit still catches everything."""
+    """Publish without changing the checkout where the logger writes CSVs."""
     if not CI_PUSH:
         return
     try:
-        if not _git_ready[0]:
-            _git("config", "user.name", "qqq-logger-bot")
-            _git("config", "user.email", "actions@github.com")
-            _git_ready[0] = True
-        paths = [GEX_LIVE_PATH, GEX_INTRADAY_PATH, AUCTION_LIVE_PATH, "market-dash/qqq_candle_history.json", "market-dash/options_latest.json"]
-        # Publish the same captured history used by entry-time lookup during the
-        # session, rather than leaving it unavailable until the final CI step.
-        paths.extend(output_path(kind) for kind in ("call", "put"))
-        _git("add", *[path for path in paths if os.path.exists(path)])
-        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%SZ")
-        c = _git("commit", "-m", f"live snapshot {stamp}")
-        if "nothing to commit" in (c.stdout + c.stderr).lower():
-            return
-        _git("pull", "--rebase", "--autostash", "origin", "main")
-        p = _git("push")
-        if p.returncode != 0:                       # one retry after another rebase
-            _git("pull", "--rebase", "--autostash", "origin", "main")
-            _git("push")
-    except Exception as e:
-        print(f"live push skipped (continuing): {e}")
+        from publish_history import publish, LIVE_PATHS
+        paths = LIVE_PATHS + [output_path(kind) for kind in ("call", "put")]
+        publish(os.path.dirname(os.path.abspath(__file__)), paths)
+    except Exception as exc:
+        print(f"Live publish failed; keeping local CSVs for final backup and retry: {exc}", flush=True)
 
 
 def snapshot_and_write(spot):
