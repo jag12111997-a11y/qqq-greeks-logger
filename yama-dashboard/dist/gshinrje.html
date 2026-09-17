@@ -149,8 +149,7 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 .widget-btn.locked { color: var(--accent); opacity: 0.8; }
 .widget-btn.fullscreen-btn:hover { color: var(--accent); }
 .widget.fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0; }
-.widget.fullscreen .resize-handle { display: none; }
-.widget.locked-widget .resize-handle { display: none; }
+.widget.fullscreen .resize-handle, .widget.locked-widget .resize-handle { display: none; }
 .widget.locked-widget .widget-header { cursor: default; }
 .widget-body {
   flex: 1; display: flex; align-items: center; justify-content: center;
@@ -159,15 +158,43 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 .widget-body .placeholder { text-align: center; }
 .widget-body .placeholder .name { font-size: 14px; font-weight: 500; color: rgba(140,40,40,0.25); }
 .widget-body .placeholder .question { margin-top: 4px; font-size: 11px; color: var(--text-ghost); max-width: 200px; line-height: 1.4; }
+/* Resize targets cover every edge, with larger corners for diagonal resizing. */
+.widget { overflow: visible; }
+.widget-body { border-radius: 0 0 8px 8px; }
 .resize-handle {
-  position: absolute; width: 16px; height: 16px;
-  opacity: 0.15; transition: opacity 0.15s;
+  position: absolute; z-index: 5; touch-action: none; user-select: none;
+  -webkit-user-select: none;
 }
-.resize-handle.se { bottom: 0; right: 0; cursor: se-resize; }
-.resize-handle.sw { bottom: 0; left: 0; cursor: sw-resize; }
-.resize-handle.ne { top: 0; right: 0; cursor: ne-resize; }
-.resize-handle.nw { top: 0; left: 0; cursor: nw-resize; }
-.widget:hover .resize-handle { opacity: 0.3; }
+.resize-handle.n, .resize-handle.s { left: 10px; right: 10px; height: 12px; cursor: ns-resize; }
+.resize-handle.n { top: -6px; }
+.resize-handle.s { bottom: -6px; }
+.resize-handle.e, .resize-handle.w { top: 10px; bottom: 10px; width: 12px; cursor: ew-resize; }
+.resize-handle.e { right: -6px; }
+.resize-handle.w { left: -6px; }
+.resize-handle.ne, .resize-handle.nw, .resize-handle.se, .resize-handle.sw { width: 22px; height: 22px; z-index: 6; }
+.resize-handle.ne, .resize-handle.se { right: -10px; }
+.resize-handle.nw, .resize-handle.sw { left: -10px; }
+.resize-handle.ne, .resize-handle.nw { top: -10px; }
+.resize-handle.se, .resize-handle.sw { bottom: -10px; }
+.resize-handle.ne, .resize-handle.sw { cursor: nesw-resize; }
+.resize-handle.nw, .resize-handle.se { cursor: nwse-resize; }
+.resize-handle:hover { background: rgba(0,229,204,0.10); border-radius: 6px; }
+.widget-header { touch-action: none; -webkit-user-select: none; }
+.widget.locked-widget .widget-header, .widget.fullscreen .widget-header { touch-action: auto; }
+.widget-interacting .widget-body { pointer-events: none; }
+@media (any-pointer: coarse) {
+  .resize-handle.n, .resize-handle.s { height: 20px; left: 14px; right: 14px; }
+  .resize-handle.n { top: -10px; }
+  .resize-handle.s { bottom: -10px; }
+  .resize-handle.e, .resize-handle.w { width: 20px; top: 14px; bottom: 14px; }
+  .resize-handle.e { right: -10px; }
+  .resize-handle.w { left: -10px; }
+  .resize-handle.ne, .resize-handle.nw, .resize-handle.se, .resize-handle.sw { width: 28px; height: 28px; }
+  .resize-handle.ne, .resize-handle.se { right: -14px; }
+  .resize-handle.nw, .resize-handle.sw { left: -14px; }
+  .resize-handle.ne, .resize-handle.nw { top: -14px; }
+  .resize-handle.se, .resize-handle.sw { bottom: -14px; }
+}
 
 /* ── Add Widget Panel ── */
 .panel-backdrop { position: fixed; inset: 0; z-index: 100; }
@@ -7746,10 +7773,10 @@ function renderCanvas() {
     var name = def ? def.name : w.definitionId;
     var question = def ? def.question : '';
 
-    html += `<div class="widget${w.locked ? ' locked-widget' : ''}" style="left:${w.x}px;top:${w.y}px;width:${w.w}px;height:${w.h}px;z-index:${idx + 1}" data-wid="${w.id}" onmousedown="bringToFront('${w.id}')">`;
+    html += `<div class="widget${w.locked ? ' locked-widget' : ''}" style="left:${w.x}px;top:${w.y}px;width:${w.w}px;height:${w.h}px;z-index:${idx + 1}" data-wid="${w.id}" onpointerdown="bringToFront('${w.id}')">`;
 
     // Header
-    html += `<div class="widget-header" onmousedown="startDrag(event, '${w.id}')" ondblclick="toggleFullscreen('${w.id}')">`;
+    html += `<div class="widget-header" onpointerdown="startDrag(event, '${w.id}')" ondblclick="toggleFullscreen('${w.id}')">`;
     if (linkColor) {
       html += `<div class="link-dot" style="background:${linkColor.hex}"></div>`;
     }
@@ -7757,17 +7784,17 @@ function renderCanvas() {
     html += '<div class="widget-controls">';
 
     // Ticker
-    html += `<input class="widget-input" value="${esc(w.ticker)}" onchange="setTicker('${w.id}', this.value)" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">`;
+    html += `<input class="widget-input" value="${esc(w.ticker)}" onchange="setTicker('${w.id}', this.value)" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()">`;
 
     // Timeframe
-    html += `<select aria-label="${w.definitionId === 'gex-chart' ? 'Candle timeframe' : 'Timeframe'}" class="widget-select" onchange="setTimeframe('${w.id}', this.value)" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">`;
+    html += `<select aria-label="${w.definitionId === 'gex-chart' ? 'Candle timeframe' : 'Timeframe'}" class="widget-select" onchange="setTimeframe('${w.id}', this.value)" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()">`;
     TIMEFRAMES.forEach(tf => {
       html += `<option value="${tf}" ${tf === w.timeframe ? 'selected' : ''}>${tf}</option>`;
     });
     html += '</select>';
 
     // Link group
-    html += `<select class="widget-select" onchange="setLinkGroup('${w.id}', this.value)" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" title="Link group">`;
+    html += `<select class="widget-select" onchange="setLinkGroup('${w.id}', this.value)" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" title="Link group">`;
     html += `<option value="" ${!w.linkGroup ? 'selected' : ''}>—</option>`;
     LINK_COLORS.forEach(c => {
       html += `<option value="${c.key}" ${w.linkGroup === c.key ? 'selected' : ''}>${c.key}</option>`;
@@ -7785,11 +7812,10 @@ function renderCanvas() {
     // Body
     html += `<div class="widget-body">${renderWidgetContent(w.definitionId, w)}</div>`;
 
-    // Resize handles — all 4 corners
-    html += `<div class="resize-handle se" onmousedown="startResize(event, '${w.id}', 'se')"><svg viewBox="0 0 16 16" style="width:100%;height:100%;color:rgba(140,40,40,0.4)"><path d="M14 14L14 6M14 14L6 14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>`;
-    html += `<div class="resize-handle sw" onmousedown="startResize(event, '${w.id}', 'sw')"><svg viewBox="0 0 16 16" style="width:100%;height:100%;color:rgba(140,40,40,0.4);transform:scaleX(-1)"><path d="M14 14L14 6M14 14L6 14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>`;
-    html += `<div class="resize-handle ne" onmousedown="startResize(event, '${w.id}', 'ne')"><svg viewBox="0 0 16 16" style="width:100%;height:100%;color:rgba(140,40,40,0.4);transform:scaleY(-1)"><path d="M14 14L14 6M14 14L6 14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>`;
-    html += `<div class="resize-handle nw" onmousedown="startResize(event, '${w.id}', 'nw')"><svg viewBox="0 0 16 16" style="width:100%;height:100%;color:rgba(140,40,40,0.4);transform:scale(-1,-1)"><path d="M14 14L14 6M14 14L6 14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>`;
+    // Resize handles — all edges and corners
+    for (var edge of ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']) {
+      html += `<div class="resize-handle ${edge}" onpointerdown="startResize(event, '${w.id}', '${edge}')" aria-hidden="true"></div>`;
+    }
 
     html += '</div>'; // widget
   });
@@ -7908,86 +7934,80 @@ function bringToFront(id) {
   save();
 }
 
-// ── Drag ──
-var dragState = null;
+// ── Pointer movement and resizing (mouse, touch, and pen) ──
+var widgetGesture = null;
 function startDrag(e, id) {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
-  e.preventDefault();
-  var lay = activeLayout();
-  var w = lay.widgets.find(w => w.id === id);
-  if (!w || w.locked) return;
-  bringToFront(id);
-  dragState = { id, startX: e.clientX, startY: e.clientY, origX: w.x, origY: w.y };
-  document.addEventListener('mousemove', onDrag);
-  document.addEventListener('mouseup', endDrag);
+  if (e.target.closest('input, select, button, a, textarea, [contenteditable]')) return;
+  startWidgetGesture(e, id, 'move');
 }
 
-function onDrag(e) {
-  if (!dragState) return;
-  var dx = e.clientX - dragState.startX;
-  var dy = e.clientY - dragState.startY;
-  var nx = snap(Math.max(0, dragState.origX + dx));
-  var ny = snap(Math.max(0, dragState.origY + dy));
-  var el = document.querySelector(`.widget[data-wid="${dragState.id}"]`);
-  if (el) { el.style.left = nx + 'px'; el.style.top = ny + 'px'; }
-  var w = activeLayout().widgets.find(w => w.id === dragState.id);
-  if (w) { w.x = nx; w.y = ny; }
+function startResize(e, id, edge) {
+  startWidgetGesture(e, id, edge || 'se');
 }
 
-function endDrag() {
-  dragState = null;
-  document.removeEventListener('mousemove', onDrag);
-  document.removeEventListener('mouseup', endDrag);
-  save();
-}
-
-// ── Resize ──
-var resizeState = null;
-function startResize(e, id, corner) {
+function startWidgetGesture(e, id, mode) {
+  if (widgetGesture || e.isPrimary === false || e.button !== 0) return;
+  var w = activeLayout().widgets.find(w => w.id === id);
+  var el = document.querySelector(`.widget[data-wid="${id}"]`);
+  if (!w || w.locked || !el || el.classList.contains('fullscreen')) return;
   e.preventDefault();
   e.stopPropagation();
-  var w = activeLayout().widgets.find(w => w.id === id);
-  if (!w || w.locked) return;
-  resizeState = { id, corner: corner || 'se', startX: e.clientX, startY: e.clientY, origW: w.w, origH: w.h, origX: w.x, origY: w.y };
-  document.addEventListener('mousemove', onResize);
-  document.addEventListener('mouseup', endResize);
+  bringToFront(id);
+  var canvas = document.getElementById('canvas');
+  widgetGesture = {
+    w, el, mode, pointerId: e.pointerId, target: e.currentTarget,
+    startX: e.clientX, startY: e.clientY,
+    x: w.x, y: w.y, width: w.w, height: w.h,
+    canvas, scrollLeft: canvas ? canvas.scrollLeft : 0, scrollTop: canvas ? canvas.scrollTop : 0
+  };
+  el.classList.add('widget-interacting');
+  e.currentTarget.setPointerCapture(e.pointerId);
+  e.currentTarget.addEventListener('lostpointercapture', endWidgetGesture);
+  document.addEventListener('pointermove', moveWidgetGesture, { passive: false });
+  document.addEventListener('pointerup', endWidgetGesture);
+  document.addEventListener('pointercancel', endWidgetGesture);
+  window.addEventListener('blur', endWidgetGesture);
 }
 
-function onResize(e) {
-  if (!resizeState) return;
-  var dx = e.clientX - resizeState.startX;
-  var dy = e.clientY - resizeState.startY;
-  var nw, nh, nx, ny;
-  var c = resizeState.corner;
-  if (c === 'se') {
-    nw = snap(Math.max(200, resizeState.origW + dx));
-    nh = snap(Math.max(120, resizeState.origH + dy));
-    nx = resizeState.origX; ny = resizeState.origY;
-  } else if (c === 'sw') {
-    nw = snap(Math.max(200, resizeState.origW - dx));
-    nh = snap(Math.max(120, resizeState.origH + dy));
-    nx = snap(resizeState.origX + resizeState.origW - nw); ny = resizeState.origY;
-  } else if (c === 'ne') {
-    nw = snap(Math.max(200, resizeState.origW + dx));
-    nh = snap(Math.max(120, resizeState.origH - dy));
-    nx = resizeState.origX; ny = snap(resizeState.origY + resizeState.origH - nh);
-  } else { // nw
-    nw = snap(Math.max(200, resizeState.origW - dx));
-    nh = snap(Math.max(120, resizeState.origH - dy));
-    nx = snap(resizeState.origX + resizeState.origW - nw);
-    ny = snap(resizeState.origY + resizeState.origH - nh);
+function moveWidgetGesture(e) {
+  var g = widgetGesture;
+  if (!g || e.pointerId !== g.pointerId) return;
+  e.preventDefault();
+  var dx = e.clientX - g.startX + (g.canvas ? g.canvas.scrollLeft - g.scrollLeft : 0);
+  var dy = e.clientY - g.startY + (g.canvas ? g.canvas.scrollTop - g.scrollTop : 0);
+  var x = g.x, y = g.y, width = g.width, height = g.height;
+  if (g.mode === 'move') {
+    x = Math.max(0, snap(g.x + dx));
+    y = Math.max(0, snap(g.y + dy));
+  } else {
+    if (g.mode.includes('e')) width = Math.max(200, snap(g.width + dx));
+    if (g.mode.includes('s')) height = Math.max(120, snap(g.height + dy));
+    // Keep the opposite edge fixed, even at the canvas boundary or minimum size.
+    if (g.mode.includes('w')) {
+      x = Math.max(0, Math.min(g.x + g.width - 200, snap(g.x + dx)));
+      width = g.x + g.width - x;
+    }
+    if (g.mode.includes('n')) {
+      y = Math.max(0, Math.min(g.y + g.height - 120, snap(g.y + dy)));
+      height = g.y + g.height - y;
+    }
   }
-  nx = Math.max(0, nx); ny = Math.max(0, ny);
-  var el = document.querySelector(`.widget[data-wid="${resizeState.id}"]`);
-  if (el) { el.style.width = nw + 'px'; el.style.height = nh + 'px'; el.style.left = nx + 'px'; el.style.top = ny + 'px'; }
-  var w = activeLayout().widgets.find(w => w.id === resizeState.id);
-  if (w) { w.w = nw; w.h = nh; w.x = nx; w.y = ny; }
+  Object.assign(g.w, { x, y, w: width, h: height });
+  Object.assign(g.el.style, { left: x + 'px', top: y + 'px', width: width + 'px', height: height + 'px' });
 }
 
-function endResize() {
-  resizeState = null;
-  document.removeEventListener('mousemove', onResize);
-  document.removeEventListener('mouseup', endResize);
+function endWidgetGesture(e) {
+  var g = widgetGesture;
+  if (!g || (e && e.pointerId !== undefined && e.pointerId !== g.pointerId)) return;
+  if (e && e.type === 'pointerup') moveWidgetGesture(e);
+  widgetGesture = null;
+  g.el.classList.remove('widget-interacting');
+  g.target.removeEventListener('lostpointercapture', endWidgetGesture);
+  document.removeEventListener('pointermove', moveWidgetGesture);
+  document.removeEventListener('pointerup', endWidgetGesture);
+  document.removeEventListener('pointercancel', endWidgetGesture);
+  window.removeEventListener('blur', endWidgetGesture);
+  if (g.target.hasPointerCapture(g.pointerId)) g.target.releasePointerCapture(g.pointerId);
   save();
 }
 
