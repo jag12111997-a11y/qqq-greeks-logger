@@ -1,0 +1,4 @@
+# history.js is append-only: two bot runs both adding lines to the tail
+# is not a real conflict. `merge=union` concatenates both sides instead
+# of leaving <<<<<<< markers in the file.
+market-dash/history.js merge=union
