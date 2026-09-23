@@ -6498,6 +6498,46 @@ var PERF_WIDGETS = {
 };
 
 
+// ── TRADE CHECKLIST (observe-only list, saves per widget) ──
+var CK_ITEMS=[
+  {k:'range',t:'$ range',s:'Option take profit / stop loss set'},
+  {k:'hiv',t:'Historical IV',s:''},
+  {k:'aiv',t:'Actual IV',s:''},
+  {k:'gex',t:'GEX levels',s:''},
+  {k:'trend',t:'Trend',s:'',pick:['Balanced','Up','Down']},
+  {k:'flip',t:'Gamma flip',s:''},
+  {k:'vol',t:'Volume candles',s:''},
+  {k:'tf',t:'Time frame = 10 min',s:''},
+  {k:'ind',t:'All my indicators',s:''}
+];
+function renderChecklist(w){
+  var st=(w&&w.ckState)||{};var done=0;
+  var h='<div data-ck-root="1" style="font-size:13px">';
+  CK_ITEMS.forEach(function(it){
+    var on=!!st[it.k];if(on)done++;
+    h+='<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--bdr)">';
+    h+='<input type="checkbox" data-ck="'+it.k+'"'+(on?' checked':'')+' style="margin-top:3px;accent-color:var(--accent);width:16px;height:16px">';
+    h+='<div style="flex:1"><div style="color:'+(on?'var(--accent)':'var(--fg)')+'">'+it.t+'</div>';
+    if(it.s)h+='<div style="color:var(--dim);font-size:11px">'+it.s+'</div>';
+    if(it.pick){h+='<div style="display:flex;gap:6px;margin-top:5px">';it.pick.forEach(function(p){var sel=st.trendPick===p;h+='<button type="button" data-ck-pick="'+p+'" style="padding:3px 9px;border-radius:4px;border:1px solid var(--bdr);background:'+(sel?'var(--accent)':'var(--bg2)')+';color:'+(sel?'#000':'var(--fg)')+';font-size:11px;cursor:pointer">'+p+'</button>';});h+='</div>';}
+    h+='</div></div>';
+  });
+  var all=done===CK_ITEMS.length;
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="color:'+(all?'var(--accent)':'var(--dim)')+'">'+done+' / '+CK_ITEMS.length+(all?' · ready':' checked')+'</span><button type="button" data-ck-reset="1" style="padding:4px 10px;border-radius:4px;border:1px solid var(--bdr);background:var(--bg2);color:var(--dim);font-size:11px;cursor:pointer">Reset</button></div></div>';
+  return h;
+}
+function _ckWidget(el){var wEl=el.closest('.widget');if(!wEl)return null;var id=wEl.dataset.wid;return {el:wEl,w:activeLayout().widgets.find(function(x){return x.id===id;})};}
+function _ckRedraw(r){var root=r.el.querySelector('[data-ck-root]');if(root)root.outerHTML=renderChecklist(r.w);}
+document.addEventListener('change',function(ev){
+  if(!ev.target.matches('[data-ck]'))return;var r=_ckWidget(ev.target);if(!r||!r.w)return;
+  r.w.ckState=Object.assign({},r.w.ckState||{});r.w.ckState[ev.target.dataset.ck]=ev.target.checked;save();_ckRedraw(r);
+});
+document.addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-ck-pick],[data-ck-reset]');if(!b)return;var r=_ckWidget(b);if(!r||!r.w)return;
+  if(b.dataset.ckReset){r.w.ckState={};}else{r.w.ckState=Object.assign({},r.w.ckState||{},{trendPick:b.dataset.ckPick,trend:true});}
+  save();_ckRedraw(r);
+});
+
 function renderWidgetContent(defId, widget) {
   try {
     return renderWidgetBody(defId, widget);
@@ -6510,6 +6550,7 @@ function renderWidgetContent(defId, widget) {
 function renderWidgetBody(defId, widget) {
   if (defId === 'trading-notebook') return renderNotebook(currentEntry() || {}, widget);
   if (defId === 'qqq-exit-calc') return renderExitCalcWidget(widget);
+  if (defId === 'trade-checklist') return renderChecklist(widget);
   if (DATA_ERROR) {
     return '<div class="loading">' + esc(DATA_ERROR) + '</div>';
   }
@@ -7657,6 +7698,7 @@ var CATEGORIES = [
   { id:'process', label:'Process & Review', question:'What was observed, why did it matter, and what was learned?', widgets:[
     { id:'thesis-builder',        name:'Thesis Builder',          question:'What is the current thesis?',                   dw:400, dh:320 },
     { id:'trading-notebook',      name:'Trading Notebook',        question:'Journal, notes, scorecard & observations',      dw:440, dh:380 },
+    { id:'trade-checklist',       name:'Trade Checklist',         question:'Did I check everything before I trade?',         dw:360, dh:440 },
   ]},
   { id:'performance', label:'Performance', question:'How am I performing and what patterns emerge from my trading history?', widgets:[
     { id:'perf-performance',  name:'Performance',  question:'Full performance picture: equity, win rate, edges, timing, distribution',  dw:680, dh:860 },
