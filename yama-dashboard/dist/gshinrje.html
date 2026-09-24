@@ -6537,7 +6537,7 @@ function _sdBuild(){
     var q=e.quant||{},rv=q.realized_vs_implied||{},g=e.gex||{},lv=g.levels||{};
     r.snap=e.session||'pm';
     r.hv=_sdNum(rv.realized_vol_pct)?rv.realized_vol_pct:q.qqq_realized_vol_21d_pct;r.iv=rv.implied_vol_pct;
-    r.flip=g.gamma_flip;r.ngex=g.net_gex;r.cw=lv.call_wall;r.pw=lv.put_wall;r.reg=g.regime;
+    r.flip=g.gamma_flip;r.flipFb=/nearest/i.test(g.gamma_flip_method||'');r.ngex=g.net_gex;r.cw=lv.call_wall;r.pw=lv.put_wall;r.reg=g.regime;
   });
   return Object.keys(days).sort().map(function(d){
     var r=days[d];
@@ -6581,7 +6581,7 @@ function _hxChart(r,uid){
   if(!bars)return {svg:'',vol:'',lo:NaN,hi:NaN,inView:[],daily:daily,bars:[]};
   var lo=Infinity,hi=-Infinity;bars.forEach(function(q){lo=Math.min(lo,q.l);hi=Math.max(hi,q.h);});
   var rg=(hi-lo)||1;
-  var lv=[['flip',r.flip],['cw',r.cw],['pw',r.pw]].filter(function(x){return _sdNum(x[1]);});
+  var lv=[['flip',r.flipFb?NaN:r.flip],['cw',r.cw],['pw',r.pw]].filter(function(x){return _sdNum(x[1]);});
   var inView=lv.filter(function(x){return x[1]>=lo-0.6*rg&&x[1]<=hi+0.6*rg;});
   inView.forEach(function(x){lo=Math.min(lo,x[1]);hi=Math.max(hi,x[1]);});
   var pad=(hi-lo)*0.08||0.5;lo-=pad;hi+=pad;
@@ -6611,6 +6611,7 @@ function _hxDay(r){
   var names={flip:'Gamma flip',cw:'Call wall',pw:'Put wall'};
   var legend=[['flip',r.flip],['cw',r.cw],['pw',r.pw]].filter(function(x){return _sdNum(x[1]);}).map(function(x){
     var shown=ch.inView.some(function(z){return z[0]===x[0];});
+    if(x[0]==='flip'&&r.flipFb)return '<span style="color:'+HX.flip+'">Gamma flip ≈'+x[1].toFixed(0)+' <span style="color:'+HX.dim+'">(no true flip found)</span></span>';
     return '<span style="color:'+HX[x[0]]+'">'+(shown?'- - ':'')+names[x[0]]+' '+x[1].toFixed(0)+(shown?'':' <span style="color:'+HX.dim+'">'+(x[1]>ch.hi?'↑ above field':'↓ below field')+'</span>')+'</span>';}).join('');
   var lastM=ch.bars.length?ch.bars[ch.bars.length-1].m+10:960;
   var h='<div style="position:relative;border-radius:14px;padding:10px;background:linear-gradient(180deg,#2a3036,#12161a);border:1px solid #050607;box-shadow:0 10px 24px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.1)">'+_hxScrew('left:7px;top:7px')+_hxScrew('right:7px;top:7px');
@@ -6623,7 +6624,7 @@ function _hxDay(r){
     h+='<div style="position:relative;margin-top:8px;perspective:900px"><div style="transform:rotateX(10deg);transform-origin:50% 100%">'+ch.svg+'</div>';
     h+='<span style="position:absolute;right:2px;top:0;font-size:11px;color:#6fb8c8">'+ch.hi.toFixed(2)+'</span><span style="position:absolute;right:2px;bottom:0;font-size:11px;color:#6fb8c8">'+ch.lo.toFixed(2)+'</span></div>';
     h+='<div style="position:relative;margin-top:6px">'+ch.vol+'</div>';
-    h+='<div style="position:relative;display:flex;justify-content:space-between;font-size:11px;color:#6fb8c8;margin-top:2px"><span>'+(ch.daily?'no 10-min data before Aug 10':'9:30a')+'</span><span>volume</span><span>'+(ch.daily?'':'4:00p')+'</span></div>';
+    h+='<div style="position:relative;display:flex;justify-content:space-between;font-size:11px;color:#6fb8c8;margin-top:2px"><span>'+(ch.daily?'no 10-min data before Aug 10':'9:30a')+'</span><span>IEX volume · shape only</span><span>'+(ch.daily?'':'4:00p')+'</span></div>';
     if(!ch.daily&&lastM<960)h+='<div style="position:relative;font-size:11px;color:'+HX.flip+';margin-top:2px">Candles through '+_sdHM(lastM)+' ET · feed updates periodically</div>';
   } else h+='<div style="position:relative;padding:40px 0;text-align:center;color:'+HX.dim+'">No candles for this day.</div>';
   if(legend)h+='<div style="position:relative;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;margin:8px 0 6px">'+legend+'</div>';
@@ -6643,9 +6644,9 @@ function _hxDay(r){
   var tc=r.trend==='Up'?HX.c:r.trend==='Down'?HX.dn:HX.txt,ti=r.trend==='Up'?'▲ ':r.trend==='Down'?'▼ ':'◆ ';
   h+='<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
   h+=_hxPlate('TREND',r.trend?ti+r.trend.toUpperCase():'—',_sdNum(r.mv)?(r.mv>=0?'+':'−')+'$'+Math.abs(r.mv).toFixed(2)+' open → close':'',tc);
-  h+=_hxPlate('GAMMA FLIP',_sdF(r.flip,0),_sdNum(r.flip)&&_sdNum(r.c)?(r.flip>r.c?'above':'below')+' close '+r.c.toFixed(2):'no snapshot',HX.flip);
+  h+=_hxPlate('GAMMA FLIP',_sdNum(r.flip)?(r.flipFb?'≈':'')+r.flip.toFixed(0):'—',!_sdNum(r.flip)?'no snapshot':r.flipFb?'no true flip found · nearest-to-zero strike':(r.flip>r.c?'above':'below')+' close '+_sdF(r.c),HX.flip);
   h+=_hxPlate('NET GEX',_sdBig(r.ngex),'CW '+_sdF(r.cw,0)+' · PW '+_sdF(r.pw,0),HX.c);
-  h+=_hxPlate('VOLUME',_sdNum(r.v)?(r.v>=1e6?(r.v/1e6).toFixed(2)+'M':Math.round(r.v/1e3)+'K'):'—',r.big?'Peak bar '+_sdHM(r.big.m)+' · '+Math.round(r.big.v).toLocaleString():(r.src==='daily'?'daily total':''),HX.c);
+  h+=_hxPlate('IEX VOLUME',_sdNum(r.v)?(r.v>=1e6?(r.v/1e6).toFixed(2)+'M':Math.round(r.v/1e3)+'K'):'—','~1–2% of total market volume'+(r.big?' · peak bar '+_sdHM(r.big.m):''),HX.c);
   h+='</div>';
   h+='<div style="margin-top:8px;font-size:11px;color:'+HX.dim+'">O '+_sdF(r.o)+' · H '+_sdF(r.h)+' · L '+_sdF(r.l)+' · C '+_sdF(r.c)+(r.snap?' · IV/GEX snapshot: '+r.snap:'')+'</div>';
   return h;
@@ -6687,14 +6688,14 @@ function renderSessionData(w){
           +'<span>$'+_sdF(r.rng)+'</span>'
           +'<span style="color:'+tc+'">'+(r.trend||'—')+'</span>'
           +'<span style="color:'+HX.dim+'">IV '+(_sdNum(r.iv)?r.iv.toFixed(1)+'%':'—')+'</span>'
-          +'<span style="color:'+HX.flip+'">flip '+_sdF(r.flip,0)+'</span></button>';
+          +'<span style="color:'+HX.flip+'">flip '+(_sdNum(r.flip)&&r.flipFb?'≈':'')+_sdF(r.flip,0)+'</span></button>';
       });
       h+='</div>';
       if(list.length>shown.length)h+='<div style="padding:8px 14px;font-size:11px;color:'+HX.dim+'">Showing newest 300 of '+list.length+' days · narrow the dates to see older ones.</div>';
       h+='</div>';
     }
   }
-  h+='<div style="position:relative;margin-top:10px;font-size:11px;color:'+HX.dim+'">Minute candles are IEX feed (volume = IEX only). IV &amp; GEX = logger snapshot for that day (pm if there is one).</div>';
+  h+='<div style="position:relative;margin-top:10px;font-size:11px;color:'+HX.dim+'">Prices: IEX feed (match full market within cents). Volume: IEX only, about 1–2% of total, so use it for shape, not size. IV &amp; GEX = logger snapshot for that day (pm if there is one).</div>';
   return h+'</div>';
 }
 function _sdWidget(el){var wEl=el.closest('.widget');if(!wEl)return null;var id=wEl.dataset.wid;return {el:wEl,w:activeLayout().widgets.find(function(x){return x.id===id;})};}
