@@ -6545,103 +6545,183 @@ function _sdBuild(){
     return r;
   });
 }
-// visuals: 10-min candles + GEX lines, volume bars, IV bars
-var SDC={up:'#4ade80',dn:'#f87171',flip:'#facc15',cw:'#60a5fa',pw:'#fb923c',hv:'#a78bfa',iv:'#22d3ee'};
-function _sdChart(r){
+// ── HOLO-TABLE look (concept B): metal console, projection bay, glass lenses ──
+var HX={c:'#46e8ff',dn:'#ff8a66',flip:'#ffd866',cw:'#a99bff',pw:'#ffb07a',dim:'#7d98a0',txt:'#dff6fa'};
+var _sdUid=0;
+function _hxScrew(pos){return '<span aria-hidden="true" style="position:absolute;'+pos+';width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8d949c,#2b3036 70%);box-shadow:inset 0 1px 1px rgba(255,255,255,.25),0 1px 2px #000"><span style="position:absolute;left:2px;right:2px;top:5px;height:2px;background:#15181c;transform:rotate(35deg)"></span></span>';}
+function _hxKey(label,act,lit,title){
+  return '<button type="button" data-sd-btn="'+act+'" title="'+title+'" style="font-family:\'Share Tech Mono\',ui-monospace,monospace;font-size:12px;letter-spacing:.14em;min-height:40px;padding:0 14px;cursor:pointer;color:'+(lit?HX.c:'#9fb4ba')+';background:linear-gradient(180deg,#3a4148,#1f2429);border:1px solid #0c0e10;border-radius:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 3px 0 #0a0c0e,0 4px 8px rgba(0,0,0,.6)'+(lit?',0 0 14px rgba(70,232,255,.35)':'')+';text-shadow:'+(lit?'0 0 8px '+HX.c:'0 1px 0 #000')+'">'+label+'</button>';
+}
+function _hxDate(attr,val,min,max){return '<input type="date" '+attr+' value="'+val+'" min="'+min+'" max="'+max+'" aria-label="'+(attr==='data-sd-from'?'From date':'To date')+'" style="font-family:inherit;font-size:12px;min-height:38px;padding:0 8px;color:'+HX.txt+';background:#07161b;border:1px solid #0e4a5a;border-radius:6px;box-shadow:inset 0 2px 6px #000;color-scheme:dark">';}
+function _hxLens(label,val,pct,sub){
+  pct=_sdNum(pct)?Math.max(0,Math.min(1,pct)):0;var r=40,C=2*Math.PI*r,ticks='';
+  for(var i=0;i<40;i++)ticks+='<line x1="60" y1="6" x2="60" y2="'+(i%5===0?12:9)+'" stroke="#7fa6b0" stroke-opacity=".6" transform="rotate('+(i*9)+' 60 60)"/>';
+  return '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0">'
+   +'<div style="width:112px;height:112px;border-radius:50%;padding:5px;box-sizing:border-box;background:conic-gradient(from 200deg,#5b646e,#1d2227,#7a838c,#20252a,#5b646e);box-shadow:0 6px 14px rgba(0,0,0,.7),inset 0 1px 1px rgba(255,255,255,.3)">'
+   +'<div style="position:relative;width:102px;height:102px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 55%,#062a33 0%,#020c10 75%);box-shadow:inset 0 0 18px #000,inset 0 -6px 18px rgba(70,232,255,.12)">'
+   +'<svg viewBox="0 0 120 120" width="102" height="102" style="position:absolute;inset:0">'+ticks
+   +'<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="#0d3440" stroke-width="6"/>'
+   +'<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="'+HX.c+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+(C*pct).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 60 60)" style="filter:drop-shadow(0 0 5px '+HX.c+')"/>'
+   +'<text x="60" y="67" text-anchor="middle" font-size="19" font-weight="700" fill="#e4fcff" font-family="Rajdhani,sans-serif">'+val+'</text></svg>'
+   +'<span style="position:absolute;left:12px;top:7px;width:52px;height:26px;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0));transform:rotate(-20deg)"></span>'
+   +'</div></div>'
+   +'<div style="font-size:12px;letter-spacing:.16em;color:#cfe9ee;text-shadow:0 1px 0 #000;text-align:center">'+label+'</div>'
+   +'<div style="font-size:11px;color:'+HX.dim+';text-align:center">'+sub+'</div></div>';
+}
+function _hxPlate(label,val,sub,col){
+  return '<div style="position:relative;overflow:hidden;border-radius:10px;padding:12px 14px;background:linear-gradient(180deg,rgba(120,200,220,.10),rgba(10,30,38,.35) 40%,rgba(2,10,14,.6));border:1px solid rgba(120,220,240,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 20px rgba(0,0,0,.4),0 8px 18px rgba(0,0,0,.55)">'
+   +'<div style="font-size:11px;letter-spacing:.18em;color:#8fb4bd">'+label+'</div>'
+   +'<div style="font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;line-height:1.15;color:'+col+';text-shadow:0 0 10px '+col+'99">'+val+'</div>'
+   +'<div style="font-size:12px;color:'+HX.dim+'">'+sub+'</div>'
+   +'<span style="position:absolute;left:-20%;top:0;width:60%;height:100%;background:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.06) 50%,rgba(255,255,255,0) 70%)"></span></div>';
+}
+function _hxChart(r,uid){
   var daily=!(r.b10&&r.b10.length);
   var bars=!daily?r.b10:(_sdNum(r.o)?[{m:570,o:r.o,h:r.h,l:r.l,c:r.c,v:r.v}]:null);
-  if(!bars)return '';
+  if(!bars)return {svg:'',vol:'',lo:NaN,hi:NaN,inView:[],daily:daily,bars:[]};
   var lo=Infinity,hi=-Infinity;bars.forEach(function(q){lo=Math.min(lo,q.l);hi=Math.max(hi,q.h);});
   var rg=(hi-lo)||1;
-  var lv=[['flip',r.flip,'Gamma flip'],['cw',r.cw,'Call wall'],['pw',r.pw,'Put wall']].filter(function(x){return _sdNum(x[1]);});
+  var lv=[['flip',r.flip],['cw',r.cw],['pw',r.pw]].filter(function(x){return _sdNum(x[1]);});
   var inView=lv.filter(function(x){return x[1]>=lo-0.6*rg&&x[1]<=hi+0.6*rg;});
   inView.forEach(function(x){lo=Math.min(lo,x[1]);hi=Math.max(hi,x[1]);});
   var pad=(hi-lo)*0.08||0.5;lo-=pad;hi+=pad;
-  var W=390,H=100,VH=24;
-  function y(p){return (hi-p)/(hi-lo)*H;}
-  var slot=daily?W:W/39,bw=daily?W*0.08:slot*0.6,vmax=0;bars.forEach(function(q){vmax=Math.max(vmax,q.v||0);});
-  var ns=' vector-effect="non-scaling-stroke"';
-  var s='<div style="position:relative;margin:6px 0 2px">';
-  s+='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="display:block;width:100%;height:150px;border:1px solid var(--bdr);border-radius:4px">';
-  inView.forEach(function(x){var yy=y(x[1]).toFixed(2);s+='<line x1="0" x2="'+W+'" y1="'+yy+'" y2="'+yy+'" stroke="'+SDC[x[0]]+'" stroke-width="1.5" stroke-dasharray="6 4"'+ns+'/>';});
-  bars.forEach(function(q){
-    var cx=daily?W/2:slot*((q.m-570)/10)+slot/2,col=q.c>=q.o?SDC.up:SDC.dn,yo=y(q.o),yc=y(q.c);
-    s+='<line x1="'+cx.toFixed(2)+'" x2="'+cx.toFixed(2)+'" y1="'+y(q.h).toFixed(2)+'" y2="'+y(q.l).toFixed(2)+'" stroke="'+col+'" stroke-width="1"'+ns+'/>';
-    s+='<rect x="'+(cx-bw/2).toFixed(2)+'" y="'+Math.min(yo,yc).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+Math.max(0.6,Math.abs(yc-yo)).toFixed(2)+'" fill="'+col+'"/>';
-  });
-  s+='</svg>';
-  s+='<div style="position:absolute;top:4px;right:6px;font-size:11px;color:var(--dim)">'+hi.toFixed(2)+'</div>';
-  s+='<div style="position:absolute;bottom:4px;right:6px;font-size:11px;color:var(--dim)">'+lo.toFixed(2)+'</div>';
-  s+='</div>';
-  s+='<svg viewBox="0 0 '+W+' '+VH+'" preserveAspectRatio="none" style="display:block;width:100%;height:36px">';
-  bars.forEach(function(q){if(!vmax)return;var cx=daily?W/2:slot*((q.m-570)/10)+slot/2,vh=(q.v/vmax)*VH,col=q.c>=q.o?SDC.up:SDC.dn;
-    s+='<rect x="'+(cx-bw/2).toFixed(2)+'" y="'+(VH-vh).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+vh.toFixed(2)+'" fill="'+col+'" opacity="'+(r.big&&q.m===r.big.m?1:0.45)+'"/>';});
-  s+='</svg>';
-  var lastM=bars[bars.length-1].m+10;
-  s+='<div style="display:flex;justify-content:space-between;color:var(--dim);font-size:11px;margin:2px 0 4px"><span>'+(daily?'1 daily candle (no 10-min data before Aug 10)':'9:30a')+'</span><span>'+(daily?'':'volume · 10-min')+'</span><span>'+(daily?'':'4:00p')+'</span></div>';
-  if(!daily&&lastM<960)s+='<div style="color:var(--dim);font-size:11px;margin-bottom:4px">Candles through '+_sdHM(lastM)+' ET (feed updates periodically)</div>';
-  if(lv.length){s+='<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;margin-bottom:6px">';
-    lv.forEach(function(x){var where=inView.indexOf(x)>=0?'':(x[1]>hi?' ↑ above chart':' ↓ below chart');
-      s+='<span style="color:'+SDC[x[0]]+'"><span style="display:inline-block;width:14px;border-top:2px dashed '+SDC[x[0]]+';vertical-align:middle;margin-right:4px"></span>'+x[2]+' '+x[1].toFixed(0)+'<span style="color:var(--dim)">'+where+'</span></span>';});
-    s+='</div>';}
-  return s;
+  var W=390,H=100,VH=24;function y(p){return (hi-p)/(hi-lo)*H;}
+  var slot=daily?W:W/39,bw=daily?W*0.06:slot*0.56,vmax=0;bars.forEach(function(q){vmax=Math.max(vmax,q.v||0);});
+  var ns=' vector-effect="non-scaling-stroke"',s='';
+  for(var i=1;i<6;i++)s+='<line x1="0" x2="'+W+'" y1="'+(H*i/6).toFixed(2)+'" y2="'+(H*i/6).toFixed(2)+'" stroke="'+HX.c+'" stroke-opacity=".09"'+ns+'/>';
+  for(var j=1;j<13;j++)s+='<line x1="'+(W*j/13).toFixed(2)+'" x2="'+(W*j/13).toFixed(2)+'" y1="0" y2="'+H+'" stroke="'+HX.c+'" stroke-opacity=".06"'+ns+'/>';
+  inView.forEach(function(x){var yy=y(x[1]).toFixed(2);s+='<line x1="0" x2="'+W+'" y1="'+yy+'" y2="'+yy+'" stroke="'+HX[x[0]]+'" stroke-width="1.4" stroke-dasharray="8 5"'+ns+'/>';});
+  function cx(q){return daily?W/2:slot*((q.m-570)/10)+slot/2;}
+  function layer(upC,dnC,dx,op){var g='<g transform="translate('+dx+' 0)" opacity="'+op+'">';
+    bars.forEach(function(q){var x=cx(q),col=q.c>=q.o?upC:dnC,yo=y(q.o),yc=y(q.c);
+      g+='<line x1="'+x.toFixed(2)+'" x2="'+x.toFixed(2)+'" y1="'+y(q.h).toFixed(2)+'" y2="'+y(q.l).toFixed(2)+'" stroke="'+col+'" stroke-width="1.1"'+ns+'/>';
+      g+='<rect x="'+(x-bw/2).toFixed(2)+'" y="'+Math.min(yo,yc).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+Math.max(0.6,Math.abs(yc-yo)).toFixed(2)+'" fill="'+col+'" fill-opacity=".6" stroke="'+col+'" stroke-width="1"'+ns+'/>';});
+    return g+'</g>';}
+  s+=layer('#ff3df2','#ff3df2',-0.7,0.22)+layer('#3dffb4','#3dffb4',0.7,0.16);
+  s+='<g filter="url(#hxg'+uid+')">'+layer(HX.c,HX.dn,0,1)+'</g>';
+  var v='';bars.forEach(function(q){if(!vmax)return;var x=cx(q),vh=(q.v/vmax)*VH,col=q.c>=q.o?HX.c:HX.dn;
+    v+='<rect x="'+(x-bw/2).toFixed(2)+'" y="'+(VH-vh).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+vh.toFixed(2)+'" fill="'+col+'" fill-opacity="'+(r.big&&q.m===r.big.m?0.95:0.3)+'"/>';});
+  var defs='<defs><filter id="hxg'+uid+'" x="-5%" y="-20%" width="110%" height="140%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+  return {svg:'<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="display:block;width:100%;height:210px;overflow:visible">'+defs+s+'</svg>',
+          vol:'<svg viewBox="0 0 '+W+' '+VH+'" preserveAspectRatio="none" style="display:block;width:100%;height:34px">'+v+'</svg>',
+          lo:lo,hi:hi,inView:inView,daily:daily,bars:bars};
 }
-function _sdIV(r){
-  if(!_sdNum(r.hv)&&!_sdNum(r.iv))return '';
-  var mx=Math.max(30,_sdNum(r.hv)?r.hv:0,_sdNum(r.iv)?r.iv:0);
-  function bar(lbl,v,c){return '<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--dim)"><span style="width:62px">'+lbl+'</span><div style="flex:1;height:7px;background:var(--bdr);border-radius:4px;overflow:hidden"><div style="width:'+(_sdNum(v)?v/mx*100:0).toFixed(1)+'%;height:100%;background:'+c+'"></div></div><span style="width:40px;text-align:right">'+(_sdNum(v)?v.toFixed(1)+'%':'—')+'</span></div>';}
-  return '<div style="margin:4px 0 6px">'+bar('Hist IV',r.hv,SDC.hv)+bar('Actual IV',r.iv,SDC.iv)+'</div>';
+function _hxDay(r){
+  var uid=++_sdUid,ch=_hxChart(r,uid),mid=(ch.lo+ch.hi)/2;
+  var names={flip:'Gamma flip',cw:'Call wall',pw:'Put wall'};
+  var legend=[['flip',r.flip],['cw',r.cw],['pw',r.pw]].filter(function(x){return _sdNum(x[1]);}).map(function(x){
+    var shown=ch.inView.some(function(z){return z[0]===x[0];});
+    return '<span style="color:'+HX[x[0]]+'">'+(shown?'- - ':'')+names[x[0]]+' '+x[1].toFixed(0)+(shown?'':' <span style="color:'+HX.dim+'">'+(x[1]>ch.hi?'↑ above field':'↓ below field')+'</span>')+'</span>';}).join('');
+  var lastM=ch.bars.length?ch.bars[ch.bars.length-1].m+10:960;
+  var h='<div style="position:relative;border-radius:14px;padding:10px;background:linear-gradient(180deg,#2a3036,#12161a);border:1px solid #050607;box-shadow:0 10px 24px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.1)">'+_hxScrew('left:7px;top:7px')+_hxScrew('right:7px;top:7px');
+  h+='<div style="position:relative;overflow:hidden;border-radius:10px;padding:14px 16px 12px;background:radial-gradient(ellipse at 50% 100%,#06313c 0%,#020a0d 62%);box-shadow:inset 0 0 40px #000,inset 0 0 2px rgba(70,232,255,.4)">';
+  // light cone + emitter + floor grid (decor, behind)
+  h+='<span aria-hidden="true" style="position:absolute;left:12%;right:12%;top:30px;bottom:10px;background:linear-gradient(0deg,rgba(70,232,255,.14),rgba(70,232,255,.02) 70%,rgba(70,232,255,0));clip-path:polygon(38% 100%,62% 100%,100% 0,0 0)"></span>';
+  h+='<span aria-hidden="true" style="position:absolute;left:32%;right:32%;bottom:4px;height:5px;border-radius:3px;background:'+HX.c+';box-shadow:0 0 16px '+HX.c+',0 0 36px rgba(70,232,255,.6)"></span>';
+  h+='<div style="position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:11px;letter-spacing:.16em;color:#6fb8c8"><span>'+r.date+' · '+(ch.daily?'DAILY BAR':'10-MIN FIELD')+'</span><span style="color:'+(/NEG/i.test(r.reg||'')?HX.dn:HX.c)+'">'+(r.reg||'NO GEX SNAPSHOT')+'</span></div>';
+  if(ch.svg){
+    h+='<div style="position:relative;margin-top:8px;perspective:900px"><div style="transform:rotateX(10deg);transform-origin:50% 100%">'+ch.svg+'</div>';
+    h+='<span style="position:absolute;right:2px;top:0;font-size:11px;color:#6fb8c8">'+ch.hi.toFixed(2)+'</span><span style="position:absolute;right:2px;bottom:0;font-size:11px;color:#6fb8c8">'+ch.lo.toFixed(2)+'</span></div>';
+    h+='<div style="position:relative;margin-top:6px">'+ch.vol+'</div>';
+    h+='<div style="position:relative;display:flex;justify-content:space-between;font-size:11px;color:#6fb8c8;margin-top:2px"><span>'+(ch.daily?'no 10-min data before Aug 10':'9:30a')+'</span><span>volume</span><span>'+(ch.daily?'':'4:00p')+'</span></div>';
+    if(!ch.daily&&lastM<960)h+='<div style="position:relative;font-size:11px;color:'+HX.flip+';margin-top:2px">Candles through '+_sdHM(lastM)+' ET · feed updates periodically</div>';
+  } else h+='<div style="position:relative;padding:40px 0;text-align:center;color:'+HX.dim+'">No candles for this day.</div>';
+  if(legend)h+='<div style="position:relative;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;margin:8px 0 6px">'+legend+'</div>';
+  // scanlines + flicker band (on top, non-interactive)
+  h+='<span aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0,rgba(0,0,0,.22) 1px,rgba(0,0,0,0) 2px,rgba(0,0,0,0) 3px)"></span>';
+  h+='<span aria-hidden="true" style="position:absolute;left:0;right:0;top:38%;height:36px;pointer-events:none;background:linear-gradient(180deg,rgba(70,232,255,0),rgba(70,232,255,.05),rgba(70,232,255,0))"></span>';
+  h+='</div></div>';
+  // lenses
+  var rngPct=_sdNum(r.rng)&&_sdNum(r.c)?r.rng/(r.c*0.02):NaN;
+  h+='<div style="position:relative;margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:12px 8px;padding:14px 8px;border-radius:14px;background:linear-gradient(180deg,#22282d,#111417);border:1px solid #050607;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.6)">';
+  h+=_hxLens('HIST IV',_sdNum(r.hv)?r.hv.toFixed(1)+'%':'—',r.hv/40,'21d realized');
+  h+=_hxLens('ACTUAL IV',_sdNum(r.iv)?r.iv.toFixed(1)+'%':'—',r.iv/40,'implied');
+  h+=_hxLens('$ RANGE',_sdNum(r.rng)?'$'+r.rng.toFixed(2):'—',rngPct,'H '+_sdF(r.h)+' · L '+_sdF(r.l));
+  h+=_hxLens('UP BARS',r.bars?r.up+'/'+r.bars:'—',r.bars?r.up/r.bars:NaN,r.bars?'▼ '+r.dn+' down · 10-min':'no 10-min data');
+  h+='</div>';
+  // plates
+  var tc=r.trend==='Up'?HX.c:r.trend==='Down'?HX.dn:HX.txt,ti=r.trend==='Up'?'▲ ':r.trend==='Down'?'▼ ':'◆ ';
+  h+='<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
+  h+=_hxPlate('TREND',r.trend?ti+r.trend.toUpperCase():'—',_sdNum(r.mv)?(r.mv>=0?'+':'−')+'$'+Math.abs(r.mv).toFixed(2)+' open → close':'',tc);
+  h+=_hxPlate('GAMMA FLIP',_sdF(r.flip,0),_sdNum(r.flip)&&_sdNum(r.c)?(r.flip>r.c?'above':'below')+' close '+r.c.toFixed(2):'no snapshot',HX.flip);
+  h+=_hxPlate('NET GEX',_sdBig(r.ngex),'CW '+_sdF(r.cw,0)+' · PW '+_sdF(r.pw,0),HX.c);
+  h+=_hxPlate('VOLUME',_sdNum(r.v)?(r.v>=1e6?(r.v/1e6).toFixed(2)+'M':Math.round(r.v/1e3)+'K'):'—',r.big?'Peak bar '+_sdHM(r.big.m)+' · '+Math.round(r.big.v).toLocaleString():(r.src==='daily'?'daily total':''),HX.c);
+  h+='</div>';
+  h+='<div style="margin-top:8px;font-size:11px;color:'+HX.dim+'">O '+_sdF(r.o)+' · H '+_sdF(r.h)+' · L '+_sdF(r.l)+' · C '+_sdF(r.c)+(r.snap?' · IV/GEX snapshot: '+r.snap:'')+'</div>';
+  return h;
 }
 function renderSessionData(w){
   _sdLoad();
   var rows=_sdBuild(),first=rows.length?rows[0].date:'',last=rows.length?rows[rows.length-1].date:'';
-  var from=(w&&w.sdFrom)||last,to=(w&&w.sdTo)||last;
-  var h='<div data-sd-root="1" style="font-size:13px">';
-  h+='<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">';
-  h+='<input type="date" data-sd-from value="'+from+'" min="'+first+'" max="'+last+'" style="background:var(--bg);color:var(--fg);border:1px solid var(--bdr);border-radius:4px;padding:3px">';
-  h+='<span style="color:var(--dim)">→</span>';
-  h+='<input type="date" data-sd-to value="'+to+'" min="'+first+'" max="'+last+'" style="background:var(--bg);color:var(--fg);border:1px solid var(--bdr);border-radius:4px;padding:3px">';
-  ['Today','All'].forEach(function(t){h+='<button type="button" data-sd-btn="'+t+'" style="padding:3px 9px;border-radius:4px;border:1px solid var(--bdr);background:transparent;color:var(--fg);cursor:pointer">'+t+'</button>';});
-  h+='</div>';
-  if(SD.err)h+='<div style="color:var(--dim)">'+SD.err+'</div>';
-  if(!SD.candles&&!SD.err)h+='<div style="color:var(--dim)">Loading candles…</div>';
-  var pick=rows.filter(function(r){return r.date>=from&&r.date<=to;}).reverse();
-  if(SD.candles&&!pick.length)h+='<div style="color:var(--dim)">No data in that date range.</div>';
-  function line(label,val,sub){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--dim)">'+label+'</span><span style="text-align:right">'+val+(sub?'<div style="color:var(--dim);font-size:11px">'+sub+'</div>':'')+'</span></div>';}
-  pick.slice(0,400).forEach(function(r){
-    var tc=r.trend==='Up'?'#4ade80':r.trend==='Down'?'#f87171':'var(--fg)';
-    h+='<div style="margin-bottom:12px"><div style="color:var(--accent);font-weight:600;margin-bottom:3px">'+r.date+(r.snap?' <span style="color:var(--dim);font-weight:400;font-size:11px">(snapshot '+r.snap+')</span>':'')+'</div>';
-    h+=_sdChart(r)+_sdIV(r);
-    h+=line('$ range (high − low)','$'+_sdF(r.rng),'O '+_sdF(r.o)+' · H '+_sdF(r.h)+' · L '+_sdF(r.l)+' · C '+_sdF(r.c));
-    h+=line('Historical IV (21d realized)',_sdNum(r.hv)?_sdF(r.hv)+'%':'—');
-    h+=line('Actual IV (implied)',_sdNum(r.iv)?_sdF(r.iv)+'%':'—');
-    h+=line('GEX levels',_sdBig(r.ngex),'call wall '+_sdF(r.cw,0)+' · put wall '+_sdF(r.pw,0)+(r.reg?' · '+r.reg:''));
-    h+=line('Trend (open → close)','<span style="color:'+tc+'">'+(r.trend||'—')+'</span>',_sdNum(r.mv)?(r.mv>=0?'+':'')+'$'+_sdF(r.mv):'');
-    h+=line('Gamma flip',_sdF(r.flip,0));
-    h+=line('Volume candles',_sdNum(r.v)?Math.round(r.v).toLocaleString():'—',r.big?'biggest 10-min: '+_sdHM(r.big.m)+' ET · '+Math.round(r.big.v).toLocaleString():'');
-    h+=line('10-min candles',r.bars?'▲ '+r.up+' · ▼ '+r.dn:'—',r.bars?r.bars+' bars':'minute data starts Aug 10');
-    h+='</div>';
-  });
-  if(pick.length>400)h+='<div style="color:var(--dim)">Showing newest 400 of '+pick.length+' days.</div>';
-  h+='<div style="color:var(--dim);font-size:11px;margin-top:6px">Regular session 9:30–4:00 ET. Minute candles are IEX feed (volume = IEX only). IV & GEX = logger snapshot for that day (pm if there is one). First day: '+first+'.</div>';
+  var from=(w&&w.sdFrom)||last,to=(w&&w.sdTo)||last;if(from>to){var t=from;from=to;to=t;}
+  var pick=rows.filter(function(r){return r.date>=from&&r.date<=to;});
+  var sel=(w&&w.sdSel&&pick.some(function(r){return r.date===w.sdSel;}))?w.sdSel:(pick.length?pick[pick.length-1].date:'');
+  var h='<div data-sd-root="1" style="position:relative;font-family:\'Share Tech Mono\',ui-monospace,monospace;font-size:13px;color:'+HX.txt+';background:radial-gradient(ellipse at 50% 0%,#1a2026 0%,#0a0c0f 70%);border-radius:12px;padding:14px;margin:-4px">';
+  h+='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap">';
+  h+='<svg aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;opacity:.3;pointer-events:none;border-radius:12px"><filter id="hxn"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .5 0 0 0 0 .55 0 0 0 0 .6 0 0 0 .35 0"/></filter><rect width="100%" height="100%" filter="url(#hxn)"/></svg>';
+  // header console
+  h+='<div style="position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:linear-gradient(180deg,#2b3137,#171b1f);border:1px solid #06080a;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 6px 14px rgba(0,0,0,.6)">'
+    +_hxScrew('left:5px;top:5px')+_hxScrew('right:5px;top:5px')+_hxScrew('left:5px;bottom:5px')+_hxScrew('right:5px;bottom:5px');
+  h+='<div style="padding-left:8px"><div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;letter-spacing:.28em;color:#b9c6cc;text-shadow:0 -1px 0 #000,0 1px 0 rgba(255,255,255,.12)">HOLO-TABLE · SESSION</div>'
+    +'<div style="font-size:11px;letter-spacing:.14em;color:#6f858c">QQQ · 09:30 → 16:00 ET · '+(SD.candles?'<span style="color:'+HX.c+'">EMITTER ONLINE</span>':SD.err?'<span style="color:'+HX.dn+'">FEED ERROR</span>':'WARMING UP…')+'</div></div>';
+  var isToday=from===last&&to===last,isAll=from===first&&to===last&&first!==last;
+  h+='<div style="display:flex;flex-wrap:wrap;gap:8px;padding-right:8px">'+_hxKey('◀','prev',false,'Previous day')+_hxKey('TODAY','today',isToday,'Latest day')+_hxKey('ALL','all',isAll,'Every day with data')+_hxKey('▶','next',false,'Next day')+'</div></div>';
+  // date range strip
+  h+='<div style="position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0">'+_hxDate('data-sd-from',from,first,last)+'<span style="color:'+HX.dim+'">→</span>'+_hxDate('data-sd-to',to,first,last)
+    +'<span style="font-size:11px;color:'+HX.dim+'">'+pick.length+' day'+(pick.length===1?'':'s')+' · data from '+first+'</span></div>';
+  if(SD.err)h+='<div style="position:relative;color:'+HX.dn+';margin-bottom:8px">'+SD.err+'</div>';
+  if(!SD.candles&&!SD.err)h+='<div style="position:relative;color:'+HX.dim+';padding:30px 0;text-align:center">Loading candles…</div>';
+  else if(!pick.length)h+='<div style="position:relative;color:'+HX.dim+';padding:30px 0;text-align:center">No data in that date range.</div>';
+  else{
+    var selRow=pick.filter(function(r){return r.date===sel;})[0];
+    h+='<div style="position:relative">'+_hxDay(selRow)+'</div>';
+    if(pick.length>1){
+      var list=pick.slice().reverse(),shown=list.slice(0,300);
+      h+='<div style="position:relative;margin-top:14px;border-radius:12px;background:linear-gradient(180deg,#1b2024,#0e1114);border:1px solid #050607;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)">';
+      h+='<div style="padding:10px 14px;font-size:11px;letter-spacing:.18em;color:#8fb4bd;border-bottom:1px solid #0e4a5a">DAY LOG · tap a day to project it</div>';
+      h+='<div style="max-height:320px;overflow:auto">';
+      shown.forEach(function(r){
+        var on=r.date===sel,tc=r.trend==='Up'?HX.c:r.trend==='Down'?HX.dn:HX.txt;
+        h+='<button type="button" data-sd-day="'+r.date+'" style="display:grid;grid-template-columns:96px 1fr 1fr 1fr 1fr;gap:8px;width:100%;min-height:40px;align-items:center;padding:6px 14px;font-family:inherit;font-size:12px;text-align:left;cursor:pointer;color:'+HX.txt+';background:'+(on?'rgba(70,232,255,.10)':'transparent')+';border:0;border-bottom:1px solid rgba(14,74,90,.5);'+(on?'box-shadow:inset 3px 0 0 '+HX.c+';':'')+'">'
+          +'<span style="color:'+(on?HX.c:HX.txt)+'">'+r.date+'</span>'
+          +'<span>$'+_sdF(r.rng)+'</span>'
+          +'<span style="color:'+tc+'">'+(r.trend||'—')+'</span>'
+          +'<span style="color:'+HX.dim+'">IV '+(_sdNum(r.iv)?r.iv.toFixed(1)+'%':'—')+'</span>'
+          +'<span style="color:'+HX.flip+'">flip '+_sdF(r.flip,0)+'</span></button>';
+      });
+      h+='</div>';
+      if(list.length>shown.length)h+='<div style="padding:8px 14px;font-size:11px;color:'+HX.dim+'">Showing newest 300 of '+list.length+' days · narrow the dates to see older ones.</div>';
+      h+='</div>';
+    }
+  }
+  h+='<div style="position:relative;margin-top:10px;font-size:11px;color:'+HX.dim+'">Minute candles are IEX feed (volume = IEX only). IV &amp; GEX = logger snapshot for that day (pm if there is one).</div>';
   return h+'</div>';
 }
 function _sdWidget(el){var wEl=el.closest('.widget');if(!wEl)return null;var id=wEl.dataset.wid;return {el:wEl,w:activeLayout().widgets.find(function(x){return x.id===id;})};}
-function _sdRedraw(r){var root=r.el.querySelector('[data-sd-root]');if(root)root.outerHTML=renderSessionData(r.w);}
+function _sdRedraw(r){var root=r.el.querySelector('[data-sd-root]');if(root){var sc=root.querySelector('[data-sd-root] div[style*="max-height:320px"]'),top=sc?sc.scrollTop:0;root.outerHTML=renderSessionData(r.w);var n=r.el.querySelector('[data-sd-root] div[style*="max-height:320px"]');if(n)n.scrollTop=top;}}
 function _sdRedrawAll(){document.querySelectorAll('[data-sd-root]').forEach(function(root){var r=_sdWidget(root);if(r&&r.w)_sdRedraw(r);});}
 document.addEventListener('change',function(ev){
   if(!ev.target.matches('[data-sd-from],[data-sd-to]'))return;var r=_sdWidget(ev.target);if(!r||!r.w)return;
   if(ev.target.matches('[data-sd-from]'))r.w.sdFrom=ev.target.value;else r.w.sdTo=ev.target.value;
-  save();_sdRedraw(r);
+  r.w.sdSel=null;save();_sdRedraw(r);
 });
 document.addEventListener('click',function(ev){
+  var d=ev.target.closest('[data-sd-day]');
+  if(d){var rd=_sdWidget(d);if(!rd||!rd.w)return;rd.w.sdSel=d.dataset.sdDay;save();_sdRedraw(rd);return;}
   var b=ev.target.closest('[data-sd-btn]');if(!b)return;var r=_sdWidget(b);if(!r||!r.w)return;
   var rows=_sdBuild();if(!rows.length)return;
-  r.w.sdTo=rows[rows.length-1].date;r.w.sdFrom=b.dataset.sdBtn==='All'?rows[0].date:r.w.sdTo;
+  var first=rows[0].date,last=rows[rows.length-1].date,act=b.dataset.sdBtn;
+  if(act==='today'){r.w.sdFrom=r.w.sdTo=r.w.sdSel=last;}
+  else if(act==='all'){r.w.sdFrom=first;r.w.sdTo=last;r.w.sdSel=last;}
+  else{
+    var cur=r.w.sdSel||r.w.sdTo||last,i=rows.findIndex(function(x){return x.date===cur;});if(i<0)i=rows.length-1;
+    i=Math.max(0,Math.min(rows.length-1,i+(act==='prev'?-1:1)));
+    var nd=rows[i].date;r.w.sdSel=nd;
+    if(!r.w.sdFrom||nd<r.w.sdFrom||!r.w.sdTo||nd>r.w.sdTo){r.w.sdFrom=r.w.sdTo=nd;}
+  }
   save();_sdRedraw(r);
 });
 setInterval(function(){if(document.querySelector('[data-sd-root]'))_sdLoad();},300000);
-
 function renderWidgetContent(defId, widget) {
   try {
     return renderWidgetBody(defId, widget);
