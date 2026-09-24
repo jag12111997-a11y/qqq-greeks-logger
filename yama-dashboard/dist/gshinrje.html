@@ -6498,45 +6498,100 @@ var PERF_WIDGETS = {
 };
 
 
-// ── TRADE CHECKLIST (observe-only list, saves per widget) ──
-var CK_ITEMS=[
-  {k:'range',t:'$ range',s:'Option take profit / stop loss set'},
-  {k:'hiv',t:'Historical IV',s:''},
-  {k:'aiv',t:'Actual IV',s:''},
-  {k:'gex',t:'GEX levels',s:''},
-  {k:'trend',t:'Trend',s:'',pick:['Balanced','Up','Down']},
-  {k:'flip',t:'Gamma flip',s:''},
-  {k:'vol',t:'Volume candles',s:''},
-  {k:'tf',t:'Time frame = 10 min',s:''},
-  {k:'ind',t:'All my indicators',s:''}
-];
-function renderChecklist(w){
-  var st=(w&&w.ckState)||{};var done=0;
-  var h='<div data-ck-root="1" style="font-size:13px">';
-  CK_ITEMS.forEach(function(it){
-    var on=!!st[it.k];if(on)done++;
-    h+='<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--bdr)">';
-    h+='<input type="checkbox" data-ck="'+it.k+'"'+(on?' checked':'')+' style="margin-top:3px;accent-color:var(--accent);width:16px;height:16px">';
-    h+='<div style="flex:1"><div style="color:'+(on?'var(--accent)':'var(--fg)')+'">'+it.t+'</div>';
-    if(it.s)h+='<div style="color:var(--dim);font-size:11px">'+it.s+'</div>';
-    if(it.pick){h+='<div style="display:flex;gap:6px;margin-top:5px">';it.pick.forEach(function(p){var sel=st.trendPick===p;h+='<button type="button" data-ck-pick="'+p+'" style="padding:3px 9px;border-radius:4px;border:1px solid var(--bdr);background:'+(sel?'var(--accent)':'var(--bg2)')+';color:'+(sel?'#000':'var(--fg)')+';font-size:11px;cursor:pointer">'+p+'</button>';});h+='</div>';}
-    h+='</div></div>';
-  });
-  var all=done===CK_ITEMS.length;
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="color:'+(all?'var(--accent)':'var(--dim)')+'">'+done+' / '+CK_ITEMS.length+(all?' · ready':' checked')+'</span><button type="button" data-ck-reset="1" style="padding:4px 10px;border-radius:4px;border:1px solid var(--bdr);background:var(--bg2);color:var(--dim);font-size:11px;cursor:pointer">Reset</button></div></div>';
-  return h;
+// ── SESSION DATA (open→close numbers per day; replaced the old checklist) ──
+var SD={candles:null,loading:false,err:null,at:0};
+var _sdFmt=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+function _sdET(t){var o={};_sdFmt.formatToParts(new Date(t*1000)).forEach(function(x){o[x.type]=x.value;});return {d:o.year+'-'+o.month+'-'+o.day,m:(+o.hour%24)*60+(+o.minute)};}
+function _sdNum(v){return typeof v==='number'&&isFinite(v);}
+function _sdF(v,d){return _sdNum(v)?v.toFixed(d==null?2:d):'—';}
+function _sdBig(v){if(!_sdNum(v))return '—';var a=Math.abs(v);return (v<0?'-':'')+(a>=1e9?(a/1e9).toFixed(2)+'B':(a/1e6).toFixed(0)+'M');}
+function _sdHM(m){var h=Math.floor(m/60),mm=m%60;return (h>12?h-12:h)+':'+(mm<10?'0':'')+mm+(h>=12?'p':'a');}
+function _sdLoad(){
+  if(SD.loading||(SD.at&&Date.now()-SD.at<300000))return;
+  SD.loading=true;
+  fetch(new URL('../../market-dash/qqq_candle_history.json',location.href).href+'?t='+Date.now())
+    .then(function(r){if(!r.ok)throw Error('HTTP '+r.status);return r.json();})
+    .then(function(j){SD.candles=j;SD.err=null;})
+    .catch(function(e){SD.err='Candle data could not load ('+e.message+').';})
+    .then(function(){SD.loading=false;SD.at=Date.now();_sdRedrawAll();});
 }
-function _ckWidget(el){var wEl=el.closest('.widget');if(!wEl)return null;var id=wEl.dataset.wid;return {el:wEl,w:activeLayout().widgets.find(function(x){return x.id===id;})};}
-function _ckRedraw(r){var root=r.el.querySelector('[data-ck-root]');if(root)root.outerHTML=renderChecklist(r.w);}
+function _sdBuild(){
+  var days={};function day(d){return days[d]||(days[d]={date:d});}
+  var c=SD.candles||{};
+  (c.daily||[]).forEach(function(k){var r=day(_sdET(k.time).d);r.o=k.open;r.h=k.high;r.l=k.low;r.c=k.close;r.v=k.volume;r.src='daily';});
+  var mins={};
+  (c.minute||[]).forEach(function(k){var e=_sdET(k.time);if(e.m<570||e.m>=960)return;(mins[e.d]=mins[e.d]||[]).push({m:e.m,k:k});});
+  Object.keys(mins).forEach(function(d){
+    var a=mins[d].sort(function(x,y){return x.m-y.m;}),r=day(d),b={};
+    r.o=a[0].k.open;r.c=a[a.length-1].k.close;r.h=-Infinity;r.l=Infinity;r.v=0;r.src='minute';
+    a.forEach(function(x){var k=x.k;r.h=Math.max(r.h,k.high);r.l=Math.min(r.l,k.low);r.v+=k.volume||0;
+      var s=570+Math.floor((x.m-570)/10)*10;var q=b[s]||(b[s]={o:k.open,c:k.close,v:0});q.c=k.close;q.v+=k.volume||0;});
+    r.up=0;r.dn=0;r.big=null;
+    Object.keys(b).forEach(function(s){var q=b[s];if(q.c>q.o)r.up++;else if(q.c<q.o)r.dn++;if(!r.big||q.v>r.big.v)r.big={m:+s,v:q.v};});
+    r.bars=Object.keys(b).length;
+  });
+  (window.MARKET_DASH_HISTORY||[]).forEach(function(e){
+    if(!e||!e.entry_date)return;var r=day(e.entry_date);
+    if(r.snap==='pm'&&e.session!=='pm')return;
+    var q=e.quant||{},rv=q.realized_vs_implied||{},g=e.gex||{},lv=g.levels||{};
+    r.snap=e.session||'pm';
+    r.hv=_sdNum(rv.realized_vol_pct)?rv.realized_vol_pct:q.qqq_realized_vol_21d_pct;r.iv=rv.implied_vol_pct;
+    r.flip=g.gamma_flip;r.ngex=g.net_gex;r.cw=lv.call_wall;r.pw=lv.put_wall;r.reg=g.regime;
+  });
+  return Object.keys(days).sort().map(function(d){
+    var r=days[d];
+    if(_sdNum(r.o)&&_sdNum(r.c)&&_sdNum(r.h)&&_sdNum(r.l)){var rg=r.h-r.l,mv=r.c-r.o;r.rng=rg;r.mv=mv;r.trend=(rg===0||Math.abs(mv)<0.25*rg)?'Balanced':(mv>0?'Up':'Down');}
+    return r;
+  });
+}
+function renderSessionData(w){
+  _sdLoad();
+  var rows=_sdBuild(),first=rows.length?rows[0].date:'',last=rows.length?rows[rows.length-1].date:'';
+  var from=(w&&w.sdFrom)||last,to=(w&&w.sdTo)||last;
+  var h='<div data-sd-root="1" style="font-size:13px">';
+  h+='<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px">';
+  h+='<input type="date" data-sd-from value="'+from+'" min="'+first+'" max="'+last+'" style="background:var(--bg);color:var(--fg);border:1px solid var(--bdr);border-radius:4px;padding:3px">';
+  h+='<span style="color:var(--dim)">→</span>';
+  h+='<input type="date" data-sd-to value="'+to+'" min="'+first+'" max="'+last+'" style="background:var(--bg);color:var(--fg);border:1px solid var(--bdr);border-radius:4px;padding:3px">';
+  ['Today','All'].forEach(function(t){h+='<button type="button" data-sd-btn="'+t+'" style="padding:3px 9px;border-radius:4px;border:1px solid var(--bdr);background:transparent;color:var(--fg);cursor:pointer">'+t+'</button>';});
+  h+='</div>';
+  if(SD.err)h+='<div style="color:var(--dim)">'+SD.err+'</div>';
+  if(!SD.candles&&!SD.err)h+='<div style="color:var(--dim)">Loading candles…</div>';
+  var pick=rows.filter(function(r){return r.date>=from&&r.date<=to;}).reverse();
+  if(SD.candles&&!pick.length)h+='<div style="color:var(--dim)">No data in that date range.</div>';
+  function line(label,val,sub){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--dim)">'+label+'</span><span style="text-align:right">'+val+(sub?'<div style="color:var(--dim);font-size:11px">'+sub+'</div>':'')+'</span></div>';}
+  pick.slice(0,400).forEach(function(r){
+    var tc=r.trend==='Up'?'#4ade80':r.trend==='Down'?'#f87171':'var(--fg)';
+    h+='<div style="margin-bottom:12px"><div style="color:var(--accent);font-weight:600;margin-bottom:3px">'+r.date+(r.snap?' <span style="color:var(--dim);font-weight:400;font-size:11px">(snapshot '+r.snap+')</span>':'')+'</div>';
+    h+=line('$ range (high − low)','$'+_sdF(r.rng),'O '+_sdF(r.o)+' · H '+_sdF(r.h)+' · L '+_sdF(r.l)+' · C '+_sdF(r.c));
+    h+=line('Historical IV (21d realized)',_sdNum(r.hv)?_sdF(r.hv)+'%':'—');
+    h+=line('Actual IV (implied)',_sdNum(r.iv)?_sdF(r.iv)+'%':'—');
+    h+=line('GEX levels',_sdBig(r.ngex),'call wall '+_sdF(r.cw,0)+' · put wall '+_sdF(r.pw,0)+(r.reg?' · '+r.reg:''));
+    h+=line('Trend (open → close)','<span style="color:'+tc+'">'+(r.trend||'—')+'</span>',_sdNum(r.mv)?(r.mv>=0?'+':'')+'$'+_sdF(r.mv):'');
+    h+=line('Gamma flip',_sdF(r.flip,0));
+    h+=line('Volume candles',_sdNum(r.v)?Math.round(r.v).toLocaleString():'—',r.big?'biggest 10-min: '+_sdHM(r.big.m)+' ET · '+Math.round(r.big.v).toLocaleString():'');
+    h+=line('10-min candles',r.bars?'▲ '+r.up+' · ▼ '+r.dn:'—',r.bars?r.bars+' bars':'minute data starts Aug 10');
+    h+='</div>';
+  });
+  if(pick.length>400)h+='<div style="color:var(--dim)">Showing newest 400 of '+pick.length+' days.</div>';
+  h+='<div style="color:var(--dim);font-size:11px;margin-top:6px">Regular session 9:30–4:00 ET. Minute candles are IEX feed (volume = IEX only). IV & GEX = logger snapshot for that day (pm if there is one). First day: '+first+'.</div>';
+  return h+'</div>';
+}
+function _sdWidget(el){var wEl=el.closest('.widget');if(!wEl)return null;var id=wEl.dataset.wid;return {el:wEl,w:activeLayout().widgets.find(function(x){return x.id===id;})};}
+function _sdRedraw(r){var root=r.el.querySelector('[data-sd-root]');if(root)root.outerHTML=renderSessionData(r.w);}
+function _sdRedrawAll(){document.querySelectorAll('[data-sd-root]').forEach(function(root){var r=_sdWidget(root);if(r&&r.w)_sdRedraw(r);});}
 document.addEventListener('change',function(ev){
-  if(!ev.target.matches('[data-ck]'))return;var r=_ckWidget(ev.target);if(!r||!r.w)return;
-  r.w.ckState=Object.assign({},r.w.ckState||{});r.w.ckState[ev.target.dataset.ck]=ev.target.checked;save();_ckRedraw(r);
+  if(!ev.target.matches('[data-sd-from],[data-sd-to]'))return;var r=_sdWidget(ev.target);if(!r||!r.w)return;
+  if(ev.target.matches('[data-sd-from]'))r.w.sdFrom=ev.target.value;else r.w.sdTo=ev.target.value;
+  save();_sdRedraw(r);
 });
 document.addEventListener('click',function(ev){
-  var b=ev.target.closest('[data-ck-pick],[data-ck-reset]');if(!b)return;var r=_ckWidget(b);if(!r||!r.w)return;
-  if(b.dataset.ckReset){r.w.ckState={};}else{r.w.ckState=Object.assign({},r.w.ckState||{},{trendPick:b.dataset.ckPick,trend:true});}
-  save();_ckRedraw(r);
+  var b=ev.target.closest('[data-sd-btn]');if(!b)return;var r=_sdWidget(b);if(!r||!r.w)return;
+  var rows=_sdBuild();if(!rows.length)return;
+  r.w.sdTo=rows[rows.length-1].date;r.w.sdFrom=b.dataset.sdBtn==='All'?rows[0].date:r.w.sdTo;
+  save();_sdRedraw(r);
 });
+setInterval(function(){if(document.querySelector('[data-sd-root]'))_sdLoad();},300000);
 
 function renderWidgetContent(defId, widget) {
   try {
@@ -6550,7 +6605,7 @@ function renderWidgetContent(defId, widget) {
 function renderWidgetBody(defId, widget) {
   if (defId === 'trading-notebook') return renderNotebook(currentEntry() || {}, widget);
   if (defId === 'qqq-exit-calc') return renderExitCalcWidget(widget);
-  if (defId === 'trade-checklist') return renderChecklist(widget);
+  if (defId === 'trade-checklist') return renderSessionData(widget);
   if (DATA_ERROR) {
     return '<div class="loading">' + esc(DATA_ERROR) + '</div>';
   }
@@ -7698,7 +7753,7 @@ var CATEGORIES = [
   { id:'process', label:'Process & Review', question:'What was observed, why did it matter, and what was learned?', widgets:[
     { id:'thesis-builder',        name:'Thesis Builder',          question:'What is the current thesis?',                   dw:400, dh:320 },
     { id:'trading-notebook',      name:'Trading Notebook',        question:'Journal, notes, scorecard & observations',      dw:440, dh:380 },
-    { id:'trade-checklist',       name:'Trade Checklist',         question:'Did I check everything before I trade?',         dw:360, dh:440 },
+    { id:'trade-checklist',       name:'Session Data',            question:'What did each session do, open to close?',         dw:360, dh:440 },
   ]},
   { id:'performance', label:'Performance', question:'How am I performing and what patterns emerge from my trading history?', widgets:[
     { id:'perf-performance',  name:'Performance',  question:'Full performance picture: equity, win rate, edges, timing, distribution',  dw:680, dh:860 },
