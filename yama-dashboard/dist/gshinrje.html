@@ -6548,30 +6548,42 @@ function _sdBuild(){
 // visuals: 10-min candles + GEX lines, volume bars, IV bars
 var SDC={up:'#4ade80',dn:'#f87171',flip:'#facc15',cw:'#60a5fa',pw:'#fb923c',hv:'#a78bfa',iv:'#22d3ee'};
 function _sdChart(r){
-  var bars=r.b10&&r.b10.length?r.b10:(_sdNum(r.o)?[{m:570,o:r.o,h:r.h,l:r.l,c:r.c,v:r.v}]:null);
+  var daily=!(r.b10&&r.b10.length);
+  var bars=!daily?r.b10:(_sdNum(r.o)?[{m:570,o:r.o,h:r.h,l:r.l,c:r.c,v:r.v}]:null);
   if(!bars)return '';
-  var W=320,PH=130,VH=36,G=6,L=4,R=52,cw=W-L-R,daily=!(r.b10&&r.b10.length);
   var lo=Infinity,hi=-Infinity;bars.forEach(function(q){lo=Math.min(lo,q.l);hi=Math.max(hi,q.h);});
-  var lv=[['flip',r.flip,'flip'],['cw',r.cw,'CW'],['pw',r.pw,'PW']].filter(function(x){return _sdNum(x[1]);});
-  var near=lv.filter(function(x){return Math.abs(x[1]-r.c)/r.c<=0.012;});
-  near.forEach(function(x){lo=Math.min(lo,x[1]);hi=Math.max(hi,x[1]);});
-  var pad=(hi-lo)*0.06||0.5;lo-=pad;hi+=pad;
-  function y(p){return 4+(hi-p)/(hi-lo)*(PH-8);}
-  var n=bars.length,slot=daily?cw:cw/39,bw=daily?24:Math.max(1.5,slot*0.62),vmax=0;bars.forEach(function(q){vmax=Math.max(vmax,q.v||0);});
-  var s='<svg viewBox="0 0 '+W+' '+(PH+G+VH)+'" width="100%" style="display:block;margin:4px 0 2px;font-family:inherit">';
-  s+='<rect x="0" y="0" width="'+W+'" height="'+PH+'" fill="none" stroke="var(--bdr)"/>';
-  var far=lv.filter(function(x){return near.indexOf(x)<0;}),nUp=0,nDn=0,nDnTot=far.filter(function(x){return x[1]<r.c;}).length;
-  near.sort(function(a,b){return b[1]-a[1];});var lastY=1+9*far.filter(function(x){return x[1]>r.c;}).length;near.forEach(function(x){var yy=y(x[1]).toFixed(1);var ty=Math.min(Math.max(+yy+3,lastY+9),PH-4-9*nDnTot);lastY=ty;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="'+SDC[x[0]]+'" stroke-dasharray="4 3" stroke-width="1"/><text x="'+(W-R+3)+'" y="'+ty+'" font-size="8" fill="'+SDC[x[0]]+'">'+x[2]+' '+x[1].toFixed(0)+'</text>';});
-  far.forEach(function(x){var up=x[1]>r.c;s+='<text x="'+(W-R+3)+'" y="'+(up?10+9*(nUp++):PH-4-9*(nDn++))+'" font-size="8" fill="'+SDC[x[0]]+'">'+(up?'↑ ':'↓ ')+x[2]+' '+x[1].toFixed(0)+'</text>';});
-  bars.forEach(function(q,i){
-    var cx=daily?L+cw/2:L+slot*((q.m-570)/10)+slot/2,col=q.c>=q.o?SDC.up:SDC.dn,yo=y(q.o),yc=y(q.c);
-    s+='<line x1="'+cx.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y1="'+y(q.h).toFixed(1)+'" y2="'+y(q.l).toFixed(1)+'" stroke="'+col+'"/>';
-    s+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+Math.min(yo,yc).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(1,Math.abs(yc-yo)).toFixed(1)+'" fill="'+col+'"/>';
-    if(vmax>0){var vh=(q.v/vmax)*VH;s+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+(PH+G+VH-vh).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+vh.toFixed(1)+'" fill="'+col+'" opacity="'+(r.big&&q.m===r.big.m?1:0.45)+'"/>';}
+  var rg=(hi-lo)||1;
+  var lv=[['flip',r.flip,'Gamma flip'],['cw',r.cw,'Call wall'],['pw',r.pw,'Put wall']].filter(function(x){return _sdNum(x[1]);});
+  var inView=lv.filter(function(x){return x[1]>=lo-0.6*rg&&x[1]<=hi+0.6*rg;});
+  inView.forEach(function(x){lo=Math.min(lo,x[1]);hi=Math.max(hi,x[1]);});
+  var pad=(hi-lo)*0.08||0.5;lo-=pad;hi+=pad;
+  var W=390,H=100,VH=24;
+  function y(p){return (hi-p)/(hi-lo)*H;}
+  var slot=daily?W:W/39,bw=daily?W*0.08:slot*0.6,vmax=0;bars.forEach(function(q){vmax=Math.max(vmax,q.v||0);});
+  var ns=' vector-effect="non-scaling-stroke"';
+  var s='<div style="position:relative;margin:6px 0 2px">';
+  s+='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="display:block;width:100%;height:150px;border:1px solid var(--bdr);border-radius:4px">';
+  inView.forEach(function(x){var yy=y(x[1]).toFixed(2);s+='<line x1="0" x2="'+W+'" y1="'+yy+'" y2="'+yy+'" stroke="'+SDC[x[0]]+'" stroke-width="1.5" stroke-dasharray="6 4"'+ns+'/>';});
+  bars.forEach(function(q){
+    var cx=daily?W/2:slot*((q.m-570)/10)+slot/2,col=q.c>=q.o?SDC.up:SDC.dn,yo=y(q.o),yc=y(q.c);
+    s+='<line x1="'+cx.toFixed(2)+'" x2="'+cx.toFixed(2)+'" y1="'+y(q.h).toFixed(2)+'" y2="'+y(q.l).toFixed(2)+'" stroke="'+col+'" stroke-width="1"'+ns+'/>';
+    s+='<rect x="'+(cx-bw/2).toFixed(2)+'" y="'+Math.min(yo,yc).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+Math.max(0.6,Math.abs(yc-yo)).toFixed(2)+'" fill="'+col+'"/>';
   });
-  s+='<text x="'+(W-R+3)+'" y="'+(PH+G+10)+'" font-size="8" fill="var(--dim)">volume</text>';
   s+='</svg>';
-  s+='<div style="display:flex;justify-content:space-between;color:var(--dim);font-size:10px;margin-bottom:4px"><span>'+(!daily?'9:30a':'daily bar (no 10-min data)')+'</span><span>'+(!daily?'10-min candles':'')+'</span><span>'+(!daily?'4:00p':'')+'</span></div>';
+  s+='<div style="position:absolute;top:4px;right:6px;font-size:11px;color:var(--dim)">'+hi.toFixed(2)+'</div>';
+  s+='<div style="position:absolute;bottom:4px;right:6px;font-size:11px;color:var(--dim)">'+lo.toFixed(2)+'</div>';
+  s+='</div>';
+  s+='<svg viewBox="0 0 '+W+' '+VH+'" preserveAspectRatio="none" style="display:block;width:100%;height:36px">';
+  bars.forEach(function(q){if(!vmax)return;var cx=daily?W/2:slot*((q.m-570)/10)+slot/2,vh=(q.v/vmax)*VH,col=q.c>=q.o?SDC.up:SDC.dn;
+    s+='<rect x="'+(cx-bw/2).toFixed(2)+'" y="'+(VH-vh).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+vh.toFixed(2)+'" fill="'+col+'" opacity="'+(r.big&&q.m===r.big.m?1:0.45)+'"/>';});
+  s+='</svg>';
+  var lastM=bars[bars.length-1].m+10;
+  s+='<div style="display:flex;justify-content:space-between;color:var(--dim);font-size:11px;margin:2px 0 4px"><span>'+(daily?'1 daily candle (no 10-min data before Aug 10)':'9:30a')+'</span><span>'+(daily?'':'volume · 10-min')+'</span><span>'+(daily?'':'4:00p')+'</span></div>';
+  if(!daily&&lastM<960)s+='<div style="color:var(--dim);font-size:11px;margin-bottom:4px">Candles through '+_sdHM(lastM)+' ET (feed updates periodically)</div>';
+  if(lv.length){s+='<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;margin-bottom:6px">';
+    lv.forEach(function(x){var where=inView.indexOf(x)>=0?'':(x[1]>hi?' ↑ above chart':' ↓ below chart');
+      s+='<span style="color:'+SDC[x[0]]+'"><span style="display:inline-block;width:14px;border-top:2px dashed '+SDC[x[0]]+';vertical-align:middle;margin-right:4px"></span>'+x[2]+' '+x[1].toFixed(0)+'<span style="color:var(--dim)">'+where+'</span></span>';});
+    s+='</div>';}
   return s;
 }
 function _sdIV(r){
