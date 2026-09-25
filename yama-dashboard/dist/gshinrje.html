@@ -6144,6 +6144,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   window.secQqqPositioning = typeof secQqqPositioning !== 'undefined' ? secQqqPositioning : function() { return ''; };
   window.secWide = typeof secWide !== 'undefined' ? secWide : function(t,b) { return '<section class="wide"><h2>'+t+'</h2>'+b+'</section>'; };
   window.mountQqqChart = typeof mountQqqChart !== 'undefined' ? mountQqqChart : function() {};
+  window.qqqLiveGex = function () { return LIVE_GEX; };
   window.qqqSetSession = function (date, past, noGex) {
     date = date || null;
     if (QQQ_SESSION.date !== date) QQQ_VIEW_STATE = { timeframe: QQQ_VIEW_STATE.timeframe, userAdjusted: false, logicalRange: null };
@@ -6838,7 +6839,7 @@ function _gsDayPanel(r0,tf,isToday){
   // VOLATILITY card
   var vol,vv,vc;
   if(_sdNum(r.hv)&&_sdNum(r.iv)){
-    vol=_gsIvBar('Real moves (21d)',r.hv,E20)+_gsIvBar('Options priced in',r.iv,E9)+'<div style="font-size:11px;color:var(--dim)">Gap '+(r.hv-r.iv>=0?'+':'')+(r.hv-r.iv).toFixed(2)+' pts · Hist IV vs Actual IV</div>';
+    vol=_gsIvBar('Real moves (21d)',r.hv,E20)+_gsIvBar('Options priced in',r.iv,E9)+'<div style="font-size:11px;color:var(--dim)">Gap '+(r.hv-r.iv>=0?'+':'')+(r.hv-r.iv).toFixed(2)+' pts · Hist IV vs Actual IV'+(r.ivFrom?' · from the '+_gsNice(r.ivFrom)+' snapshot':'')+'</div>';
     vv=r.hv>r.iv?'Market moved MORE than options priced in: edge to option buyers.':'Market moved LESS than options priced in: edge to option sellers.';vc=r.hv>r.iv?E20:E9;
   }else{vol='<div style="font-size:12px;color:var(--dim)">No logger snapshot for this day.</div>';vv='IV snapshots start Jul 14, 2026.';vc='#8b8ba6';}
   // DEALER MAP card
@@ -6851,9 +6852,9 @@ function _gsDayPanel(r0,tf,isToday){
     lad.push([isToday?'Last':'Close',r.c,'#e8dede',_sdF(r.c),true]);
     lad.sort(function(x,y){return y[1]-x[1];});
     dealer=lad.map(function(x){return _gsRung(x[0],x[3],x[2],r.c,!!x[4],x[1]);}).join('')
-      +'<div style="font-size:11px;color:var(--dim)">Net GEX '+_sdBig(r.ngex)+' · sorted high → low</div>';
+      +'<div style="font-size:11px;color:var(--dim)">Net GEX '+_sdBig(r.ngex)+(r.reg?' · '+r.reg.toLowerCase():'')+(r.gexLive?' · live logger':'')+' · sorted high → low</div>';
     if(r.flipFb){dv='No true flip found that day (≈ nearest strike), so treat the regime with caution.';dc='#8b8ba6';}
-    else if(_sdNum(r.flip)){var below=r.c<r.flip;dv=(below?'Below':'Above')+' the flip: '+(below?'negative gamma, moves tend to run.':'positive gamma, moves tend to get absorbed.');dc=below?DN:UP;}
+    else if(_sdNum(r.flip)){var below=r.c<r.flip,pos=r.reg?/POS/i.test(r.reg):!below;dv=(pos?'Positive':'Negative')+' gamma: moves tend to '+(pos?'get absorbed.':'run.');if(Math.abs(r.c-r.flip)/r.c<0.002)dv+=' Price is sitting right at the flip ('+r.flip.toFixed(2)+'), so this can switch fast.';else dv+=' Price is '+(below?'below':'above')+' the flip.';dc=pos?UP:DN;}
     else{dv='No gamma flip in this snapshot.';dc='#8b8ba6';}
   }else{dealer='<div style="font-size:12px;color:var(--dim)">No GEX snapshot for this day.</div>';dv='GEX snapshots start Jul 14, 2026.';dc='#8b8ba6';}
   // ACTIVITY card
@@ -6879,7 +6880,7 @@ function _gsLog(rows,sel,n,wid){
     +'<div style="overflow-x:auto"><div style="min-width:860px">'
     +'<div style="display:grid;'+cols+';gap:12px;padding:6px 12px;font-size:10px;letter-spacing:.1em;color:var(--dim);border-bottom:1px solid var(--line)"><span>DAY</span><span>OPEN → CLOSE</span><span>RANGE</span><span>VS GAMMA FLIP</span><span>REAL vs PRICED MOVE</span><span>OPEN/CLOSE IN RANGE</span></div>'
     +'<div style="max-height:300px;overflow-y:auto" data-gs-logscroll="1">';
-  shown.forEach(function(r){
+  shown.forEach(function(r){r=_gsLiveFill(r,window._gsLastG);
     var on=r.date===sel,mv=r.mv,col=mv>0?UP:mv<0?DN:'var(--dim)',pct=_sdNum(mv)&&r.o?mv/r.o*100:NaN;
     var chip='<span style="color:var(--dim)">—</span>';
     if(_sdNum(r.flip)&&_sdNum(r.c)){var ab=r.c>=r.flip,cc=ab?UP:FL;chip='<span style="padding:2px 7px;border-radius:9px;font-size:11px;background:'+cc+'1f;color:'+cc+'">'+(ab?'above':'below')+' '+(r.flipFb?'≈':'')+r.flip.toFixed(0)+'</span>';}
@@ -6902,12 +6903,14 @@ function gsPrepare(e,widget){
   var sdate=(widget&&widget.gsDate)||null;
   if(sdate&&!rows.some(function(r){return r.date===sdate;}))sdate=null;
   var latestDate=e&&e.entry_date,entry=e,noGex=false,past=false;
-  if(sdate){
+  var live=!!sdate&&sdate===last&&(!latestDate||sdate>=latestDate);
+  if(sdate&&!live){
     var hit=_gsEntryFor(sdate);
     if(sdate!==latestDate){past=true;if(hit)entry=hit;else noGex=true;}
   }
   if(window.qqqSetSession)window.qqqSetSession(sdate,past,noGex);
-  return {rows:rows,last:last,sdate:sdate,entry:entry,noGex:noGex,past:past};
+  window._gsLastG={rows:rows,last:last,sdate:sdate,entry:entry,noGex:noGex,past:past,live:live,latestEntry:e};
+  return window._gsLastG;
 }
 function gsControls(G,widget){
   var tf=(widget&&widget.timeframe)||'1m',cal=['1D','1W','1M'].indexOf(tf)>=0;
@@ -6922,11 +6925,18 @@ function gsControls(G,widget){
   if(G.sdate&&cal)h+='<span style="font-size:11px;color:#ffd600">pick 1m–4H to see this day intraday</span>';
   return h+'</div>';
 }
+function _gsLiveFill(r,G){
+  if(!G||!G.live||r.date!==G.sdate)return r;
+  var o=Object.assign({},r),LG=window.qqqLiveGex?window.qqqLiveGex():null,le=G.latestEntry||{};
+  if(LG&&_sdNum(LG.net_gex)){var lv=LG.levels||{};o.flip=LG.gamma_flip;o.flipFb=/nearest/i.test(LG.gamma_flip_method||'');o.ngex=LG.net_gex;o.cw=lv.call_wall;o.pw=lv.put_wall;o.reg=LG.regime;o.gexLive=true;}
+  if(!_sdNum(o.hv)){var q=le.quant||{},rv=q.realized_vs_implied||{};if(_sdNum(rv.realized_vol_pct)){o.hv=rv.realized_vol_pct;o.iv=rv.implied_vol_pct;o.ivFrom=le.entry_date;}}
+  return o;
+}
 function _gsPanelFor(G,widget){
   var tf=(widget&&widget.timeframe)||'1m';
   if(!G.sdate||!SD.candles)return null;
   var r=G.rows.filter(function(x){return x.date===G.sdate;})[0];
-  return r?_gsDayPanel(r,GS_TF_MIN[tf]?tf:'1m',G.sdate===G.last&&!G.past):null;
+  return r?_gsDayPanel(_gsLiveFill(r,G),GS_TF_MIN[tf]?tf:'1m',G.sdate===G.last&&!G.past):null;
 }
 function gsHeadline(G,widget){var P=_gsPanelFor(G,widget);return P?P.head:'';}
 function gsBelow(G,widget){return '<div style="position:relative;z-index:2;background:var(--panel,#0d0305);padding-top:4px;clear:both">'+_gsBelowInner(G,widget)+'</div>';}
