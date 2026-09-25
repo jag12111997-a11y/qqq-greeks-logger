@@ -465,6 +465,186 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 
 .exit-calc-widget select:focus,.exit-calc-widget input:focus{outline:1px solid var(--accent,#00e5cc);outline-offset:-1px}
 .exit-calc-widget td{vertical-align:top;overflow-wrap:anywhere}
+
+/* cockpit-restore */
+/* ── Unified quadrant grid cockpit ── */
+  .qqq-quad-cockpit {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 98px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+.qqq-quad {
+    padding: 4px 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    background: var(--panel);
+    border-bottom: 1px solid rgba(59,14,51,.25);
+  }
+.qqq-quad-tl { grid-column:1; grid-row:1; border-right:1px solid rgba(59,14,51,.25); }
+.qqq-quad-tr { grid-column:3; grid-row:1; }
+.qqq-quad-bl { grid-column:1; grid-row:2; border-right:1px solid rgba(59,14,51,.25); border-bottom:0; }
+.qqq-quad-br { grid-column:3; grid-row:2; border-bottom:0; }
+.qqq-quad-title {
+    grid-column: 1 / -1;
+    font-size: 8px; letter-spacing: 1.2px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 3px;
+    margin-bottom: 2px;
+  }
+.qqq-quad-title .qdot {
+    width: 4px; height: 4px; border-radius: 50%;
+  }
+.qqq-qnode {
+    background: rgba(10,2,16,.7);
+    border: 1px solid; border-radius: 3px;
+    padding: 2px 5px;
+    font-variant-numeric: tabular-nums;
+  }
+.qqq-qnode .qk {
+    font-size: 8px; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.6;
+  }
+.qqq-qnode .qv {
+    font-size: 12px; font-weight: 700; line-height: 1.2;
+  }
+.qqq-qnode .qs {
+    font-size: 8.5px; opacity: 0.55; line-height: 1.2;
+  }
+.qqq-qnode.sm .qv { font-size: 10px; }
+.qqq-qnode.sm { padding: 2px 5px; }
+.qqq-quad-hub-wrap {
+    display: flex; align-items: center; justify-content: center;
+    padding: 6px;
+    background: var(--panel);
+    grid-column:2; grid-row:1 / 3;
+    border-bottom:1px solid rgba(59,14,51,.25);
+  }
+.qqq-quad-hub {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    transition: border-color 0.4s, background 0.4s, box-shadow 0.4s;
+  }
+.qqq-quad-hub.qqq-hub-pulse {
+    animation: qqqHubPulse 0.8s ease-out;
+  }
+@keyframes qqqHubPulse {
+    0%   { box-shadow: 0 0 0 0 currentColor; transform: scale(1); }
+    40%  { box-shadow: 0 0 12px 4px currentColor; transform: scale(1.04); }
+    100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+  }
+.qqq-quad-hub .qh-label {
+    font-size: 6px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--dim);
+  }
+.qqq-quad-hub .qh-call {
+    font-size: 11px; font-weight: 800;
+    text-shadow: 0 0 8px currentColor;
+    line-height: 1.1; margin-top: 1px;
+  }
+.qqq-quad-hub .qh-count {
+    font-size: 7px; color: var(--dim); margin-top: 1px;
+  }
+.qqq-quad-hub .qh-story {
+    font-size: 6px; color: var(--faint); margin-top: 1px;
+    line-height: 1.2; max-width: 65px;
+  }
+.qqq-compass-row {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;
+    padding: 4px 8px;
+    background: rgba(10,2,16,.5);
+    border-top: 1px solid var(--line);
+  }
+.qqq-compass-chip {
+    border: 1px solid; border-radius: 3px;
+    padding: 2px 6px;
+    text-align: center; font-variant-numeric: tabular-nums;
+  }
+.qqq-compass-chip .ck {
+    font-size: 6px; letter-spacing: 0.8px; text-transform: uppercase;
+  }
+.qqq-compass-chip .cv {
+    font-size: 11px; font-weight: 800; line-height: 1.2;
+  }
+.qqq-compass-chip .cs {
+    font-size: 7px; opacity: 0.65;
+  }
+.qqq-story-strip {
+    border: 1px solid var(--line); border-top: 0;
+    border-radius: 0 0 8px 8px;
+    padding: 4px 10px;
+    font-size: 8.5px; color: var(--dim);
+    display: flex; align-items: baseline; gap: 8px;
+  }
+.qqq-story-strip .sy-k {
+    font-size: 6.5px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--faint); flex-shrink: 0;
+  }
+.qqq-signal-legend {
+    display: flex; flex-wrap: wrap; gap: 4px 12px;
+    margin-top: 6px; padding: 0 2px;
+    font-size: 9px; color: var(--dim);
+  }
+.qqq-signal-legend .ldot {
+    display: inline-block; width: 5px; height: 5px;
+    border-radius: 50%; margin-right: 3px; vertical-align: 1px;
+  }
+/* Chart label overlay removed (2026-08-31) — reverted to plain TradingView chart */
+
+  @media (max-width: 700px) {
+    /* The center call stays visible; tap it to reveal the four quadrants. */
+    .qqq-quad-cockpit {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+    }
+    .qqq-quad-hub-wrap { grid-row: auto; grid-column: auto; order:-1; padding: 8px; cursor: pointer; }
+    .qqq-quad-hub-wrap::after {
+      content: "▼ tap to expand";
+      display: block; text-align: center;
+      font-size: 7px; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--faint); margin-top: 4px;
+    }
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-hub-wrap::after {
+      content: "▲ tap to collapse";
+    }
+    .qqq-quad-hub { width: 60px; height: 60px; }
+    .qqq-quad-hub .qh-call { font-size: 10px; }
+    .qqq-quad-tl, .qqq-quad-tr, .qqq-quad-bl, .qqq-quad-br {
+      display: none; grid-column:auto; grid-row:auto; border-radius: 0;
+      border-right: 1px solid rgba(59,14,51,.25); border-bottom:1px solid rgba(59,14,51,.25);
+    }
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-tl,
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-tr,
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-bl,
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-quad-br {
+      display: block;
+    }
+    .qqq-compass-row { display: none; grid-row:auto; }
+    .qqq-quad-cockpit.qqq-cockpit-open .qqq-compass-row { display: flex; }
+  }
+/* readable sizes inside dashboard widgets */
+.widget-body .qqq-quad-title { font-size: 10px; }
+.widget-body .qqq-qnode .qk { font-size: 10px; opacity: .75; }
+.widget-body .qqq-qnode .qv { font-size: 15px; }
+.widget-body .qqq-qnode.sm .qv { font-size: 13px; }
+.widget-body .qqq-qnode .qs { font-size: 10px; opacity: .7; }
+.widget-body .qqq-quad-cockpit { grid-template-columns: minmax(0,1fr) 120px minmax(0,1fr); }
+.widget-body .qqq-quad-hub { width: 108px; height: 108px; padding: 8px; box-sizing: border-box; overflow: hidden; }
+.widget-body .qqq-quad-hub .qh-label { font-size: 8px; }
+.widget-body .qqq-quad-hub .qh-call { font-size: 13px; }
+.widget-body .qqq-quad-hub .qh-count { font-size: 9px; }
+.widget-body .qqq-quad-hub .qh-story { font-size: 8px; line-height: 1.2; }
+/* strike profile: keep its lines inside its own box */
+.widget-body .qqq-gex-profile { overflow: hidden; }
+
 </style>
 </head>
 <body>
@@ -3391,6 +3571,15 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // the chart at all while the user is working in it.
   var QQQ_VIEW_STATE = { userAdjusted: false, logicalRange: null };
   var QQQ_LAYERS = { core: true, ranges: true, flow: true };
+  // Session mode (GEX Chart day picker). date=null means all history, as before.
+  var QQQ_SESSION = { date: null, past: false, noGex: false };
+  var QQQ_SESS_FMT = null;
+  function qqqSessionDay(t) {
+    QQQ_SESS_FMT = QQQ_SESS_FMT || new Intl.DateTimeFormat('en-CA', { timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' });
+    var p = {}; QQQ_SESS_FMT.formatToParts(new Date(t * 1000)).forEach(function (x) { p[x.type] = x.value; });
+    var m = Number(p.hour) * 60 + Number(p.minute);
+    return (m >= 570 && m < 960) ? p.year + '-' + p.month + '-' + p.day : null;
+  }
   var QQQ_CHART_VIEW = { mode: "raw", ema: true, pane: "adl" };
   try {
     var _ql = JSON.parse(localStorage.getItem("md:qqq-layers") || "{}");
@@ -3439,7 +3628,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   }
 
   function qqqChartModel(e) {
-    var latest = idx === FULL.length - 1;
+    var latest = idx === FULL.length - 1 && !QQQ_SESSION.past;
     var g = (latest && LIVE_GEX) ? LIVE_GEX : get(e, "gex", {});
     var L = (g && g.levels) || {};
     var mk = {};
@@ -3912,6 +4101,11 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   }
 
   function secQqqOpening(e, chartModel) {
+    if (QQQ_SESSION.noGex) {
+      return secWide("QQQ · price (no GEX snapshot for this day)",
+        '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>')
+        .replace('<section class="wide">', '<section class="wide qqq-market-card">');
+    }
     var body =
       '<div class="qqq-top-grid">' +
         '<div class="qqq-primary-chart">' +
@@ -4270,6 +4464,15 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       localization: { locale: "en-US", priceFormatter: function (p) { return "$" + p.toFixed(2); } }
     });
 
+    if (!calendarTimeframe) {
+      var qqqEtF = new Intl.DateTimeFormat('en-US', { timeZone:'America/New_York', hour:'2-digit', minute:'2-digit', hourCycle:'h23' });
+      var qqqEtD = new Intl.DateTimeFormat('en-US', { timeZone:'America/New_York', weekday:'short', month:'short', day:'numeric' });
+      var qqqEtM = new Intl.DateTimeFormat('en-US', { timeZone:'America/New_York', month:'short', day:'numeric' });
+      chart.applyOptions({
+        localization: { timeFormatter: function (t) { var d = new Date(Number(t) * 1000); return qqqEtD.format(d) + ' ' + qqqEtF.format(d) + ' ET'; } },
+        timeScale: { tickMarkFormatter: function (t, type) { var d = new Date(Number(t) * 1000); return type <= 2 ? qqqEtM.format(d) : qqqEtF.format(d); } }
+      });
+    }
     var M = chartModel || qqqChartModel(e);
     var raw = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
       ? LIVE_AUCTION.candles.slice() : [];
@@ -4289,6 +4492,9 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var minuteCandles = qqqMergeLiveCandle(baseCandles, M);
     var dailySource = LIVE_CANDLE_HISTORY ? LIVE_CANDLE_HISTORY.daily : [];
     var candles = qqqChartCandles(minuteCandles, dailySource, timeframe);
+    if (QQQ_SESSION.date && !calendarTimeframe) {
+      candles = candles.filter(function (b) { return qqqSessionDay(b.time) === QQQ_SESSION.date; });
+    }
     el.dataset.timeframe = timeframe;
     el.dataset.candleCount = String(candles.length);
     var status = document.createElement('div');
@@ -4299,12 +4505,14 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var oldStatus = el.parentElement.querySelector('.qqq-candle-status');
     if (oldStatus) oldStatus.remove();
     el.parentElement.appendChild(status);
+    if (QQQ_SESSION.date && !calendarTimeframe && !candles.length) status.textContent = 'No intraday candles for ' + QQQ_SESSION.date + ' (1-minute history starts Aug 10, 2026). The day\'s numbers are below; pick All history + 1D to see it on the daily chart.';
     var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : qqqRawDisplay(candles);
 
     var series, ema9Series = null, ema20Series = null, indicatorSeries = null;
     var gexTrailSeries = [];
     var trailRows = M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points)
       ? LIVE_GEX_INTRADAY.points.slice() : [];
+    if (QQQ_SESSION.date) trailRows = trailRows.filter(function (r) { return qqqSessionDay(Number(r.time)) === QQQ_SESSION.date; });
     // Align overlays to the same candle buckets, so they cannot add minute ticks
     // back to a chart displaying a larger interval.
     var trailBuckets = new Map();
@@ -4437,6 +4645,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     // Same-price signals are combined into one labelled line. This is common
     // when the call wall, put wall and OI magnet all sit on one strike.
     var active = M.levels.filter(function (x) {
+      if (QQQ_SESSION.noGex) return false;
       if (hasGexTrail && (x.group === "core" || x.group === "flow")) return false;
       return x.group === "spot" || QQQ_LAYERS[x.group];
     }).sort(function (a, b) { return a.priority - b.priority; });
@@ -4523,7 +4732,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // Chart label overlay removed (2026-08-31) — reverted to plain TradingView chart.
 
   function updateMountedQqqQuote(e) {
-    if (!e || idx !== FULL.length - 1) return;
+    if (!e || idx !== FULL.length - 1 || QQQ_SESSION.past) return;
     var M = qqqChartModel(e);
     var leverageMeter = document.getElementById("qqq-leverage-meter");
     if (leverageMeter) {
@@ -4864,7 +5073,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var q3 = '<div class="qqq-quad-title" style="color:var(--info);">' +
       '<span class="qdot" style="background:var(--info)"></span>Auction &amp; Flow</div>';
 
-    var A = (idx === FULL.length - 1) ? LIVE_AUCTION : null;
+    var A = (idx === FULL.length - 1 && !QQQ_SESSION.past) ? LIVE_AUCTION : null;
     var haveA = A && (has(A.ad_z) || has(A.vol_pace));
 
     if (haveA && has(A.ad_z)) {
@@ -4884,7 +5093,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       q3 += qn("Volume", "—", "waiting", "rgba(41,182,246,.2)", "var(--faint)", true);
     }
 
-    if (LIVE_GEX && has(LIVE_GEX.net_gex)) {
+    if (LIVE_GEX && has(LIVE_GEX.net_gex) && !QQQ_SESSION.past) {
       q3 += qn("GEX", fmtBig(LIVE_GEX.net_gex),
         has(LIVE_GEX.net_dex) ? "DEX " + fmtBig(LIVE_GEX.net_dex) : "",
         "rgba(41,182,246,.25)", "var(--txt)", true);
@@ -5933,6 +6142,11 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   window.secQqqPositioning = typeof secQqqPositioning !== 'undefined' ? secQqqPositioning : function() { return ''; };
   window.secWide = typeof secWide !== 'undefined' ? secWide : function(t,b) { return '<section class="wide"><h2>'+t+'</h2>'+b+'</section>'; };
   window.mountQqqChart = typeof mountQqqChart !== 'undefined' ? mountQqqChart : function() {};
+  window.qqqSetSession = function (date, past, noGex) {
+    date = date || null;
+    if (QQQ_SESSION.date !== date) QQQ_VIEW_STATE = { timeframe: QQQ_VIEW_STATE.timeframe, userAdjusted: false, logicalRange: null };
+    QQQ_SESSION.date = date; QQQ_SESSION.past = !!past; QQQ_SESSION.noGex = !!noGex;
+  };
   window.starChart = typeof starChart !== 'undefined' ? starChart : function() { return ''; };
   window.starCorrel = typeof starCorrel !== 'undefined' ? starCorrel : function() { return ''; };
   window.startLivePrices = typeof startLivePrices !== 'undefined' ? startLivePrices : function() {};
@@ -6558,194 +6772,202 @@ function _sdAgg(r,tf){
   out.b10.forEach(function(q){if(q.c>q.o)out.up++;else if(q.c<q.o)out.dn++;if(!out.big||q.v>out.big.v)out.big={m:q.m,v:q.v};});
   out.bars=out.b10.length;out.tf=tf;return out;
 }
-// ── HOLO-TABLE look (concept B): metal console, projection bay, glass lenses ──
-var HX={c:'#46e8ff',dn:'#ff8a66',flip:'#ffd866',cw:'#a99bff',pw:'#ffb07a',dim:'#7d98a0',txt:'#dff6fa'};
-var _sdUid=0;
-function _hxScrew(pos){return '<span aria-hidden="true" style="position:absolute;'+pos+';width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8d949c,#2b3036 70%);box-shadow:inset 0 1px 1px rgba(255,255,255,.25),0 1px 2px #000"><span style="position:absolute;left:2px;right:2px;top:5px;height:2px;background:#15181c;transform:rotate(35deg)"></span></span>';}
-function _hxKey(label,act,lit,title){
-  return '<button type="button" data-sd-btn="'+act+'" title="'+title+'" style="font-family:\'Share Tech Mono\',ui-monospace,monospace;font-size:12px;letter-spacing:.14em;min-height:40px;padding:0 14px;cursor:pointer;color:'+(lit?HX.c:'#9fb4ba')+';background:linear-gradient(180deg,#3a4148,#1f2429);border:1px solid #0c0e10;border-radius:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 3px 0 #0a0c0e,0 4px 8px rgba(0,0,0,.6)'+(lit?',0 0 14px rgba(70,232,255,.35)':'')+';text-shadow:'+(lit?'0 0 8px '+HX.c:'0 1px 0 #000')+'">'+label+'</button>';
+// ── GEX CHART · SESSION MODE (concept D) ──
+// Adds a day picker, a plain-English headline, four readable cards and a day log
+// around the real GEX Chart. "All history" leaves the chart exactly as before.
+var _sdCache={key:null,rows:null};
+function _sdRows(){
+  var k=SD.at+':'+((window.MARKET_DASH_HISTORY||[]).length);
+  if(_sdCache.key!==k){_sdCache.rows=_sdBuild();_sdCache.key=k;}
+  return _sdCache.rows;
 }
-function _hxDate(attr,val,min,max){return '<input type="date" '+attr+' value="'+val+'" min="'+min+'" max="'+max+'" aria-label="'+(attr==='data-sd-from'?'From date':'To date')+'" style="font-family:inherit;font-size:12px;min-height:38px;padding:0 8px;color:'+HX.txt+';background:#07161b;border:1px solid #0e4a5a;border-radius:6px;box-shadow:inset 0 2px 6px #000;color-scheme:dark">';}
-function _hxLens(label,val,pct,sub){
-  pct=_sdNum(pct)?Math.max(0,Math.min(1,pct)):0;var r=40,C=2*Math.PI*r,ticks='';
-  for(var i=0;i<40;i++)ticks+='<line x1="60" y1="6" x2="60" y2="'+(i%5===0?12:9)+'" stroke="#7fa6b0" stroke-opacity=".6" transform="rotate('+(i*9)+' 60 60)"/>';
-  return '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0">'
-   +'<div style="width:112px;height:112px;border-radius:50%;padding:5px;box-sizing:border-box;background:conic-gradient(from 200deg,#5b646e,#1d2227,#7a838c,#20252a,#5b646e);box-shadow:0 6px 14px rgba(0,0,0,.7),inset 0 1px 1px rgba(255,255,255,.3)">'
-   +'<div style="position:relative;width:102px;height:102px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 55%,#062a33 0%,#020c10 75%);box-shadow:inset 0 0 18px #000,inset 0 -6px 18px rgba(70,232,255,.12)">'
-   +'<svg viewBox="0 0 120 120" width="102" height="102" style="position:absolute;inset:0">'+ticks
-   +'<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="#0d3440" stroke-width="6"/>'
-   +'<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="'+HX.c+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+(C*pct).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 60 60)" style="filter:drop-shadow(0 0 5px '+HX.c+')"/>'
-   +'<text x="60" y="67" text-anchor="middle" font-size="19" font-weight="700" fill="#e4fcff" font-family="Rajdhani,sans-serif">'+val+'</text></svg>'
-   +'<span style="position:absolute;left:12px;top:7px;width:52px;height:26px;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0));transform:rotate(-20deg)"></span>'
-   +'</div></div>'
-   +'<div style="font-size:12px;letter-spacing:.16em;color:#cfe9ee;text-shadow:0 1px 0 #000;text-align:center">'+label+'</div>'
-   +'<div style="font-size:11px;color:'+HX.dim+';text-align:center">'+sub+'</div></div>';
+function _sdRedrawAll(){
+  _sdCache.key=null;
+  try{if(activeLayout().widgets.some(function(w){return w.definitionId==='gex-chart';}))renderAllWidgets();}catch(e){}
 }
-function _hxPlate(label,val,sub,col){
-  return '<div style="position:relative;overflow:hidden;border-radius:10px;padding:12px 14px;background:linear-gradient(180deg,rgba(120,200,220,.10),rgba(10,30,38,.35) 40%,rgba(2,10,14,.6));border:1px solid rgba(120,220,240,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 20px rgba(0,0,0,.4),0 8px 18px rgba(0,0,0,.55)">'
-   +'<div style="font-size:11px;letter-spacing:.18em;color:#8fb4bd">'+label+'</div>'
-   +'<div style="font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;line-height:1.15;color:'+col+';text-shadow:0 0 10px '+col+'99">'+val+'</div>'
-   +'<div style="font-size:12px;color:'+HX.dim+'">'+sub+'</div>'
-   +'<span style="position:absolute;left:-20%;top:0;width:60%;height:100%;background:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.06) 50%,rgba(255,255,255,0) 70%)"></span></div>';
+var GS_TF_MIN={'1m':1,'5m':5,'15m':15,'1H':60,'4H':240};
+var GS_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function _gsNice(d){var p=d.split('-'),dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getUTCDay()]+' '+GS_MON[+p[1]-1]+' '+(+p[2]);}
+function _gsEntryFor(d){var f=(typeof FULL!=='undefined'&&FULL)||[],hit=null;for(var i=0;i<f.length;i++)if(f[i]&&f[i].entry_date===d)hit=f[i];return hit;}
+function _gsBtn(attr,val,label,on,title){return '<button type="button" class="qqq-layer" '+attr+'="'+val+'" aria-pressed="'+(on?'true':'false')+'"'+(title?' title="'+title+'"':'')+'>'+label+'</button>';}
+function _gsSep(){return '<span style="width:1px;height:18px;background:var(--line);margin:0 4px"></span>';}
+function _gsCard(title,body,verdict,col){
+  return '<div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;min-width:0">'
+    +'<div style="font-size:11px;letter-spacing:.16em;color:var(--dim)">'+title+'</div>'+body
+    +'<div style="margin-top:auto;padding:7px 9px;border-radius:6px;background:'+col+'1a;color:'+col+';font-size:12px;line-height:1.4">'+verdict+'</div></div>';
 }
-function _hxChart(r,uid){
-  var tf=r.tf||10,nSlots=Math.ceil(390/tf),endM=960;
-  var daily=!(r.b10&&r.b10.length);
-  var bars=!daily?r.b10:(_sdNum(r.o)?[{m:570,o:r.o,h:r.h,l:r.l,c:r.c,v:r.v}]:null);
-  if(!bars)return {svg:'',vol:'',lo:NaN,hi:NaN,inView:[],daily:daily,bars:[]};
-  var lo=Infinity,hi=-Infinity;bars.forEach(function(q){lo=Math.min(lo,q.l);hi=Math.max(hi,q.h);});
-  var rg=(hi-lo)||1;
-  var lv=[['flip',r.flipFb?NaN:r.flip],['cw',r.cw],['pw',r.pw]].filter(function(x){return _sdNum(x[1]);});
-  var inView=lv.filter(function(x){return x[1]>=lo-0.6*rg&&x[1]<=hi+0.6*rg;});
-  inView.forEach(function(x){lo=Math.min(lo,x[1]);hi=Math.max(hi,x[1]);});
-  var pad=(hi-lo)*0.08||0.5;lo-=pad;hi+=pad;
-  var W=390,H=100,VH=24;function y(p){return (hi-p)/(hi-lo)*H;}
-  if(!daily&&bars.length){var lm=bars[bars.length-1].m+tf;if(lm<960){endM=Math.max(lm,570+6*tf);nSlots=Math.ceil((endM-570)/tf);}}
-  var crisp=!daily&&nSlots>80;
-  var slot=daily?W:W/nSlots,bw=daily?W*0.06:Math.min(W*0.028,Math.max(0.35,slot*(tf===1?0.7:0.56))),vmax=0;bars.forEach(function(q){vmax=Math.max(vmax,q.v||0);});
-  var ns=' vector-effect="non-scaling-stroke"',s='';
-  for(var i=1;i<6;i++)s+='<line x1="0" x2="'+W+'" y1="'+(H*i/6).toFixed(2)+'" y2="'+(H*i/6).toFixed(2)+'" stroke="'+HX.c+'" stroke-opacity=".09"'+ns+'/>';
-  for(var j=1;j<13;j++)s+='<line x1="'+(W*j/13).toFixed(2)+'" x2="'+(W*j/13).toFixed(2)+'" y1="0" y2="'+H+'" stroke="'+HX.c+'" stroke-opacity=".06"'+ns+'/>';
-  inView.forEach(function(x){var yy=y(x[1]).toFixed(2);s+='<line x1="0" x2="'+W+'" y1="'+yy+'" y2="'+yy+'" stroke="'+HX[x[0]]+'" stroke-width="1.4" stroke-dasharray="8 5"'+ns+'/>';});
-  function cx(q){return daily?W/2:slot*((q.m-570)/tf)+slot/2;}
-  function layer(upC,dnC,dx,op){var g='<g transform="translate('+dx+' 0)" opacity="'+op+'">';
-    bars.forEach(function(q){var x=cx(q),col=q.c>=q.o?upC:dnC,yo=y(q.o),yc=y(q.c);
-      g+='<line x1="'+x.toFixed(2)+'" x2="'+x.toFixed(2)+'" y1="'+y(q.h).toFixed(2)+'" y2="'+y(q.l).toFixed(2)+'" stroke="'+col+'" stroke-width="1.1"'+ns+'/>';
-      g+='<rect x="'+(x-bw/2).toFixed(2)+'" y="'+Math.min(yo,yc).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+Math.max(0.6,Math.abs(yc-yo)).toFixed(2)+'" fill="'+col+'" fill-opacity=".6" stroke="'+col+'" stroke-width="1"'+ns+'/>';});
-    return g+'</g>';}
-  if(crisp)s+=layer(HX.c,HX.dn,0,1);
-  else{s+=layer('#ff3df2','#ff3df2',-0.7,0.22)+layer('#3dffb4','#3dffb4',0.7,0.16);
-  s+='<g filter="url(#hxg'+uid+')">'+layer(HX.c,HX.dn,0,1)+'</g>';}
-  var v='';bars.forEach(function(q){if(!vmax)return;var x=cx(q),vh=(q.v/vmax)*VH,col=q.c>=q.o?HX.c:HX.dn;
-    v+='<rect x="'+(x-bw/2).toFixed(2)+'" y="'+(VH-vh).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+vh.toFixed(2)+'" fill="'+col+'" fill-opacity="'+(r.big&&q.m===r.big.m?0.95:0.3)+'"/>';});
-  var defs='<defs><filter id="hxg'+uid+'" x="-5%" y="-20%" width="110%" height="140%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
-  return {svg:'<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="display:block;width:100%;height:210px;overflow:visible">'+defs+s+'</svg>',
-          vol:'<svg viewBox="0 0 '+W+' '+VH+'" preserveAspectRatio="none" style="display:block;width:100%;height:34px">'+v+'</svg>',
-          lo:lo,hi:hi,inView:inView,daily:daily,bars:bars,endM:endM};
+function _gsIvBar(l,v,col){
+  return '<div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:120px;color:var(--dim)">'+l+'</span>'
+    +'<div style="flex:1;height:8px;background:var(--line);border-radius:4px"><div style="width:'+(_sdNum(v)?Math.min(100,v/30*100):0).toFixed(0)+'%;height:8px;border-radius:4px;background:'+col+'"></div></div>'
+    +'<span style="width:56px;text-align:right;font-size:15px">'+(_sdNum(v)?v.toFixed(1)+'%':'—')+'</span></div>';
 }
-function _hxDay(r0,tf){
-  var r=_sdAgg(r0,tf),uid=++_sdUid,ch=_hxChart(r,uid),mid=(ch.lo+ch.hi)/2;
-  var names={flip:'Gamma flip',cw:'Call wall',pw:'Put wall'};
-  var legend=[['flip',r.flip],['cw',r.cw],['pw',r.pw]].filter(function(x){return _sdNum(x[1]);}).map(function(x){
-    var shown=ch.inView.some(function(z){return z[0]===x[0];});
-    if(x[0]==='flip'&&r.flipFb)return '<span style="color:'+HX.flip+'">Gamma flip ≈'+x[1].toFixed(0)+' <span style="color:'+HX.dim+'">(no true flip found)</span></span>';
-    return '<span style="color:'+HX[x[0]]+'">'+(shown?'- - ':'')+names[x[0]]+' '+x[1].toFixed(0)+(shown?'':' <span style="color:'+HX.dim+'">'+(x[1]>ch.hi?'↑ above field':'↓ below field')+'</span>')+'</span>';}).join('');
-  var lastM=ch.bars.length?ch.bars[ch.bars.length-1].m+tf:960;
-  var h='<div style="position:relative;border-radius:14px;padding:10px;background:linear-gradient(180deg,#2a3036,#12161a);border:1px solid #050607;box-shadow:0 10px 24px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.1)">'+_hxScrew('left:7px;top:7px')+_hxScrew('right:7px;top:7px');
-  h+='<div style="position:relative;overflow:hidden;border-radius:10px;padding:14px 16px 12px;background:radial-gradient(ellipse at 50% 100%,#06313c 0%,#020a0d 62%);box-shadow:inset 0 0 40px #000,inset 0 0 2px rgba(70,232,255,.4)">';
-  // light cone + emitter + floor grid (decor, behind)
-  h+='<span aria-hidden="true" style="position:absolute;left:12%;right:12%;top:30px;bottom:10px;background:linear-gradient(0deg,rgba(70,232,255,.14),rgba(70,232,255,.02) 70%,rgba(70,232,255,0));clip-path:polygon(38% 100%,62% 100%,100% 0,0 0)"></span>';
-  h+='<span aria-hidden="true" style="position:absolute;left:32%;right:32%;bottom:4px;height:5px;border-radius:3px;background:'+HX.c+';box-shadow:0 0 16px '+HX.c+',0 0 36px rgba(70,232,255,.6)"></span>';
-  h+='<div style="position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:11px;letter-spacing:.16em;color:#6fb8c8"><span>'+r.date+' · '+(ch.daily?'DAILY BAR':_sdTfLabel(tf)+' FIELD')+'</span><span style="color:'+(/NEG/i.test(r.reg||'')?HX.dn:HX.c)+'">'+(r.reg||'NO GEX SNAPSHOT')+'</span></div>';
-  if(ch.svg){
-    h+='<div style="position:relative;margin-top:8px;perspective:900px"><div style="transform:rotateX(10deg);transform-origin:50% 100%">'+ch.svg+'</div>';
-    h+='<span style="position:absolute;right:2px;top:0;font-size:11px;color:#6fb8c8">'+ch.hi.toFixed(2)+'</span><span style="position:absolute;right:2px;bottom:0;font-size:11px;color:#6fb8c8">'+ch.lo.toFixed(2)+'</span></div>';
-    h+='<div style="position:relative;margin-top:6px">'+ch.vol+'</div>';
-    h+='<div style="position:relative;display:flex;justify-content:space-between;font-size:11px;color:#6fb8c8;margin-top:2px"><span>'+(ch.daily?'no intraday data before Aug 10':'9:30a')+'</span><span>IEX volume · shape only</span><span>'+(ch.daily?'':_sdHM(ch.endM||960)+(ch.endM<960?' (so far)':''))+'</span></div>';
-    if(!ch.daily&&lastM<960)h+='<div style="position:relative;font-size:11px;color:'+HX.flip+';margin-top:2px">Candles through '+_sdHM(lastM)+' ET · feed updates periodically</div>';
-  } else h+='<div style="position:relative;padding:40px 0;text-align:center;color:'+HX.dim+'">No candles for this day.</div>';
-  if(legend)h+='<div style="position:relative;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;margin:8px 0 6px">'+legend+'</div>';
-  // scanlines + flicker band (on top, non-interactive)
-  h+='<span aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0,rgba(0,0,0,.22) 1px,rgba(0,0,0,0) 2px,rgba(0,0,0,0) 3px)"></span>';
-  h+='<span aria-hidden="true" style="position:absolute;left:0;right:0;top:38%;height:36px;pointer-events:none;background:linear-gradient(180deg,rgba(70,232,255,0),rgba(70,232,255,.05),rgba(70,232,255,0))"></span>';
-  h+='</div></div>';
-  // lenses
-  var rngPct=_sdNum(r.rng)&&_sdNum(r.c)?r.rng/(r.c*0.02):NaN;
-  h+='<div style="position:relative;margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:12px 8px;padding:14px 8px;border-radius:14px;background:linear-gradient(180deg,#22282d,#111417);border:1px solid #050607;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.6)">';
-  h+=_hxLens('HIST IV',_sdNum(r.hv)?r.hv.toFixed(1)+'%':'—',r.hv/40,'21d realized');
-  h+=_hxLens('ACTUAL IV',_sdNum(r.iv)?r.iv.toFixed(1)+'%':'—',r.iv/40,'implied');
-  h+=_hxLens('$ RANGE',_sdNum(r.rng)?'$'+r.rng.toFixed(2):'—',rngPct,'H '+_sdF(r.h)+' · L '+_sdF(r.l));
-  h+=_hxLens('UP BARS',r.bars?r.up+'/'+r.bars:'—',r.bars?r.up/r.bars:NaN,r.bars?'▼ '+r.dn+' down · '+_sdTfLabel(tf).toLowerCase():'no intraday data');
-  h+='</div>';
-  // plates
-  var tc=r.trend==='Up'?HX.c:r.trend==='Down'?HX.dn:HX.txt,ti=r.trend==='Up'?'▲ ':r.trend==='Down'?'▼ ':'◆ ';
-  h+='<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
-  h+=_hxPlate('TREND',r.trend?ti+r.trend.toUpperCase():'—',_sdNum(r.mv)?(r.mv>=0?'+':'−')+'$'+Math.abs(r.mv).toFixed(2)+' open → close':'',tc);
-  h+=_hxPlate('GAMMA FLIP',_sdNum(r.flip)?(r.flipFb?'≈':'')+r.flip.toFixed(0):'—',!_sdNum(r.flip)?'no snapshot':r.flipFb?'no true flip found · nearest-to-zero strike':(r.flip>r.c?'above':'below')+' close '+_sdF(r.c),HX.flip);
-  h+=_hxPlate('NET GEX',_sdBig(r.ngex),'CW '+_sdF(r.cw,0)+' · PW '+_sdF(r.pw,0),HX.c);
-  h+=_hxPlate('IEX VOLUME',_sdNum(r.v)?(r.v>=1e6?(r.v/1e6).toFixed(2)+'M':Math.round(r.v/1e3)+'K'):'—','~1–2% of total market volume'+(r.big?' · peak bar '+_sdHM(r.big.m):''),HX.c);
-  h+='</div>';
-  h+='<div style="margin-top:8px;font-size:11px;color:'+HX.dim+'">O '+_sdF(r.o)+' · H '+_sdF(r.h)+' · L '+_sdF(r.l)+' · C '+_sdF(r.c)+(r.snap?' · IV/GEX snapshot: '+r.snap:'')+'</div>';
-  return h;
+function _gsRung(label,v,col,close,bold,n){
+  var dist=_sdNum(n)&&_sdNum(close)&&!bold?(n>=close?'+':'−')+Math.abs(n-close).toFixed(2)+(n>=close?' above':' below'):'';
+  return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line)"><span style="width:9px;height:9px;border-radius:2px;background:'+col+'"></span>'
+    +'<span style="flex:1;font-size:12px;color:'+(bold?'var(--fg,#e8dede)':'var(--dim)')+'">'+label+'</span><span style="font-size:15px;color:'+(bold?'inherit':col)+'">'+v+'</span>'
+    +'<span style="width:92px;text-align:right;font-size:11px;color:var(--dim)">'+dist+'</span></div>';
 }
-function renderSessionData(w){
-  _sdLoad();
-  var rows=_sdBuild(),first=rows.length?rows[0].date:'',last=rows.length?rows[rows.length-1].date:'';
-  var from=(w&&w.sdFrom)||last,to=(w&&w.sdTo)||last;if(from>to){var t=from;from=to;to=t;}
-  var pick=rows.filter(function(r){return r.date>=from&&r.date<=to;});
-  var sel=(w&&w.sdSel&&pick.some(function(r){return r.date===w.sdSel;}))?w.sdSel:(pick.length?pick[pick.length-1].date:'');
-  var h='<div data-sd-root="1" style="position:relative;font-family:\'Share Tech Mono\',ui-monospace,monospace;font-size:13px;color:'+HX.txt+';background:radial-gradient(ellipse at 50% 0%,#1a2026 0%,#0a0c0f 70%);border-radius:12px;padding:14px;margin:-4px">';
-  h+='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap">';
-  h+='<svg aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;opacity:.3;pointer-events:none;border-radius:12px"><filter id="hxn"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .5 0 0 0 0 .55 0 0 0 0 .6 0 0 0 .35 0"/></filter><rect width="100%" height="100%" filter="url(#hxn)"/></svg>';
-  // header console
-  h+='<div style="position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:linear-gradient(180deg,#2b3137,#171b1f);border:1px solid #06080a;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 6px 14px rgba(0,0,0,.6)">'
-    +_hxScrew('left:5px;top:5px')+_hxScrew('right:5px;top:5px')+_hxScrew('left:5px;bottom:5px')+_hxScrew('right:5px;bottom:5px');
-  h+='<div style="padding-left:8px"><div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;letter-spacing:.28em;color:#b9c6cc;text-shadow:0 -1px 0 #000,0 1px 0 rgba(255,255,255,.12)">HOLO-TABLE · SESSION</div>'
-    +'<div style="font-size:11px;letter-spacing:.14em;color:#6f858c">QQQ · 09:30 → 16:00 ET · '+(SD.candles?'<span style="color:'+HX.c+'">EMITTER ONLINE</span>':SD.err?'<span style="color:'+HX.dn+'">FEED ERROR</span>':'WARMING UP…')+'</div></div>';
-  var tf=(w&&SD_TFS.indexOf(+w.sdTf)>=0)?+w.sdTf:10;
-  var isToday=from===last&&to===last,isAll=from===first&&to===last&&first!==last;
-  h+='<div style="display:flex;flex-wrap:wrap;gap:8px;padding-right:8px">'+_hxKey('◀','prev',false,'Previous day')+_hxKey('TODAY','today',isToday,'Latest day')+_hxKey('ALL','all',isAll,'Every day with data')+_hxKey('▶','next',false,'Next day')+'</div></div>';
-  // date range strip
-  h+='<div style="position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0">'+_hxDate('data-sd-from',from,first,last)+'<span style="color:'+HX.dim+'">→</span>'+_hxDate('data-sd-to',to,first,last)
-    +'<span style="font-size:11px;color:'+HX.dim+'">'+pick.length+' day'+(pick.length===1?'':'s')+' · data from '+first+'</span></div>';
-  h+='<div role="group" aria-label="Candle size" style="position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 12px"><span style="font-size:11px;letter-spacing:.16em;color:#8fb4bd;margin-right:4px">CANDLES</span>';
-  SD_TFS.forEach(function(t){var on=t===tf;h+='<button type="button" data-sd-tf="'+t+'" aria-pressed="'+on+'" style="font-family:inherit;font-size:12px;min-height:34px;min-width:46px;padding:0 10px;cursor:pointer;color:'+(on?HX.c:'#9fb4ba')+';background:'+(on?'linear-gradient(180deg,#0f3a46,#082730)':'linear-gradient(180deg,#3a4148,#1f2429)')+';border:1px solid '+(on?'#1d7f95':'#0c0e10')+';border-radius:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 0 #0a0c0e'+(on?',0 0 12px rgba(70,232,255,.35)':'')+';text-shadow:'+(on?'0 0 8px '+HX.c:'0 1px 0 #000')+'">'+(t>=60?(t/60)+'h':t+'m')+'</button>';});
-  h+='</div>';
-  if(SD.err)h+='<div style="position:relative;color:'+HX.dn+';margin-bottom:8px">'+SD.err+'</div>';
-  if(!SD.candles&&!SD.err)h+='<div style="position:relative;color:'+HX.dim+';padding:30px 0;text-align:center">Loading candles…</div>';
-  else if(!pick.length)h+='<div style="position:relative;color:'+HX.dim+';padding:30px 0;text-align:center">No data in that date range.</div>';
-  else{
-    var selRow=pick.filter(function(r){return r.date===sel;})[0];
-    h+='<div style="position:relative">'+_hxDay(selRow,tf)+'</div>';
-    if(pick.length>1){
-      var list=pick.slice().reverse(),shown=list.slice(0,300);
-      h+='<div style="position:relative;margin-top:14px;border-radius:12px;background:linear-gradient(180deg,#1b2024,#0e1114);border:1px solid #050607;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)">';
-      h+='<div style="padding:10px 14px;font-size:11px;letter-spacing:.18em;color:#8fb4bd;border-bottom:1px solid #0e4a5a">DAY LOG · tap a day to project it</div>';
-      h+='<div style="max-height:320px;overflow:auto">';
-      shown.forEach(function(r){
-        var on=r.date===sel,tc=r.trend==='Up'?HX.c:r.trend==='Down'?HX.dn:HX.txt;
-        h+='<button type="button" data-sd-day="'+r.date+'" style="display:grid;grid-template-columns:96px 1fr 1fr 1fr 1fr;gap:8px;width:100%;min-height:40px;align-items:center;padding:6px 14px;font-family:inherit;font-size:12px;text-align:left;cursor:pointer;color:'+HX.txt+';background:'+(on?'rgba(70,232,255,.10)':'transparent')+';border:0;border-bottom:1px solid rgba(14,74,90,.5);'+(on?'box-shadow:inset 3px 0 0 '+HX.c+';':'')+'">'
-          +'<span style="color:'+(on?HX.c:HX.txt)+'">'+r.date+'</span>'
-          +'<span>$'+_sdF(r.rng)+'</span>'
-          +'<span style="color:'+tc+'">'+(r.trend||'—')+'</span>'
-          +'<span style="color:'+HX.dim+'">IV '+(_sdNum(r.iv)?r.iv.toFixed(1)+'%':'—')+'</span>'
-          +'<span style="color:'+HX.flip+'">flip '+(_sdNum(r.flip)&&r.flipFb?'≈':'')+_sdF(r.flip,0)+'</span></button>';
-      });
-      h+='</div>';
-      if(list.length>shown.length)h+='<div style="padding:8px 14px;font-size:11px;color:'+HX.dim+'">Showing newest 300 of '+list.length+' days · narrow the dates to see older ones.</div>';
-      h+='</div>';
-    }
-  }
-  h+='<div style="position:relative;margin-top:10px;font-size:11px;color:'+HX.dim+'">Prices: IEX feed (match full market within cents). Volume: IEX only, about 1–2% of total, so use it for shape, not size. IV &amp; GEX = logger snapshot for that day (pm if there is one).</div>';
+function _gsDayPanel(r0,tf,isToday){
+  var r=_sdAgg(r0,GS_TF_MIN[tf]||1),UP='#00e676',DN='#ff453a',FL='#ffd600',E9='#29b6f6',E20='#ff9f0a';
+  var mv=_sdNum(r.mv)?r.mv:NaN,pct=_sdNum(mv)&&r.o?mv/r.o*100:NaN,col=mv>0?UP:mv<0?DN:'var(--dim)';
+  var sign=function(x){return (x>=0?'+':'−')+Math.abs(x).toFixed(2);};
+  var hasSnap=_sdNum(r.hv)||_sdNum(r.flip);
+  // headline
+  var hl=_gsNice(r.date)+(isToday?' (so far)':'')+': QQQ '+(mv>=0?'rose':'fell')+' <span style="color:'+col+'">$'+Math.abs(mv).toFixed(2)+'</span>';
+  if(_sdNum(r.flip))hl+=', '+(isToday?'is':'closed')+' <span style="color:'+FL+'">'+(r.c>=r.flip?'above':'below')+' the gamma flip ('+(r.flipFb?'≈':'')+r.flip.toFixed(0)+')</span>';
+  if(_sdNum(r.hv)&&_sdNum(r.iv))hl+=', and the market moved '+(r.hv>r.iv?'more':'less')+' than options priced in';
+  hl+='.';
+  var tag=r.trend==='Up'?['▲ UP DAY',UP]:r.trend==='Down'?['▼ DOWN DAY',DN]:['◆ BALANCED DAY','#b0b0c8'];
+  var head='<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin:8px 0">'
+    +'<span style="padding:5px 9px;border-radius:6px;background:'+tag[1]+'1f;color:'+tag[1]+';font-size:12px;white-space:nowrap">'+tag[0]+'</span>'
+    +'<span style="font-size:14px;line-height:1.45">'+hl+'</span></div>';
+  // PRICE card
+  var pos=function(v){return r.h>r.l?(v-r.l)/(r.h-r.l)*100:50;};
+  var a=Math.min(pos(r.o),pos(r.c)),w=Math.abs(pos(r.c)-pos(r.o));
+  var price='<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:26px">'+_sdF(r.c)+'</span><span style="font-size:15px;color:'+col+'">'+(_sdNum(mv)?sign(mv)+' ('+sign(pct)+'%)':'')+'</span></div>'
+    +'<div style="font-size:11px;color:var(--dim)">'+(isToday?'last':'close')+' · change from the 9:30 open</div>'
+    +'<div style="position:relative;height:30px"><div style="position:absolute;left:0;right:0;top:12px;height:6px;border-radius:3px;background:var(--line)"></div>'
+    +'<div style="position:absolute;left:'+a.toFixed(1)+'%;width:'+Math.max(1,w).toFixed(1)+'%;top:12px;height:6px;border-radius:3px;background:'+col+'"></div>'
+    +'<div style="position:absolute;left:'+pos(r.o).toFixed(1)+'%;top:0;font-size:10px;color:var(--dim);transform:translateX(-50%)">open</div>'
+    +'<div style="position:absolute;left:'+pos(r.c).toFixed(1)+'%;top:19px;font-size:10px;transform:translateX(-50%)">'+(isToday?'now':'close')+'</div></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)"><span>Low <b style="color:inherit;font-weight:400;color:#e8dede">'+_sdF(r.l)+'</b></span><span>Range <span style="color:#e8dede">$'+_sdF(r.rng)+'</span></span><span>High <span style="color:#e8dede">'+_sdF(r.h)+'</span></span></div>';
+  var pv=r.trend==='Up'?'Up day: closed $'+Math.abs(mv).toFixed(2)+' above the open.':r.trend==='Down'?'Down day: closed $'+Math.abs(mv).toFixed(2)+' below the open.':'Balanced day: open and close ended close together.';
+  if(isToday)pv=pv.replace('closed','is trading');
+  // VOLATILITY card
+  var vol,vv,vc;
+  if(_sdNum(r.hv)&&_sdNum(r.iv)){
+    vol=_gsIvBar('Real moves (21d)',r.hv,E20)+_gsIvBar('Options priced in',r.iv,E9)+'<div style="font-size:11px;color:var(--dim)">Gap '+(r.hv-r.iv>=0?'+':'')+(r.hv-r.iv).toFixed(2)+' pts · Hist IV vs Actual IV</div>';
+    vv=r.hv>r.iv?'Market moved MORE than options priced in: edge to option buyers.':'Market moved LESS than options priced in: edge to option sellers.';vc=r.hv>r.iv?E20:E9;
+  }else{vol='<div style="font-size:12px;color:var(--dim)">No logger snapshot for this day.</div>';vv='IV snapshots start Jul 14, 2026.';vc='#8b8ba6';}
+  // DEALER MAP card
+  var dealer,dv,dc;
+  if(hasSnap){
+    var lad=[];
+    if(_sdNum(r.flip))lad.push(['Gamma flip',r.flip,FL,(r.flipFb?'≈':'')+r.flip.toFixed(0)]);
+    if(_sdNum(r.cw))lad.push(['Call wall',r.cw,'#5eead4',r.cw.toFixed(0)]);
+    if(_sdNum(r.pw))lad.push(['Put wall',r.pw,E20,r.pw.toFixed(0)]);
+    lad.push([isToday?'Last':'Close',r.c,'#e8dede',_sdF(r.c),true]);
+    lad.sort(function(x,y){return y[1]-x[1];});
+    dealer=lad.map(function(x){return _gsRung(x[0],x[3],x[2],r.c,!!x[4],x[1]);}).join('')
+      +'<div style="font-size:11px;color:var(--dim)">Net GEX '+_sdBig(r.ngex)+' · sorted high → low</div>';
+    if(r.flipFb){dv='No true flip found that day (≈ nearest strike), so treat the regime with caution.';dc='#8b8ba6';}
+    else if(_sdNum(r.flip)){var below=r.c<r.flip;dv=(below?'Below':'Above')+' the flip: '+(below?'negative gamma, moves tend to run.':'positive gamma, moves tend to get absorbed.');dc=below?DN:UP;}
+    else{dv='No gamma flip in this snapshot.';dc='#8b8ba6';}
+  }else{dealer='<div style="font-size:12px;color:var(--dim)">No GEX snapshot for this day.</div>';dv='GEX snapshots start Jul 14, 2026.';dc='#8b8ba6';}
+  // ACTIVITY card
+  var act,av,ac='#5eead4';
+  if(r.bars){
+    var upP=r.up/r.bars*100,dnP=r.dn/r.bars*100;
+    act='<div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:26px">'+r.up+' up</span><span style="font-size:17px;color:var(--dim)">/ '+r.dn+' down</span></div>'
+      +'<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line)"><div style="width:'+upP.toFixed(1)+'%;background:'+UP+'"></div><div style="flex:1"></div><div style="width:'+dnP.toFixed(1)+'%;background:'+DN+'"></div></div>'
+      +'<div style="font-size:11px;color:var(--dim)">'+tf+' candles · '+r.bars+' total · follows your candle size</div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)"><span>Busiest bar <span style="color:#e8dede">'+(r.big?_sdHM(r.big.m):'—')+'</span></span><span>IEX vol <span style="color:#e8dede">'+(_sdNum(r.v)?(r.v>=1e6?(r.v/1e6).toFixed(2)+'M':Math.round(r.v/1e3)+'K'):'—')+'</span></span></div>';
+    av=r.up>r.dn*1.2?'Buyers won more candles.':r.dn>r.up*1.2?'Sellers won more candles.':'Even tug-of-war between buyers and sellers.';
+    if(r.big)av+=' Heaviest volume at '+_sdHM(r.big.m)+'.';
+  }else{act='<div style="font-size:12px;color:var(--dim)">No intraday candles for this day (they start Aug 10, 2026).</div>';av='Daily candle only.';ac='#8b8ba6';}
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:8px">'
+    +_gsCard('PRICE',price,pv,col==='var(--dim)'?'#8b8ba6':col)+_gsCard('VOLATILITY',vol,vv,vc)+_gsCard('DEALER MAP',dealer,dv,dc)+_gsCard('ACTIVITY',act,av,ac)+'</div>';
+  return {head:head,cards:h};
+}
+function _gsLog(rows,sel,n,wid){
+  var list=rows.slice().reverse(),shown=list.slice(0,n),UP='#00e676',DN='#ff453a',FL='#ffd600';
+  var cols='grid-template-columns:118px 150px 80px 150px minmax(150px,1fr) 150px';
+  var h='<div style="margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.14em;color:var(--dim)"><span>DAY LOG · NEWEST FIRST · CLICK A DAY TO LOAD IT ON THE CHART</span><span>'+shown.length+' of '+list.length+' days</span></div>'
+    +'<div style="overflow-x:auto"><div style="min-width:860px">'
+    +'<div style="display:grid;'+cols+';gap:12px;padding:6px 12px;font-size:10px;letter-spacing:.1em;color:var(--dim);border-bottom:1px solid var(--line)"><span>DAY</span><span>OPEN → CLOSE</span><span>RANGE</span><span>VS GAMMA FLIP</span><span>REAL vs PRICED MOVE</span><span>OPEN/CLOSE IN RANGE</span></div>'
+    +'<div style="max-height:300px;overflow-y:auto" data-gs-logscroll="1">';
+  shown.forEach(function(r){
+    var on=r.date===sel,mv=r.mv,col=mv>0?UP:mv<0?DN:'var(--dim)',pct=_sdNum(mv)&&r.o?mv/r.o*100:NaN;
+    var chip='<span style="color:var(--dim)">—</span>';
+    if(_sdNum(r.flip)&&_sdNum(r.c)){var ab=r.c>=r.flip,cc=ab?UP:FL;chip='<span style="padding:2px 7px;border-radius:9px;font-size:11px;background:'+cc+'1f;color:'+cc+'">'+(ab?'above':'below')+' '+(r.flipFb?'≈':'')+r.flip.toFixed(0)+'</span>';}
+    var iv=_sdNum(r.hv)&&_sdNum(r.iv)?'<span style="color:'+(r.hv>r.iv?'#ff9f0a':'#29b6f6')+'">moved '+(r.hv>r.iv?'more':'less')+'</span> <span style="color:var(--dim)">'+r.hv.toFixed(1)+' / '+r.iv.toFixed(1)+'</span>':'<span style="color:var(--dim)">—</span>';
+    var p=function(v){return r.h>r.l?(v-r.l)/(r.h-r.l)*100:50;};
+    var bar=_sdNum(r.o)?'<div style="position:relative;height:7px;background:var(--line);border-radius:4px"><div style="position:absolute;left:'+Math.min(p(r.o),p(r.c)).toFixed(0)+'%;width:'+Math.max(2,Math.abs(p(r.c)-p(r.o))).toFixed(0)+'%;height:7px;border-radius:4px;background:'+col+'"></div></div>':'';
+    h+='<button type="button" data-gs-day="'+r.date+'" style="display:grid;'+cols+';gap:12px;align-items:center;width:100%;min-height:40px;padding:6px 12px;font:inherit;font-size:13px;text-align:left;color:inherit;cursor:pointer;background:'+(on?'rgba(228,106,106,.12)':'transparent')+';border:0;border-bottom:1px solid var(--line)">'
+      +'<span style="color:'+(on?'var(--accent)':'inherit')+'">'+_gsNice(r.date)+(r.date.slice(0,4)!==String(new Date().getFullYear())?' '+r.date.slice(0,4):'')+'</span>'
+      +'<span style="color:'+col+'">'+(_sdNum(mv)?(mv>=0?'+':'−')+Math.abs(mv).toFixed(2)+' ('+(pct>=0?'+':'−')+Math.abs(pct).toFixed(2)+'%)':'—')+'</span>'
+      +'<span>$'+_sdF(r.rng)+'</span><span>'+chip+'</span><span>'+iv+'</span>'+bar+'</button>';
+  });
+  h+='</div></div></div>';
+  if(list.length>shown.length)h+='<div style="padding:8px 12px"><button type="button" class="qqq-layer" data-gs-more="1">Show 30 more days</button></div>';
   return h+'</div>';
 }
-function _sdWidget(el){var wEl=el.closest('.widget');if(!wEl)return null;var id=wEl.dataset.wid;return {el:wEl,w:activeLayout().widgets.find(function(x){return x.id===id;})};}
-function _sdRedraw(r){var root=r.el.querySelector('[data-sd-root]');if(root){var sc=root.querySelector('[data-sd-root] div[style*="max-height:320px"]'),top=sc?sc.scrollTop:0;root.outerHTML=renderSessionData(r.w);var n=r.el.querySelector('[data-sd-root] div[style*="max-height:320px"]');if(n)n.scrollTop=top;}}
-function _sdRedrawAll(){document.querySelectorAll('[data-sd-root]').forEach(function(root){var r=_sdWidget(root);if(r&&r.w)_sdRedraw(r);});}
-document.addEventListener('change',function(ev){
-  if(!ev.target.matches('[data-sd-from],[data-sd-to]'))return;var r=_sdWidget(ev.target);if(!r||!r.w)return;
-  if(ev.target.matches('[data-sd-from]'))r.w.sdFrom=ev.target.value;else r.w.sdTo=ev.target.value;
-  r.w.sdSel=null;save();_sdRedraw(r);
-});
-document.addEventListener('click',function(ev){
-  var tb=ev.target.closest('[data-sd-tf]');
-  if(tb){var rt=_sdWidget(tb);if(!rt||!rt.w)return;rt.w.sdTf=+tb.dataset.sdTf;save();_sdRedraw(rt);return;}
-  var d=ev.target.closest('[data-sd-day]');
-  if(d){var rd=_sdWidget(d);if(!rd||!rd.w)return;rd.w.sdSel=d.dataset.sdDay;save();_sdRedraw(rd);return;}
-  var b=ev.target.closest('[data-sd-btn]');if(!b)return;var r=_sdWidget(b);if(!r||!r.w)return;
-  var rows=_sdBuild();if(!rows.length)return;
-  var first=rows[0].date,last=rows[rows.length-1].date,act=b.dataset.sdBtn;
-  if(act==='today'){r.w.sdFrom=r.w.sdTo=r.w.sdSel=last;}
-  else if(act==='all'){r.w.sdFrom=first;r.w.sdTo=last;r.w.sdSel=last;}
-  else{
-    var cur=r.w.sdSel||r.w.sdTo||last,i=rows.findIndex(function(x){return x.date===cur;});if(i<0)i=rows.length-1;
-    i=Math.max(0,Math.min(rows.length-1,i+(act==='prev'?-1:1)));
-    var nd=rows[i].date;r.w.sdSel=nd;
-    if(!r.w.sdFrom||nd<r.w.sdFrom||!r.w.sdTo||nd>r.w.sdTo){r.w.sdFrom=r.w.sdTo=nd;}
+// Called from renderGexChart before the chart is built.
+function gsPrepare(e,widget){
+  _sdLoad();
+  var rows=_sdRows(),last=rows.length?rows[rows.length-1].date:null;
+  var sdate=(widget&&widget.gsDate)||null;
+  if(sdate&&!rows.some(function(r){return r.date===sdate;}))sdate=null;
+  var latestDate=e&&e.entry_date,entry=e,noGex=false,past=false;
+  if(sdate){
+    var hit=_gsEntryFor(sdate);
+    if(sdate!==latestDate){past=true;if(hit)entry=hit;else noGex=true;}
   }
-  save();_sdRedraw(r);
+  if(window.qqqSetSession)window.qqqSetSession(sdate,past,noGex);
+  return {rows:rows,last:last,sdate:sdate,entry:entry,noGex:noGex,past:past};
+}
+function gsControls(G,widget){
+  var tf=(widget&&widget.timeframe)||'1m',cal=['1D','1W','1M'].indexOf(tf)>=0;
+  var h='<div class="qqq-chart-controls" style="flex-wrap:wrap;gap:6px;align-items:center"><span class="label">Session</span>'
+    +_gsBtn('data-gs-step','-1','◀',false,'Previous day')
+    +'<input type="date" data-gs-pick="1" aria-label="Pick a day" value="'+(G.sdate||'')+'" min="'+(G.rows.length?G.rows[0].date:'')+'" max="'+(G.last||'')+'" style="font:inherit;font-size:12px;padding:3px 6px;color:inherit;background:transparent;border:1px solid var(--line);border-radius:4px;color-scheme:dark">'
+    +_gsBtn('data-gs-step','1','▶',false,'Next day')
+    +_gsBtn('data-gs-go','today','Today',G.sdate&&G.sdate===G.last,'Latest day')
+    +_gsBtn('data-gs-go','all','All history',!G.sdate,'Continuous chart, as before')
+    +_gsSep()+'<span class="label">Candles</span>';
+  ['1m','5m','15m','1H','4H'].forEach(function(t){h+=_gsBtn('data-gs-tf',t,t,tf===t);});
+  if(G.sdate&&cal)h+='<span style="font-size:11px;color:#ffd600">pick 1m–4H to see this day intraday</span>';
+  return h+'</div>';
+}
+function _gsPanelFor(G,widget){
+  var tf=(widget&&widget.timeframe)||'1m';
+  if(!G.sdate||!SD.candles)return null;
+  var r=G.rows.filter(function(x){return x.date===G.sdate;})[0];
+  return r?_gsDayPanel(r,GS_TF_MIN[tf]?tf:'1m',G.sdate===G.last&&!G.past):null;
+}
+function gsHeadline(G,widget){var P=_gsPanelFor(G,widget);return P?P.head:'';}
+function gsBelow(G,widget){return '<div style="position:relative;z-index:2;background:var(--panel,#0d0305);padding-top:4px;clear:both">'+_gsBelowInner(G,widget)+'</div>';}
+function _gsBelowInner(G,widget){
+  var tf=(widget&&widget.timeframe)||'1m';
+  if(!SD.candles&&!SD.err)return '<div style="padding:8px;color:var(--dim);font-size:12px">Loading day stats…</div>';
+  if(SD.err)return '<div style="padding:8px;color:#ff453a;font-size:12px">'+SD.err+'</div>';
+  var h='';
+  var P=_gsPanelFor(G,widget);
+  if(P)h+=P.cards;
+  else h+='<div style="margin-top:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--dim)">Showing all history. Pick a day (◀ ▶, Today, or the day log) to lock the chart to that session and see its numbers.</div>';
+  h+=_gsLog(G.rows,G.sdate,(widget&&widget.gsLogN)||30,widget&&widget.id);
+  h+='<div style="font-size:11px;color:var(--dim);padding:6px 2px">Prices: IEX feed (match full market within cents). Volume: IEX only, ~1–2% of total, so use it for shape, not size. IV &amp; GEX: logger snapshot for that day.</div>';
+  return h;
+}
+function _gsWidget(el){var wEl=el.closest('.widget');if(!wEl)return null;var id=wEl.dataset.wid;return activeLayout().widgets.find(function(x){return x.id===id;});}
+function _gsGo(w,date){if(date&&['1D','1W','1M'].indexOf(w.timeframe)>=0)w.timeframe='5m';w.gsDate=date;try{save();}catch(e){}render();}
+document.addEventListener('click',function(ev){
+  var b=ev.target.closest&&ev.target.closest('[data-gs-step],[data-gs-go],[data-gs-tf],[data-gs-day],[data-gs-more]');if(!b)return;
+  var w=_gsWidget(b);if(!w)return;
+  var rows=_sdRows();if(!rows.length&&!b.hasAttribute('data-gs-tf'))return;
+  var last=rows.length?rows[rows.length-1].date:null;
+  if(b.hasAttribute('data-gs-tf')){w.timeframe=b.getAttribute('data-gs-tf');try{save();}catch(e){}render();return;}
+  if(b.hasAttribute('data-gs-more')){w.gsLogN=((w.gsLogN||30)+30);try{save();}catch(e){}render();return;}
+  if(b.hasAttribute('data-gs-day'))return _gsGo(w,b.getAttribute('data-gs-day'));
+  if(b.hasAttribute('data-gs-go'))return _gsGo(w,b.getAttribute('data-gs-go')==='all'?null:last);
+  var cur=w.gsDate||last,i=rows.findIndex(function(x){return x.date===cur;});if(i<0)i=rows.length-1;
+  i=Math.max(0,Math.min(rows.length-1,i+(+b.getAttribute('data-gs-step'))));
+  if(['1D','1W','1M'].indexOf(w.timeframe)>=0)w.timeframe='5m';
+  _gsGo(w,rows[i].date);
 });
-setInterval(function(){if(document.querySelector('[data-sd-root]'))_sdLoad();},300000);
+document.addEventListener('change',function(ev){
+  if(!ev.target.matches||!ev.target.matches('[data-gs-pick]'))return;var w=_gsWidget(ev.target);if(!w)return;
+  var v=ev.target.value,rows=_sdRows();if(!v)return _gsGo(w,null);
+  // snap weekends/holidays to the nearest earlier trading day
+  var pick=null;rows.forEach(function(r){if(r.date<=v)pick=r.date;});
+  if(['1D','1W','1M'].indexOf(w.timeframe)>=0)w.timeframe='5m';
+  _gsGo(w,pick||rows[0].date);
+});
+setInterval(function(){try{if(activeLayout().widgets.some(function(w){return w.definitionId==='gex-chart';}))_sdLoad();}catch(e){}},300000);
+// Old Session Data widget: retired; point people to the GEX Chart.
+function renderSessionData(w){return '<div style="padding:14px;font-size:13px;color:var(--dim);line-height:1.5">Session Data now lives inside the <b>GEX Chart</b> widget (Session controls, day cards and day log). You can remove this widget.</div>';}
+
 function renderWidgetContent(defId, widget) {
   try {
     return renderWidgetBody(defId, widget);
@@ -7242,8 +7464,11 @@ function renderGexChart(e, widget) {
   }
   // secQqqOpening returns a <section class="wide qqq-market-card"> wrapper.
   // Extract just the inner body for the widget by stripping the outer section.
-  var full = window.secQqqOpening(e);
+  var G = gsPrepare(e, widget);
+  var full = window.secQqqOpening(G.entry);
   var html = full.replace(/^<section[^>]*>/, '').replace(/<\/section>\s*$/, '');
+  var gsB = gsBelow(G, widget), gsCut = html.indexOf('<div id="qqq-cockpit-block"');
+  html = gsControls(G, widget) + gsHeadline(G, widget) + (gsCut >= 0 ? html.slice(0, gsCut) + gsB + html.slice(gsCut) : html + gsB);
 
   // Collapsible notebook panel at the bottom
   html += '<details class="gex-notebook-panel" style="flex-shrink:0;border-top:1px solid var(--line);margin-top:4px">';
@@ -7256,7 +7481,7 @@ function renderGexChart(e, widget) {
   // that gets assigned to innerHTML, schedule the mount for after the DOM update.
   setTimeout(function() {
     if (document.getElementById('qqq-tv-chart')) {
-      window.mountQqqChart(e);
+      window.mountQqqChart(G.entry);
     }
   }, 0);
   return html;
@@ -7906,7 +8131,7 @@ var CATEGORIES = [
   { id:'process', label:'Process & Review', question:'What was observed, why did it matter, and what was learned?', widgets:[
     { id:'thesis-builder',        name:'Thesis Builder',          question:'What is the current thesis?',                   dw:400, dh:320 },
     { id:'trading-notebook',      name:'Trading Notebook',        question:'Journal, notes, scorecard & observations',      dw:440, dh:380 },
-    { id:'trade-checklist',       name:'Session Data',            question:'What did each session do, open to close?',         dw:360, dh:440 },
+    { id:'trade-checklist',       name:'Session Data (retired)',            question:'Moved into the GEX Chart widget',         dw:360, dh:440 },
   ]},
   { id:'performance', label:'Performance', question:'How am I performing and what patterns emerge from my trading history?', widgets:[
     { id:'perf-performance',  name:'Performance',  question:'Full performance picture: equity, win rate, edges, timing, distribution',  dw:680, dh:860 },
