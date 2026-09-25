@@ -642,6 +642,8 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 .widget-body .qqq-quad-hub .qh-call { font-size: 13px; }
 .widget-body .qqq-quad-hub .qh-count { font-size: 9px; }
 .widget-body .qqq-quad-hub .qh-story { font-size: 8px; line-height: 1.2; }
+/* keep the cockpit's own wording: no forced capitals (√det(G), γ Flip, The Call) */
+.widget-body .qqq-quad-cockpit, .widget-body .qqq-quad-cockpit * { text-transform: none !important; }
 /* strike profile: keep its lines inside its own box */
 .widget-body .qqq-gex-profile { overflow: hidden; }
 
@@ -6778,7 +6780,7 @@ function _sdAgg(r,tf){
 var _sdCache={key:null,rows:null};
 function _sdRows(){
   var k=SD.at+':'+((window.MARKET_DASH_HISTORY||[]).length);
-  if(_sdCache.key!==k){_sdCache.rows=_sdBuild();_sdCache.key=k;}
+  if(_sdCache.key!==k){_sdCache.rows=_sdBuild().filter(function(r){return _sdNum(r.o)&&_sdNum(r.c);});_sdCache.key=k;}
   return _sdCache.rows;
 }
 function _sdRedrawAll(){
@@ -8131,7 +8133,7 @@ var CATEGORIES = [
   { id:'process', label:'Process & Review', question:'What was observed, why did it matter, and what was learned?', widgets:[
     { id:'thesis-builder',        name:'Thesis Builder',          question:'What is the current thesis?',                   dw:400, dh:320 },
     { id:'trading-notebook',      name:'Trading Notebook',        question:'Journal, notes, scorecard & observations',      dw:440, dh:380 },
-    { id:'trade-checklist',       name:'Session Data (retired)',            question:'Moved into the GEX Chart widget',         dw:360, dh:440 },
+    { id:'trade-checklist',       name:'Session Data', hidden:true,            question:'Moved into the GEX Chart widget',         dw:360, dh:440 },
   ]},
   { id:'performance', label:'Performance', question:'How am I performing and what patterns emerge from my trading history?', widgets:[
     { id:'perf-performance',  name:'Performance',  question:'Full performance picture: equity, win rate, edges, timing, distribution',  dw:680, dh:860 },
@@ -8585,7 +8587,7 @@ function renderPanel() {
 
   var totalShown = 0;
   CATEGORIES.forEach(cat => {
-    var widgets = cat.widgets;
+    var widgets = cat.widgets.filter(w => !w.hidden);
     if (searchText) {
       widgets = widgets.filter(w => w.name.toLowerCase().includes(lower) || w.question.toLowerCase().includes(lower));
     }
