@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Notebook</title>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --bg:#050000; --panel:#0d0305; --line:#2a0a0f;
+  --txt:#e8d8d8; --dim:#8b3a3a; --faint:#4a1a1f;
+  --accent:#00e5cc; --warn:#cc1111;
+  --text-secondary: rgba(200,160,160,0.65);
+  --font: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+html,body{ height:100%; background:var(--bg); color:var(--txt); font-family:var(--font); }
+body{ padding:16px; }
+#app{ max-width:900px; margin:0 auto; }
+h2.nb-title{ font-size:13px; color:var(--dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
+#app button{ font-family:var(--font); }
+[data-notebook-score]{ min-width:24px; padding:4px 0; font-size:11px; }
+button:hover{ filter:brightness(1.15); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+var notebookDrafts = Object.create(null);
+function notebookAttr(value) { return esc(value == null ? '' : String(value)).replace(/"/g, '&quot;'); }
+function readNotebookDraft(key, date) {
+  if (notebookDrafts[key]) return notebookDrafts[key];
+  var draft;
+  try { draft = JSON.parse(localStorage.getItem(key)); } catch (err) {}
+  if (!draft || typeof draft !== 'object' || Array.isArray(draft)) draft = {};
+  if (!draft.fields || typeof draft.fields !== 'object') draft.fields = {};
+  if (!draft.scores || typeof draft.scores !== 'object') draft.scores = {};
+  try {
+    if (draft.fields.notes == null) draft.fields.notes = localStorage.getItem('gshinrje-quicknotes') || '';
+    if (draft.fields.observations == null) draft.fields.observations = localStorage.getItem('gshinrje-notes-' + date) || '';
+  } catch (err) {}
+  if (!draft.entryDate) draft.entryDate = notebookToday();
+  notebookDrafts[key] = draft;
+  return draft;
+}
+function saveNotebookDraft(root) {
+  var key = root.dataset.notebookKey;
+  var draft = notebookDrafts[key];
+  var status = root.querySelector('[data-notebook-status]');
+  try {
+    var savedAt = new Date().toISOString();
+    localStorage.setItem(key, JSON.stringify(Object.assign({}, draft, { updatedAt: savedAt })));
+    draft.updatedAt = savedAt;
+    if (status) status.textContent = 'Draft saved on this device · ' + notebookTime(savedAt);
+  } catch (err) {
+    if (status) status.textContent = 'Could not save. Copy your text before leaving this page.';
+  }
+}
+document.addEventListener('input', function(event) {
+  var field = event.target.closest('[data-notebook-field]');
+  if (!field) return;
+  var root = field.closest('[data-notebook-root]');
+  notebookDrafts[root.dataset.notebookKey].fields[field.dataset.notebookField] = field.value;
+  saveNotebookDraft(root);
+});
+function scoreNotebook(button) {
+  var root = button.closest('[data-notebook-root]');
+  var name = button.dataset.notebookScore;
+  notebookDrafts[root.dataset.notebookKey].scores[name] = Number(button.dataset.score);
+  button.parentElement.querySelectorAll('button').forEach(function(item) {
+    var selected = item === button;
+    item.setAttribute('aria-pressed', selected);
+    item.style.background = selected ? 'var(--accent)' : 'var(--line)';
+    item.style.color = selected ? '#000' : 'var(--dim)';
+  });
+  saveNotebookDraft(root);
+}
+var NOTEBOOK_ARCHIVE_KEY = 'gshinrje-notebook-archive-v1';
+function notebookToday() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function notebookTime(value) {
+  return value && isFinite(Date.parse(value)) ? new Date(value).toLocaleString() : '';
+}
+function notebookArchive() {
+  var raw = localStorage.getItem(NOTEBOOK_ARCHIVE_KEY);
+  if (!raw) return [];
+  var entries = JSON.parse(raw);
+  if (!Array.isArray(entries)) throw new Error('Invalid notebook archive');
+  return entries;
+}
+function notebookStatus(root, message) {
+  root.querySelector('[data-notebook-status]').textContent = message;
+}
+function setNotebookDate(input) {
+  var root = input.closest('[data-notebook-root]');
+  notebookDrafts[root.dataset.notebookKey].entryDate = input.value;
+  saveNotebookDraft(root);
+}
+function archiveNotebook(button) {
+  var root = button.closest('[data-notebook-root]');
+  var key = root.dataset.notebookKey, draft = notebookDrafts[key];
+  var date = root.querySelector('[data-notebook-date]').value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { notebookStatus(root, 'Choose an entry date before saving.'); return; }
+  if (!Object.values(draft.fields).some(function(v) { return String(v || '').trim(); }) && !Object.keys(draft.scores).length) {
+    notebookStatus(root, 'Write a note or add a score before saving an entry.'); return;
+  }
+  var now = new Date().toISOString();
+  try {
+    var entries = notebookArchive();
+    entries.push({ id: (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : now + '-' + Math.random().toString(36).slice(2), date: date, savedAt: now, sourceWidget: key,
+      fields: JSON.parse(JSON.stringify(draft.fields)), scores: JSON.parse(JSON.stringify(draft.scores)) });
+    localStorage.setItem(NOTEBOOK_ARCHIVE_KEY, JSON.stringify(entries));
+  } catch (err) { notebookStatus(root, 'Entry could not be saved. Export a backup before leaving this page.'); return; }
+  draft.lastEntrySavedAt = now;
+  saveNotebookDraft(root);
+  root.querySelector('[data-notebook-last-entry]').textContent = 'Last entry saved: ' + notebookTime(now);
+  notebookStatus(root, 'Entry saved for ' + date + ' · ' + notebookTime(now));
+  document.querySelectorAll('[data-notebook-root]').forEach(function(other) {
+    var filter = other.querySelector('[data-notebook-browse-date]');
+    if (other === root) filter.value = date;
+    browseNotebook(filter);
+  });
+}
+function browseNotebook(input) {
+  var root = input.closest('[data-notebook-root]');
+  var list = root.querySelector('[data-notebook-entries]');
+  try {
+    var entries = notebookArchive().filter(function(entry) { return !input.value || entry.date === input.value; });
+    entries.sort(function(a, b) { return String(b.date).localeCompare(String(a.date)) || String(b.savedAt).localeCompare(String(a.savedAt)); });
+    list.innerHTML = entries.length ? entries.map(function(entry) {
+      var h = '<details style="border:1px solid var(--line);border-radius:4px;padding:8px;margin-top:6px"><summary style="cursor:pointer">' + esc(entry.date) + ' · Saved ' + esc(notebookTime(entry.savedAt)) + '</summary>';
+      Object.keys(entry.fields || {}).forEach(function(field) {
+        var value = entry.fields[field];
+        if (value != null && String(value).trim()) h += '<div style="margin-top:8px"><strong>' + esc(field) + '</strong><div style="white-space:pre-wrap;overflow-wrap:anywhere">' + esc(String(value)) + '</div></div>';
+      });
+      Object.keys(entry.scores || {}).forEach(function(name) { h += '<div style="margin-top:6px">' + esc(name) + ': ' + esc(String(entry.scores[name])) + '/5</div>'; });
+      return h + '</details>';
+    }).join('') : '<p>No saved entries' + (input.value ? ' for ' + esc(input.value) : ' yet') + '. Use Save entry to add one.</p>';
+  } catch (err) { list.textContent = 'Could not read saved entries. Export a backup to preserve the stored data.'; }
+}
+function openNotebookArchive(panel) {
+  if (panel.open) browseNotebook(panel.querySelector('[data-notebook-browse-date]'));
+}
+function exportNotebook(button) {
+  var root = button.closest('[data-notebook-root]');
+  try {
+    var stored = {};
+    for (var i = 0; i < localStorage.length; i++) {
+      var key = localStorage.key(i);
+      if (key === NOTEBOOK_ARCHIVE_KEY || key === 'gshinrje-quicknotes' || key.startsWith('gshinrje-notebook-v1-') || key.startsWith('gshinrje-notes-')) stored[key] = localStorage.getItem(key);
+    }
+    var backup = { format: 'gshinrje-notebook-backup', version: 1, exportedAt: new Date().toISOString(), stored: stored, currentDrafts: notebookDrafts };
+    var url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+    var a = document.createElement('a'); a.href = url; a.download = 'trading-notebook-' + notebookToday() + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+    notebookStatus(root, 'Backup download started. Keep the JSON file in a safe place.');
+  } catch (err) { notebookStatus(root, 'Could not export. Copy your notes before leaving this page.'); }
+}
+function renderNotebook(e, widget) {
+  var key = 'gshinrje-notebook-v1-' + (widget ? widget.id : 'shared');
+  var draft = readNotebookDraft(key, e.entry_date || 'today');
+  var controlStyle = 'width:100%;box-sizing:border-box;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:3px;padding:6px;font:11px ui-monospace,monospace';
+  function textarea(field, placeholder, height) {
+    return '<textarea aria-label="' + notebookAttr(placeholder) + '" data-notebook-field="' + field + '" placeholder="' + notebookAttr(placeholder) + '" style="' + controlStyle + ';height:' + height + 'px;resize:vertical">' + esc(draft.fields[field] || '') + '</textarea>';
+  }
+  function section(name, label) { return '<section data-notebook-section="' + name + '" style="margin-top:18px;padding-top:12px;border-top:1px solid var(--line)"><h3 style="font-size:13px;color:var(--accent);margin:0 0 10px">' + label + '</h3>'; }
+  var html = '<div data-notebook-root data-notebook-key="' + notebookAttr(key) + '" style="width:100%;height:100%;overflow:auto;box-sizing:border-box;padding:2px">';
+  html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><label>Entry date <input aria-label="Entry date" data-notebook-date type="date" value="' + notebookAttr(draft.entryDate) + '" onchange="setNotebookDate(this)" style="color-scheme:dark;padding:6px"></label><button type="button" onclick="archiveNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(0,229,204,0.08);color:var(--accent);font:inherit;cursor:pointer">Save entry</button><button type="button" onclick="exportNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(0,229,204,0.08);color:var(--accent);font:inherit;cursor:pointer">Export backup</button></div>';
+  html += '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Drafts autosave on this device. Save entry keeps a dated copy of your notebook. Each save adds a new copy.</div>';
+  html += '<div data-notebook-last-entry style="font-size:11px;margin-bottom:8px">' + (draft.lastEntrySavedAt ? 'Last entry saved: ' + esc(notebookTime(draft.lastEntrySavedAt)) : 'No dated entry saved from this notebook yet.') + '</div>';
+  html += '<details ontoggle="openNotebookArchive(this)" style="border:1px solid var(--line);padding:8px;margin-bottom:10px"><summary style="cursor:pointer;padding:4px">Browse by date</summary><label style="display:block;margin-top:8px">Saved entry date <input aria-label="Browse saved entry date" data-notebook-browse-date type="date" onchange="browseNotebook(this)" style="color-scheme:dark;padding:6px"></label><button type="button" style="margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--text-secondary);font:inherit;cursor:pointer" onclick="var input=this.parentElement.querySelector(\'[data-notebook-browse-date]\');input.value=\'\';browseNotebook(input)">Show all entries</button><div data-notebook-entries style="font-size:12px"></div></details>';
+  html += section('notes', 'Notes') + textarea('notes', 'Scratch pad...', 160) + '</section>';
+  html += section('scorecard', 'Scorecard') + '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">Rate your process (not your P/L)</div>';
+  ['Waited for setup','Followed thesis','Sized correctly','Managed risk','No revenge trades','Accepted outcome'].forEach(function(name) {
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0"><span style="flex:1;font-size:11px">' + name + '</span><div style="display:flex;gap:2px">';
+    for (var score = 1; score <= 5; score++) {
+      var selected = draft.scores[name] === score;
+      html += '<button aria-label="' + name + ': ' + score + '/5" aria-pressed="' + selected + '" data-notebook-score="' + name + '" data-score="' + score + '" onclick="scoreNotebook(this)" style="border:none;border-radius:2px;cursor:pointer;background:' + (selected ? 'var(--accent)' : 'var(--line)') + ';color:' + (selected ? '#000' : 'var(--dim)') + '">' + score + '</button>';
+    }
+    html += '</div></div>';
+  });
+  html += '</section>' + section('observations', 'Observations') + textarea('observations', 'What do you notice?', 140) + '</section>';
+  html += '<div data-notebook-status role="status" style="font-size:10px;color:var(--text-secondary);margin-top:6px">' + (draft.updatedAt ? 'Draft saved on this device · ' + esc(notebookTime(draft.updatedAt)) : 'Drafts save automatically on this device') + '</div><div style="font-size:10px;color:var(--text-secondary);margin-top:6px">Stored in this browser website data. No automatic sync between devices. Export a backup before clearing website data.</div></div>';
+  return html;
+}
+document.getElementById('app').innerHTML = '<h2 class="nb-title">Trading Notebook</h2>' + renderNotebook({}, null);
+</script>
+</body>
+</html>
