@@ -1,23 +1,36 @@
 {
   "symbol": "QQQ",
   "spot": 740.91,
-  "net_gex": 1904676064.64,
-  "net_dex": 964095260.27,
-  "net_vex": 14713.01,
-  "net_tex": -2524100.5,
-  "net_vannaex": 131718.98,
-  "net_charmex": -148783898175.21,
-  "gamma_ratio": 0.9269,
-  "gamma_flip": 738.26,
+  "net_gex": 1862552733.08,
+  "net_dex": 954272757.08,
+  "net_vex": 17774.66,
+  "net_tex": -2734196.5,
+  "net_vannaex": 106395.43,
+  "net_charmex": -110659895974.08,
+  "gamma_ratio": 0.8646,
+  "gamma_flip": 739.22,
   "gamma_flip_method": "zero crossing",
   "regime": "POSITIVE GAMMA",
-  "distance_to_flip_pct": 0.36,
+  "distance_to_flip_pct": 0.23,
   "levels": {
     "call_wall": 740.0,
-    "put_wall": 737.0,
-    "highest_oi_strike": 745.0
+    "put_wall": 730.0,
+    "highest_oi_strike": 730.0
   },
   "strikes": [
+    {
+      "strike": 730.0,
+      "call_gex": 0.0,
+      "put_gex": -182845232.6,
+      "net_gex": -182845232.6,
+      "call_oi": 0,
+      "put_oi": 46520,
+      "dex": -48598657.81,
+      "vex": 1860.8,
+      "tex": -116300.0,
+      "vannaex": -74500.49,
+      "charmex": 96123731618.19
+    },
     {
       "strike": 737.0,
       "call_gex": 0.0,
@@ -160,10 +173,62 @@
       "tex": -168171.0,
       "vannaex": 57692.86,
       "charmex": -62807275326.44
+    },
+    {
+      "strike": 748.0,
+      "call_gex": 28107737.95,
+      "put_gex": 0.0,
+      "net_gex": 28107737.95,
+      "call_oi": 1907,
+      "put_oi": 0,
+      "dex": 8873108.52,
+      "vex": 247.91,
+      "tex": -23837.5,
+      "vannaex": 8047.37,
+      "charmex": -9514075791.25
+    },
+    {
+      "strike": 749.0,
+      "call_gex": 9623029.96,
+      "put_gex": 0.0,
+      "net_gex": 9623029.96,
+      "call_oi": 1148,
+      "put_oi": 0,
+      "dex": 2381581.1,
+      "vex": 80.36,
+      "tex": -5166.0,
+      "vannaex": 3435.21,
+      "charmex": -3712832161.94
+    },
+    {
+      "strike": 750.0,
+      "call_gex": 99989267.92,
+      "put_gex": 0.0,
+      "net_gex": 99989267.92,
+      "call_oi": 14109,
+      "put_oi": 0,
+      "dex": 26865492.92,
+      "vex": 846.54,
+      "tex": -63490.5,
+      "vannaex": 36396.04,
+      "charmex": -43330813758.06
+    },
+    {
+      "strike": 751.0,
+      "call_gex": 3001865.21,
+      "put_gex": 0.0,
+      "net_gex": 3001865.21,
+      "call_oi": 868,
+      "put_oi": 0,
+      "dex": 655972.08,
+      "vex": 26.04,
+      "tex": -1302.0,
+      "vannaex": 1298.32,
+      "charmex": -1442007705.81
     }
   ],
-  "contracts_used": 28,
+  "contracts_used": 60,
   "dealer_convention": "dealers long call gamma, short put gamma",
   "source": "5-min greeks logger (calls + puts, 0DTE)",
-  "generated_utc": "2026-09-30 20:29:49"
+  "generated_utc": "2026-09-30 22:18:02"
 }
