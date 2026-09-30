@@ -118,11 +118,7 @@ function archiveNotebook(button) {
   saveNotebookDraft(root);
   root.querySelector('[data-notebook-last-entry]').textContent = 'Last entry saved: ' + notebookTime(now);
   notebookStatus(root, 'Entry saved for ' + date + ' · ' + notebookTime(now));
-  document.querySelectorAll('[data-notebook-root]').forEach(function(other) {
-    var filter = other.querySelector('[data-notebook-browse-date]');
-    if (other === root) filter.value = date;
-    browseNotebook(filter);
-  });
+  renderPastEntries();
 }
 function browseNotebook(input) {
   var root = input.closest('[data-notebook-root]');
@@ -172,7 +168,6 @@ function renderNotebook(e, widget) {
   html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><label>Entry date <input aria-label="Entry date" data-notebook-date type="date" value="' + notebookAttr(draft.entryDate) + '" onchange="setNotebookDate(this)" style="color-scheme:dark;padding:6px"></label><button type="button" onclick="archiveNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(0,229,204,0.08);color:var(--accent);font:inherit;cursor:pointer">Save entry</button><button type="button" onclick="exportNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(0,229,204,0.08);color:var(--accent);font:inherit;cursor:pointer">Export backup</button></div>';
   html += '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Drafts autosave on this device. Save entry keeps a dated copy of your notebook. Each save adds a new copy.</div>';
   html += '<div data-notebook-last-entry style="font-size:11px;margin-bottom:8px">' + (draft.lastEntrySavedAt ? 'Last entry saved: ' + esc(notebookTime(draft.lastEntrySavedAt)) : 'No dated entry saved from this notebook yet.') + '</div>';
-  html += '<details ontoggle="openNotebookArchive(this)" style="border:1px solid var(--line);padding:8px;margin-bottom:10px"><summary style="cursor:pointer;padding:4px">Browse by date</summary><label style="display:block;margin-top:8px">Saved entry date <input aria-label="Browse saved entry date" data-notebook-browse-date type="date" onchange="browseNotebook(this)" style="color-scheme:dark;padding:6px"></label><button type="button" style="margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--text-secondary);font:inherit;cursor:pointer" onclick="var input=this.parentElement.querySelector(\'[data-notebook-browse-date]\');input.value=\'\';browseNotebook(input)">Show all entries</button><div data-notebook-entries style="font-size:12px"></div></details>';
   html += section('notes', 'Notes') + textarea('notes', 'Scratch pad...', 160) + '</section>';
   html += section('scorecard', 'Scorecard') + '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">Rate your process (not your P/L)</div>';
   ['Waited for setup','Followed thesis','Sized correctly','Managed risk','No revenge trades','Accepted outcome'].forEach(function(name) {
@@ -187,7 +182,47 @@ function renderNotebook(e, widget) {
   html += '<div data-notebook-status role="status" style="font-size:10px;color:var(--text-secondary);margin-top:6px">' + (draft.updatedAt ? 'Draft saved on this device · ' + esc(notebookTime(draft.updatedAt)) : 'Drafts save automatically on this device') + '</div><div style="font-size:10px;color:var(--text-secondary);margin-top:6px">Stored in this browser website data. No automatic sync between devices. Export a backup before clearing website data.</div></div>';
   return html;
 }
-document.getElementById('app').innerHTML = '<h2 class="nb-title">Trading Notebook</h2>' + renderNotebook({}, null);
+function fmtEntryHeader(savedAt, date) {
+  var d = new Date(savedAt);
+  if (!isFinite(d.getTime())) return esc(date || '');
+  var days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var mons = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var hh = String(d.getHours()).padStart(2,'0'), mm = String(d.getMinutes()).padStart(2,'0');
+  return days[d.getDay()] + ' \u00b7 ' + d.getDate() + ' ' + mons[d.getMonth()] + ' ' + d.getFullYear() + ' \u00b7 ' + hh + ':' + mm;
+}
+function renderPastEntries() {
+  var host = document.getElementById('past-entries');
+  if (!host) return;
+  var entries;
+  try { entries = notebookArchive(); } catch (e) { host.innerHTML = '<div style="color:var(--dim);font-size:12px">Could not read saved entries.</div>'; return; }
+  var head = '<h2 class="nb-title" style="margin-bottom:12px">PAST ENTRIES</h2>';
+  if (!entries.length) { host.innerHTML = head + '<div style="color:var(--text-secondary);font-size:12px">No saved entries yet. Write above and hit Save entry.</div>'; return; }
+  entries.sort(function(a,b){ return String(b.savedAt).localeCompare(String(a.savedAt)); });
+  host.innerHTML = head + entries.map(function(en) {
+    var h = '<div style="border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px;background:var(--panel)">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><b style="color:var(--accent);letter-spacing:1px;font-size:12px">' + esc(fmtEntryHeader(en.savedAt, en.date)) + '</b><button type="button" onclick="deleteNotebookEntry(\'' + esc(en.id) + '\')" style="border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--dim);font:inherit;font-size:10px;padding:4px 10px;cursor:pointer">DELETE</button></div>';
+    Object.keys(en.fields || {}).forEach(function(field) {
+      var value = en.fields[field];
+      if (value != null && String(value).trim()) h += '<div style="margin-top:8px"><span style="color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:1px">' + esc(field) + '</span><div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;margin-top:2px">' + esc(String(value)) + '</div></div>';
+    });
+    var sk = Object.keys(en.scores || {});
+    if (sk.length) {
+      h += '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">';
+      sk.forEach(function(n) { h += '<span style="font-size:10px;border:1px solid var(--line);border-radius:4px;padding:2px 6px;color:var(--text-secondary)">' + esc(n) + ': ' + esc(String(en.scores[n])) + '/5</span>'; });
+      h += '</div>';
+    }
+    return h + '</div>';
+  }).join('');
+}
+function deleteNotebookEntry(id) {
+  try {
+    var entries = notebookArchive().filter(function(e) { return e.id !== id; });
+    localStorage.setItem(NOTEBOOK_ARCHIVE_KEY, JSON.stringify(entries));
+  } catch (e) {}
+  renderPastEntries();
+}
+document.getElementById('app').innerHTML = '<h2 class="nb-title">Trading Notebook</h2>' + renderNotebook({}, null) + '<section id="past-entries" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--line)"></section>';
+renderPastEntries();
 </script>
 </body>
 </html>
