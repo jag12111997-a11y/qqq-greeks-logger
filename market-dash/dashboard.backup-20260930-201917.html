@@ -4872,7 +4872,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + tab("journal", "Trading Journal") + "</div>";
+      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
@@ -5711,9 +5711,7 @@
       _pipeFooter + '</div>';
 
     app.innerHTML = _header + tabBar() +
-      (TAB === "journal"
-        ? ('<div class="flow"><iframe src="notebook.html" title="Trading Journal" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0d0625"></iframe></div>')
-        : TAB === "nasdaq" ? ('<div class="flow">' + _qqqBody + "</div>") : _dashBody);
+      (TAB === "nasdaq" ? ('<div class="flow">' + _qqqBody + "</div>") : _dashBody);
 
     // Pipeline layout: expand .wrap to full width for the 3-column grid
     if (TAB === "dash") {
