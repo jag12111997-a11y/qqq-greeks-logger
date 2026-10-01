@@ -1,13 +1,13 @@
 {
   "symbol": "QQQ",
   "spot": 742.43,
-  "net_gex": -64643358.22,
-  "net_dex": -135876858.41,
-  "net_vex": 2935.27,
-  "net_tex": -223973.0,
-  "net_vannaex": 33309.95,
-  "net_charmex": -14998699024.22,
-  "gamma_ratio": 0.4691,
+  "net_gex": -60402236.82,
+  "net_dex": -134993158.83,
+  "net_vex": 2963.61,
+  "net_tex": -225390.0,
+  "net_vannaex": 34543.26,
+  "net_charmex": -16123014461.23,
+  "gamma_ratio": 0.4712,
   "gamma_flip": 736.0,
   "gamma_flip_method": "nearest-to-zero (no crossing in window)",
   "regime": "NEGATIVE GAMMA",
@@ -176,16 +176,16 @@
     },
     {
       "strike": 748.0,
-      "call_gex": 9833465.66,
+      "call_gex": 14074587.06,
       "put_gex": 0.0,
-      "net_gex": 9833465.66,
+      "net_gex": 14074587.06,
       "call_oi": 1417,
       "put_oi": 0,
-      "dex": 1241387.51,
-      "vex": 42.51,
-      "tex": -1417.0,
-      "vannaex": 4139.47,
-      "charmex": -2603557481.67
+      "dex": 2125087.09,
+      "vex": 70.85,
+      "tex": -2834.0,
+      "vannaex": 5372.78,
+      "charmex": -3727872918.68
     },
     {
       "strike": 749.0,
@@ -204,5 +204,5 @@
   "contracts_used": 28,
   "dealer_convention": "dealers long call gamma, short put gamma",
   "source": "5-min greeks logger (calls + puts, 0DTE)",
-  "generated_utc": "2026-10-01 20:06:56"
+  "generated_utc": "2026-10-01 20:12:06"
 }
