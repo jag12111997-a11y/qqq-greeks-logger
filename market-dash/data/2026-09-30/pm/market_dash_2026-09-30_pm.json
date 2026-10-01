@@ -1,0 +1,4284 @@
+{
+  "fetched_utc": "2026-10-01 00:55:07",
+  "fetched_pt": "2026-09-30 05:55 PM PT",
+  "entry_date": "2026-09-30",
+  "session": "pm",
+  "entry_key": "2026-09-30",
+  "calendar": {
+    "all_events": [
+      {
+        "title": "Monetary Policy Meeting Minutes",
+        "country": "JPY",
+        "date": "2026-09-27T19:50:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "SPPI y/y",
+        "country": "JPY",
+        "date": "2026-09-27T19:50:00-04:00",
+        "impact": "Low",
+        "forecast": "3.6%",
+        "previous": "3.6%"
+      },
+      {
+        "title": "MPC Member Ramsden Speaks",
+        "country": "GBP",
+        "date": "2026-09-28T06:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Bowman Speaks",
+        "country": "USD",
+        "date": "2026-09-28T08:15:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "ECB President Lagarde Speaks",
+        "country": "EUR",
+        "date": "2026-09-28T09:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Cook Speaks",
+        "country": "USD",
+        "date": "2026-09-28T13:25:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Barkin Speaks",
+        "country": "USD",
+        "date": "2026-09-28T13:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "BRC Shop Price Index y/y",
+        "country": "GBP",
+        "date": "2026-09-28T19:01:00-04:00",
+        "impact": "Low",
+        "forecast": "1.5%",
+        "previous": "1.5%"
+      },
+      {
+        "title": "Household Spending m/m",
+        "country": "AUD",
+        "date": "2026-09-28T21:30:00-04:00",
+        "impact": "Low",
+        "forecast": "0.3%",
+        "previous": "1.1%"
+      },
+      {
+        "title": "Cash Rate",
+        "country": "AUD",
+        "date": "2026-09-29T00:30:00-04:00",
+        "impact": "High",
+        "forecast": "4.60%",
+        "previous": "4.35%"
+      },
+      {
+        "title": "RBA Rate Statement",
+        "country": "AUD",
+        "date": "2026-09-29T00:30:00-04:00",
+        "impact": "High",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "RBA Press Conference",
+        "country": "AUD",
+        "date": "2026-09-29T01:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "KOF Economic Barometer",
+        "country": "CHF",
+        "date": "2026-09-29T03:00:00-04:00",
+        "impact": "Low",
+        "forecast": "106.0",
+        "previous": "106.7"
+      },
+      {
+        "title": "Spanish Flash CPI y/y",
+        "country": "EUR",
+        "date": "2026-09-29T03:00:00-04:00",
+        "impact": "Low",
+        "forecast": "4.6%",
+        "previous": "4.3%"
+      },
+      {
+        "title": "M4 Money Supply m/m",
+        "country": "GBP",
+        "date": "2026-09-29T04:30:00-04:00",
+        "impact": "Low",
+        "forecast": "0.1%",
+        "previous": "-0.3%"
+      },
+      {
+        "title": "Mortgage Approvals",
+        "country": "GBP",
+        "date": "2026-09-29T04:30:00-04:00",
+        "impact": "Low",
+        "forecast": "56K",
+        "previous": "56K"
+      },
+      {
+        "title": "Net Lending to Individuals m/m",
+        "country": "GBP",
+        "date": "2026-09-29T04:30:00-04:00",
+        "impact": "Low",
+        "forecast": "6.2B",
+        "previous": "6.3B"
+      },
+      {
+        "title": "10-y Bond Auction",
+        "country": "GBP",
+        "date": "2026-09-29T05:02:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "5.16|3.6"
+      },
+      {
+        "title": "Italian 10-y Bond Auction",
+        "country": "EUR",
+        "date": "2026-09-29T05:04:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "4.10|1.6"
+      },
+      {
+        "title": "German Buba President Nagel Speaks",
+        "country": "EUR",
+        "date": "2026-09-29T06:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "ECB President Lagarde Speaks",
+        "country": "EUR",
+        "date": "2026-09-29T07:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "GDP m/m",
+        "country": "CAD",
+        "date": "2026-09-29T08:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "0.0%",
+        "previous": "0.3%"
+      },
+      {
+        "title": "HPI m/m",
+        "country": "USD",
+        "date": "2026-09-29T09:00:00-04:00",
+        "impact": "Low",
+        "forecast": "0.1%",
+        "previous": "0.0%"
+      },
+      {
+        "title": "S&P/CS Composite-20 HPI y/y",
+        "country": "USD",
+        "date": "2026-09-29T09:00:00-04:00",
+        "impact": "Low",
+        "forecast": "2.2%",
+        "previous": "2.1%"
+      },
+      {
+        "title": "CB Consumer Confidence",
+        "country": "USD",
+        "date": "2026-09-29T10:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "89.2",
+        "previous": "89.4"
+      },
+      {
+        "title": "JOLTS Job Openings",
+        "country": "USD",
+        "date": "2026-09-29T10:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "7.23M",
+        "previous": "7.27M"
+      },
+      {
+        "title": "MPC Member Mann Speaks",
+        "country": "GBP",
+        "date": "2026-09-29T11:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Bowman Speaks",
+        "country": "USD",
+        "date": "2026-09-29T11:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "MPC Member Taylor Speaks",
+        "country": "GBP",
+        "date": "2026-09-29T11:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Barr Speaks",
+        "country": "USD",
+        "date": "2026-09-29T12:40:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Goolsbee Speaks",
+        "country": "USD",
+        "date": "2026-09-29T13:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Gov Council Member Gravelle Speaks",
+        "country": "CAD",
+        "date": "2026-09-29T13:20:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Musalem Speaks",
+        "country": "USD",
+        "date": "2026-09-29T13:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Williams Speaks",
+        "country": "USD",
+        "date": "2026-09-29T14:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Waller Speaks",
+        "country": "USD",
+        "date": "2026-09-29T15:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "API Weekly Statistical Bulletin",
+        "country": "USD",
+        "date": "2026-09-29T16:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Prelim Industrial Production m/m",
+        "country": "JPY",
+        "date": "2026-09-29T19:50:00-04:00",
+        "impact": "Low",
+        "forecast": "1.4%",
+        "previous": "0.1%"
+      },
+      {
+        "title": "Retail Sales y/y",
+        "country": "JPY",
+        "date": "2026-09-29T19:50:00-04:00",
+        "impact": "Low",
+        "forecast": "3.3%",
+        "previous": "4.0%"
+      },
+      {
+        "title": "ANZ Business Confidence",
+        "country": "NZD",
+        "date": "2026-09-29T20:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "53.7"
+      },
+      {
+        "title": "CPI m/m",
+        "country": "AUD",
+        "date": "2026-09-29T21:30:00-04:00",
+        "impact": "High",
+        "forecast": "0.5%",
+        "previous": "1.0%"
+      },
+      {
+        "title": "CPI y/y",
+        "country": "AUD",
+        "date": "2026-09-29T21:30:00-04:00",
+        "impact": "High",
+        "forecast": "4.1%",
+        "previous": "3.5%"
+      },
+      {
+        "title": "Trimmed Mean CPI m/m",
+        "country": "AUD",
+        "date": "2026-09-29T21:30:00-04:00",
+        "impact": "High",
+        "forecast": "0.3%",
+        "previous": "0.5%"
+      },
+      {
+        "title": "Building Approvals m/m",
+        "country": "AUD",
+        "date": "2026-09-29T21:30:00-04:00",
+        "impact": "Low",
+        "forecast": "-1.6%",
+        "previous": "-3.6%"
+      },
+      {
+        "title": "Private Sector Credit m/m",
+        "country": "AUD",
+        "date": "2026-09-29T21:30:00-04:00",
+        "impact": "Low",
+        "forecast": "0.5%",
+        "previous": "0.6%"
+      },
+      {
+        "title": "Manufacturing PMI",
+        "country": "CNY",
+        "date": "2026-09-29T21:30:00-04:00",
+        "impact": "Low",
+        "forecast": "50.1",
+        "previous": "49.8"
+      },
+      {
+        "title": "Non-Manufacturing PMI",
+        "country": "CNY",
+        "date": "2026-09-29T21:30:00-04:00",
+        "impact": "Low",
+        "forecast": "49.2",
+        "previous": "49.0"
+      },
+      {
+        "title": "RatingDog Manufacturing PMI",
+        "country": "CNY",
+        "date": "2026-09-29T21:45:00-04:00",
+        "impact": "Low",
+        "forecast": "51.7",
+        "previous": "51.5"
+      },
+      {
+        "title": "RatingDog Services PMI",
+        "country": "CNY",
+        "date": "2026-09-29T21:45:00-04:00",
+        "impact": "Low",
+        "forecast": "51.3",
+        "previous": "51.4"
+      },
+      {
+        "title": "Housing Starts y/y",
+        "country": "JPY",
+        "date": "2026-09-30T01:00:00-04:00",
+        "impact": "Low",
+        "forecast": "6.9%",
+        "previous": "8.2%"
+      },
+      {
+        "title": "German Import Prices m/m",
+        "country": "EUR",
+        "date": "2026-09-30T02:00:00-04:00",
+        "impact": "Low",
+        "forecast": "0.6%",
+        "previous": "0.2%"
+      },
+      {
+        "title": "Current Account",
+        "country": "GBP",
+        "date": "2026-09-30T02:00:00-04:00",
+        "impact": "Low",
+        "forecast": "-25.6B",
+        "previous": "-22.1B"
+      },
+      {
+        "title": "Final GDP q/q",
+        "country": "GBP",
+        "date": "2026-09-30T02:00:00-04:00",
+        "impact": "Low",
+        "forecast": "0.4%",
+        "previous": "0.4%"
+      },
+      {
+        "title": "Revised Business Investment q/q",
+        "country": "GBP",
+        "date": "2026-09-30T02:00:00-04:00",
+        "impact": "Low",
+        "forecast": "1.7%",
+        "previous": "1.7%"
+      },
+      {
+        "title": "German Retail Sales m/m",
+        "country": "EUR",
+        "date": "2026-09-30T02:04:00-04:00",
+        "impact": "Low",
+        "forecast": "1.6%",
+        "previous": "-3.4%"
+      },
+      {
+        "title": "German Prelim CPI m/m",
+        "country": "EUR",
+        "date": "2026-09-30T02:29:00-04:00",
+        "impact": "Medium",
+        "forecast": "0.5%",
+        "previous": "0.2%"
+      },
+      {
+        "title": "French Consumer Spending m/m",
+        "country": "EUR",
+        "date": "2026-09-30T02:45:00-04:00",
+        "impact": "Low",
+        "forecast": "0.0%",
+        "previous": "0.5%"
+      },
+      {
+        "title": "French Prelim CPI m/m",
+        "country": "EUR",
+        "date": "2026-09-30T02:45:00-04:00",
+        "impact": "Low",
+        "forecast": "-0.5%",
+        "previous": "0.7%"
+      },
+      {
+        "title": "German Unemployment Change",
+        "country": "EUR",
+        "date": "2026-09-30T03:55:00-04:00",
+        "impact": "Low",
+        "forecast": "1K",
+        "previous": "4K"
+      },
+      {
+        "title": "UBS Economic Expectations",
+        "country": "CHF",
+        "date": "2026-09-30T04:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "12.1"
+      },
+      {
+        "title": "Italian Prelim CPI m/m",
+        "country": "EUR",
+        "date": "2026-09-30T05:00:00-04:00",
+        "impact": "Low",
+        "forecast": "0.2%",
+        "previous": "0.5%"
+      },
+      {
+        "title": "FPC Meeting Minutes",
+        "country": "GBP",
+        "date": "2026-09-30T05:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FPC Statement",
+        "country": "GBP",
+        "date": "2026-09-30T05:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "German 10-y Bond Auction",
+        "country": "EUR",
+        "date": "2026-09-30T05:32:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "3.39|1.5"
+      },
+      {
+        "title": "Bank Holiday",
+        "country": "CAD",
+        "date": "2026-09-30T08:00:00-04:00",
+        "impact": "Holiday",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "ADP Non-Farm Employment Change",
+        "country": "USD",
+        "date": "2026-09-30T08:15:00-04:00",
+        "impact": "Medium",
+        "forecast": "73K",
+        "previous": "38K"
+      },
+      {
+        "title": "Core PCE Price Index m/m",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "0.3%",
+        "previous": "0.2%"
+      },
+      {
+        "title": "Final GDP q/q",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "1.5%",
+        "previous": "1.5%"
+      },
+      {
+        "title": "Final GDP Price Index q/q",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "6.4%",
+        "previous": "6.4%"
+      },
+      {
+        "title": "Goods Trade Balance",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "Low",
+        "forecast": "-116.3B",
+        "previous": "-118.8B"
+      },
+      {
+        "title": "Personal Income m/m",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "Low",
+        "forecast": "0.5%",
+        "previous": "0.4%"
+      },
+      {
+        "title": "Personal Spending m/m",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "Low",
+        "forecast": "0.8%",
+        "previous": "0.2%"
+      },
+      {
+        "title": "Prelim Wholesale Inventories m/m",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "Low",
+        "forecast": "0.5%",
+        "previous": "1.3%"
+      },
+      {
+        "title": "SNB Quarterly Bulletin",
+        "country": "CHF",
+        "date": "2026-09-30T09:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Chicago PMI",
+        "country": "USD",
+        "date": "2026-09-30T09:45:00-04:00",
+        "impact": "Low",
+        "forecast": "51.2",
+        "previous": "47.1"
+      },
+      {
+        "title": "Gov Board Member Tschudin Speaks",
+        "country": "CHF",
+        "date": "2026-09-30T10:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Crude Oil Inventories",
+        "country": "USD",
+        "date": "2026-09-30T10:30:00-04:00",
+        "impact": "Low",
+        "forecast": "-0.7M",
+        "previous": "3.0M"
+      },
+      {
+        "title": "FOMC Member Barkin Speaks",
+        "country": "USD",
+        "date": "2026-09-30T13:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Cook Speaks",
+        "country": "USD",
+        "date": "2026-09-30T15:25:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "President Trump Speaks",
+        "country": "USD",
+        "date": "2026-09-30T15:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Goolsbee Speaks",
+        "country": "USD",
+        "date": "2026-09-30T17:10:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Building Consents m/m",
+        "country": "NZD",
+        "date": "2026-09-30T17:45:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "-4.3%"
+      },
+      {
+        "title": "FOMC Member Kashkari Speaks",
+        "country": "USD",
+        "date": "2026-09-30T18:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Bank Holiday",
+        "country": "CNY",
+        "date": "2026-09-30T19:01:00-04:00",
+        "impact": "Holiday",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "BOJ Summary of Opinions",
+        "country": "JPY",
+        "date": "2026-09-30T19:50:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Tankan Manufacturing Index",
+        "country": "JPY",
+        "date": "2026-09-30T19:50:00-04:00",
+        "impact": "Low",
+        "forecast": "25",
+        "previous": "22"
+      },
+      {
+        "title": "Tankan Non-Manufacturing Index",
+        "country": "JPY",
+        "date": "2026-09-30T19:50:00-04:00",
+        "impact": "Low",
+        "forecast": "36",
+        "previous": "37"
+      },
+      {
+        "title": "Final Manufacturing PMI",
+        "country": "JPY",
+        "date": "2026-09-30T20:30:00-04:00",
+        "impact": "Low",
+        "forecast": "54.1",
+        "previous": "54.1"
+      },
+      {
+        "title": "Goods Trade Balance",
+        "country": "AUD",
+        "date": "2026-09-30T21:30:00-04:00",
+        "impact": "Low",
+        "forecast": "2.00B",
+        "previous": "1.92B"
+      },
+      {
+        "title": "RBA Financial Stability Review",
+        "country": "AUD",
+        "date": "2026-09-30T21:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Nationwide HPI m/m",
+        "country": "GBP",
+        "date": "2026-10-01T02:00:00-04:00",
+        "impact": "Low",
+        "forecast": "0.0%",
+        "previous": "0.2%"
+      },
+      {
+        "title": "Commodity Prices y/y",
+        "country": "AUD",
+        "date": "2026-10-01T02:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "15.5%"
+      },
+      {
+        "title": "CPI m/m",
+        "country": "CHF",
+        "date": "2026-10-01T02:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "0.0%",
+        "previous": "0.4%"
+      },
+      {
+        "title": "Retail Sales y/y",
+        "country": "CHF",
+        "date": "2026-10-01T02:30:00-04:00",
+        "impact": "Low",
+        "forecast": "2.1%",
+        "previous": "2.3%"
+      },
+      {
+        "title": "Spanish Manufacturing PMI",
+        "country": "EUR",
+        "date": "2026-10-01T03:15:00-04:00",
+        "impact": "Low",
+        "forecast": "50.2",
+        "previous": "49.5"
+      },
+      {
+        "title": "Manufacturing PMI",
+        "country": "CHF",
+        "date": "2026-10-01T03:30:00-04:00",
+        "impact": "Low",
+        "forecast": "56.3",
+        "previous": "57.1"
+      },
+      {
+        "title": "Italian Manufacturing PMI",
+        "country": "EUR",
+        "date": "2026-10-01T03:45:00-04:00",
+        "impact": "Low",
+        "forecast": "50.1",
+        "previous": "49.6"
+      },
+      {
+        "title": "French Final Manufacturing PMI",
+        "country": "EUR",
+        "date": "2026-10-01T03:50:00-04:00",
+        "impact": "Low",
+        "forecast": "50.3",
+        "previous": "50.3"
+      },
+      {
+        "title": "German Final Manufacturing PMI",
+        "country": "EUR",
+        "date": "2026-10-01T03:55:00-04:00",
+        "impact": "Low",
+        "forecast": "53.8",
+        "previous": "53.8"
+      },
+      {
+        "title": "Final Manufacturing PMI",
+        "country": "EUR",
+        "date": "2026-10-01T04:00:00-04:00",
+        "impact": "Low",
+        "forecast": "52.7",
+        "previous": "52.7"
+      },
+      {
+        "title": "Italian Monthly Unemployment Rate",
+        "country": "EUR",
+        "date": "2026-10-01T04:00:00-04:00",
+        "impact": "Low",
+        "forecast": "5.8%",
+        "previous": "5.8%"
+      },
+      {
+        "title": "BOE Gov Bailey Speaks",
+        "country": "GBP",
+        "date": "2026-10-01T04:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Final Manufacturing PMI",
+        "country": "GBP",
+        "date": "2026-10-01T04:30:00-04:00",
+        "impact": "Low",
+        "forecast": "52.0",
+        "previous": "52.0"
+      },
+      {
+        "title": "Unemployment Rate",
+        "country": "EUR",
+        "date": "2026-10-01T05:00:00-04:00",
+        "impact": "Low",
+        "forecast": "6.4%",
+        "previous": "6.4%"
+      },
+      {
+        "title": "Spanish 10-y Bond Auction",
+        "country": "EUR",
+        "date": "2026-10-01T05:03:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "3.96|1.7"
+      },
+      {
+        "title": "French 10-y Bond Auction",
+        "country": "EUR",
+        "date": "2026-10-01T05:18:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "4.23|2.3"
+      },
+      {
+        "title": "Challenger Job Cuts y/y",
+        "country": "USD",
+        "date": "2026-10-01T05:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "-38.5%"
+      },
+      {
+        "title": "German Buba President Nagel Speaks",
+        "country": "EUR",
+        "date": "2026-10-01T06:35:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "MPC Member Mann Speaks",
+        "country": "GBP",
+        "date": "2026-10-01T08:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Unemployment Claims",
+        "country": "USD",
+        "date": "2026-10-01T08:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "201K",
+        "previous": "197K"
+      },
+      {
+        "title": "FOMC Member Barkin Speaks",
+        "country": "USD",
+        "date": "2026-10-01T09:05:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Collins Speaks",
+        "country": "USD",
+        "date": "2026-10-01T09:05:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Schmid Speaks",
+        "country": "USD",
+        "date": "2026-10-01T09:05:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Manufacturing PMI",
+        "country": "CAD",
+        "date": "2026-10-01T09:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": "53.0"
+      },
+      {
+        "title": "ECB President Lagarde Speaks",
+        "country": "EUR",
+        "date": "2026-10-01T09:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Final Manufacturing PMI",
+        "country": "USD",
+        "date": "2026-10-01T09:45:00-04:00",
+        "impact": "Low",
+        "forecast": "56.9",
+        "previous": "57.0"
+      },
+      {
+        "title": "FOMC Member Waller Speaks",
+        "country": "USD",
+        "date": "2026-10-01T10:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "ISM Manufacturing PMI",
+        "country": "USD",
+        "date": "2026-10-01T10:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "54.8",
+        "previous": "54.6"
+      },
+      {
+        "title": "Construction Spending m/m",
+        "country": "USD",
+        "date": "2026-10-01T10:00:00-04:00",
+        "impact": "Low",
+        "forecast": "0.0%",
+        "previous": "-0.5%"
+      },
+      {
+        "title": "ISM Manufacturing Prices",
+        "country": "USD",
+        "date": "2026-10-01T10:00:00-04:00",
+        "impact": "Low",
+        "forecast": "72.9",
+        "previous": "71.1"
+      },
+      {
+        "title": "Omdia Total Vehicle Sales",
+        "country": "USD",
+        "date": "2026-10-01T10:15:00-04:00",
+        "impact": "Low",
+        "forecast": "16.3M",
+        "previous": "16.8M"
+      },
+      {
+        "title": "Natural Gas Storage",
+        "country": "USD",
+        "date": "2026-10-01T10:30:00-04:00",
+        "impact": "Low",
+        "forecast": "63B",
+        "previous": "53B"
+      },
+      {
+        "title": "SNB Chairman Schlegel Speaks",
+        "country": "CHF",
+        "date": "2026-10-01T11:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Jefferson Speaks",
+        "country": "USD",
+        "date": "2026-10-01T13:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Bowman Speaks",
+        "country": "USD",
+        "date": "2026-10-01T15:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Gov Council Member Rogers Speaks",
+        "country": "CAD",
+        "date": "2026-10-01T15:05:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Cook Speaks",
+        "country": "USD",
+        "date": "2026-10-01T15:30:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "FOMC Member Logan Speaks",
+        "country": "USD",
+        "date": "2026-10-01T18:45:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Bank Holiday",
+        "country": "CNY",
+        "date": "2026-10-01T19:01:00-04:00",
+        "impact": "Holiday",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Tokyo Core CPI y/y",
+        "country": "JPY",
+        "date": "2026-10-01T19:30:00-04:00",
+        "impact": "Medium",
+        "forecast": "2.4%",
+        "previous": "1.8%"
+      },
+      {
+        "title": "Unemployment Rate",
+        "country": "JPY",
+        "date": "2026-10-01T19:30:00-04:00",
+        "impact": "Low",
+        "forecast": "2.4%",
+        "previous": "2.4%"
+      },
+      {
+        "title": "Monetary Base y/y",
+        "country": "JPY",
+        "date": "2026-10-01T19:50:00-04:00",
+        "impact": "Low",
+        "forecast": "-16.3%",
+        "previous": "-15.7%"
+      },
+      {
+        "title": "Spanish Unemployment Change",
+        "country": "EUR",
+        "date": "2026-10-02T03:00:00-04:00",
+        "impact": "Low",
+        "forecast": "17.6K",
+        "previous": "44.4K"
+      },
+      {
+        "title": "Italian Retail Sales m/m",
+        "country": "EUR",
+        "date": "2026-10-02T04:00:00-04:00",
+        "impact": "Low",
+        "forecast": "-0.1%",
+        "previous": "-0.4%"
+      },
+      {
+        "title": "Core CPI Flash Estimate y/y",
+        "country": "EUR",
+        "date": "2026-10-02T05:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "2.5%",
+        "previous": "2.4%"
+      },
+      {
+        "title": "CPI Flash Estimate y/y",
+        "country": "EUR",
+        "date": "2026-10-02T05:00:00-04:00",
+        "impact": "Medium",
+        "forecast": "3.7%",
+        "previous": "3.3%"
+      },
+      {
+        "title": "Average Hourly Earnings m/m",
+        "country": "USD",
+        "date": "2026-10-02T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "0.3%",
+        "previous": "0.3%"
+      },
+      {
+        "title": "Non-Farm Employment Change",
+        "country": "USD",
+        "date": "2026-10-02T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "90K",
+        "previous": "162K"
+      },
+      {
+        "title": "Unemployment Rate",
+        "country": "USD",
+        "date": "2026-10-02T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "4.1%",
+        "previous": "4.1%"
+      },
+      {
+        "title": "Factory Orders m/m",
+        "country": "USD",
+        "date": "2026-10-02T10:00:00-04:00",
+        "impact": "Low",
+        "forecast": "0.1%",
+        "previous": "0.9%"
+      },
+      {
+        "title": "FOMC Member Logan Speaks",
+        "country": "USD",
+        "date": "2026-10-02T10:00:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "German Buba President Nagel Speaks",
+        "country": "EUR",
+        "date": "2026-10-02T15:35:00-04:00",
+        "impact": "Low",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "title": "Daylight Saving Time Shift",
+        "country": "AUD",
+        "date": "2026-10-03T12:00:00-04:00",
+        "impact": "Holiday",
+        "forecast": "",
+        "previous": ""
+      }
+    ],
+    "us_high_impact": [
+      {
+        "title": "Core PCE Price Index m/m",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "0.3%",
+        "previous": "0.2%"
+      },
+      {
+        "title": "Final GDP q/q",
+        "country": "USD",
+        "date": "2026-09-30T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "1.5%",
+        "previous": "1.5%"
+      },
+      {
+        "title": "Average Hourly Earnings m/m",
+        "country": "USD",
+        "date": "2026-10-02T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "0.3%",
+        "previous": "0.3%"
+      },
+      {
+        "title": "Non-Farm Employment Change",
+        "country": "USD",
+        "date": "2026-10-02T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "90K",
+        "previous": "162K"
+      },
+      {
+        "title": "Unemployment Rate",
+        "country": "USD",
+        "date": "2026-10-02T08:30:00-04:00",
+        "impact": "High",
+        "forecast": "4.1%",
+        "previous": "4.1%"
+      }
+    ],
+    "event_count": 142
+  },
+  "options": {
+    "total_pc": 0.76,
+    "index_pc": 1.01,
+    "etp_pc": 0.91,
+    "equity_pc": 0.38,
+    "vix_pc": 0.41,
+    "spx_spxw_pc": 1.09,
+    "total_volume": null,
+    "total_open_interest": null,
+    "session_date": null,
+    "fields_parsed": 6
+  },
+  "positioning": {
+    "NASDAQ_MINI": {
+      "reportDate": "September 22, 2026",
+      "previousReportDate": "September 15, 2026                   :",
+      "positions": {
+        "openInterest": 286321,
+        "nonCommercialLong": 88507,
+        "nonCommercialShort": 32357,
+        "nonCommercialSpreads": 4624,
+        "commercialLong": 152580,
+        "commercialShort": 218343,
+        "totalReportableLong": 245711,
+        "totalReportableShort": 255324,
+        "nonReportableLong": 40610,
+        "nonReportableShort": 30997
+      },
+      "changes": {
+        "openInterest": -39463,
+        "nonCommercialLong": 3445,
+        "nonCommercialShort": -18987,
+        "nonCommercialSpreads": -10811,
+        "commercialLong": -23316,
+        "commercialShort": -6411,
+        "totalReportableLong": -30682,
+        "totalReportableShort": -36209,
+        "nonReportableLong": -8781,
+        "nonReportableShort": -3254
+      },
+      "percentOpenInterest": {
+        "openInterest": 100.0,
+        "nonCommercialLong": 30.9,
+        "nonCommercialShort": 11.3,
+        "nonCommercialSpreads": 1.6,
+        "commercialLong": 53.3,
+        "commercialShort": 76.3,
+        "totalReportableLong": 85.8,
+        "totalReportableShort": 89.2,
+        "nonReportableLong": 14.2,
+        "nonReportableShort": 10.8
+      },
+      "nonCommercialNet": 56150,
+      "commercialNet": -65763,
+      "nonCommercialNetChange": 22432,
+      "read": "FUNDS NET LONG / COMMERCIALS NET SHORT"
+    },
+    "SP500_CONSOLIDATED": {
+      "reportDate": "September 22, 2026",
+      "previousReportDate": "September 15, 2026                   :",
+      "positions": {
+        "openInterest": 1903696,
+        "nonCommercialLong": 215826,
+        "nonCommercialShort": 350499,
+        "nonCommercialSpreads": 38873,
+        "commercialLong": 1391646,
+        "commercialShort": 1360428,
+        "totalReportableLong": 1646345,
+        "totalReportableShort": 1749800,
+        "nonReportableLong": 257352,
+        "nonReportableShort": 153896
+      },
+      "changes": {
+        "openInterest": -579666,
+        "nonCommercialLong": -8876,
+        "nonCommercialShort": 9065,
+        "nonCommercialSpreads": -79747,
+        "commercialLong": -455489,
+        "commercialShort": -456919,
+        "totalReportableLong": -544112,
+        "totalReportableShort": -527601,
+        "nonReportableLong": -35554,
+        "nonReportableShort": -52065
+      },
+      "percentOpenInterest": {
+        "openInterest": 100.0,
+        "nonCommercialLong": 11.3,
+        "nonCommercialShort": 18.4,
+        "nonCommercialSpreads": 2.0,
+        "commercialLong": 73.1,
+        "commercialShort": 71.5,
+        "totalReportableLong": 86.5,
+        "totalReportableShort": 91.9,
+        "nonReportableLong": 13.5,
+        "nonReportableShort": 8.1
+      },
+      "nonCommercialNet": -134673,
+      "commercialNet": 31218,
+      "nonCommercialNetChange": -17941,
+      "read": "FUNDS NET SHORT / COMMERCIALS NET LONG"
+    }
+  },
+  "markets": {
+    "QQQ": {
+      "ticker": "QQQ",
+      "last": 742.8,
+      "prev_close": 737.93,
+      "pct_change": 0.66,
+      "ret_5d": -0.19,
+      "ret_1m": 3.32,
+      "ret_3m": 2.12,
+      "bars_used": 70
+    },
+    "SPY": {
+      "ticker": "SPY",
+      "last": 765.54,
+      "prev_close": 764.2,
+      "pct_change": 0.175,
+      "ret_5d": -0.67,
+      "ret_1m": -0.33,
+      "ret_3m": 2.52,
+      "bars_used": 70
+    },
+    "VIX": {
+      "ticker": "^VIX",
+      "last": 16.34,
+      "prev_close": 16.04,
+      "pct_change": 1.87,
+      "ret_5d": 1.35,
+      "ret_1m": -3.9,
+      "ret_3m": -31.44,
+      "bars_used": 70
+    },
+    "CRUDE": {
+      "ticker": "CL=F",
+      "last": 90.32,
+      "prev_close": 89.38,
+      "pct_change": 1.052,
+      "ret_5d": -2.0,
+      "ret_1m": 5.32,
+      "ret_3m": 31.7,
+      "bars_used": 85
+    },
+    "GOLD": {
+      "ticker": "GC=F",
+      "last": 4174.7002,
+      "prev_close": 4179.7002,
+      "pct_change": -0.12,
+      "ret_5d": -3.33,
+      "ret_1m": -6.85,
+      "ret_3m": 2.26,
+      "bars_used": 85
+    },
+    "US10Y": {
+      "ticker": "^TNX",
+      "last": 5.293,
+      "prev_close": 5.255,
+      "pct_change": 0.723,
+      "ret_5d": 0.88,
+      "ret_1m": 0.0,
+      "ret_3m": 0.71,
+      "bars_used": 70
+    },
+    "DOLLAR": {
+      "ticker": "DX-Y.NYB",
+      "last": 101.46,
+      "prev_close": 101.37,
+      "pct_change": 0.089,
+      "ret_5d": 0.36,
+      "ret_1m": 2.04,
+      "ret_3m": 0.07,
+      "bars_used": 85
+    }
+  },
+  "watchlist": [
+    {
+      "symbol": "QQQ",
+      "name": "Invesco QQQ Trust",
+      "ticker": "QQQ",
+      "last": 742.8,
+      "pct_change": 0.66,
+      "ret_5d": -0.19,
+      "ret_1m": 3.32,
+      "ret_3m": 2.12,
+      "bars_used": 70,
+      "ret_ytd": 24.99,
+      "z20": 1.03,
+      "z60": 1.51,
+      "realized_vol_pct": 15.93,
+      "sharpe": 1.2,
+      "vol_drag": {
+        "arithmetic_pct": 23.65,
+        "geometric_pct": 21.71,
+        "drag_pct": 1.94
+      }
+    },
+    {
+      "symbol": "NDX",
+      "name": "Nasdaq-100 Index",
+      "ticker": "^NDX",
+      "last": 30408.502,
+      "pct_change": 0.23,
+      "ret_5d": -0.4,
+      "ret_1m": -1.39,
+      "ret_3m": -4.41,
+      "bars_used": 70,
+      "ret_ytd": 6.18,
+      "z20": -0.61,
+      "z60": -1.25,
+      "realized_vol_pct": 10.9,
+      "sharpe": 0.97,
+      "vol_drag": {
+        "arithmetic_pct": 13.1,
+        "geometric_pct": 12.18,
+        "drag_pct": 0.92
+      }
+    },
+    {
+      "symbol": "QQQM",
+      "name": "Invesco Nasdaq-100 (QQQM)",
+      "ticker": "QQQM",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -0.16,
+      "ret_1m": 3.31,
+      "ret_3m": 2.13,
+      "bars_used": 70,
+      "ret_ytd": 25.04,
+      "z20": 1.04,
+      "z60": 1.51,
+      "realized_vol_pct": 16.05,
+      "sharpe": 1.21,
+      "vol_drag": {
+        "arithmetic_pct": 23.66,
+        "geometric_pct": 21.75,
+        "drag_pct": 1.91
+      }
+    },
+    {
+      "symbol": "TQQQ",
+      "name": "ProShares UltraPro QQQ (3x)",
+      "ticker": "TQQQ",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -0.8,
+      "ret_1m": 8.71,
+      "ret_3m": 0.93,
+      "bars_used": 70,
+      "ret_ytd": 55.84,
+      "z20": 0.99,
+      "z60": 1.36,
+      "realized_vol_pct": 47.56,
+      "sharpe": 1.03,
+      "vol_drag": {
+        "arithmetic_pct": 60.31,
+        "geometric_pct": 43.2,
+        "drag_pct": 17.11
+      }
+    },
+    {
+      "symbol": "SQQQ",
+      "name": "ProShares UltraPro Short QQQ (-3x)",
+      "ticker": "SQQQ",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": 0.79,
+      "ret_1m": -9.38,
+      "ret_3m": -7.87,
+      "bars_used": 70,
+      "ret_ytd": -53.16,
+      "z20": -1.02,
+      "z60": -1.38,
+      "realized_vol_pct": 47.58,
+      "sharpe": -0.96,
+      "vol_drag": {
+        "arithmetic_pct": -56.43,
+        "geometric_pct": -73.74,
+        "drag_pct": 17.31
+      }
+    },
+    {
+      "symbol": "SPY",
+      "name": "SPDR S&P 500 ETF",
+      "ticker": "SPY",
+      "last": 765.54,
+      "pct_change": 0.18,
+      "ret_5d": -0.67,
+      "ret_1m": -0.33,
+      "ret_3m": 2.52,
+      "bars_used": 70,
+      "ret_ytd": 16.72,
+      "z20": -0.24,
+      "z60": 0.32,
+      "realized_vol_pct": 10.81,
+      "sharpe": 1.23,
+      "vol_drag": {
+        "arithmetic_pct": 15.87,
+        "geometric_pct": 15.05,
+        "drag_pct": 0.83
+      }
+    },
+    {
+      "symbol": "DXY",
+      "name": "US Dollar Index (ICE)",
+      "ticker": "DX-Y.NYB",
+      "last": 101.46,
+      "pct_change": 0.09,
+      "ret_5d": 0.36,
+      "ret_1m": 2.04,
+      "ret_3m": 0.07,
+      "bars_used": 85,
+      "ret_ytd": 2.28,
+      "z20": 1.46,
+      "z60": 1.54,
+      "realized_vol_pct": 4.46,
+      "sharpe": 1.47,
+      "vol_drag": {
+        "arithmetic_pct": 6.87,
+        "geometric_pct": 6.76,
+        "drag_pct": 0.11
+      }
+    },
+    {
+      "symbol": "IEF",
+      "name": "iShares 7-10Y Treasury",
+      "ticker": "IEF",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -0.98,
+      "ret_1m": -3.35,
+      "ret_3m": -4.35,
+      "bars_used": 70,
+      "ret_ytd": -3.96,
+      "z20": -1.65,
+      "z60": -2.68,
+      "realized_vol_pct": 6.08,
+      "sharpe": -0.8,
+      "vol_drag": {
+        "arithmetic_pct": -3.81,
+        "geometric_pct": -3.93,
+        "drag_pct": 0.11
+      }
+    },
+    {
+      "symbol": "USO",
+      "name": "United States Oil Fund",
+      "ticker": "USO",
+      "last": 144.75,
+      "pct_change": 0.98,
+      "ret_5d": -2.13,
+      "ret_1m": 8.95,
+      "ret_3m": 41.05,
+      "bars_used": 70,
+      "ret_ytd": 95.02,
+      "z20": -0.72,
+      "z60": 0.87,
+      "realized_vol_pct": 47.24,
+      "sharpe": 1.57,
+      "vol_drag": {
+        "arithmetic_pct": 76.99,
+        "geometric_pct": 64.95,
+        "drag_pct": 12.04
+      }
+    },
+    {
+      "symbol": "GLD",
+      "name": "SPDR Gold Shares",
+      "ticker": "GLD",
+      "last": 381.0,
+      "pct_change": -0.49,
+      "ret_5d": -3.06,
+      "ret_1m": -6.75,
+      "ret_3m": 2.76,
+      "bars_used": 70,
+      "ret_ytd": 13.47,
+      "z20": -1.81,
+      "z60": -0.65,
+      "realized_vol_pct": 24.44,
+      "sharpe": 0.57,
+      "vol_drag": {
+        "arithmetic_pct": 16.62,
+        "geometric_pct": 12.33,
+        "drag_pct": 4.29
+      }
+    },
+    {
+      "symbol": "VIX",
+      "name": "CBOE Volatility Index",
+      "ticker": "^VIX",
+      "last": 16.34,
+      "pct_change": 1.87,
+      "ret_5d": 1.35,
+      "ret_1m": -3.9,
+      "ret_3m": -31.44,
+      "bars_used": 70,
+      "ret_ytd": -67.23,
+      "z20": -0.57,
+      "z60": -1.14,
+      "realized_vol_pct": 51.46,
+      "sharpe": -0.87,
+      "vol_drag": {
+        "arithmetic_pct": -73.38,
+        "geometric_pct": -108.8,
+        "drag_pct": 35.42
+      }
+    },
+    {
+      "symbol": "VXN",
+      "name": "CBOE Nasdaq-100 Volatility Index",
+      "ticker": "^VXN",
+      "last": 22.46,
+      "pct_change": 1.77,
+      "ret_5d": 8.19,
+      "ret_1m": 11.3,
+      "ret_3m": -18.89,
+      "bars_used": 85,
+      "ret_ytd": -3.11,
+      "z20": 1.09,
+      "z60": -0.35,
+      "realized_vol_pct": 83.19,
+      "sharpe": 0.39,
+      "vol_drag": {
+        "arithmetic_pct": 40.37,
+        "geometric_pct": -12.52,
+        "drag_pct": 52.9
+      }
+    },
+    {
+      "symbol": "EWY",
+      "name": "iShares MSCI South Korea",
+      "ticker": "EWY",
+      "last": 183.55,
+      "pct_change": -1.9,
+      "ret_5d": -1.55,
+      "ret_1m": 1.06,
+      "ret_3m": -1.47,
+      "bars_used": 70,
+      "ret_ytd": 131.43,
+      "z20": -0.27,
+      "z60": 0.71,
+      "realized_vol_pct": 47.41,
+      "sharpe": 1.73,
+      "vol_drag": {
+        "arithmetic_pct": 97.72,
+        "geometric_pct": 81.81,
+        "drag_pct": 15.91
+      }
+    },
+    {
+      "symbol": "TLT",
+      "name": "iShares 20+Y Treasury",
+      "ticker": "TLT",
+      "last": 77.7969,
+      "pct_change": -0.55,
+      "ret_5d": -3.33,
+      "ret_1m": -5.39,
+      "ret_3m": -8.33,
+      "bars_used": 70,
+      "ret_ytd": -8.79,
+      "z20": -2.16,
+      "z60": -3.17,
+      "realized_vol_pct": 10.2,
+      "sharpe": -0.91,
+      "vol_drag": {
+        "arithmetic_pct": -8.52,
+        "geometric_pct": -8.96,
+        "drag_pct": 0.43
+      }
+    },
+    {
+      "symbol": "UUP",
+      "name": "Invesco DB US Dollar (DXY tracker)",
+      "ticker": "UUP",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": 0.42,
+      "ret_1m": 2.31,
+      "ret_3m": 0.98,
+      "bars_used": 70,
+      "ret_ytd": 8.77,
+      "z20": 1.49,
+      "z60": 2.13,
+      "realized_vol_pct": 4.54,
+      "sharpe": 1.51,
+      "vol_drag": {
+        "arithmetic_pct": 8.33,
+        "geometric_pct": 8.18,
+        "drag_pct": 0.15
+      }
+    },
+    {
+      "symbol": "BNO",
+      "name": "United States Brent Oil",
+      "ticker": "BNO",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -0.45,
+      "ret_1m": 13.72,
+      "ret_3m": 52.47,
+      "bars_used": 70,
+      "ret_ytd": 97.66,
+      "z20": 0.13,
+      "z60": 1.26,
+      "realized_vol_pct": 44.95,
+      "sharpe": 1.65,
+      "vol_drag": {
+        "arithmetic_pct": 77.31,
+        "geometric_pct": 66.33,
+        "drag_pct": 10.98
+      }
+    },
+    {
+      "symbol": "SLV",
+      "name": "iShares Silver Trust",
+      "ticker": "SLV",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -6.28,
+      "ret_1m": -9.35,
+      "ret_3m": 1.74,
+      "bars_used": 70,
+      "ret_ytd": 43.49,
+      "z20": -2.02,
+      "z60": -0.65,
+      "realized_vol_pct": 41.18,
+      "sharpe": 0.89,
+      "vol_drag": {
+        "arithmetic_pct": 55.58,
+        "geometric_pct": 36.24,
+        "drag_pct": 19.34
+      }
+    },
+    {
+      "symbol": "DIA",
+      "name": "SPDR Dow Jones ETF",
+      "ticker": "DIA",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -1.12,
+      "ret_1m": -4.11,
+      "ret_3m": -2.32,
+      "bars_used": 70,
+      "ret_ytd": 11.87,
+      "z20": -1.61,
+      "z60": -2.02,
+      "realized_vol_pct": 11.49,
+      "sharpe": 0.93,
+      "vol_drag": {
+        "arithmetic_pct": 11.7,
+        "geometric_pct": 10.91,
+        "drag_pct": 0.79
+      }
+    },
+    {
+      "symbol": "IWM",
+      "name": "iShares Russell 2000",
+      "ticker": "IWM",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -1.43,
+      "ret_1m": -5.21,
+      "ret_3m": -6.92,
+      "bars_used": 70,
+      "ret_ytd": 14.65,
+      "z20": -1.6,
+      "z60": -2.29,
+      "realized_vol_pct": 11.75,
+      "sharpe": 0.81,
+      "vol_drag": {
+        "arithmetic_pct": 15.01,
+        "geometric_pct": 13.3,
+        "drag_pct": 1.71
+      }
+    },
+    {
+      "symbol": "M",
+      "name": "Macy's, Inc.",
+      "ticker": "M",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": 2.38,
+      "ret_1m": 4.59,
+      "ret_3m": -1.98,
+      "bars_used": 70,
+      "ret_ytd": 33.86,
+      "z20": 0.86,
+      "z60": -0.27,
+      "realized_vol_pct": 43.67,
+      "sharpe": 0.89,
+      "vol_drag": {
+        "arithmetic_pct": 36.76,
+        "geometric_pct": 28.28,
+        "drag_pct": 8.48
+      }
+    },
+    {
+      "symbol": "MU",
+      "name": "Micron Technology",
+      "ticker": "MU",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -0.63,
+      "ret_1m": 11.1,
+      "ret_3m": 3.2,
+      "bars_used": 70,
+      "ret_ytd": 531.66,
+      "z20": 0.93,
+      "z60": 1.61,
+      "realized_vol_pct": 49.89,
+      "sharpe": 2.63,
+      "vol_drag": {
+        "arithmetic_pct": 211.88,
+        "geometric_pct": 179.37,
+        "drag_pct": 32.5
+      }
+    },
+    {
+      "symbol": "SCHX",
+      "name": "Schwab U.S. Large-Cap",
+      "ticker": "SCHX",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -0.79,
+      "ret_1m": -0.5,
+      "ret_3m": 2.35,
+      "bars_used": 70,
+      "ret_ytd": 15.87,
+      "z20": -0.41,
+      "z60": 0.19,
+      "realized_vol_pct": 10.97,
+      "sharpe": 1.17,
+      "vol_drag": {
+        "arithmetic_pct": 15.17,
+        "geometric_pct": 14.34,
+        "drag_pct": 0.84
+      }
+    },
+    {
+      "symbol": "IBIT",
+      "name": "iShares Bitcoin Trust",
+      "ticker": "IBIT",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -1.13,
+      "ret_1m": 5.98,
+      "ret_3m": 39.24,
+      "bars_used": 70,
+      "ret_ytd": -29.08,
+      "z20": 0.8,
+      "z60": 1.43,
+      "realized_vol_pct": 43.86,
+      "sharpe": -0.51,
+      "vol_drag": {
+        "arithmetic_pct": -23.05,
+        "geometric_pct": -33.43,
+        "drag_pct": 10.38
+      }
+    },
+    {
+      "symbol": "ETHA",
+      "name": "iShares Ethereum Trust",
+      "ticker": "ETHA",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -0.45,
+      "ret_1m": 7.48,
+      "ret_3m": 65.05,
+      "bars_used": 70,
+      "ret_ytd": -42.07,
+      "z20": 0.79,
+      "z60": 1.39,
+      "realized_vol_pct": 46.84,
+      "sharpe": -0.5,
+      "vol_drag": {
+        "arithmetic_pct": -32.35,
+        "geometric_pct": -53.08,
+        "drag_pct": 20.73
+      }
+    },
+    {
+      "symbol": "BSOL",
+      "name": "Bitwise Solana Staking",
+      "ticker": "BSOL",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": 2.47,
+      "ret_1m": 13.65,
+      "ret_3m": 54.55,
+      "bars_used": 70,
+      "ret_ytd": -36.79,
+      "z20": 0.99,
+      "z60": 1.66,
+      "realized_vol_pct": 65.83,
+      "sharpe": -0.33,
+      "vol_drag": {
+        "arithmetic_pct": -23.81,
+        "geometric_pct": -50.2,
+        "drag_pct": 26.38
+      }
+    },
+    {
+      "symbol": "XRPR",
+      "name": "REX-Osprey XRP ETF",
+      "ticker": "XRPR",
+      "last": null,
+      "pct_change": null,
+      "ret_5d": -0.49,
+      "ret_1m": 7.43,
+      "ret_3m": 39.66,
+      "bars_used": 70,
+      "ret_ytd": -52.78,
+      "z20": 0.61,
+      "z60": 1.32,
+      "realized_vol_pct": 84.19,
+      "sharpe": -0.58,
+      "vol_drag": {
+        "arithmetic_pct": -44.44,
+        "geometric_pct": -73.38,
+        "drag_pct": 28.94
+      }
+    }
+  ],
+  "gex": {
+    "symbol": "QQQ",
+    "spot": 739.77,
+    "net_gex": 2660120374.23,
+    "net_dex": 15569532606.21,
+    "net_vex": 82785080.29,
+    "net_tex": -634534323.8,
+    "net_vannaex": -5229174.16,
+    "net_charmex": 53452529158.01,
+    "gamma_ratio": 0.5982,
+    "gamma_ratio_note": "call gamma / total gamma (SqueezeMetrics G). 0.5 balanced, >0.5 call-driven, <0.5 put-driven.",
+    "exposure_note": "VEX = vega exposure, TEX = theta exposure. VANNAEX and CHARMEX are the real second-order dials (dDelta/dsigma and dDelta/dt), computed closed-form from d1/d2 and verified vs finite differences \u2014 not proxied.",
+    "gamma_flip": 752.35,
+    "gamma_flip_method": "zero crossing",
+    "regime": "NEGATIVE GAMMA",
+    "distance_to_flip_pct": -1.7,
+    "levels": {
+      "call_wall": 760.0,
+      "put_wall": 730.0,
+      "max_positive_gamma": 760.0,
+      "max_negative_gamma": 730.0,
+      "highest_oi_strike": 725.0
+    },
+    "strikes": [
+      {
+        "strike": 666.0,
+        "call_gex": 29220.38,
+        "put_gex": -851426.61,
+        "call_oi": 30,
+        "put_oi": 919,
+        "dex": -697174.77,
+        "vex": 14178.26,
+        "tex": -10602.9,
+        "vannaex": -465.45,
+        "charmex": 2207.44,
+        "call_gamma_raw": 0.053394000613049414,
+        "put_gamma_raw": 1.5558,
+        "net_gex": -822206.23
+      },
+      {
+        "strike": 667.0,
+        "call_gex": 64911.38,
+        "put_gex": -1258314.19,
+        "call_oi": 42,
+        "put_oi": 1215,
+        "dex": -1744818.3,
+        "vex": 23307.64,
+        "tex": -16779.48,
+        "vannaex": -1913.26,
+        "charmex": 10230.27,
+        "call_gamma_raw": 0.11861165793518633,
+        "put_gamma_raw": 2.2993,
+        "net_gex": -1193402.81
+      },
+      {
+        "strike": 668.0,
+        "call_gex": 30448.06,
+        "put_gex": -1002032.48,
+        "call_oi": 31,
+        "put_oi": 951,
+        "dex": -1201960.46,
+        "vex": 16788.16,
+        "tex": -12393.18,
+        "vannaex": -406.57,
+        "charmex": 2081.94,
+        "call_gamma_raw": 0.05563732123127796,
+        "put_gamma_raw": 1.831,
+        "net_gex": -971584.41
+      },
+      {
+        "strike": 669.0,
+        "call_gex": 31854.73,
+        "put_gex": -4831427.37,
+        "call_oi": 20,
+        "put_oi": 4644,
+        "dex": -13496030.99,
+        "vex": 67622.8,
+        "tex": -59939.5,
+        "vannaex": -1100.65,
+        "charmex": 4719.44,
+        "call_gamma_raw": 0.05820770688659741,
+        "put_gamma_raw": 8.8284,
+        "net_gex": -4799572.64
+      },
+      {
+        "strike": 670.0,
+        "call_gex": 1317057.15,
+        "put_gex": -64372186.23,
+        "call_oi": 871,
+        "put_oi": 65681,
+        "dex": -140444586.27,
+        "vex": 916339.77,
+        "tex": -870563.2,
+        "vannaex": -36792.99,
+        "charmex": 420549.92,
+        "call_gamma_raw": 2.4066402016543638,
+        "put_gamma_raw": 117.62640000000002,
+        "net_gex": -63055129.08
+      },
+      {
+        "strike": 671.0,
+        "call_gex": 68823.46,
+        "put_gex": -1041982.43,
+        "call_oi": 41,
+        "put_oi": 1103,
+        "dex": -901664.03,
+        "vex": 18419.3,
+        "tex": -13252.11,
+        "vannaex": -2423.17,
+        "charmex": 9011.38,
+        "call_gamma_raw": 0.12576014266637633,
+        "put_gamma_raw": 1.9040000000000001,
+        "net_gex": -973158.98
+      },
+      {
+        "strike": 672.0,
+        "call_gex": 200153.01,
+        "put_gex": -987584.82,
+        "call_oi": 134,
+        "put_oi": 1170,
+        "dex": 5639799.51,
+        "vex": 19419.17,
+        "tex": -14791.53,
+        "vannaex": -6909.43,
+        "charmex": 30519.81,
+        "call_gamma_raw": 0.3657368080742777,
+        "put_gamma_raw": 1.8046,
+        "net_gex": -787431.81
+      },
+      {
+        "strike": 673.0,
+        "call_gex": 184841.25,
+        "put_gex": -3615963.62,
+        "call_oi": 126,
+        "put_oi": 3064,
+        "dex": -2594356.47,
+        "vex": 53639.84,
+        "tex": -44081.58,
+        "vannaex": -1380.95,
+        "charmex": 6022.06,
+        "call_gamma_raw": 0.33775783758010725,
+        "put_gamma_raw": 6.6074,
+        "net_gex": -3431122.37
+      },
+      {
+        "strike": 674.0,
+        "call_gex": 143344.31,
+        "put_gex": -8438634.84,
+        "call_oi": 89,
+        "put_oi": 6981,
+        "dex": -19663574.04,
+        "vex": 114859.48,
+        "tex": -99823.75,
+        "vannaex": -3198.43,
+        "charmex": 15349.46,
+        "call_gamma_raw": 0.26193106801185617,
+        "put_gamma_raw": 15.4198,
+        "net_gex": -8295290.53
+      },
+      {
+        "strike": 675.0,
+        "call_gex": 1098187.2,
+        "put_gex": -37398577.41,
+        "call_oi": 667,
+        "put_oi": 33351,
+        "dex": -71304055.21,
+        "vex": 528646.52,
+        "tex": -471608.9,
+        "vannaex": -33650.28,
+        "charmex": 290046.48,
+        "call_gamma_raw": 2.0067021837872154,
+        "put_gamma_raw": 68.33789999999999,
+        "net_gex": -36300390.21
+      },
+      {
+        "strike": 676.0,
+        "call_gex": 156861.71,
+        "put_gex": -5416721.6,
+        "call_oi": 88,
+        "put_oi": 4009,
+        "dex": -15963354.21,
+        "vex": 108695.86,
+        "tex": -61802.97,
+        "vannaex": -3856.41,
+        "charmex": 25455.93,
+        "call_gamma_raw": 0.2866312117225912,
+        "put_gamma_raw": 9.8979,
+        "net_gex": -5259859.9
+      },
+      {
+        "strike": 677.0,
+        "call_gex": 406825.06,
+        "put_gex": -2290829.03,
+        "call_oi": 258,
+        "put_oi": 3180,
+        "dex": 11032824.87,
+        "vex": 34324.84,
+        "tex": -38822.78,
+        "vannaex": -10356.71,
+        "charmex": 78888.99,
+        "call_gamma_raw": 0.7433857623911752,
+        "put_gamma_raw": 4.186,
+        "net_gex": -1884003.97
+      },
+      {
+        "strike": 678.0,
+        "call_gex": 126499.43,
+        "put_gex": -3832897.36,
+        "call_oi": 74,
+        "put_oi": 3530,
+        "dex": -7043266.96,
+        "vex": 54409.74,
+        "tex": -48466.18,
+        "vannaex": -3938.02,
+        "charmex": 20626.86,
+        "call_gamma_raw": 0.23115065130166454,
+        "put_gamma_raw": 7.0038,
+        "net_gex": -3706397.93
+      },
+      {
+        "strike": 679.0,
+        "call_gex": 253381.83,
+        "put_gex": -3384801.13,
+        "call_oi": 157,
+        "put_oi": 3136,
+        "dex": 756030.27,
+        "vex": 46690.83,
+        "tex": -43269.05,
+        "vannaex": -4235.83,
+        "charmex": 18880.65,
+        "call_gamma_raw": 0.4630010849645517,
+        "put_gamma_raw": 6.1850000000000005,
+        "net_gex": -3131419.31
+      },
+      {
+        "strike": 680.0,
+        "call_gex": 3325851.58,
+        "put_gex": -98983679.54,
+        "call_oi": 1712,
+        "put_oi": 67379,
+        "dex": -235098597.59,
+        "vex": 1624709.25,
+        "tex": -1089630.65,
+        "vannaex": -88003.16,
+        "charmex": 534040.22,
+        "call_gamma_raw": 6.077282303184174,
+        "put_gamma_raw": 180.8715,
+        "net_gex": -95657827.96
+      },
+      {
+        "strike": 681.0,
+        "call_gex": 251295.78,
+        "put_gex": -2703845.91,
+        "call_oi": 138,
+        "put_oi": 2257,
+        "dex": 747333.15,
+        "vex": 40605.43,
+        "tex": -33243.41,
+        "vannaex": -2946.88,
+        "charmex": 13530.86,
+        "call_gamma_raw": 0.45918927882015453,
+        "put_gamma_raw": 4.9407000000000005,
+        "net_gex": -2452550.13
+      },
+      {
+        "strike": 682.0,
+        "call_gex": 328411.99,
+        "put_gex": -4284988.58,
+        "call_oi": 192,
+        "put_oi": 4019,
+        "dex": 148189.25,
+        "vex": 59231.86,
+        "tex": -61159.33,
+        "vannaex": -4472.66,
+        "charmex": 152236.77,
+        "call_gamma_raw": 0.6001026517496872,
+        "put_gamma_raw": 7.829899999999999,
+        "net_gex": -3956576.6
+      },
+      {
+        "strike": 683.0,
+        "call_gex": 327888.85,
+        "put_gex": -4462300.72,
+        "call_oi": 170,
+        "put_oi": 3850,
+        "dex": -1534308.39,
+        "vex": 57508.83,
+        "tex": -56029.01,
+        "vannaex": -8030.18,
+        "charmex": 39430.65,
+        "call_gamma_raw": 0.5991467403794328,
+        "put_gamma_raw": 8.1539,
+        "net_gex": -4134411.86
+      },
+      {
+        "strike": 684.0,
+        "call_gex": 216958.96,
+        "put_gex": -2160581.22,
+        "call_oi": 118,
+        "put_oi": 1994,
+        "dex": 1235417.19,
+        "vex": 31451.43,
+        "tex": -26231.4,
+        "vannaex": -3983.99,
+        "charmex": 20499.66,
+        "call_gamma_raw": 0.3964460793108628,
+        "put_gamma_raw": 3.9480000000000004,
+        "net_gex": -1943622.27
+      },
+      {
+        "strike": 685.0,
+        "call_gex": 2761633.88,
+        "put_gex": -109174475.7,
+        "call_oi": 1286,
+        "put_oi": 65261,
+        "dex": -364925017.07,
+        "vex": 2110967.47,
+        "tex": -1078678.5,
+        "vannaex": -79969.5,
+        "charmex": 457930.82,
+        "call_gamma_raw": 5.046295152561793,
+        "put_gamma_raw": 199.493,
+        "net_gex": -106412841.82
+      },
+      {
+        "strike": 686.0,
+        "call_gex": 208449.61,
+        "put_gex": -4463614.14,
+        "call_oi": 175,
+        "put_oi": 4184,
+        "dex": -2132295.01,
+        "vex": 64497.39,
+        "tex": -49994.42,
+        "vannaex": -747.99,
+        "charmex": 50539.21,
+        "call_gamma_raw": 0.3808970662801653,
+        "put_gamma_raw": 8.1563,
+        "net_gex": -4255164.54
+      },
+      {
+        "strike": 687.0,
+        "call_gex": 816143.55,
+        "put_gex": -5072768.89,
+        "call_oi": 395,
+        "put_oi": 4503,
+        "dex": 11373555.28,
+        "vex": 72922.98,
+        "tex": -65541.25,
+        "vannaex": -5856.63,
+        "charmex": 27564.7,
+        "call_gamma_raw": 1.4913277584578535,
+        "put_gamma_raw": 9.269400000000001,
+        "net_gex": -4256625.34
+      },
+      {
+        "strike": 688.0,
+        "call_gex": 320150.8,
+        "put_gex": -3875857.24,
+        "call_oi": 141,
+        "put_oi": 4662,
+        "dex": -2267692.46,
+        "vex": 50687.82,
+        "tex": -51224.61,
+        "vannaex": -7830.9,
+        "charmex": 98850.56,
+        "call_gamma_raw": 0.5850070958315585,
+        "put_gamma_raw": 7.0823,
+        "net_gex": -3555706.45
+      },
+      {
+        "strike": 689.0,
+        "call_gex": 572535.3,
+        "put_gex": -5589436.76,
+        "call_oi": 250,
+        "put_oi": 5472,
+        "dex": 361321.54,
+        "vex": 70033.08,
+        "tex": -78534.98,
+        "vannaex": -14829.61,
+        "charmex": 82465.2,
+        "call_gamma_raw": 1.0461857791887001,
+        "put_gamma_raw": 10.2135,
+        "net_gex": -5016901.46
+      },
+      {
+        "strike": 690.0,
+        "call_gex": 7294435.3,
+        "put_gex": -135455144.32,
+        "call_oi": 2984,
+        "put_oi": 97755,
+        "dex": -294074237.54,
+        "vex": 2166160.22,
+        "tex": -1526823.94,
+        "vannaex": -190284.4,
+        "charmex": 1218350.09,
+        "call_gamma_raw": 13.329020111322448,
+        "put_gamma_raw": 247.51530000000002,
+        "net_gex": -128160709.01
+      },
+      {
+        "strike": 691.0,
+        "call_gex": 183394.58,
+        "put_gex": -3798474.73,
+        "call_oi": 158,
+        "put_oi": 3403,
+        "dex": 614783.25,
+        "vex": 42871.6,
+        "tex": -45709.21,
+        "vannaex": -448.27,
+        "charmex": 40521.06,
+        "call_gamma_raw": 0.3351143721234154,
+        "put_gamma_raw": 6.9409,
+        "net_gex": -3615080.14
+      },
+      {
+        "strike": 692.0,
+        "call_gex": 976513.9,
+        "put_gex": -7117823.6,
+        "call_oi": 391,
+        "put_oi": 5034,
+        "dex": 4156502.97,
+        "vex": 96664.49,
+        "tex": -85147.69,
+        "vannaex": -25067.75,
+        "charmex": 146266.33,
+        "call_gamma_raw": 1.7843702570841402,
+        "put_gamma_raw": 13.0063,
+        "net_gex": -6141309.7
+      },
+      {
+        "strike": 693.0,
+        "call_gex": 712193.23,
+        "put_gex": -6392376.17,
+        "call_oi": 289,
+        "put_oi": 4225,
+        "dex": 410639.46,
+        "vex": 79898.11,
+        "tex": -72309.55,
+        "vannaex": -11856.79,
+        "charmex": 88635.33,
+        "call_gamma_raw": 1.301380773804443,
+        "put_gamma_raw": 11.680700000000002,
+        "net_gex": -5680182.94
+      },
+      {
+        "strike": 694.0,
+        "call_gex": 799204.34,
+        "put_gex": -4601687.76,
+        "call_oi": 325,
+        "put_oi": 4346,
+        "dex": 9128528.66,
+        "vex": 53979.45,
+        "tex": -84779.99,
+        "vannaex": -11681.56,
+        "charmex": 382762.54,
+        "call_gamma_raw": 1.460374959771231,
+        "put_gamma_raw": 8.4086,
+        "net_gex": -3802483.42
+      },
+      {
+        "strike": 695.0,
+        "call_gex": 5361835.9,
+        "put_gex": -107657198.23,
+        "call_oi": 2103,
+        "put_oi": 49488,
+        "dex": -212810078.8,
+        "vex": 1402336.32,
+        "tex": -1085249.94,
+        "vannaex": -105599.85,
+        "charmex": 1491002.44,
+        "call_gamma_raw": 9.797608113210172,
+        "put_gamma_raw": 196.7205,
+        "net_gex": -102295362.33
+      },
+      {
+        "strike": 696.0,
+        "call_gex": 869695.83,
+        "put_gex": -7075082.62,
+        "call_oi": 344,
+        "put_oi": 3965,
+        "dex": -93493.31,
+        "vex": 98918.37,
+        "tex": -70688.63,
+        "vannaex": -10061.49,
+        "charmex": 48397.01,
+        "call_gamma_raw": 1.5891830895323285,
+        "put_gamma_raw": 12.928199999999999,
+        "net_gex": -6205386.79
+      },
+      {
+        "strike": 697.0,
+        "call_gex": 871205.25,
+        "put_gex": -6062104.95,
+        "call_oi": 328,
+        "put_oi": 4131,
+        "dex": 4412932.48,
+        "vex": 72136.6,
+        "tex": -71189.38,
+        "vannaex": -11090.37,
+        "charmex": 156705.07,
+        "call_gamma_raw": 1.5919412355842177,
+        "put_gamma_raw": 11.077200000000001,
+        "net_gex": -5190899.69
+      },
+      {
+        "strike": 698.0,
+        "call_gex": 1371259.99,
+        "put_gex": -6841949.99,
+        "call_oi": 483,
+        "put_oi": 6081,
+        "dex": 12312124.23,
+        "vex": 83999.13,
+        "tex": -86593.6,
+        "vannaex": -26689.46,
+        "charmex": 148382.51,
+        "call_gamma_raw": 2.5056843006820873,
+        "put_gamma_raw": 12.5022,
+        "net_gex": -5470690.0
+      },
+      {
+        "strike": 699.0,
+        "call_gex": 1200204.21,
+        "put_gex": -7949658.32,
+        "call_oi": 421,
+        "put_oi": 5801,
+        "dex": 5083582.81,
+        "vex": 92717.52,
+        "tex": -109261.65,
+        "vannaex": -13424.47,
+        "charmex": 380237.74,
+        "call_gamma_raw": 2.193116448466077,
+        "put_gamma_raw": 14.526299999999999,
+        "net_gex": -6749454.11
+      },
+      {
+        "strike": 700.0,
+        "call_gex": 42820741.22,
+        "put_gex": -309140810.21,
+        "call_oi": 13998,
+        "put_oi": 123343,
+        "dex": -232768030.01,
+        "vex": 4760370.0,
+        "tex": -3205351.3,
+        "vannaex": -953860.87,
+        "charmex": 6414246.91,
+        "call_gamma_raw": 78.24574446700302,
+        "put_gamma_raw": 564.8887,
+        "net_gex": -266320068.99
+      },
+      {
+        "strike": 701.0,
+        "call_gex": 2450476.81,
+        "put_gex": -15424295.23,
+        "call_oi": 847,
+        "put_oi": 8228,
+        "dex": 17574686.06,
+        "vex": 153457.8,
+        "tex": -169355.96,
+        "vannaex": -32953.32,
+        "charmex": 246951.02,
+        "call_gamma_raw": 4.477722170940881,
+        "put_gamma_raw": 28.1846,
+        "net_gex": -12973818.42
+      },
+      {
+        "strike": 702.0,
+        "call_gex": 2794094.29,
+        "put_gex": -15931878.58,
+        "call_oi": 1010,
+        "put_oi": 7552,
+        "dex": 20134740.12,
+        "vex": 195395.68,
+        "tex": -196851.82,
+        "vannaex": -10794.22,
+        "charmex": 646984.45,
+        "call_gamma_raw": 5.105609613071948,
+        "put_gamma_raw": 29.1121,
+        "net_gex": -13137784.29
+      },
+      {
+        "strike": 703.0,
+        "call_gex": 2710272.66,
+        "put_gex": -14557435.89,
+        "call_oi": 929,
+        "put_oi": 6627,
+        "dex": 20322134.56,
+        "vex": 165087.91,
+        "tex": -177067.54,
+        "vannaex": -27516.05,
+        "charmex": 602157.93,
+        "call_gamma_raw": 4.952443514452261,
+        "put_gamma_raw": 26.6006,
+        "net_gex": -11847163.23
+      },
+      {
+        "strike": 704.0,
+        "call_gex": 2697007.89,
+        "put_gex": -9308394.65,
+        "call_oi": 965,
+        "put_oi": 6603,
+        "dex": 40621391.88,
+        "vex": 103981.52,
+        "tex": -157813.45,
+        "vannaex": -10285.59,
+        "charmex": 898069.47,
+        "call_gamma_raw": 4.928204986488002,
+        "put_gamma_raw": 17.009100000000004,
+        "net_gex": -6611386.76
+      },
+      {
+        "strike": 705.0,
+        "call_gex": 22462585.63,
+        "put_gex": -167459875.58,
+        "call_oi": 6685,
+        "put_oi": 65957,
+        "dex": -82774535.58,
+        "vex": 1899840.17,
+        "tex": -1687355.06,
+        "vannaex": -413747.31,
+        "charmex": 5717336.15,
+        "call_gamma_raw": 41.0455700946383,
+        "put_gamma_raw": 305.9971,
+        "net_gex": -144997289.95
+      },
+      {
+        "strike": 706.0,
+        "call_gex": 4288017.12,
+        "put_gex": -13369280.4,
+        "call_oi": 1372,
+        "put_oi": 5785,
+        "dex": 55847621.21,
+        "vex": 151678.04,
+        "tex": -173528.76,
+        "vannaex": -21006.75,
+        "charmex": 704845.17,
+        "call_gamma_raw": 7.835434000791244,
+        "put_gamma_raw": 24.429499999999997,
+        "net_gex": -9081263.28
+      },
+      {
+        "strike": 707.0,
+        "call_gex": 6413967.59,
+        "put_gex": -20206961.76,
+        "call_oi": 2258,
+        "put_oi": 7997,
+        "dex": 81627427.41,
+        "vex": 296560.31,
+        "tex": -337759.78,
+        "vannaex": -25255.94,
+        "charmex": 2262878.38,
+        "call_gamma_raw": 11.720153701451947,
+        "put_gamma_raw": 36.9239,
+        "net_gex": -13792994.18
+      },
+      {
+        "strike": 708.0,
+        "call_gex": 6293544.55,
+        "put_gex": -18449163.67,
+        "call_oi": 2391,
+        "put_oi": 7330,
+        "dex": 102464842.92,
+        "vex": 259843.02,
+        "tex": -250122.21,
+        "vannaex": -16934.79,
+        "charmex": 1273415.62,
+        "call_gamma_raw": 11.500106373068062,
+        "put_gamma_raw": 33.7119,
+        "net_gex": -12155619.11
+      },
+      {
+        "strike": 709.0,
+        "call_gex": 5243490.0,
+        "put_gex": -17076964.74,
+        "call_oi": 2541,
+        "put_oi": 8288,
+        "dex": 136027345.53,
+        "vex": 158796.17,
+        "tex": -295712.36,
+        "vannaex": -29610.65,
+        "charmex": 2155139.09,
+        "call_gamma_raw": 9.581356293300018,
+        "put_gamma_raw": 31.204500000000003,
+        "net_gex": -11833474.74
+      },
+      {
+        "strike": 710.0,
+        "call_gex": 33445842.3,
+        "put_gex": -203008660.54,
+        "call_oi": 9691,
+        "put_oi": 63569,
+        "dex": -39010144.99,
+        "vex": 2478818.54,
+        "tex": -2198183.42,
+        "vannaex": -139201.01,
+        "charmex": 7934024.71,
+        "call_gamma_raw": 61.1151221575136,
+        "put_gamma_raw": 370.9549,
+        "net_gex": -169562818.23
+      },
+      {
+        "strike": 711.0,
+        "call_gex": 7942236.97,
+        "put_gex": -60601676.48,
+        "call_oi": 2106,
+        "put_oi": 18151,
+        "dex": -94932618.41,
+        "vex": 852428.19,
+        "tex": -572731.29,
+        "vannaex": -35243.46,
+        "charmex": 2251025.42,
+        "call_gamma_raw": 14.512739087187715,
+        "put_gamma_raw": 110.7366,
+        "net_gex": -52659439.5
+      },
+      {
+        "strike": 712.0,
+        "call_gex": 32728643.09,
+        "put_gex": -65598321.55,
+        "call_oi": 10549,
+        "put_oi": 18799,
+        "dex": 516494893.59,
+        "vex": 842443.32,
+        "tex": -757927.32,
+        "vannaex": -77393.82,
+        "charmex": 2401839.02,
+        "call_gamma_raw": 59.80459401196775,
+        "put_gamma_raw": 119.8669,
+        "net_gex": -32869678.46
+      },
+      {
+        "strike": 713.0,
+        "call_gex": 7912747.47,
+        "put_gex": -58387354.35,
+        "call_oi": 2310,
+        "put_oi": 16532,
+        "dex": -29445548.27,
+        "vex": 612610.37,
+        "tex": -519734.98,
+        "vannaex": -21975.07,
+        "charmex": 1071603.16,
+        "call_gamma_raw": 14.458853316278546,
+        "put_gamma_raw": 106.6904,
+        "net_gex": -50474606.89
+      },
+      {
+        "strike": 714.0,
+        "call_gex": 14005093.41,
+        "put_gex": -21336615.2,
+        "call_oi": 3861,
+        "put_oi": 7105,
+        "dex": 207049261.74,
+        "vex": 245023.64,
+        "tex": -317197.7,
+        "vannaex": -24705.88,
+        "charmex": 1532871.01,
+        "call_gamma_raw": 25.59131227395466,
+        "put_gamma_raw": 38.9881,
+        "net_gex": -7331521.79
+      },
+      {
+        "strike": 715.0,
+        "call_gex": 55096282.78,
+        "put_gex": -189335541.56,
+        "call_oi": 12500,
+        "put_oi": 63331,
+        "dex": 355059850.43,
+        "vex": 1611132.77,
+        "tex": -2201113.84,
+        "vannaex": -198139.08,
+        "charmex": 9350248.88,
+        "call_gamma_raw": 100.67667071503116,
+        "put_gamma_raw": 345.97020000000003,
+        "net_gex": -134239258.78
+      },
+      {
+        "strike": 716.0,
+        "call_gex": 14013083.02,
+        "put_gex": -67117952.24,
+        "call_oi": 3060,
+        "put_oi": 16635,
+        "dex": -40820074.61,
+        "vex": 789783.49,
+        "tex": -642162.01,
+        "vannaex": -45599.36,
+        "charmex": 1504770.36,
+        "call_gamma_raw": 25.605911569909807,
+        "put_gamma_raw": 122.64370000000001,
+        "net_gex": -53104869.22
+      },
+      {
+        "strike": 717.0,
+        "call_gex": 19184537.76,
+        "put_gex": -47360126.49,
+        "call_oi": 4176,
+        "put_oi": 11123,
+        "dex": 137742307.17,
+        "vex": 484445.45,
+        "tex": -564817.16,
+        "vannaex": -57759.87,
+        "charmex": 2358708.21,
+        "call_gamma_raw": 35.05563884930625,
+        "put_gamma_raw": 86.5405,
+        "net_gex": -28175588.73
+      },
+      {
+        "strike": 718.0,
+        "call_gex": 54927404.02,
+        "put_gex": -43994588.9,
+        "call_oi": 11301,
+        "put_oi": 10497,
+        "dex": 587339467.88,
+        "vex": 736636.46,
+        "tex": -791167.11,
+        "vannaex": -43741.07,
+        "charmex": 4404115.85,
+        "call_gamma_raw": 100.36808090236508,
+        "put_gamma_raw": 80.3907,
+        "net_gex": 10932815.12
+      },
+      {
+        "strike": 719.0,
+        "call_gex": 25116281.86,
+        "put_gex": -40629270.21,
+        "call_oi": 4883,
+        "put_oi": 9479,
+        "dex": 183781998.96,
+        "vex": 490477.35,
+        "tex": -548387.74,
+        "vannaex": -74919.56,
+        "charmex": 2658857.29,
+        "call_gamma_raw": 45.89463229055041,
+        "put_gamma_raw": 74.2413,
+        "net_gex": -15512988.35
+      },
+      {
+        "strike": 720.0,
+        "call_gex": 123725737.42,
+        "put_gex": -264160989.71,
+        "call_oi": 24756,
+        "put_oi": 61528,
+        "dex": 455507133.85,
+        "vex": 4179119.21,
+        "tex": -2910439.55,
+        "vannaex": -99309.15,
+        "charmex": 8486078.52,
+        "call_gamma_raw": 226.08231802546467,
+        "put_gamma_raw": 482.69770000000005,
+        "net_gex": -140435252.28
+      },
+      {
+        "strike": 721.0,
+        "call_gex": 19867476.29,
+        "put_gex": -25802363.66,
+        "call_oi": 3674,
+        "put_oi": 5588,
+        "dex": 157681502.38,
+        "vex": 310066.17,
+        "tex": -394800.04,
+        "vannaex": -16320.61,
+        "charmex": 1658293.01,
+        "call_gamma_raw": 36.30356291916369,
+        "put_gamma_raw": 47.1483,
+        "net_gex": -5934887.36
+      },
+      {
+        "strike": 722.0,
+        "call_gex": 15321669.69,
+        "put_gex": -53375057.66,
+        "call_oi": 2848,
+        "put_oi": 10699,
+        "dex": 16643189.79,
+        "vex": 502874.7,
+        "tex": -592593.73,
+        "vannaex": -27558.3,
+        "charmex": 2617564.09,
+        "call_gamma_raw": 27.997073775001585,
+        "put_gamma_raw": 97.53150000000001,
+        "net_gex": -38053387.97
+      },
+      {
+        "strike": 723.0,
+        "call_gex": 18734924.36,
+        "put_gex": -24478378.31,
+        "call_oi": 3268,
+        "put_oi": 4695,
+        "dex": 127547693.52,
+        "vex": 294403.94,
+        "tex": -395448.84,
+        "vannaex": -30701.93,
+        "charmex": 2549587.45,
+        "call_gamma_raw": 34.234066537211746,
+        "put_gamma_raw": 44.729000000000006,
+        "net_gex": -5743453.95
+      },
+      {
+        "strike": 724.0,
+        "call_gex": 18255793.34,
+        "put_gex": -26075993.5,
+        "call_oi": 2864,
+        "put_oi": 4563,
+        "dex": 118869720.77,
+        "vex": 216898.66,
+        "tex": -409955.8,
+        "vannaex": -31424.55,
+        "charmex": 2886158.26,
+        "call_gamma_raw": 33.35855710054955,
+        "put_gamma_raw": 47.64829999999999,
+        "net_gex": -7820200.15
+      },
+      {
+        "strike": 725.0,
+        "call_gex": 362459932.4,
+        "put_gex": -478713764.87,
+        "call_oi": 48273,
+        "put_oi": 89195,
+        "dex": 1282368804.27,
+        "vex": 5142377.74,
+        "tex": -14495213.7,
+        "vannaex": -1491143.48,
+        "charmex": 172629961.04,
+        "call_gamma_raw": 662.3179898967795,
+        "put_gamma_raw": 874.7470000000001,
+        "net_gex": -116253832.47
+      },
+      {
+        "strike": 726.0,
+        "call_gex": 23981064.53,
+        "put_gex": -40938745.56,
+        "call_oi": 3562,
+        "put_oi": 7119,
+        "dex": 100266525.01,
+        "vex": 399793.26,
+        "tex": -568492.51,
+        "vannaex": -44280.48,
+        "charmex": 7204478.27,
+        "call_gamma_raw": 43.82026545837851,
+        "put_gamma_raw": 74.8068,
+        "net_gex": -16957681.03
+      },
+      {
+        "strike": 727.0,
+        "call_gex": 25640995.78,
+        "put_gex": -51866755.25,
+        "call_oi": 3811,
+        "put_oi": 7893,
+        "dex": 78314342.1,
+        "vex": 450942.37,
+        "tex": -755817.58,
+        "vannaex": -45610.53,
+        "charmex": 28083702.39,
+        "call_gamma_raw": 46.85343471965347,
+        "put_gamma_raw": 94.7754,
+        "net_gex": -26225759.47
+      },
+      {
+        "strike": 728.0,
+        "call_gex": 27920216.98,
+        "put_gex": -32365977.37,
+        "call_oi": 3939,
+        "put_oi": 4560,
+        "dex": 143835921.85,
+        "vex": 319156.7,
+        "tex": -672339.14,
+        "vannaex": -42322.78,
+        "charmex": 36771630.55,
+        "call_gamma_raw": 51.01822390912803,
+        "put_gamma_raw": 59.14189999999999,
+        "net_gex": -4445760.39
+      },
+      {
+        "strike": 729.0,
+        "call_gex": 24661808.89,
+        "put_gex": -41560760.92,
+        "call_oi": 3774,
+        "put_oi": 5612,
+        "dex": 111333195.42,
+        "vex": 360244.23,
+        "tex": -1644829.12,
+        "vannaex": -25102.44,
+        "charmex": 310269907.87,
+        "call_gamma_raw": 45.06418015058404,
+        "put_gamma_raw": 75.94340000000001,
+        "net_gex": -16898952.03
+      },
+      {
+        "strike": 730.0,
+        "call_gex": 190877238.31,
+        "put_gex": -747092813.3,
+        "call_oi": 26942,
+        "put_oi": 88690,
+        "dex": -60823306.15,
+        "vex": 3924143.64,
+        "tex": -18900533.68,
+        "vannaex": -143227.81,
+        "charmex": 2942470984.18,
+        "call_gamma_raw": 348.7873210140123,
+        "put_gamma_raw": 1365.1523000000002,
+        "net_gex": -556215574.99
+      },
+      {
+        "strike": 731.0,
+        "call_gex": 44575503.51,
+        "put_gex": -31127802.34,
+        "call_oi": 5485,
+        "put_oi": 3847,
+        "dex": 214127585.58,
+        "vex": 377340.31,
+        "tex": -3470508.42,
+        "vannaex": -53902.08,
+        "charmex": 641847210.67,
+        "call_gamma_raw": 81.4521971736673,
+        "put_gamma_raw": 56.87939999999999,
+        "net_gex": 13447701.16
+      },
+      {
+        "strike": 732.0,
+        "call_gex": 84773723.94,
+        "put_gex": -49756357.74,
+        "call_oi": 8200,
+        "put_oi": 5292,
+        "dex": 332977240.28,
+        "vex": 365846.57,
+        "tex": -16245668.83,
+        "vannaex": -207043.14,
+        "charmex": 2991503968.16,
+        "call_gamma_raw": 154.90584591672692,
+        "put_gamma_raw": 90.91909999999999,
+        "net_gex": 35017366.21
+      },
+      {
+        "strike": 733.0,
+        "call_gex": 33688508.44,
+        "put_gex": -123287700.91,
+        "call_oi": 3752,
+        "put_oi": 11453,
+        "dex": -24295321.75,
+        "vex": 448168.31,
+        "tex": -13020218.93,
+        "vannaex": -20353.19,
+        "charmex": 2119605318.62,
+        "call_gamma_raw": 61.558542602351515,
+        "put_gamma_raw": 225.2819,
+        "net_gex": -89599192.47
+      },
+      {
+        "strike": 734.0,
+        "call_gex": 69351567.19,
+        "put_gex": -86183330.3,
+        "call_oi": 7219,
+        "put_oi": 10764,
+        "dex": 107280470.57,
+        "vex": 835383.38,
+        "tex": -20444290.08,
+        "vannaex": -1206.75,
+        "charmex": 3016864312.66,
+        "call_gamma_raw": 126.72515351261119,
+        "put_gamma_raw": 157.4816,
+        "net_gex": -16831763.12
+      },
+      {
+        "strike": 735.0,
+        "call_gex": 232880058.79,
+        "put_gex": -225378447.29,
+        "call_oi": 22583,
+        "put_oi": 25135,
+        "dex": 548813899.02,
+        "vex": 2175576.7,
+        "tex": -90338365.8,
+        "vannaex": -4473.82,
+        "charmex": 11184561306.22,
+        "call_gamma_raw": 425.5384902957721,
+        "put_gamma_raw": 411.8309,
+        "net_gex": 7501611.5
+      },
+      {
+        "strike": 736.0,
+        "call_gex": 99695671.2,
+        "put_gex": -53288590.63,
+        "call_oi": 5485,
+        "put_oi": 5271,
+        "dex": 166657735.55,
+        "vex": 382400.86,
+        "tex": -171085520.77,
+        "vannaex": -6858.47,
+        "charmex": 17146175162.13,
+        "call_gamma_raw": 182.17251245336055,
+        "put_gamma_raw": 97.3735,
+        "net_gex": 46407080.57
+      },
+      {
+        "strike": 737.0,
+        "call_gex": 79779035.23,
+        "put_gex": -51739626.82,
+        "call_oi": 4722,
+        "put_oi": 5095,
+        "dex": 102301771.04,
+        "vex": 392604.01,
+        "tex": -89247978.78,
+        "vannaex": -2615.7,
+        "charmex": 6539243456.72,
+        "call_gamma_raw": 145.77912073810546,
+        "put_gamma_raw": 94.54310000000001,
+        "net_gex": 28039408.41
+      },
+      {
+        "strike": 738.0,
+        "call_gex": 109967225.25,
+        "put_gex": -65538779.7,
+        "call_oi": 5903,
+        "put_oi": 6472,
+        "dex": 98587626.62,
+        "vex": 492449.79,
+        "tex": -133483547.93,
+        "vannaex": -2495.75,
+        "charmex": 6239371321.32,
+        "call_gamma_raw": 200.94158020980305,
+        "put_gamma_raw": 119.75809999999998,
+        "net_gex": 44428445.55
+      },
+      {
+        "strike": 739.0,
+        "call_gex": 115663279.02,
+        "put_gex": -58233519.66,
+        "call_oi": 7811,
+        "put_oi": 5296,
+        "dex": 207672767.28,
+        "vex": 560966.25,
+        "tex": -905978.05,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 211.3499,
+        "put_gamma_raw": 106.40929999999999,
+        "net_gex": 57429759.36
+      },
+      {
+        "strike": 740.0,
+        "call_gex": 721794475.81,
+        "put_gex": -352964818.27,
+        "call_oi": 51146,
+        "put_oi": 37670,
+        "dex": 1065450204.94,
+        "vex": 4489514.33,
+        "tex": -5407470.7,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 1318.925,
+        "put_gamma_raw": 644.9676999999999,
+        "net_gex": 368829657.54
+      },
+      {
+        "strike": 741.0,
+        "call_gex": 99049186.52,
+        "put_gex": -49023248.67,
+        "call_oi": 5488,
+        "put_oi": 4771,
+        "dex": 76293791.51,
+        "vex": 431329.91,
+        "tex": -797853.3,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 180.9912,
+        "put_gamma_raw": 89.5795,
+        "net_gex": 50025937.85
+      },
+      {
+        "strike": 742.0,
+        "call_gex": 96743362.58,
+        "put_gex": -48672947.74,
+        "call_oi": 5806,
+        "put_oi": 4876,
+        "dex": 64360620.5,
+        "vex": 466542.04,
+        "tex": -834866.86,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 176.77779999999996,
+        "put_gamma_raw": 88.93939999999999,
+        "net_gex": 48070414.83
+      },
+      {
+        "strike": 743.0,
+        "call_gex": 73187445.19,
+        "put_gex": -42453560.36,
+        "call_oi": 5184,
+        "put_oi": 3695,
+        "dex": 64211083.39,
+        "vex": 400765.85,
+        "tex": -714051.82,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 133.7344,
+        "put_gamma_raw": 77.5748,
+        "net_gex": 30733884.83
+      },
+      {
+        "strike": 744.0,
+        "call_gex": 115992400.99,
+        "put_gex": -39234962.0,
+        "call_oi": 7272,
+        "put_oi": 3837,
+        "dex": 116623841.06,
+        "vex": 486028.48,
+        "tex": -851270.63,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 211.9513,
+        "put_gamma_raw": 71.6935,
+        "net_gex": 76757439.0
+      },
+      {
+        "strike": 745.0,
+        "call_gex": 663369305.82,
+        "put_gex": -113340982.56,
+        "call_oi": 41951,
+        "put_oi": 11768,
+        "dex": 953222550.79,
+        "vex": 2270425.16,
+        "tex": -3864539.01,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 1212.1654999999998,
+        "put_gamma_raw": 207.1064,
+        "net_gex": 550028323.25
+      },
+      {
+        "strike": 746.0,
+        "call_gex": 122630168.4,
+        "put_gex": -31374233.38,
+        "call_oi": 8226,
+        "put_oi": 3705,
+        "dex": 116349208.84,
+        "vex": 569727.71,
+        "tex": -756467.24,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 224.08040000000003,
+        "put_gamma_raw": 57.3297,
+        "net_gex": 91255935.02
+      },
+      {
+        "strike": 747.0,
+        "call_gex": 124707839.78,
+        "put_gex": -23825606.96,
+        "call_oi": 8084,
+        "put_oi": 2759,
+        "dex": 122615963.42,
+        "vex": 467646.09,
+        "tex": -748669.75,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 227.8769,
+        "put_gamma_raw": 43.536199999999994,
+        "net_gex": 100882232.82
+      },
+      {
+        "strike": 748.0,
+        "call_gex": 180320915.91,
+        "put_gex": -11660462.04,
+        "call_oi": 14277,
+        "put_oi": 1166,
+        "dex": 365885354.38,
+        "vex": 681912.15,
+        "tex": -851246.44,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 329.4979,
+        "put_gamma_raw": 21.307000000000002,
+        "net_gex": 168660453.87
+      },
+      {
+        "strike": 749.0,
+        "call_gex": 68062960.25,
+        "put_gex": -8839776.19,
+        "call_oi": 5840,
+        "put_oi": 919,
+        "dex": 122896306.67,
+        "vex": 325195.56,
+        "tex": -378005.07,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 124.37049999999999,
+        "put_gamma_raw": 16.1528,
+        "net_gex": 59223184.07
+      },
+      {
+        "strike": 750.0,
+        "call_gex": 686667080.81,
+        "put_gex": -48966333.66,
+        "call_oi": 65943,
+        "put_oi": 5768,
+        "dex": 1569153974.19,
+        "vex": 3676983.32,
+        "tex": -3470018.57,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 1254.7371999999998,
+        "put_gamma_raw": 89.47549999999998,
+        "net_gex": 637700747.15
+      },
+      {
+        "strike": 751.0,
+        "call_gex": 93334208.39,
+        "put_gex": -4937541.03,
+        "call_oi": 7354,
+        "put_oi": 762,
+        "dex": 120169765.9,
+        "vex": 303227.74,
+        "tex": -430307.18,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 170.54829999999998,
+        "put_gamma_raw": 9.0223,
+        "net_gex": 88396667.36
+      },
+      {
+        "strike": 752.0,
+        "call_gex": 200004314.33,
+        "put_gex": -9846405.65,
+        "call_oi": 17001,
+        "put_oi": 1435,
+        "dex": 285329962.33,
+        "vex": 673239.25,
+        "tex": -922425.46,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 365.4651,
+        "put_gamma_raw": 17.9922,
+        "net_gex": 190157908.69
+      },
+      {
+        "strike": 753.0,
+        "call_gex": 68414738.78,
+        "put_gex": -1185473.92,
+        "call_oi": 6274,
+        "put_oi": 151,
+        "dex": 104654473.11,
+        "vex": 206699.85,
+        "tex": -302625.14,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 125.01329999999999,
+        "put_gamma_raw": 2.1662,
+        "net_gex": 67229264.86
+      },
+      {
+        "strike": 754.0,
+        "call_gex": 170077637.54,
+        "put_gex": -1173872.02,
+        "call_oi": 14881,
+        "put_oi": 160,
+        "dex": 169175949.21,
+        "vex": 271696.39,
+        "tex": -760748.24,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 310.7805,
+        "put_gamma_raw": 2.145,
+        "net_gex": 168903765.52
+      },
+      {
+        "strike": 755.0,
+        "call_gex": 454588150.16,
+        "put_gex": -8122920.73,
+        "call_oi": 52363,
+        "put_oi": 1152,
+        "dex": 1006761364.19,
+        "vex": 2426282.45,
+        "tex": -1825347.55,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 830.6625999999999,
+        "put_gamma_raw": 14.842899999999998,
+        "net_gex": 446465229.43
+      },
+      {
+        "strike": 756.0,
+        "call_gex": 113381041.97,
+        "put_gex": -4513250.6,
+        "call_oi": 15347,
+        "put_oi": 694,
+        "dex": 293070545.93,
+        "vex": 838623.85,
+        "tex": -542485.04,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 207.1796,
+        "put_gamma_raw": 8.247,
+        "net_gex": 108867791.38
+      },
+      {
+        "strike": 757.0,
+        "call_gex": 51087676.36,
+        "put_gex": -4879750.4,
+        "call_oi": 6469,
+        "put_oi": 762,
+        "dex": 69601188.31,
+        "vex": 283288.96,
+        "tex": -234160.69,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 93.3518,
+        "put_gamma_raw": 8.916699999999999,
+        "net_gex": 46207925.96
+      },
+      {
+        "strike": 758.0,
+        "call_gex": 33848668.03,
+        "put_gex": -1072738.43,
+        "call_oi": 4837,
+        "put_oi": 172,
+        "dex": 64133940.17,
+        "vex": 185397.91,
+        "tex": -144175.97,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 61.8512,
+        "put_gamma_raw": 1.9602,
+        "net_gex": 32775929.6
+      },
+      {
+        "strike": 759.0,
+        "call_gex": 39682784.59,
+        "put_gex": -651567.38,
+        "call_oi": 6258,
+        "put_oi": 96,
+        "dex": 82494898.9,
+        "vex": 225326.06,
+        "tex": -172959.8,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 72.51180000000001,
+        "put_gamma_raw": 1.1905999999999999,
+        "net_gex": 39031217.22
+      },
+      {
+        "strike": 760.0,
+        "call_gex": 809244383.93,
+        "put_gex": -13917470.42,
+        "call_oi": 116793,
+        "put_oi": 2385,
+        "dex": 1927186359.11,
+        "vex": 5420446.12,
+        "tex": -3202805.01,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 1478.7209999999998,
+        "put_gamma_raw": 25.431199999999997,
+        "net_gex": 795326913.51
+      },
+      {
+        "strike": 761.0,
+        "call_gex": 21037154.7,
+        "put_gex": -349863.11,
+        "call_oi": 3927,
+        "put_oi": 56,
+        "dex": 41990271.02,
+        "vex": 121929.87,
+        "tex": -88665.91,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 38.4409,
+        "put_gamma_raw": 0.6393,
+        "net_gex": 20687291.59
+      },
+      {
+        "strike": 762.0,
+        "call_gex": 14246154.58,
+        "put_gex": -127620.96,
+        "call_oi": 2852,
+        "put_oi": 22,
+        "dex": 26615038.89,
+        "vex": 75834.52,
+        "tex": -56549.41,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 26.031800000000004,
+        "put_gamma_raw": 0.23320000000000002,
+        "net_gex": 14118533.63
+      },
+      {
+        "strike": 763.0,
+        "call_gex": 14744270.35,
+        "put_gex": -108466.87,
+        "call_oi": 3421,
+        "put_oi": 19,
+        "dex": 27044660.33,
+        "vex": 77577.7,
+        "tex": -57714.74,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 26.941999999999997,
+        "put_gamma_raw": 0.19820000000000002,
+        "net_gex": 14635803.48
+      },
+      {
+        "strike": 764.0,
+        "call_gex": 22102340.95,
+        "put_gex": -109068.85,
+        "call_oi": 6438,
+        "put_oi": 18,
+        "dex": 35580075.03,
+        "vex": 101388.2,
+        "tex": -98492.5,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 40.3873,
+        "put_gamma_raw": 0.19929999999999998,
+        "net_gex": 21993272.09
+      },
+      {
+        "strike": 765.0,
+        "call_gex": 130998206.74,
+        "put_gex": -3797872.74,
+        "call_oi": 25283,
+        "put_oi": 688,
+        "dex": 278565157.58,
+        "vex": 972200.33,
+        "tex": -536037.55,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 239.3712,
+        "put_gamma_raw": 6.939800000000001,
+        "net_gex": 127200334.0
+      },
+      {
+        "strike": 766.0,
+        "call_gex": 18513138.32,
+        "put_gex": -403877.65,
+        "call_oi": 4209,
+        "put_oi": 85,
+        "dex": 31715538.64,
+        "vex": 112865.6,
+        "tex": -73082.17,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 33.8288,
+        "put_gamma_raw": 0.738,
+        "net_gex": 18109260.68
+      },
+      {
+        "strike": 767.0,
+        "call_gex": 9940096.5,
+        "put_gex": -114322.55,
+        "call_oi": 2507,
+        "put_oi": 23,
+        "dex": 18387287.14,
+        "vex": 60754.48,
+        "tex": -39195.96,
+        "vannaex": 0.0,
+        "charmex": -0.14,
+        "call_gamma_raw": 18.163400000102687,
+        "put_gamma_raw": 0.2089,
+        "net_gex": 9825773.96
+      },
+      {
+        "strike": 768.0,
+        "call_gex": 10316556.44,
+        "put_gex": -200844.3,
+        "call_oi": 3151,
+        "put_oi": 42,
+        "dex": 19369072.92,
+        "vex": 71866.85,
+        "tex": -39824.19,
+        "vannaex": 0.0,
+        "charmex": 0.0,
+        "call_gamma_raw": 18.8513,
+        "put_gamma_raw": 0.367,
+        "net_gex": 10115712.14
+      },
+      {
+        "strike": 769.0,
+        "call_gex": 9491069.94,
+        "put_gex": -82088.95,
+        "call_oi": 3084,
+        "put_oi": 17,
+        "dex": 15882263.11,
+        "vex": 53681.61,
+        "tex": -37498.97,
+        "vannaex": 0.0,
+        "charmex": -0.01,
+        "call_gamma_raw": 17.34290000000393,
+        "put_gamma_raw": 0.15,
+        "net_gex": 9408980.98
+      },
+      {
+        "strike": 770.0,
+        "call_gex": 198169352.62,
+        "put_gex": -5276896.76,
+        "call_oi": 44971,
+        "put_oi": 1174,
+        "dex": 368012429.92,
+        "vex": 1501298.32,
+        "tex": -757045.83,
+        "vannaex": 0.0,
+        "charmex": -0.0,
+        "call_gamma_raw": 362.1121000000009,
+        "put_gamma_raw": 9.6424,
+        "net_gex": 192892455.87
+      },
+      {
+        "strike": 771.0,
+        "call_gex": 7605596.15,
+        "put_gex": -94840.1,
+        "call_oi": 2364,
+        "put_oi": 21,
+        "dex": 15170730.11,
+        "vex": 56865.71,
+        "tex": -29306.88,
+        "vannaex": 0.0,
+        "charmex": -0.0,
+        "call_gamma_raw": 13.897600000000025,
+        "put_gamma_raw": 0.1733,
+        "net_gex": 7510756.05
+      },
+      {
+        "strike": 772.0,
+        "call_gex": 13694407.37,
+        "put_gex": -46790.7,
+        "call_oi": 3805,
+        "put_oi": 10,
+        "dex": 27126952.35,
+        "vex": 95595.09,
+        "tex": -52138.81,
+        "vannaex": 0.0,
+        "charmex": -0.0,
+        "call_gamma_raw": 25.023600000000002,
+        "put_gamma_raw": 0.0855,
+        "net_gex": 13647616.67
+      },
+      {
+        "strike": 773.0,
+        "call_gex": 7073823.92,
+        "put_gex": -13188.96,
+        "call_oi": 2232,
+        "put_oi": 3,
+        "dex": 16422679.9,
+        "vex": 60089.8,
+        "tex": -27198.04,
+        "vannaex": 0.0,
+        "charmex": -0.0,
+        "call_gamma_raw": 12.9259,
+        "put_gamma_raw": 0.0241,
+        "net_gex": 7060634.96
+      },
+      {
+        "strike": 774.0,
+        "call_gex": 7100913.28,
+        "put_gex": -73113.89,
+        "call_oi": 2218,
+        "put_oi": 17,
+        "dex": 14790488.32,
+        "vex": 58491.82,
+        "tex": -26856.59,
+        "vannaex": 0.0,
+        "charmex": -0.0,
+        "call_gamma_raw": 12.975399999999999,
+        "put_gamma_raw": 0.1336,
+        "net_gex": 7027799.38
+      },
+      {
+        "strike": 775.0,
+        "call_gex": 222622940.06,
+        "put_gex": -2050253.67,
+        "call_oi": 55468,
+        "put_oi": 485,
+        "dex": 438400925.87,
+        "vex": 1725487.92,
+        "tex": -840125.03,
+        "vannaex": 0.0,
+        "charmex": -0.0,
+        "call_gamma_raw": 406.79580000000004,
+        "put_gamma_raw": 3.7464,
+        "net_gex": 220572686.39
+      },
+      {
+        "strike": 780.0,
+        "call_gex": 86302085.66,
+        "put_gex": -2446907.49,
+        "call_oi": 31435,
+        "put_oi": 639,
+        "dex": 148504274.44,
+        "vex": 798937.66,
+        "tex": -336218.69,
+        "vannaex": 0.0,
+        "charmex": -0.0,
+        "call_gamma_raw": 157.6986,
+        "put_gamma_raw": 4.4712,
+        "net_gex": 83855178.17
+      },
+      {
+        "strike": 785.0,
+        "call_gex": 99280361.9,
+        "put_gex": -899257.11,
+        "call_oi": 44288,
+        "put_oi": 262,
+        "dex": 183140535.08,
+        "vex": 893998.91,
+        "tex": -388976.52,
+        "vannaex": 22397.9,
+        "charmex": -1722281.7,
+        "call_gamma_raw": 181.41362355891567,
+        "put_gamma_raw": 1.6432000000000002,
+        "net_gex": 98381104.79
+      },
+      {
+        "strike": 790.0,
+        "call_gex": 48038131.92,
+        "put_gex": -230779.41,
+        "call_oi": 21827,
+        "put_oi": 74,
+        "dex": 110434461.29,
+        "vex": 559959.81,
+        "tex": -196741.59,
+        "vannaex": 8568.89,
+        "charmex": -722357.7,
+        "call_gamma_raw": 87.77940988630218,
+        "put_gamma_raw": 0.4217,
+        "net_gex": 47807352.51
+      },
+      {
+        "strike": 795.0,
+        "call_gex": 14360197.37,
+        "put_gex": -153506.34,
+        "call_oi": 10834,
+        "put_oi": 55,
+        "dex": 23084913.82,
+        "vex": 137567.81,
+        "tex": -60557.09,
+        "vannaex": 4599.99,
+        "charmex": -421360.12,
+        "call_gamma_raw": 26.24018878887611,
+        "put_gamma_raw": 0.2805,
+        "net_gex": 14206691.03
+      },
+      {
+        "strike": 800.0,
+        "call_gex": 30059044.69,
+        "put_gex": -25338.12,
+        "call_oi": 36919,
+        "put_oi": 10,
+        "dex": 45879620.7,
+        "vex": 246927.24,
+        "tex": -133931.64,
+        "vannaex": 11434.2,
+        "charmex": -1129730.84,
+        "call_gamma_raw": 54.92647400721397,
+        "put_gamma_raw": 0.0463,
+        "net_gex": 30033706.56
+      },
+      {
+        "strike": 805.0,
+        "call_gex": 4633687.88,
+        "put_gex": 0.0,
+        "call_oi": 8130,
+        "put_oi": 0,
+        "dex": 7302611.59,
+        "vex": 38647.88,
+        "tex": -40731.57,
+        "vannaex": 10351.66,
+        "charmex": -1048205.78,
+        "call_gamma_raw": 8.467073377614007,
+        "put_gamma_raw": 0.0,
+        "net_gex": 4633687.88
+      },
+      {
+        "strike": 810.0,
+        "call_gex": 5322817.1,
+        "put_gex": 0.0,
+        "call_oi": 7444,
+        "put_oi": 0,
+        "dex": 9042753.68,
+        "vex": 53607.42,
+        "tex": -23834.31,
+        "vannaex": 3571.89,
+        "charmex": -130335.33,
+        "call_gamma_raw": 9.72630961130353,
+        "put_gamma_raw": 0.0,
+        "net_gex": 5322817.1
+      }
+    ],
+    "contracts_used": 1898,
+    "dealer_convention": "dealers long call gamma, short put gamma"
+  },
+  "time_footprint": {
+    "generated_utc": "2026-10-01 00:55:53",
+    "feed": "indicative",
+    "near_money_pct": 20,
+    "days_out": 400,
+    "spot": 739.77,
+    "buckets": [
+      {
+        "name": "0DTE",
+        "vol": 931960,
+        "oi": 107159,
+        "prem": 185490898,
+        "contracts": 294
+      },
+      {
+        "name": "Weeklies",
+        "vol": 799892,
+        "oi": 780246,
+        "prem": 207208907,
+        "contracts": 1290
+      },
+      {
+        "name": "1-4wk",
+        "vol": 526802,
+        "oi": 2165104,
+        "prem": 277029325,
+        "contracts": 1880
+      },
+      {
+        "name": "1-3mo",
+        "vol": 140639,
+        "oi": 2054093,
+        "prem": 203411690,
+        "contracts": 1232
+      },
+      {
+        "name": "3mo+",
+        "vol": 46594,
+        "oi": 2573239,
+        "prem": 149501828,
+        "contracts": 1302
+      }
+    ],
+    "totals": {
+      "vol": 2445887,
+      "oi": 7679841,
+      "prem": 1022642648
+    },
+    "short_share": {
+      "vol": 70.8,
+      "oi": 11.6,
+      "prem": 38.4
+    },
+    "long_share": {
+      "vol": 7.7,
+      "oi": 60.3,
+      "prem": 34.5
+    },
+    "grid": {
+      "buckets": [
+        "0DTE",
+        "Weeklies",
+        "1-4wk",
+        "1-3mo",
+        "3mo+"
+      ],
+      "bands": [
+        "<= -8%",
+        "-8..-4%",
+        "-4..-1.5%",
+        "ATM +/-1.5%",
+        "+1.5..+4%",
+        "+4..+8%",
+        ">= +8%"
+      ],
+      "cells": [
+        {
+          "e": 0,
+          "m": 0,
+          "vol": 28939,
+          "oi": 12793,
+          "prem": 791682
+        },
+        {
+          "e": 0,
+          "m": 1,
+          "vol": 48251,
+          "oi": 16112,
+          "prem": 685334
+        },
+        {
+          "e": 0,
+          "m": 2,
+          "vol": 51733,
+          "oi": 14412,
+          "prem": 4026181
+        },
+        {
+          "e": 0,
+          "m": 3,
+          "vol": 687588,
+          "oi": 40215,
+          "prem": 175376550
+        },
+        {
+          "e": 0,
+          "m": 4,
+          "vol": 90072,
+          "oi": 15456,
+          "prem": 4393657
+        },
+        {
+          "e": 0,
+          "m": 5,
+          "vol": 3729,
+          "oi": 2946,
+          "prem": 181185
+        },
+        {
+          "e": 0,
+          "m": 6,
+          "vol": 21648,
+          "oi": 5225,
+          "prem": 36309
+        },
+        {
+          "e": 1,
+          "m": 0,
+          "vol": 35498,
+          "oi": 112603,
+          "prem": 5154363
+        },
+        {
+          "e": 1,
+          "m": 1,
+          "vol": 72181,
+          "oi": 154724,
+          "prem": 2235622
+        },
+        {
+          "e": 1,
+          "m": 2,
+          "vol": 83960,
+          "oi": 171087,
+          "prem": 10732275
+        },
+        {
+          "e": 1,
+          "m": 3,
+          "vol": 435311,
+          "oi": 207709,
+          "prem": 174075161
+        },
+        {
+          "e": 1,
+          "m": 4,
+          "vol": 129135,
+          "oi": 86665,
+          "prem": 14332029
+        },
+        {
+          "e": 1,
+          "m": 5,
+          "vol": 12398,
+          "oi": 31993,
+          "prem": 533198
+        },
+        {
+          "e": 1,
+          "m": 6,
+          "vol": 31409,
+          "oi": 15465,
+          "prem": 146259
+        },
+        {
+          "e": 2,
+          "m": 0,
+          "vol": 51226,
+          "oi": 543833,
+          "prem": 14552146
+        },
+        {
+          "e": 2,
+          "m": 1,
+          "vol": 80185,
+          "oi": 474252,
+          "prem": 23423513
+        },
+        {
+          "e": 2,
+          "m": 2,
+          "vol": 82914,
+          "oi": 333734,
+          "prem": 46206190
+        },
+        {
+          "e": 2,
+          "m": 3,
+          "vol": 150740,
+          "oi": 327030,
+          "prem": 135164721
+        },
+        {
+          "e": 2,
+          "m": 4,
+          "vol": 76686,
+          "oi": 209067,
+          "prem": 40368557
+        },
+        {
+          "e": 2,
+          "m": 5,
+          "vol": 51020,
+          "oi": 187243,
+          "prem": 11101443
+        },
+        {
+          "e": 2,
+          "m": 6,
+          "vol": 34031,
+          "oi": 89945,
+          "prem": 6212755
+        },
+        {
+          "e": 3,
+          "m": 0,
+          "vol": 31054,
+          "oi": 809937,
+          "prem": 18788207
+        },
+        {
+          "e": 3,
+          "m": 1,
+          "vol": 20281,
+          "oi": 318859,
+          "prem": 20221454
+        },
+        {
+          "e": 3,
+          "m": 2,
+          "vol": 19464,
+          "oi": 162538,
+          "prem": 27700599
+        },
+        {
+          "e": 3,
+          "m": 3,
+          "vol": 30602,
+          "oi": 202056,
+          "prem": 63195576
+        },
+        {
+          "e": 3,
+          "m": 4,
+          "vol": 3352,
+          "oi": 94773,
+          "prem": 6682875
+        },
+        {
+          "e": 3,
+          "m": 5,
+          "vol": 17203,
+          "oi": 180992,
+          "prem": 17976734
+        },
+        {
+          "e": 3,
+          "m": 6,
+          "vol": 18683,
+          "oi": 284938,
+          "prem": 48846245
+        },
+        {
+          "e": 4,
+          "m": 0,
+          "vol": 15074,
+          "oi": 1005027,
+          "prem": 27911273
+        },
+        {
+          "e": 4,
+          "m": 1,
+          "vol": 4492,
+          "oi": 263172,
+          "prem": 11144235
+        },
+        {
+          "e": 4,
+          "m": 2,
+          "vol": 831,
+          "oi": 174438,
+          "prem": 3252310
+        },
+        {
+          "e": 4,
+          "m": 3,
+          "vol": 6492,
+          "oi": 314994,
+          "prem": 24317969
+        },
+        {
+          "e": 4,
+          "m": 4,
+          "vol": 1584,
+          "oi": 86105,
+          "prem": 6500548
+        },
+        {
+          "e": 4,
+          "m": 5,
+          "vol": 3054,
+          "oi": 146917,
+          "prem": 10289563
+        },
+        {
+          "e": 4,
+          "m": 6,
+          "vol": 15067,
+          "oi": 582586,
+          "prem": 66085930
+        }
+      ]
+    }
+  },
+  "quant": {
+    "garch": {
+      "omega": 1.6155014302948783e-05,
+      "alpha": 0.05,
+      "beta": 0.845,
+      "persistence": 0.895,
+      "conditional_vol_pct": 18.17,
+      "unconditional_vol_pct": 19.69,
+      "regime": "LOW VOL",
+      "tercile_low_pct": 18.64,
+      "tercile_high_pct": 19.83,
+      "obs": 259,
+      "note": "regime-conditioned vol; a single static normal understates tails badly"
+    },
+    "qqq_realized_vol_21d_pct": 15.93,
+    "qqq_vol_drag": {
+      "arithmetic_pct": 23.65,
+      "geometric_pct": 21.71,
+      "drag_pct": 1.94
+    },
+    "realized_vs_implied": {
+      "realized_vol_pct": 15.93,
+      "implied_vol_pct": 16.34,
+      "spread_pct": -0.41,
+      "window_days": 21,
+      "who_is_paid": "option SELLERS \u2014 realized is coming in below implied"
+    },
+    "geometry": {
+      "assets": 11,
+      "observations": 89,
+      "det_G": 0.005693,
+      "diversification_volume": 0.0755,
+      "avg_correlation": 0.148,
+      "eigenvalues": [
+        3.539,
+        2.531,
+        1.415,
+        0.813,
+        0.713,
+        0.606,
+        0.427,
+        0.324,
+        0.231,
+        0.215,
+        0.186
+      ],
+      "mp_lambda_plus": 1.827,
+      "real_factors": 2,
+      "top_eigen_share_pct": 32.2,
+      "labels": [
+        "Energy",
+        "Financials",
+        "Consumer Staples",
+        "Communication Services",
+        "Health Care",
+        "Real Estate",
+        "Information Technology",
+        "Industrials",
+        "Consumer Discretionary",
+        "Utilities",
+        "Materials"
+      ],
+      "regime": "RISK-OFF / CORRELATED",
+      "note": "sqrt(det G): 1 = independent, 0 = one crowded trade. Eigenvalues under lambda_+ are noise (Marchenko-Pastur)."
+    }
+  },
+  "sectors": {
+    "rows": [
+      {
+        "sector": "Energy",
+        "ticker": "XLE",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Financials",
+        "ticker": "XLF",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Consumer Staples",
+        "ticker": "XLP",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Communication Services",
+        "ticker": "XLC",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Health Care",
+        "ticker": "XLV",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Real Estate",
+        "ticker": "XLRE",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Information Technology",
+        "ticker": "XLK",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Industrials",
+        "ticker": "XLI",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Consumer Discretionary",
+        "ticker": "XLY",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Utilities",
+        "ticker": "XLU",
+        "last": null,
+        "pct_change": null
+      },
+      {
+        "sector": "Materials",
+        "ticker": "XLB",
+        "last": null,
+        "pct_change": null
+      }
+    ],
+    "leaders": [
+      "Energy",
+      "Financials",
+      "Consumer Staples"
+    ],
+    "laggards": [
+      "Consumer Discretionary",
+      "Utilities",
+      "Materials"
+    ],
+    "breadth": "0/11 sectors green"
+  },
+  "macro": {
+    "real_gdp": {
+      "latest_date": "2026-04-01",
+      "latest": 24408.011,
+      "prior": 24274.383,
+      "change": 133.628
+    },
+    "cpi": {
+      "latest_date": "2026-08-01",
+      "latest": 334.131,
+      "prior": 332.813,
+      "change": 1.318
+    },
+    "core_pce": {
+      "latest_date": "2026-08-01",
+      "latest": 130.455,
+      "prior": 130.133,
+      "change": 0.322
+    },
+    "fed_funds": {
+      "latest_date": "2026-09-29",
+      "latest": 3.88,
+      "prior": 3.88,
+      "change": 0.0
+    },
+    "yield_10y": {
+      "latest_date": "2026-09-29",
+      "latest": 5.26,
+      "prior": 5.24,
+      "change": 0.02
+    },
+    "yield_2y": {
+      "latest_date": "2026-09-29",
+      "latest": 4.89,
+      "prior": 4.92,
+      "change": -0.03
+    },
+    "dollar_index": {
+      "latest_date": "2026-09-25",
+      "latest": 120.33,
+      "prior": 120.5521,
+      "change": -0.2221
+    },
+    "curve_2s10s": {
+      "spread": 0.37,
+      "read": "NORMAL"
+    }
+  },
+  "venue_concentration": {
+    "volume_share": [
+      {
+        "venue": "Cboe (C,W,E,Z)",
+        "today": 29.03,
+        "avg5": 29.49
+      },
+      {
+        "venue": "NASDAQ (Q,T,X,H,I,J)",
+        "today": 26.55,
+        "avg5": 26.51
+      },
+      {
+        "venue": "NYSE (A,N)",
+        "today": 20.63,
+        "avg5": 20.24
+      },
+      {
+        "venue": "MIAX (M,P,D,S)",
+        "today": 15.56,
+        "avg5": 15.34
+      },
+      {
+        "venue": "BOX Options",
+        "today": 4.12,
+        "avg5": 4.27
+      },
+      {
+        "venue": "Members Exchange (G,U)",
+        "today": 4.11,
+        "avg5": 4.15
+      }
+    ],
+    "premium_share": [
+      {
+        "venue": "Cboe (C,W,E,Z)",
+        "today": 29.03,
+        "avg5": 29.49
+      },
+      {
+        "venue": "NASDAQ (Q,T,X,H,I,J)",
+        "today": 26.55,
+        "avg5": 26.51
+      },
+      {
+        "venue": "NYSE (A,N)",
+        "today": 20.63,
+        "avg5": 20.24
+      },
+      {
+        "venue": "MIAX (M,P,D,S)",
+        "today": 15.56,
+        "avg5": 15.34
+      },
+      {
+        "venue": "BOX Options",
+        "today": 4.12,
+        "avg5": 4.27
+      },
+      {
+        "venue": "Members Exchange (G,U)",
+        "today": 4.11,
+        "avg5": 4.15
+      }
+    ],
+    "total_volume": 61041951,
+    "total_premium": 61041951,
+    "session_date": "2026-09-30",
+    "sessions_in_avg": 5
+  }
+}
