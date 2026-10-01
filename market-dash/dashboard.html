@@ -1311,7 +1311,7 @@
         '<td class="num" style="color:var(--faint)">' + r.w.toFixed(1) + "%</td>" +
         '<td class="num"><span style="background:' + col +
         ';color:#fff;padding:1px 6px;border-radius:3px;font-size:11px">' +
-        (r.pct > 0 ? "+" : "") + r.pct.toFixed(2) + "%</span></td></tr>";
+        (has(r.pct) ? (r.pct > 0 ? "+" : "") + r.pct.toFixed(2) + "%" : "—") + "</span></td></tr>";
       ang = a2;
     });
 
