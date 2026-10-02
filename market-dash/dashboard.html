@@ -4872,7 +4872,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + tab("journal", "Trading Journal") + "</div>";
+      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + tab("journal", "Trading Journal") + tab("perf", "Trading Performance") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
@@ -5711,7 +5711,9 @@
       _pipeFooter + '</div>';
 
     app.innerHTML = _header + tabBar() +
-      (TAB === "journal"
+      (TAB === "perf"
+        ? ('<div class="flow"><iframe src="trading-performance.html" title="Trading Performance" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#160a0e"></iframe></div>')
+        : TAB === "journal"
         ? ('<div class="flow"><iframe src="notebook.html" title="Trading Journal" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0d0625"></iframe></div>')
         : TAB === "nasdaq" ? ('<div class="flow">' + _qqqBody + "</div>") : _dashBody);
 
