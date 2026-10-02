@@ -537,8 +537,41 @@ def _overnight_last_prev(ticker):
     return last, prev
 
 
+def _alpaca_daily_last_prev(ticker):
+    """Last two daily closes from Alpaca (the same brokerage feed the greeks
+    logger uses). Reliable where Yahoo intermittently returns nothing. Returns
+    (last, prev) or (None, None). Only for plain equity/ETF symbols — index
+    symbols like ^VIX or DX-Y.NYB are skipped so they stay on Yahoo."""
+    if not ticker or not ticker.isalpha():
+        return None, None
+    headers = _alpaca_headers()
+    if not headers:
+        return None, None
+    try:
+        r = requests.get(
+            ALPACA_DATA + "/v2/stocks/" + ticker + "/bars",
+            params={"timeframe": "1Day", "limit": 5, "adjustment": "raw"},
+            headers=headers, timeout=15)
+        if not r.ok:
+            return None, None
+        bars = (r.json() or {}).get("bars") or []
+        closes = [float(b["c"]) for b in bars if b.get("c") is not None]
+        if len(closes) < 2:
+            return None, None
+        return closes[-1], closes[-2]
+    except Exception:
+        return None, None
+
+
 def pct_change_last_two(ticker):
     """Returns (last_close, prev_close, pct_change)."""
+    # Alpaca first for ordinary stocks/ETFs (incl. the 11 sector ETFs); it is
+    # far more reliable than Yahoo, which intermittently returns blanks. The
+    # pre/post-market majors below and index symbols keep their existing source.
+    if ticker not in OVERNIGHT_TICKERS:
+        a_last, a_prev = _alpaca_daily_last_prev(ticker)
+        if a_last is not None and a_prev:
+            return a_last, a_prev, ((a_last - a_prev) / a_prev) * 100.0
     if ticker in OVERNIGHT_TICKERS:
         try:
             last, prev = _overnight_last_prev(ticker)
