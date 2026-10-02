@@ -1,20 +1,20 @@
 {
-  "generated_utc": "2026-10-02 20:29:32",
+  "generated_utc": "2026-10-02 22:08:28",
   "session_date": "2026-10-02",
   "feed": "iex",
-  "bars": 392,
-  "spot": 749.8,
+  "bars": 394,
+  "spot": 749.2,
   "vwap": 750.38,
-  "vwap_dist_pct": -0.08,
-  "ad_z": 4.66,
-  "ad_last": 32120.0,
+  "vwap_dist_pct": -0.16,
+  "ad_z": 4.52,
+  "ad_last": 33045.0,
   "or15_high": 752.02,
   "or15_low": 749.24,
   "or30_high": 752.49,
   "or30_low": 749.24,
-  "spot_vs_or": "inside",
-  "vol_total": 463888.0,
-  "vol_pace": 0.47,
+  "spot_vs_or": "below",
+  "vol_total": 465138.0,
+  "vol_pace": 0.6,
   "candles": [
     {
       "time": 1790947800,
@@ -3151,6 +3151,22 @@
       "low": 749.78,
       "close": 749.8,
       "volume": 356.0
+    },
+    {
+      "time": 1790973480,
+      "open": 749.59,
+      "high": 749.6,
+      "low": 749.59,
+      "close": 749.6,
+      "volume": 925.0
+    },
+    {
+      "time": 1790974440,
+      "open": 749.2,
+      "high": 749.2,
+      "low": 749.2,
+      "close": 749.2,
+      "volume": 325.0
     }
   ]
 }
