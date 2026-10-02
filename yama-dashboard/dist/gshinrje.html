@@ -6186,7 +6186,8 @@ var PERF_LOTS=[["2025-05-22",0.0,0,4,3,1,0,"2025-05-22 16:29:29","2025-05-22 17:
 // ── Filter state per widget (independent) ──
 var PERF_FILTER = {
   'perf-performance': 'ALL',
-  'perf-discipline':  'ALL'
+  'perf-discipline':  'ALL',
+  'perf-combined':    'ALL'
 };
 
 // ── Lot field indices ──
@@ -6708,10 +6709,101 @@ function _compactRules(D) {
   return html;
 }
 
+// ═══════════════════════════════════════════════
+// WIDGET 3: PERFORMANCE + DISCIPLINE (combined)
+// ═══════════════════════════════════════════════
+function _payoffStats(D){
+  var e=D.edges||[];
+  var gw=0,gl=0,wins=0,losses=0;
+  e.forEach(function(x){gw+=x.gross_win;gl+=x.gross_loss;wins+=x.wins;losses+=(x.n-x.wins);});
+  var aw=wins?gw/wins:0, al=losses?Math.abs(gl)/losses:0;
+  return {payoff: al?aw/al:0, pf: gl?gw/Math.abs(gl):0, avg_win:aw, avg_loss:al};
+}
+
+function _heroTile(label,big,bigCol,sub){
+  var h='<div style="flex:1;text-align:center;background:rgba(140,20,20,0.05);border-radius:5px;padding:6px 2px">';
+  h+='<div style="color:rgba(200,160,160,0.45);font-size:7px;letter-spacing:0.12em;margin-bottom:2px">'+label+'</div>';
+  h+='<div style="font-size:22px;font-weight:700;color:'+bigCol+';line-height:1">'+big+'</div>';
+  h+='<div style="font-size:7px;color:rgba(200,160,160,0.4);margin-top:2px">'+(sub||'')+'</div>';
+  h+='</div>';
+  return h;
+}
+
+function _combinedHero(D){
+  var wr=D.winrate||{};
+  var ps=_payoffStats(D);
+  var rev=(D.revenge||[]).find(function(r){return r.category==='revenge';})||{n:0};
+  var cur=D.current_streak||{};
+  var isWin=cur.streak_type==='win';
+  var wrPct=wr.total?(100*wr.wins/wr.total).toFixed(1)+'%':'—';
+  var poCol=ps.payoff>=2?'#00e5cc':(ps.payoff>=1?'rgba(230,200,200,0.8)':'#cc1111');
+  var html='<div style="display:flex;gap:4px">';
+  html+=_heroTile('WIN RATE',wrPct,'#00e5cc',(wr.total||0)+' lots');
+  html+=_heroTile('PAYOFF',ps.payoff?ps.payoff.toFixed(2)+'×':'—',poCol,'PF '+(ps.pf?ps.pf.toFixed(2):'—'));
+  html+=_heroTile('REVENGE',rev.n||0,'#cc1111','trades');
+  html+=_heroTile('STREAK',(cur.streak_len||0)+(isWin?'W':'L'),isWin?'#00e5cc':'#cc1111','best '+(D.max_win_streak||0)+'W');
+  html+='</div>';
+  return html;
+}
+
+function _compactEdgesAll(D){
+  var d=D.edges;if(!d||!d.length)return '';
+  var maxAbs=0;d.forEach(function(e){if(Math.abs(e.pnl)>maxAbs)maxAbs=Math.abs(e.pnl);});
+  var html='';
+  d.forEach(function(e){
+    var pct=maxAbs?Math.abs(e.pnl)/maxAbs*100:0;
+    var col=e.pnl>=0?'#00e5cc':'#cc1111';
+    var bgCol=e.pnl>=0?'rgba(0,229,204,0.12)':'rgba(204,17,17,0.12)';
+    html+='<div style="margin-bottom:2px">';
+    html+='<div style="display:flex;justify-content:space-between;font-size:9px">';
+    html+='<span style="color:rgba(230,200,200,0.8)">'+e.option_type+' · '+e.hold_bucket+' <span style="color:rgba(200,160,160,0.35)">('+e.n+')</span></span>';
+    html+='<span style="color:'+col+';font-weight:600">'+perfNum(e.pnl)+'</span></div>';
+    html+='<div style="height:3px;background:rgba(140,20,20,0.08);border-radius:2px;margin:1px 0">';
+    html+='<div style="width:'+pct.toFixed(1)+'%;height:100%;background:'+bgCol+';border-radius:2px;'+(e.pnl<0?'margin-left:auto':'')+'"></div></div>';
+    html+='</div>';
+  });
+  return html;
+}
+
+function _pnlConcentration(D){
+  var rd=D.r_dist;if(!rd||!rd.length)return '';
+  var net=(D.winrate&&D.winrate.net_pnl)||0;
+  var big=rd.filter(function(b){return b.pnl>0;}).sort(function(a,b){return b.pnl-a.pnl;})[0];
+  if(!big)return '';
+  var without=net-big.pnl;
+  var html='<div style="background:rgba(0,229,204,0.04);border:1px solid rgba(0,229,204,0.12);border-radius:5px;padding:6px 8px;font-size:9px;line-height:1.4">';
+  html+='<span style="color:rgba(200,160,160,0.6)">Edge lives in the fat tail — </span>';
+  html+='<span style="color:#00e5cc;font-weight:600">'+big.n+' trades ('+big.bucket+') = '+perfNum(big.pnl)+'</span>';
+  html+='<span style="color:rgba(200,160,160,0.6)">. Strip them and net is </span>';
+  html+='<span style="color:'+(without>=0?'#00e5cc':'#cc1111')+';font-weight:600">'+perfNum(without)+'</span>';
+  html+='</div>';
+  return html;
+}
+
+function renderCombinedWidget(){
+  var D=_getPerfData('perf-combined');
+  var css='font-family:ui-monospace,monospace;font-size:10px;display:grid;gap:7px;height:100%;grid-template-columns:1fr 1fr;';
+  var html='<div style="'+css+'">';
+  html+='<div style="grid-column:1/-1">'+_filterBar('perf-combined')+'</div>';
+  if(!D){html+='<div style="grid-column:1/-1;color:rgba(200,160,160,0.5);font-size:11px;padding:20px;text-align:center">No trades in this period</div></div>';return html;}
+  html+='<div style="grid-column:1/-1">'+_miniEquity(D)+'</div>';
+  html+='<div style="grid-column:1/-1">'+_combinedHero(D)+'</div>';
+  html+='<div style="padding:2px">'+perfLabel('EDGES & LEAKS')+_compactEdgesAll(D)+'</div>';
+  html+='<div style="padding:2px">'+perfLabel('HOLD TIME')+_compactHoldTime(D)+perfLabel('R DISTRIBUTION')+_compactRDist(D)+'</div>';
+  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('MONTHLY')+_compactMonthly(D)+'</div>';
+  html+='<div style="grid-column:1/-1">'+_pnlConcentration(D)+'</div>';
+  html+='<div style="grid-column:1/-1;padding:2px">'+_compactRules(D)+'</div>';
+  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('SESSION HEATMAP')+_compactHeatmap(D)+'</div>';
+  html+='</div>';
+  return html;
+}
+
+
 // ── Registry ──
 var PERF_WIDGETS = {
   'perf-performance':  renderPerformanceWidget,
-  'perf-discipline':   renderDisciplineWidget
+  'perf-discipline':   renderDisciplineWidget,
+  'perf-combined':     renderCombinedWidget
 };
 
 
@@ -7089,6 +7181,7 @@ function renderWidgetBody(defId, widget) {
         // ── Performance widgets v5 ──
     case 'perf-performance':  return PERF_WIDGETS['perf-performance']();
     case 'perf-discipline':   return PERF_WIDGETS['perf-discipline']();
+    case 'perf-combined':     return PERF_WIDGETS['perf-combined']();
     default:
       return '<div class="loading">Widget: ' + esc(defId) + '</div>';
   }
@@ -8148,6 +8241,7 @@ var CATEGORIES = [
   { id:'performance', label:'Performance', question:'How am I performing and what patterns emerge from my trading history?', widgets:[
     { id:'perf-performance',  name:'Performance',  question:'Full performance picture: equity, win rate, edges, timing, distribution',  dw:680, dh:860 },
     { id:'perf-discipline',   name:'Discipline',   question:'Revenge trades, streaks, rules, and session patterns',                     dw:680, dh:560 },
+    { id:'perf-combined',     name:'Performance + Discipline',  question:'Everything in one view: equity, payoff, edges, rules, streaks, heatmap',  dw:720, dh:1180 },
   ]},
   { id:'utilities', label:'Utilities', question:'Supporting tools', widgets:[
     { id:'watchlist',             name:'Watchlist',               question:'Which assets am I tracking?',                   dw:300, dh:400 },
