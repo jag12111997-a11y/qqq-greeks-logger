@@ -214,6 +214,39 @@ function _pnlConcentration(D){
   html+='</div>';
   return html;
 }
+function _pnlCalendar(D){
+  var eq=D.equity; if(!eq||!eq.length) return '';
+  var byd={}; eq.forEach(function(e){byd[e.trade_date]=e.day_pnl;});
+  var months={}; eq.forEach(function(e){months[e.trade_date.slice(0,7)]=1;});
+  var mlist=Object.keys(months).sort().reverse();
+  var dows=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var html='';
+  mlist.forEach(function(ym){
+    var y=+ym.slice(0,4), m=+ym.slice(5,7);
+    var startDow=new Date(y,m-1,1).getDay();
+    var daysIn=new Date(y,m,0).getDate();
+    var mtot=0; for(var dd=1;dd<=daysIn;dd++){var kk=ym+'-'+String(dd).padStart(2,'0'); if(byd[kk]!=null) mtot+=byd[kk];}
+    html+='<div style="margin-bottom:10px">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">';
+    html+='<span style="color:rgba(200,160,160,0.6);font-size:10px;letter-spacing:0.08em">'+ym+'</span>';
+    html+='<span style="font-size:11px;font-weight:600;color:'+(mtot>=0?'#00e5cc':'#cc1111')+'">'+perfNum(mtot)+'</span></div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">';
+    dows.forEach(function(d){html+='<div style="text-align:center;font-size:7px;color:rgba(200,160,160,0.4);padding:1px 0">'+d+'</div>';});
+    for(var i=0;i<startDow;i++) html+='<div></div>';
+    for(var d=1;d<=daysIn;d++){
+      var k=ym+'-'+String(d).padStart(2,'0'); var v=byd[k];
+      var bg = (v==null)?'transparent':(v>0?'rgba(0,229,204,0.10)':(v<0?'rgba(204,17,17,0.10)':'rgba(140,20,20,0.03)'));
+      var col = (v==null)?'rgba(200,160,160,0.25)':(v>0?'#00e5cc':(v<0?'#cc1111':'rgba(200,160,160,0.45)'));
+      html+='<div style="background:'+bg+';border-radius:3px;padding:3px 1px;min-height:30px;text-align:center">';
+      html+='<div style="font-size:8px;color:rgba(200,160,160,0.4)">'+d+'</div>';
+      html+='<div style="font-size:8.5px;font-weight:600;color:'+col+'">'+(v==null?'':(v>=0?'+':'')+Math.round(v))+'</div>';
+      html+='</div>';
+    }
+    html+='</div></div>';
+  });
+  return html;
+}
+
 function renderCombinedWidget(){
   var D=_getPerfData('perf-combined');
   var css='font-family:ui-monospace,monospace;font-size:10px;display:grid;gap:7px;grid-template-columns:1fr 1fr;';
@@ -226,6 +259,7 @@ function renderCombinedWidget(){
     html+='</div>';return html;
   }
   html+='<div style="grid-column:1/-1">'+_miniEquity(D)+'</div>';
+  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('P&L CALENDAR')+_pnlCalendar(D)+'</div>';
   html+='<div style="padding:2px">'+perfLabel('EDGES & LEAKS')+_compactEdgesAll(D)+'</div>';
   html+='<div style="padding:2px">'+perfLabel('HOLD TIME')+_compactHoldTime(D)+perfLabel('R DISTRIBUTION')+_compactRDist(D)+'</div>';
   html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('MONTHLY')+_compactMonthly(D)+'</div>';

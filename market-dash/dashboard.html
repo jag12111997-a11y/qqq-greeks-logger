@@ -5970,7 +5970,7 @@
       fetchAll().then(function () {
         var info = applyLive();
         // Repaint without losing scroll or which session you are viewing.
-        if (info.painted && idx === FULL.length - 1 && TAB !== "journal") {
+        if (info.painted && idx === FULL.length - 1 && TAB !== "journal" && TAB !== "perf") {
           // Once the user has positioned the Nasdaq chart, the minute refresh
           // updates its live quote in place instead of destroying the chart.
           if (TAB === "nasdaq" && QQQ_TV && QQQ_VIEW_STATE.userAdjusted) {
