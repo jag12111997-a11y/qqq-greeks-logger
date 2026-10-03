@@ -10,12 +10,11 @@
 </style>
 </head><body>
 <div id="root"></div>
-<script src="trading_performance_data.js"></script>
 <script>
 // ===== BLANK dataset — official data starts September; no practice data carried over =====
-var PERF = window.PERF || {equity:[],winrate:{total:0,wins:0,losses:0,be:0,net_pnl:0,expectancy:0,by_type:[]},edges:[],heatmap:[],revenge:[],streaks:[],current_streak:{},max_win_streak:0,max_loss_streak:0,r_dist:[],hold_time:[],monthly:[],rules:[]};
+var BLANK_PERF = {equity:[],winrate:{total:0,wins:0,losses:0,be:0,net_pnl:0,expectancy:0,by_type:[]},edges:[],heatmap:[],revenge:[],streaks:[],current_streak:{},max_win_streak:0,max_loss_streak:0,r_dist:[],hold_time:[],monthly:[],rules:[]};
 var PERF_FILTER = {'perf-combined':'ALL'};
-function _getPerfData(){ return PERF; }
+function _getPerfData(){ return (window.PERF && window.PERF.winrate && window.PERF.winrate.total) ? window.PERF : BLANK_PERF; }
 function _getMonths(){ return []; }
 
 // ===== helpers =====
@@ -269,6 +268,6 @@ function renderCombinedWidget(){
   html+='</div>';
   return html;
 }
-document.getElementById('root').innerHTML=renderCombinedWidget();
+(function(){var s=document.createElement('script');s.src='trading_performance_data.js?t='+Date.now();s.onload=s.onerror=function(){document.getElementById('root').innerHTML=renderCombinedWidget();};document.head.appendChild(s);})();
 </script>
 </body></html>
