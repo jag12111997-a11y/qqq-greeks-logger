@@ -1,13 +1,13 @@
 {
   "symbol": "QQQ",
   "spot": 755.94,
-  "net_gex": 2936198230.44,
-  "net_dex": 1507949573.12,
-  "net_vex": 7238.2,
-  "net_tex": -386621.0,
-  "net_vannaex": -188723.28,
-  "net_charmex": 73769874792.59,
-  "gamma_ratio": 0.9785,
+  "net_gex": 2932173255.59,
+  "net_dex": 1507448460.48,
+  "net_vex": 7219.88,
+  "net_tex": -385628.0,
+  "net_vannaex": -189638.14,
+  "net_charmex": 74229179181.39,
+  "gamma_ratio": 0.9786,
   "gamma_flip": 749.0,
   "gamma_flip_method": "nearest-to-zero (no crossing in window)",
   "regime": "POSITIVE GAMMA",
@@ -21,15 +21,15 @@
     {
       "strike": 749.0,
       "call_gex": 13510737.98,
-      "put_gex": -1368440.02,
-      "net_gex": 12142297.96,
+      "put_gex": -774422.65,
+      "net_gex": 12736315.34,
       "call_oi": 845,
       "put_oi": 154,
-      "dex": 59279484.35,
-      "vex": 127.54,
-      "tex": -12292.0,
-      "vannaex": -4161.61,
-      "charmex": 4761755725.84
+      "dex": 59430823.53,
+      "vex": 122.92,
+      "tex": -11984.0,
+      "vannaex": -3993.11,
+      "charmex": 4571588933.55
     },
     {
       "strike": 750.0,
@@ -150,16 +150,16 @@
     },
     {
       "strike": 759.0,
-      "call_gex": 16839749.63,
+      "call_gex": 12220757.4,
       "put_gex": 0.0,
-      "net_gex": 16839749.63,
+      "net_gex": 12220757.4,
       "call_oi": 685,
       "put_oi": 0,
-      "dex": 1620773.16,
-      "vex": 47.95,
-      "tex": -1370.0,
-      "vannaex": 5726.62,
-      "charmex": -2366239943.94
+      "dex": 968321.34,
+      "vex": 34.25,
+      "tex": -685.0,
+      "vannaex": 4643.26,
+      "charmex": -1716768762.85
     },
     {
       "strike": 760.0,
@@ -204,5 +204,5 @@
   "contracts_used": 28,
   "dealer_convention": "dealers long call gamma, short put gamma",
   "source": "5-min greeks logger (calls + puts, 0DTE)",
-  "generated_utc": "2026-10-05 20:02:33"
+  "generated_utc": "2026-10-05 20:07:46"
 }
