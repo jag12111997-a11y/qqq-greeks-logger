@@ -78,12 +78,17 @@ function _combinedHero(D){
   var rev=(D.revenge||[]).find(function(r){return r.category==='revenge';})||{n:0};
   var cur=D.current_streak||{};
   var isWin=cur.streak_type==='win';
-  var wrPct=wr.total?(100*wr.wins/wr.total).toFixed(1)+'%':'—';
+  // win rate counts decisions (lots of one contract bought within 5 min = one decision), not individual lots
+  var byDec=wr.decisions>0;
+  var wrPct=byDec?(100*wr.decision_wins/wr.decisions).toFixed(1)+'%':(wr.total?(100*wr.wins/wr.total).toFixed(1)+'%':'—');
+  var wrSub=byDec?(wr.decision_wins+'/'+wr.decisions+' decisions'):((wr.total||0)+' lots');
   var poCol=ps.payoff>=2?'#00e5cc':(ps.payoff>=1?'rgba(230,200,200,0.8)':'#cc1111');
+  var AL=D.alpha&&D.alpha.after_loss;
   var html='<div style="display:flex;gap:4px">';
-  html+=_heroTile('WIN RATE',wrPct,'#00e5cc',(wr.total||0)+' lots');
+  html+=_heroTile('WIN RATE',wrPct,'#00e5cc',wrSub);
   html+=_heroTile('PAYOFF',ps.payoff?ps.payoff.toFixed(2)+'×':'—',poCol,'PF '+(ps.pf?ps.pf.toFixed(2):'—'));
-  html+=_heroTile('REVENGE',rev.n||0,'#cc1111','trades');
+  if(AL) html+=_heroTile('AFTER A LOSS',AL.retry.n+AL.revenge.n,'#cc1111',AL.retry.n+' re-try · '+AL.revenge.n+' revenge');
+  else html+=_heroTile('REVENGE',rev.n||0,'#cc1111','trades');
   html+=_heroTile('STREAK',(cur.streak_len||0)+(isWin?'W':'L'),isWin?'#00e5cc':'#cc1111','best '+(D.max_win_streak||0)+'W');
   html+='</div>';
   return html;
@@ -246,6 +251,80 @@ function _pnlCalendar(D){
   return html;
 }
 
+// ===== alpha blocks (from the Oct 5 September review) =====
+var _TXT='rgba(230,200,200,0.8)', _MUTE='rgba(200,160,160,0.45)', _AMB='#e0a030';
+function _row(label,val,valCol,pct,barCol,sub){
+  var h='<div style="margin-bottom:5px">';
+  h+='<div style="display:flex;justify-content:space-between;gap:8px;font-size:9px"><span style="color:'+_TXT+'">'+label+'</span><span style="color:'+valCol+';font-weight:600;white-space:nowrap">'+val+'</span></div>';
+  if(pct!=null) h+='<div style="height:4px;background:rgba(140,20,20,0.08);border-radius:2px;margin-top:2px"><div style="width:'+Math.max(1,Math.min(100,pct)).toFixed(1)+'%;height:100%;background:'+barCol+';border-radius:2px"></div></div>';
+  if(sub) h+='<div style="font-size:7.5px;color:'+_MUTE+';margin-top:2px">'+sub+'</div>';
+  return h+'</div>';
+}
+function _box(inner,tint){ return '<div style="background:'+(tint||'rgba(140,20,20,0.05)')+';border-radius:5px;padding:7px 8px">'+inner+'</div>'; }
+
+// Chip stack: $15 per trading day (Tue-Fri) unlocks into the week, unused days roll over, week capped at $60.
+// Uses the week's net P&L (wins give room back). Computed with today's date every time the page opens.
+function _chipStack(D){
+  var A=D.alpha; if(!A||!A.chip) return '';
+  var C=A.chip, now=new Date(), dow=now.getDay();
+  var mon=new Date(now.getFullYear(),now.getMonth(),now.getDate()-((dow+6)%7));
+  function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  var k=0; for(var i=0;i<7;i++){var dd=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i); if(iso(dd)>iso(now)) break; if(C.trade_days.indexOf(dd.getDay())>=0) k++;}
+  var unlocked=Math.min(C.week_cap,C.per_day*k);
+  var monIso=iso(mon), todayIso=iso(now);
+  var wk=(D.equity||[]).filter(function(e){return e.trade_date>=monIso&&e.trade_date<=todayIso;});
+  var net=wk.reduce(function(s,e){return s+e.day_pnl;},0), used=Math.max(0,-net);
+  var left=Math.max(0,unlocked-used), weekLeft=Math.max(0,C.week_cap-used);
+  var big, bigCol;
+  if(k===0){ big='$'+C.per_day+' opens Tue'; bigCol=_TXT; }
+  else { big='$'+Math.round(left)+' left'; bigCol=left>0?'#00e5cc':'#cc1111'; }
+  var h='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">';
+  h+='<span style="font-size:18px;font-weight:700;color:'+bigCol+'">'+big+'</span>';
+  h+='<span style="font-size:8px;color:'+_MUTE+';text-align:right">week: $'+Math.round(used)+' of $'+C.week_cap+' used</span></div>';
+  var usedPct=used/C.week_cap*100, unlockPct=unlocked/C.week_cap*100;
+  h+='<div style="position:relative;height:6px;background:rgba(140,20,20,0.10);border-radius:3px;margin:5px 0 3px">';
+  h+='<div style="position:absolute;left:0;top:0;bottom:0;width:'+Math.min(100,unlockPct).toFixed(1)+'%;background:rgba(0,229,204,0.14);border-radius:3px"></div>';
+  h+='<div style="position:absolute;left:0;top:0;bottom:0;width:'+Math.min(100,usedPct).toFixed(1)+'%;background:#cc1111;border-radius:3px"></div></div>';
+  var note=(k===0?'Mon: no budget unlocked yet':'$'+Math.round(unlocked)+' unlocked so far this week ($'+C.per_day+'/day Tue–Fri, unused days roll over)')+' · $'+Math.round(weekLeft)+' left in the week';
+  if(!wk.length) note+=' · no trades logged this week (data through '+(A.data_through||'—')+')';
+  h+='<div style="font-size:7.5px;color:'+_MUTE+'">'+note+'</div>';
+  return _box(h);
+}
+function _strikeZone(D){
+  var S=D.alpha&&D.alpha.strike; if(!S||!S.zones||!S.covered) return '';
+  var mx=0; S.zones.forEach(function(z){if(Math.abs(z.pnl)>mx)mx=Math.abs(z.pnl);});
+  var h='<div style="font-size:8px;color:'+_MUTE+';margin-bottom:5px">median $'+S.median.toFixed(2)+' out · middle half $'+S.q1.toFixed(2)+'–'+S.q3.toFixed(2)+'</div>';
+  S.zones.forEach(function(z){
+    if(!z.lots) return;
+    var lab=z.zone+(z.dead?' <span style="color:'+_AMB+';font-size:7px;letter-spacing:0.1em">DEAD ZONE</span>':'');
+    var sub=z.won+' of '+z.dec+' decision'+(z.dec===1?'':'s')+' won · '+z.lots+' lots';
+    h+=_row(lab,perfNum(z.pnl),z.pnl>=0?'#00e5cc':'#cc1111',mx?Math.abs(z.pnl)/mx*100:0,z.pnl>=0?'rgba(0,229,204,0.45)':'rgba(204,17,17,0.45)',sub);
+  });
+  h+='<div style="font-size:7.5px;color:'+_MUTE+'">strike distance from QQQ when you bought · '+S.covered+' of '+S.total+' QQQ lots priced</div>';
+  return _box(h);
+}
+function _afterLoss(D){
+  var A=D.alpha&&D.alpha.after_loss; if(!A) return '';
+  var mx=Math.max(Math.abs(A.retry.pnl),Math.abs(A.revenge.pnl),Math.abs(A.rest.pnl),1);
+  var h='<div style="font-size:8px;color:'+_MUTE+';margin-bottom:5px">new trade within '+A.window_min+' min of closing a loser</div>';
+  var rs=A.retry.right_known?'QQQ moved $1+ your way within the hour on '+A.retry.right_later+' of '+A.retry.right_known+' (right, just early)':'';
+  h+=_row('Re-try · same read · '+A.retry.n,perfNum(A.retry.pnl),A.retry.pnl>=0?'#00e5cc':'#cc1111',Math.abs(A.retry.pnl)/mx*100,'rgba(204,17,17,0.45)',A.retry.won+' won · '+rs);
+  h+=_row('Revenge · flip or size-up · '+A.revenge.n,perfNum(A.revenge.pnl),A.revenge.pnl>=0?'#00e5cc':'#cc1111',Math.abs(A.revenge.pnl)/mx*100,'rgba(204,17,17,0.45)',A.revenge.won+' won · '+A.revenge.flips+' flipped calls↔puts · '+A.revenge.sizeups+' sized up');
+  h+=_row('Everything else · '+A.rest.n,perfNum(A.rest.pnl),A.rest.pnl>=0?'#00e5cc':'#cc1111',Math.abs(A.rest.pnl)/mx*100,A.rest.pnl>=0?'rgba(0,229,204,0.45)':'rgba(204,17,17,0.45)',A.rest.won+' won');
+  return _box(h);
+}
+function _timing(D){
+  var A=D.alpha; if(!A||!A.hold) return '';
+  var Ho=A.hold, T=A.timing||{};
+  var t1='<div style="color:'+_MUTE+';font-size:7px;letter-spacing:0.12em;margin-bottom:2px">HOLD</div>';
+  t1+='<div style="font-size:18px;font-weight:700;color:'+_TXT+';line-height:1">'+(Ho.median!=null?Ho.median+'m':'—')+'</div>';
+  t1+='<div style="font-size:7.5px;color:'+_MUTE+';margin-top:3px">winners '+(Ho.median_win!=null?Ho.median_win+'m':'—')+' · losers '+(Ho.median_loss!=null?Ho.median_loss+'m':'—')+'</div>';
+  var t2='<div style="color:'+_MUTE+';font-size:7px;letter-spacing:0.12em;margin-bottom:2px">FIRST 10 MIN</div>';
+  t2+='<div style="font-size:18px;font-weight:700;color:#cc1111;line-height:1">'+(T.adverse_median!=null?'$'+T.adverse_median.toFixed(2):'—')+'</div>';
+  t2+='<div style="font-size:7.5px;color:'+_MUTE+';margin-top:3px">QQQ against you (median) · $1+ on '+(T.adverse_1plus||0)+'/'+(T.n||0)+' · '+(T.drifted||0)+' of '+(T.close||0)+' close strikes drifted $1+ out</div>';
+  return '<div style="display:flex;gap:4px"><div style="flex:1">'+_box(t1)+'</div><div style="flex:1">'+_box(t2)+'</div></div>';
+}
+
 function renderCombinedWidget(){
   var D=_getPerfData('perf-combined');
   var css='font-family:ui-monospace,monospace;font-size:10px;display:grid;gap:7px;grid-template-columns:1fr 1fr;';
@@ -258,7 +337,13 @@ function renderCombinedWidget(){
     html+='</div>';return html;
   }
   html+='<div style="grid-column:1/-1">'+_miniEquity(D)+'</div>';
+  if(D.alpha) html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('CHIP STACK · THIS WEEK')+_chipStack(D)+'</div>';
   html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('P&L CALENDAR')+_pnlCalendar(D)+'</div>';
+  if(D.alpha){
+    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('STRIKE ZONE')+_strikeZone(D)+'</div>';
+    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('AFTER A LOSS')+_afterLoss(D)+'</div>';
+    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('TIMING')+_timing(D)+'</div>';
+  }
   html+='<div style="padding:2px">'+perfLabel('EDGES & LEAKS')+_compactEdgesAll(D)+'</div>';
   html+='<div style="padding:2px">'+perfLabel('HOLD TIME')+_compactHoldTime(D)+perfLabel('R DISTRIBUTION')+_compactRDist(D)+'</div>';
   html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('MONTHLY')+_compactMonthly(D)+'</div>';
