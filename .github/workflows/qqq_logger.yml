@@ -1,10 +1,12 @@
 # ============================================================
 # QQQ Greeks Logger — MORNING burst
 # ============================================================
-# 6:45-8:45 AM Pacific: one snapshot every 60 seconds, window +/-$15.
+# 6:45 AM-12:25 PM Pacific: one snapshot every 60 seconds, window +/-$15.
+# Runs until the midday job takes over at 12:15 PM, so there is no midday gap.
 #
 # GitHub cron runs on UTC and can't schedule faster than every 5 min,
-# so this ONE job starts at 6:45 and loops internally for 2 hours.
+# so this ONE job starts at 6:45 and loops internally for 5 h 40 min
+# (GitHub's hard cap is 6 hours per job).
 #   13:45 UTC = 6:45 AM PDT (summer). In winter it shifts to 5:45 AM
 #   PST until the cron is bumped. GitHub may start the job a few
 #   minutes late; once started, the 5-minute cadence is exact.
@@ -28,7 +30,7 @@ concurrency:
 jobs:
   log-greeks:
     runs-on: ubuntu-latest
-    timeout-minutes: 135
+    timeout-minutes: 355
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -54,7 +56,7 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run logger (6:45-8:45 PT, every 5 min, +/-$15)
+      - name: Run logger (6:45 AM-12:25 PM PT, every 1 min, +/-$15)
         if: steps.guard.outputs.run == 'true'
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
@@ -62,7 +64,7 @@ jobs:
           SESSION: 'am'
           WINDOW: '15'
           INTERVAL_SECONDS: '60'
-          DURATION_SECONDS: '7200'
+          DURATION_SECONDS: '20400'
         run: python qqq_greeks_logger_alpaca.py
 
       - name: Back up captured CSVs before publishing
