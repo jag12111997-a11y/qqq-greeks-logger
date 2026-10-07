@@ -4108,7 +4108,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // the 1H+ candle sizes keep the original chart. Per-minute volume GEX,
   // change dots and the biggest-change table light up once the logger writes
   // market-dash/gex_frames.json; until then they say so instead of guessing.
-  var GX_VIEW = { w: "vol", hist: "smooth", dots: true, zoom: "wide", at: null };
+  var GX_VIEW = { w: "vol", hist: "smooth", dots: true, zoom: "wide", at: null, tview: "fit" };
   try {
     var _gv = JSON.parse(localStorage.getItem("md:gx-view") || "{}");
     if (["vol", "oi", "both"].indexOf(_gv.w) >= 0) GX_VIEW.w = _gv.w;
@@ -4222,6 +4222,9 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         viewButton("data-qqq-pane", "none", "Off", QQQ_CHART_VIEW.pane === "none") +
         '<span class="label" style="margin-left:7px">Price scale</span>' +
         gxBtn("zoom", "tight", "Tight", GX_VIEW.zoom === "tight") + gxBtn("zoom", "wide", "Wide", GX_VIEW.zoom === "wide") +
+        '<span class="label" style="margin-left:7px">Time</span>' +
+        gxBtn("tview", "fit", "Fit", GX_VIEW.tview === "fit") + gxBtn("tview", "day", "Full day", GX_VIEW.tview === "day") +
+        '<span style="font-size:10.5px;color:var(--faint);margin-left:6px">scroll = zoom · drag = pan · double-click = reset</span>' +
       '</div>' +
       '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
         layerButton("core", "GEX history + odds") + layerButton("ranges", "Expected ranges") +
@@ -4264,7 +4267,8 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var day = QQQ_SESSION.date, tf = window._gxTf || "1m", step = { "1m": 1, "5m": 5, "15m": 15 }[tf] || 1;
     var T0 = gxSessionStart(day), SESSION = 23400;
     var PX0 = 60, PX1 = 820, PY0 = 56, PY1 = 536, PC = 985, PH = 136, LY0 = 566, LY1 = 646;
-    function X(rel) { return PX0 + (rel / SESSION) * (PX1 - PX0); }
+    var V0 = 0, V1 = SESSION;
+    function X(rel) { return PX0 + ((rel - V0) / (V1 - V0)) * (PX1 - PX0); }
 
     // ---- candles: same sources and merge as the original chart ----
     var raw = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles) ? LIVE_AUCTION.candles.slice() : [];
@@ -4291,6 +4295,12 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     }
     window._gxTimes = times; window._gxIdx = ci;
     var tNowAbs = times[ci], tNow = tNowAbs - T0 + step * 60;
+    if (ci === candles.length - 1 && minute.length) tNow = Math.min(tNow, minute[minute.length - 1].time - T0 + 60);
+    var lastT = candles[candles.length - 1].time - T0 + step * 60;
+    if (GX_VIEW.tview === "day") { V0 = 0; V1 = SESSION; }
+    else if (GX_VIEW.tview && typeof GX_VIEW.tview === "object") { V0 = GX_VIEW.tview.v0; V1 = GX_VIEW.tview.v1; }
+    else { V0 = 0; V1 = Math.min(SESSION, Math.max(3600, lastT + Math.max(1800, lastT * 0.15))); }
+    window._gxView = { V0: V0, V1: V1 };
     window._gxClockText = (GX_VIEW.at === null ? "latest · " : "replay · ") + gxClock(Math.min(tNow, SESSION) - 1) + " ET";
     var shown = candles.slice(0, ci + 1);
     var disp = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : candles;
@@ -4338,7 +4348,12 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
 
     // ---- price scale ----
     var lo = 1e9, hi = -1e9;
-    shown.forEach(function (b) { lo = Math.min(lo, b.low); hi = Math.max(hi, b.high); });
+    shown.forEach(function (b) {
+      var rt = b.time - T0;
+      if (rt + step * 60 < V0 || rt > V1) return;
+      lo = Math.min(lo, b.low); hi = Math.max(hi, b.high);
+    });
+    if (lo > hi) shown.forEach(function (b) { lo = Math.min(lo, b.low); hi = Math.max(hi, b.high); });
     lo = Math.min(lo, spot); hi = Math.max(hi, spot);
     var pad = Math.max(0.6, (hi - lo) * 0.18);
     if (GX_VIEW.zoom === "wide") {
@@ -4378,18 +4393,23 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
 
     var svg = "", sty = 'font-family:ui-monospace,Menlo,monospace;font-size:11px';
     svg += '<defs><pattern id="gx-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
-      '<line x1="0" y1="0" x2="0" y2="8" stroke="#2c1626" stroke-width="4"/></pattern></defs>';
+      '<line x1="0" y1="0" x2="0" y2="8" stroke="#2c1626" stroke-width="4"/></pattern>' +
+      '<clipPath id="gx-clip"><rect x="60" y="56" width="760" height="480"/></clipPath>' +
+      '<clipPath id="gx-clip-pane"><rect x="60" y="566" width="760" height="80"/></clipPath></defs>';
     svg += '<rect x="60" y="56" width="760" height="480" fill="#0c0c14"/><rect x="845" y="56" width="280" height="480" fill="#0c0c14"/>';
     var paneOn = QQQ_CHART_VIEW.pane !== "none", gridBottom = paneOn ? LY1 : PY1;
     for (var gk = Math.ceil(KB / gstep) * gstep; gk <= KT; gk += gstep) {
       svg += '<line x1="60" x2="1125" y1="' + Y(gk).toFixed(1) + '" y2="' + Y(gk).toFixed(1) + '" stroke="#17171f"/>' +
         '<text x="52" y="' + (Y(gk) + 4).toFixed(1) + '" fill="#8b8ba6" text-anchor="end" style="' + sty + '">' + (gstep < 1 ? gk.toFixed(1) : gk.toFixed(0)) + '</text>';
     }
-    for (var hh = 10; hh <= 16; hh++) {
-      var tx = X((hh * 60 - 570) * 60);
+    var span = V1 - V0, tick = span <= 2400 ? 300 : span <= 5400 ? 600 : span <= 12000 ? 1800 : 3600;
+    for (var tt0 = Math.ceil((V0 + 1800) / tick) * tick - 1800; tt0 <= V1; tt0 += tick) {
+      if (tt0 < V0) continue;
+      var tx = X(tt0);
       svg += '<line x1="' + tx.toFixed(1) + '" x2="' + tx.toFixed(1) + '" y1="56" y2="' + gridBottom + '" stroke="#15151f"/>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + (gridBottom + 18) + '" fill="#8b8ba6" text-anchor="middle" style="' + sty + '">' + hh + ':00</text>';
+        '<text x="' + tx.toFixed(1) + '" y="' + (gridBottom + 18) + '" fill="#8b8ba6" text-anchor="middle" style="' + sty + '">' + gxClock(tt0) + '</text>';
     }
+    svg += '<g clip-path="url(#gx-clip)">';
     // logger gaps (no GEX snapshots), so flat lines never pretend levels held
     var gapSrc = frames ? frames.map(function (f) { return f.t; }) : pts.map(function (p) { return p.t; });
     var gapMax = frames ? 180 : 720;
@@ -4404,17 +4424,19 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
 
     // expected-range cones from the cursor to the close
     var left = Math.max(0, SESSION - tNow), sig = M.sig, cvol = Number(get(e, "quant.garch.conditional_vol_pct"));
-    var sigLeft = sig ? sig * Math.sqrt(left / SESSION) : null;
+    var sigLeft = sig ? sig * Math.sqrt(left / SESSION) : null, gxConeLabels = [];
     if (QQQ_LAYERS.ranges && left > 0 && sig) {
       var cone = function (mult, sday, col, dash, label) {
         var d = "";
         for (var c2 = 0; c2 <= 16; c2++) {
           var tt = tNow + (left * c2) / 16, pr = spot * (1 + mult * sday * Math.sqrt((tt - tNow) / SESSION));
-          d += (c2 ? "L" : "M") + X(tt).toFixed(1) + " " + Y(Math.max(KB, Math.min(KT, pr))).toFixed(1);
+          d += (c2 ? "L" : "M") + X(tt).toFixed(1) + " " + Y(pr).toFixed(1);
         }
-        var endP = spot * (1 + mult * sday * Math.sqrt(left / SESSION));
+        var tv = Math.min(V1, SESSION), endP = spot * (1 + mult * sday * Math.sqrt(Math.max(0, tv - tNow) / SESSION));
+        var closeP = spot * (1 + mult * sday * Math.sqrt(left / SESSION));
         svg += '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="1.2" stroke-dasharray="' + dash + '"/>';
-        if (inR(endP)) svg += '<text x="826" y="' + (Y(endP) + 4).toFixed(1) + '" fill="' + col + '" style="' + sty + '">' + label + '</text>';
+        if (inR(endP) && tv > tNow) gxConeLabels.push('<text x="' + (X(tv) - 4).toFixed(1) + '" y="' + (Y(endP) + (mult > 0 ? -4 : 12)).toFixed(1) + '" fill="' + col +
+          '" text-anchor="end" style="' + sty + '">' + label + ' ' + closeP.toFixed(1) + '</text>');
       };
       cone(1, sig, "#29b6f6", "5 3", "68%"); cone(-1, sig, "#29b6f6", "5 3", "68%");
       cone(2, sig, "#5c6bc0", "1 3", "95%"); cone(-2, sig, "#5c6bc0", "1 3", "95%");
@@ -4425,6 +4447,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var cw = (PX1 - PX0) * step * 60 / SESSION, bw = Math.max(1, cw * 0.65);
     for (var b = 0; b <= ci; b++) {
       var k = disp[b], x = X(k.time - T0 + step * 30), up = k.close >= k.open, col = up ? "#00e676" : "#ff453a";
+      if (x < PX0 - 20 || x > PX1 + 20) continue;
       svg += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + Y(k.high).toFixed(1) + '" y2="' + Y(k.low).toFixed(1) + '" stroke="' + (up ? "#69f0ae" : "#ff7961") + '"/>' +
         '<rect x="' + (x - bw / 2).toFixed(1) + '" y="' + Math.min(Y(k.open), Y(k.close)).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' +
         Math.max(Math.abs(Y(k.open) - Y(k.close)), 1).toFixed(1) + '" fill="' + col + '"/>';
@@ -4467,7 +4490,9 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         svg += '<path d="' + path(ptsNow.map(function (p) { return [p.t, p[s[0]]]; }), 720, true) + '" fill="none" stroke="' + s[1] + '" stroke-width="1.3" stroke-dasharray="1 3"/>';
       });
     }
-    svg += '<line x1="' + X(tNow).toFixed(1) + '" x2="' + X(tNow).toFixed(1) + '" y1="56" y2="' + gridBottom + '" stroke="#ff2be0" stroke-dasharray="3 3"/>';
+    svg += '<line x1="' + X(tNow).toFixed(1) + '" x2="' + X(tNow).toFixed(1) + '" y1="56" y2="536" stroke="#ff2be0" stroke-dasharray="3 3"/>';
+    svg += gxConeLabels.join("") + '</g>';
+    if (tNow >= V0 && tNow <= V1 && paneOn) svg += '<line x1="' + X(tNow).toFixed(1) + '" x2="' + X(tNow).toFixed(1) + '" y1="566" y2="646" stroke="#ff2be0" stroke-dasharray="3 3"/>';
 
     // strike profile on the same price axis
     svg += '<line x1="' + PC + '" x2="' + PC + '" y1="56" y2="536" stroke="#3a2a3a"/>';
@@ -4528,7 +4553,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
 
     // lower pane
     if (paneOn) {
-      svg += '<rect x="60" y="566" width="760" height="80" fill="#0c0c14"/>';
+      svg += '<rect x="60" y="566" width="760" height="80" fill="#0c0c14"/><g clip-path="url(#gx-clip-pane)">';
       var sub = shown, pv = QQQ_CHART_VIEW.pane;
       svg += '<text x="60" y="560" fill="#8b8ba6" style="' + sty + '">' + (pv === "volume" ? "IEX VOLUME" : pv === "rsi" ? "RSI 14" : "ADL · IEX") + '</text>';
       if (pv === "volume") {
@@ -4552,6 +4577,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         });
         svg += '<path d="' + d + '" fill="none" stroke="#29b6f6" stroke-width="1.3"/>';
       }
+      svg += '</g>';
     }
     svg += '<text x="60" y="40" fill="#8b8ba6" style="' + sty + '">QQQ · ' + tf + ' · IEX</text>' +
       '<text x="845" y="40" fill="#8b8ba6" style="' + sty + '">' + (w === "both" ? "GEX · OI (wide) + VOL (thin)" : w === "vol" ? "GEX BY STRIKE · VOLUME" : "GEX BY STRIKE · OPEN INTEREST") + '</text>' +
@@ -4618,6 +4644,8 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var r = document.getElementById("gx-replay"), c = document.getElementById("gx-replay-clock");
     if (r) { r.max = Math.max(0, (window._gxTimes || []).length - 1); r.value = window._gxIdx || 0; }
     if (c) c.textContent = window._gxClockText || "";
+    var lb = document.querySelector('#gx-chart-block [data-gx="live"]');
+    if (lb) lb.setAttribute("aria-pressed", GX_VIEW.at === null ? "true" : "false");
   }
   document.addEventListener("click", function (ev) {
     var t = ev.target && ev.target.closest ? ev.target.closest("[data-gx]") : null;
@@ -4634,10 +4662,56 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     else if (a === "hist") GX_VIEW.hist = v;
     else if (a === "zoom") GX_VIEW.zoom = v;
     else if (a === "dots") GX_VIEW.dots = !GX_VIEW.dots;
+    else if (a === "tview") GX_VIEW.tview = v;
     gxSave();
+    // renderAllWidgets skips a widget that holds focus, so let go of the button first.
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     var y = window.scrollY;
     renderAllWidgets();
     window.scrollTo(0, y);
+  });
+  function gxPlotTime(ev) {
+    var svg = ev.target && ev.target.closest ? ev.target.closest("#gx-dyn svg") : null, V = window._gxView;
+    if (!svg || !V) return null;
+    var r = svg.getBoundingClientRect(), sx = (ev.clientX - r.left) * 1200 / r.width;
+    if (sx < 60 || sx > 820) return null;
+    return { svg: svg, sx: sx, t: V.V0 + (sx - 60) / 760 * (V.V1 - V.V0), V: V, scale: 1200 / r.width };
+  }
+  var gxRaf = 0;
+  function gxSoon() { if (gxRaf) return; gxRaf = requestAnimationFrame(function () { gxRaf = 0; gxRefresh(); }); }
+  function gxSetView(v0, v1) {
+    var span = Math.max(900, Math.min(23400, v1 - v0));
+    v0 = Math.max(0, Math.min(23400 - span, v0));
+    GX_VIEW.tview = { v0: v0, v1: v0 + span };
+  }
+  document.addEventListener("wheel", function (ev) {
+    var p = gxPlotTime(ev);
+    if (!p) return;
+    ev.preventDefault();
+    var f = ev.deltaY > 0 ? 1.18 : 1 / 1.18, V = p.V;
+    gxSetView(p.t - (p.t - V.V0) * f, p.t + (V.V1 - p.t) * f);
+    gxSoon();
+  }, { passive: false });
+  var gxDrag = null;
+  document.addEventListener("pointerdown", function (ev) {
+    var p = gxPlotTime(ev);
+    if (!p || ev.button !== 0) return;
+    gxDrag = { x: ev.clientX, V: { V0: p.V.V0, V1: p.V.V1 }, scale: p.scale, moved: false };
+  });
+  document.addEventListener("pointermove", function (ev) {
+    if (!gxDrag) return;
+    var dx = (ev.clientX - gxDrag.x) * gxDrag.scale;
+    if (Math.abs(dx) < 3 && !gxDrag.moved) return;
+    gxDrag.moved = true;
+    var dt = -dx / 760 * (gxDrag.V.V1 - gxDrag.V.V0);
+    gxSetView(gxDrag.V.V0 + dt, gxDrag.V.V1 + dt);
+    gxSoon();
+  });
+  document.addEventListener("pointerup", function () { gxDrag = null; });
+  document.addEventListener("dblclick", function (ev) {
+    if (!gxPlotTime(ev)) return;
+    GX_VIEW.tview = "fit";
+    gxRefresh();
   });
   document.addEventListener("input", function (ev) {
     var t = ev.target;
@@ -6619,7 +6693,10 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     }
 
     function cycle() {
-      if (document.hidden) return;  // skip refresh when tab is hidden
+      // Skip refreshes while hidden, but always load once so a page opened in a
+      // background tab is never left empty.
+      if (document.hidden && cycle.ran) return;
+      cycle.ran = true;
       loadCandleHistory();
       loadLiveGex();
       loadGexIntraday();
@@ -6648,11 +6725,16 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       Promise.all([fetchOne("QQQ"), fetchOne("TQQQ"), fetchOne("SQQQ")]).then(function () {
         var info = applyLive();
         if (idx === FULL.length - 1) (typeof updateMountedQqqQuote === "function" ? updateMountedQqqQuote : function(){})(FULL[FULL.length - 1]);
+        // GEX Chart v2: redraw the current candle and levels with the fresh quote.
+        if (idx === FULL.length - 1 && window._gxLast && document.getElementById("gx-dyn")) {
+          try { window._gxLast.M = qqqChartModel(window._gxLast.e); gxRefresh(); } catch (eGxQuote) {}
+        }
         stamp(info);
       });
     }
 
     cycle();                     // paint as soon as the page opens
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) cycle(); });
     setInterval(cycle, 60000);   // keep it fresh every 60s while the page is open
     setInterval(cycleQqq, 15000); // keep the QQQ chart quote aligned with the live price
   }
