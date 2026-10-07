@@ -71,6 +71,10 @@ CONTRACT_MULTIPLIER = 100
 GEX_DEALER_SIGN = 1
 GEX_LIVE_PATH = os.path.join("market-dash", "gex_live.json")
 GEX_INTRADAY_PATH = os.path.join("market-dash", "gex_intraday.json")
+# Per-minute strike profile (OI-weighted AND volume-weighted gamma) for the
+# GEXBot-style page: lets it show how positioning moves, not just where it is.
+GEX_FRAMES_PATH = os.path.join("market-dash", "gex_frames.json")
+GEX_FRAMES_CAP = 480
 AUCTION_LIVE_PATH = os.path.join("market-dash", "auction_live.json")
 
 # Intraday live-push: on GitHub Actions, push the live JSONs every few minutes
@@ -344,6 +348,74 @@ def build_snapshot_rows(opt_type="call", spot=None):
     return rows
 
 
+def fill_missing_greeks(call_rows, put_rows, spot):
+    """One IV per strike, so no contract drops out of GEX.
+
+    In-the-money quotes on the free feed often have a mid below intrinsic
+    (wide spreads), so no IV solves and the row used to carry no gamma: on
+    Oct 7 that was 392 of 2,880 call rows and 301 of 2,880 put rows, all in
+    the money. Standard practice: take each strike's IV from its
+    out-of-the-money side and use it for both the call and the put; where
+    neither side solves, read the smile in a straight line between the
+    nearest solved strikes (flat past the edges). Returns rows filled.
+    """
+    def f(v):
+        try:
+            return None if v in (None, "") else float(v)
+        except (TypeError, ValueError):
+            return None
+
+    sides = ((call_rows or [], True), (put_rows or [], False))
+    smile = {}
+    for rows, is_call in sides:
+        for r in rows:
+            iv, k = f(r.get("iv")), f(r.get("strike"))
+            if iv is None or k is None or iv <= 0:
+                continue
+            otm = k >= spot if is_call else k < spot
+            if otm or k not in smile:            # the out-of-the-money side wins
+                smile[k] = iv
+    if not smile:
+        return 0
+    ks = sorted(smile)
+
+    def iv_at(k):
+        if k in smile:
+            return smile[k]
+        lo = [x for x in ks if x < k]
+        hi = [x for x in ks if x > k]
+        if lo and hi:
+            a, b = lo[-1], hi[0]
+            return smile[a] + (smile[b] - smile[a]) * (k - a) / (b - a)
+        return smile[lo[-1]] if lo else smile[hi[0]]
+
+    filled = 0
+    for rows, is_call in sides:
+        for r in rows:
+            if r.get("iv") not in (None, ""):
+                continue
+            k = f(r.get("strike"))
+            if k is None or k <= 0:
+                continue
+            try:
+                now = datetime.datetime.strptime(r["run_time"], "%Y-%m-%d %H:%M:%S").replace(
+                    tzinfo=datetime.timezone.utc)
+            except (KeyError, TypeError, ValueError):
+                now = datetime.datetime.now(datetime.timezone.utc)
+            expiry = r.get("expiration") or now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+            T = time_to_expiry_years(now, expiry)
+            sigma = iv_at(k)
+            if not sigma or sigma <= 0:
+                continue
+            greeks = _call_greeks if is_call else _put_greeks
+            delta, gamma, theta, vega = greeks(spot, k, T, RISK_FREE_RATE, DIVIDEND_YIELD, sigma)
+            r.update({"iv": _round_or_blank(sigma, 4), "delta": _round_or_blank(delta, 4),
+                      "gamma": _round_or_blank(gamma, 5), "theta": _round_or_blank(theta, 4),
+                      "vega": _round_or_blank(vega, 4)})
+            filled += 1
+    return filled
+
+
 def output_path(opt_type="call"):
     # data/<trading date>/<am|pm>/qqq_greeks_<calls|puts>_<date>_<session>.csv
     # Calls and puts ALWAYS go to separate files — never the same CSV.
@@ -399,19 +471,28 @@ def compute_gex_live(call_rows, put_rows, spot):
         for r in rows:
             k = num(r.get("strike"))
             g = num(r.get("gamma"))
-            oi = num(r.get("open_interest"))
-            if k is None or g is None or not oi:
+            oi = num(r.get("open_interest")) or 0
+            vol = num(r.get("volume")) or 0
+            if k is None or g is None or (not oi and not vol):
                 continue
             oi = int(oi)
+            vol = int(vol)
             d = by.setdefault(k, {"strike": k, "call_gex": 0.0, "put_gex": 0.0,
                                   "call_oi": 0, "put_oi": 0, "dex": 0.0, "vex": 0.0,
                                   "tex": 0.0, "vannaex": 0.0, "charmex": 0.0,
-                                  "call_g": 0.0, "put_g": 0.0})
+                                  "call_g": 0.0, "put_g": 0.0,
+                                  "call_vol": 0, "put_vol": 0,
+                                  "call_gex_vol": 0.0, "put_gex_vol": 0.0})
             dollars = g * oi * unit
+            # Same dollar-gamma formula weighted by TODAY'S volume instead of
+            # yesterday's settled OI: this is the part that moves with the tape.
+            vol_dollars = g * vol * unit
             if is_call:
                 d["call_gex"] += dollars; d["call_oi"] += oi; d["call_g"] += g * oi
+                d["call_gex_vol"] += vol_dollars; d["call_vol"] += vol
             else:
                 d["put_gex"] -= dollars; d["put_oi"] += oi; d["put_g"] += g * oi
+                d["put_gex_vol"] -= vol_dollars; d["put_vol"] += vol
             de, ve, th = num(r.get("delta")), num(r.get("vega")), num(r.get("theta"))
             if de is not None:
                 d["dex"] += de * oi * CONTRACT_MULTIPLIER * spot
@@ -436,12 +517,15 @@ def compute_gex_live(call_rows, put_rows, spot):
     if not by:
         return {"error": "no usable rows for live GEX"}
 
-    strikes = sorted(by.values(), key=lambda x: x["strike"])
-    for s in strikes:
+    all_strikes = sorted(by.values(), key=lambda x: x["strike"])
+    for s in all_strikes:
         s["net_gex"] = (s["call_gex"] + s["put_gex"]) * GEX_DEALER_SIGN
+        s["net_gex_vol"] = (s["call_gex_vol"] + s["put_gex_vol"]) * GEX_DEALER_SIGN
         for key in ("call_gex", "put_gex", "net_gex", "dex", "vex", "tex",
-                    "vannaex", "charmex"):
+                    "vannaex", "charmex", "call_gex_vol", "put_gex_vol", "net_gex_vol"):
             s[key] = round(s[key], 2)
+    # OI-based levels use only strikes that carry OI, exactly as before.
+    strikes = [s for s in all_strikes if s["call_oi"] + s["put_oi"] > 0] or all_strikes
 
     net = round(sum(s["net_gex"] for s in strikes), 2)
     net_dex = round(sum(s["dex"] for s in strikes), 2)
@@ -468,6 +552,26 @@ def compute_gex_live(call_rows, put_rows, spot):
         flip = round(k, 2)
         method = "nearest-to-zero (no crossing in window)"
 
+    # Volume-weighted structure (today's flow): its own flip and major levels.
+    flip_vol, run_v, prev_v = None, 0.0, 0.0
+    for i, s in enumerate(all_strikes):
+        prev_v = run_v
+        run_v += s["net_gex_vol"]
+        if i and ((prev_v < 0 <= run_v) or (prev_v > 0 >= run_v)):
+            a, b = all_strikes[i - 1]["strike"], s["strike"]
+            frac = abs(prev_v) / (abs(prev_v) + abs(run_v)) if (prev_v or run_v) else 0.5
+            flip_vol = round(a + (b - a) * frac, 2)
+    has_vol = any(s["call_vol"] + s["put_vol"] for s in all_strikes)
+    net_vol = round(sum(s["net_gex_vol"] for s in all_strikes), 2)
+    vol_levels = {}
+    if has_vol:
+        vol_levels = {
+            "major_call_gamma_vol": max(all_strikes, key=lambda s: s["call_gex_vol"])["strike"],
+            "major_put_gamma_vol": min(all_strikes, key=lambda s: s["put_gex_vol"])["strike"],
+            "major_pos_vol": max(all_strikes, key=lambda s: s["net_gex_vol"])["strike"],
+            "major_neg_vol": min(all_strikes, key=lambda s: s["net_gex_vol"])["strike"],
+        }
+
     call_wall = max(strikes, key=lambda s: s["call_gex"])["strike"]
     # Put wall = strike with the most negative NET dealer gamma (max short gamma
     # = the real support level). Using raw put_gex snapped it to the ATM strike,
@@ -487,16 +591,85 @@ def compute_gex_live(call_rows, put_rows, spot):
                    if (spot > flip if method == "zero crossing" else net > 0)
                    else "NEGATIVE GAMMA"),
         "distance_to_flip_pct": round((spot - flip) / spot * 100, 2) if flip else None,
-        "levels": {"call_wall": call_wall, "put_wall": put_wall, "highest_oi_strike": top_oi},
+        "levels": {"call_wall": call_wall, "put_wall": put_wall, "highest_oi_strike": top_oi,
+                   **vol_levels},
+        "net_gex_vol": net_vol if has_vol else None,
+        "gamma_flip_vol": flip_vol if has_vol else None,
         "strikes": [{"strike": s["strike"], "call_gex": s["call_gex"], "put_gex": s["put_gex"],
                      "net_gex": s["net_gex"], "call_oi": s["call_oi"], "put_oi": s["put_oi"],
                      "dex": s["dex"], "vex": s["vex"], "tex": s["tex"],
-                     "vannaex": s["vannaex"], "charmex": s["charmex"]} for s in strikes],
+                     "vannaex": s["vannaex"], "charmex": s["charmex"],
+                     "call_vol": s["call_vol"], "put_vol": s["put_vol"],
+                     "call_gex_vol": s["call_gex_vol"], "put_gex_vol": s["put_gex_vol"],
+                     "net_gex_vol": s["net_gex_vol"]} for s in all_strikes],
         "contracts_used": len(call_rows) + len(put_rows),
         "dealer_convention": "dealers long call gamma, short put gamma",
-        "source": "5-min greeks logger (calls + puts, 0DTE)",
+        "source": "1-min greeks logger (calls + puts, 0DTE)",
         "generated_utc": now_utc.strftime("%Y-%m-%d %H:%M:%S"),
     }
+
+
+# Wall steadiness: a rival strike must beat the current wall by 10% for 3
+# straight snapshots before the wall moves. On Oct 7 the call wall swapped
+# between 755 and 762 21 times in 96 minutes; with this rule it moved once.
+WALL_SWITCH_EDGE = 1.10
+WALL_SWITCH_SNAPSHOTS = 3
+_WALLS = {"date": None, "call": None, "put": None, "call_try": (None, 0), "put_try": (None, 0)}
+
+
+def _seed_walls(session_date):
+    """Start from the last published walls so a new run doesn't jump."""
+    try:
+        with open(GEX_INTRADAY_PATH) as f:
+            hist = json.load(f)
+        if hist.get("session_date") == session_date and hist.get("points"):
+            last = hist["points"][-1]
+            return last.get("call_wall"), last.get("put_wall")
+    except (OSError, ValueError, TypeError, AttributeError):
+        pass
+    return None, None
+
+
+def stabilize_walls(gx):
+    """Hold call/put walls through near-ties. Raw picks stay in levels.*_raw."""
+    if not gx or gx.get("error"):
+        return gx
+    levels = gx.setdefault("levels", {})
+    strikes = gx.get("strikes") or []
+    try:
+        stamp = datetime.datetime.strptime(gx["generated_utc"], "%Y-%m-%d %H:%M:%S").replace(
+            tzinfo=datetime.timezone.utc)
+    except (KeyError, TypeError, ValueError):
+        stamp = datetime.datetime.now(datetime.timezone.utc)
+    day = stamp.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+    if _WALLS["date"] != day:
+        call0, put0 = _seed_walls(day)
+        _WALLS.update({"date": day, "call": call0, "put": put0,
+                       "call_try": (None, 0), "put_try": (None, 0)})
+    sides = (
+        ("call", "call_wall", {s["strike"]: s["call_gex"] for s in strikes},
+         lambda new, cur: new > 0 and new >= WALL_SWITCH_EDGE * cur),
+        ("put", "put_wall", {s["strike"]: s["net_gex"] for s in strikes},
+         lambda new, cur: new < 0 and new <= WALL_SWITCH_EDGE * cur),
+    )
+    for side, key, vals, beats in sides:
+        raw, cur = levels.get(key), _WALLS[side]
+        levels[key + "_raw"] = raw
+        cand, n = _WALLS[side + "_try"]
+        if raw is None or cur is None or cur not in vals or raw == cur:
+            held, cand, n = raw, None, 0
+        elif beats(vals[raw], vals[cur]):
+            n = n + 1 if cand == raw else 1
+            cand = raw
+            if n >= WALL_SWITCH_SNAPSHOTS:
+                held, cand, n = raw, None, 0
+            else:
+                held = cur
+        else:
+            held, cand, n = cur, None, 0
+        _WALLS[side], _WALLS[side + "_try"] = held, (cand, n)
+        levels[key] = held
+    return gx
 
 
 def write_gex_live(gx):
@@ -590,6 +763,59 @@ def append_gex_intraday(gx):
     os.replace(tmp, GEX_INTRADAY_PATH)
 
 
+def append_gex_frame(gx):
+    """Append one per-minute strike profile to gex_frames.json.
+
+    Each frame keeps net gamma per strike weighted by OI and by volume, in
+    $ thousands, so the page can replay the day and measure how fast each
+    strike's gamma changed over 1/5/10/15/30 minutes.
+    """
+    if not gx or gx.get("error") or not gx.get("strikes"):
+        return
+    try:
+        stamp = datetime.datetime.strptime(gx["generated_utc"], "%Y-%m-%d %H:%M:%S")
+        stamp = stamp.replace(tzinfo=datetime.timezone.utc)
+    except (KeyError, TypeError, ValueError):
+        stamp = datetime.datetime.now(datetime.timezone.utc)
+    t = int(stamp.timestamp())
+    session_date = datetime.datetime.fromtimestamp(
+        t, ZoneInfo("America/New_York")).date().isoformat()
+
+    def k(v):
+        try:
+            return int(round(float(v) / 1000.0))
+        except (TypeError, ValueError):
+            return 0
+
+    frame = {
+        "t": t,
+        "s": gx.get("spot"),
+        "f": gx.get("gamma_flip") if gx.get("gamma_flip_method") == "zero crossing" else None,
+        "fv": gx.get("gamma_flip_vol"),
+        # [strike, net gamma by OI ($K), net gamma by volume ($K), call vol, put vol]
+        "d": [[r.get("strike"), k(r.get("net_gex")), k(r.get("net_gex_vol")),
+               int(r.get("call_vol") or 0), int(r.get("put_vol") or 0)]
+              for r in gx["strikes"]],
+    }
+    doc = {"symbol": SYMBOL, "session_date": session_date, "units": "USD thousands", "frames": []}
+    try:
+        with open(GEX_FRAMES_PATH) as f:
+            existing = json.load(f)
+        if existing.get("session_date") == session_date and isinstance(existing.get("frames"), list):
+            doc = existing
+    except (OSError, ValueError, TypeError):
+        pass
+    by_minute = {int(fr.get("t", 0)) // 60: fr for fr in doc["frames"] if fr.get("t")}
+    by_minute[t // 60] = frame
+    doc["frames"] = sorted(by_minute.values(), key=lambda fr: fr["t"])[-GEX_FRAMES_CAP:]
+    doc["updated_utc"] = gx.get("generated_utc")
+    os.makedirs(os.path.dirname(GEX_FRAMES_PATH), exist_ok=True)
+    tmp = GEX_FRAMES_PATH + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(doc, f, separators=(",", ":"))
+    os.replace(tmp, GEX_FRAMES_PATH)
+
+
 # ---------- Auction metrics (VWAP, A/D line, opening range, volume) ----------
 # All computed from QQQ 1-minute bars on Alpaca's FREE IEX feed. IEX is a SUBSET
 # of the consolidated tape, so VWAP/volume here are IEX-only reads, not the exact
@@ -601,9 +827,13 @@ def get_qqq_minute_bars():
     now_ny = datetime.datetime.now(ny)
     session_open = now_ny.replace(hour=9, minute=30, second=0, microsecond=0)
     start_iso = session_open.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Stop at the 3:59 PM bar: after-hours IEX prints were leaking into the
+    # candles, VWAP and A/D after 4:00 PM.
+    session_close = min(now_ny, now_ny.replace(hour=15, minute=59, second=59, microsecond=0))
+    end_iso = session_close.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     bars, page_token = [], None
     for _ in range(12):                       # hard cap on pagination (safety)
-        params = {"timeframe": "1Min", "start": start_iso,
+        params = {"timeframe": "1Min", "start": start_iso, "end": end_iso,
                   "feed": "iex", "limit": 10000, "adjustment": "raw", "sort": "asc"}
         if page_token:
             params["page_token"] = page_token
@@ -740,13 +970,15 @@ def _git(*args):
 def push_live_snapshots():
     """Publish without changing the checkout where the logger writes CSVs."""
     if not CI_PUSH:
-        return
+        return False
     try:
         from publish_history import publish, LIVE_PATHS
         paths = LIVE_PATHS + [output_path(kind) for kind in ("call", "put")]
         publish(os.path.dirname(os.path.abspath(__file__)), paths)
+        return True
     except Exception as exc:
-        print(f"Live publish failed; keeping local CSVs for final backup and retry: {exc}", flush=True)
+        print(f"Live publish failed; retrying next minute: {exc}", flush=True)
+        return False
 
 
 def snapshot_and_write(spot):
@@ -755,13 +987,28 @@ def snapshot_and_write(spot):
     for t in ("call", "put"):
         rows = build_snapshot_rows(t, spot=spot)
         if rows:
-            write_rows(rows, t)
             got[t] = rows
+    try:
+        filled = fill_missing_greeks(got.get("call"), got.get("put"), spot)
+        if filled:
+            print(f"Filled IV/greeks on {filled} in-the-money rows from the smile")
+    except Exception as e:
+        print(f"IV fill skipped (continuing): {e}")
+    for t, rows in got.items():
+        write_rows(rows, t)
     try:
         if got.get("call") or got.get("put"):
             live_gex = compute_gex_live(got.get("call", []), got.get("put", []), spot)
+            try:
+                stabilize_walls(live_gex)
+            except Exception as e:
+                print(f"Wall steadiness skipped (continuing): {e}")
             write_gex_live(live_gex)
             append_gex_intraday(live_gex)
+            try:
+                append_gex_frame(live_gex)
+            except Exception as e:
+                print(f"GEX frames skipped (continuing): {e}")
     except Exception as e:
         print(f"live GEX skipped (continuing): {e}")
 
@@ -805,6 +1052,7 @@ def main():
           f"(window +/-{WINDOW:g}, calls + puts to separate files).")
     start = time.monotonic()
     last_push = start
+    retry_push = False
     count = 0
     while time.monotonic() - start < DURATION_SECONDS:
         try:
@@ -813,12 +1061,17 @@ def main():
         except Exception as e:
             print(f"Snapshot error (continuing): {e}")
         # Push the live JSONs mid-run so the dashboard is fresh DURING the window.
-        if CI_PUSH and time.monotonic() - last_push >= LIVE_PUSH_SECONDS:
-            push_live_snapshots()
-            last_push = time.monotonic()
+        # A failed push is retried on the very next snapshot, not 5 minutes later.
+        if CI_PUSH and (retry_push or time.monotonic() - last_push >= LIVE_PUSH_SECONDS):
+            if push_live_snapshots():
+                last_push, retry_push = time.monotonic(), False
+            else:
+                retry_push = True
         if time.monotonic() - start >= DURATION_SECONDS:
             break
-        time.sleep(INTERVAL_SECONDS)
+        # Sleep to 2 s past the next interval boundary (:02 each minute), so a
+        # slow snapshot never pushes the next one into the following minute.
+        time.sleep(max(1.0, INTERVAL_SECONDS - ((time.time() - 2) % INTERVAL_SECONDS)))
     print(f"Session done: {count} snapshots written (calls + puts, separate files).")
 
 

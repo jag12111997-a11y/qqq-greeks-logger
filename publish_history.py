@@ -10,7 +10,7 @@ from scripts.sync_local_history import merge_csv
 
 LIVE_PATHS = ['market-dash/gex_live.json', 'market-dash/gex_intraday.json',
               'market-dash/auction_live.json', 'market-dash/qqq_candle_history.json',
-              'market-dash/options_latest.json']
+              'market-dash/options_latest.json', 'market-dash/gex_frames.json']
 
 
 def timestamp(raw):
@@ -23,6 +23,36 @@ def timestamp(raw):
         return stamp.replace(tzinfo=datetime.timezone.utc) if stamp.tzinfo is None else stamp
     except (ValueError, TypeError, AttributeError):
         return None
+
+
+# Per-minute lists that two overlapping runs (am until 12:25 PT, pm from
+# 12:15 PT) both append to: merge them minute by minute instead of letting
+# the newer file erase the other run's minutes.
+MINUTE_LISTS = {'market-dash/gex_intraday.json': ('points', 'time'),
+                'market-dash/gex_frames.json': ('frames', 't')}
+
+
+def merge_minutes(previous, raw, list_key, time_key):
+    try:
+        old, new = json.loads(previous), json.loads(raw)
+    except ValueError:
+        return raw
+    if not isinstance(old, dict) or not isinstance(new, dict):
+        return raw
+    if old.get('session_date') != new.get('session_date'):
+        older = timestamp(previous) and timestamp(raw) and timestamp(previous) > timestamp(raw)
+        return previous if older else raw
+    rows = {}
+    for doc in (old, new):  # the local (new) capture wins a shared minute
+        for row in doc.get(list_key) or []:
+            if isinstance(row, dict) and row.get(time_key):
+                rows[int(row[time_key]) // 60] = row
+    merged = dict(new)
+    merged[list_key] = [rows[m] for m in sorted(rows)]
+    stamps = [s for s in (old.get('updated_utc'), new.get('updated_utc')) if s]
+    if stamps:
+        merged['updated_utc'] = max(stamps)
+    return json.dumps(merged, separators=(',', ':'))
 
 
 def publish(repo, paths, attempts=5):
@@ -76,6 +106,8 @@ def publish(repo, paths, attempts=5):
                 previous = target.read_text() if target.exists() else ''
                 if name.startswith('data/') and name.endswith('.csv'):
                     raw = merge_csv(previous, raw)
+                elif name in MINUTE_LISTS and previous:
+                    raw = merge_minutes(previous, raw, *MINUTE_LISTS[name])
                 elif previous and timestamp(previous) and timestamp(raw) and timestamp(previous) > timestamp(raw):
                     continue
                 target.parent.mkdir(parents=True, exist_ok=True)
