@@ -4265,6 +4265,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
 
   function gxDynamic(e, M) {
     var day = QQQ_SESSION.date, tf = window._gxTf || "1m", step = { "1m": 1, "5m": 5, "15m": 15 }[tf] || 1;
+    if (window._gxDay !== day) { if (window._gxDay) { GX_VIEW.tview = "fit"; GX_VIEW.yv = null; GX_VIEW.at = null; } window._gxDay = day; }
     var T0 = gxSessionStart(day), SESSION = 23400;
     var PX0 = 60, PX1 = 820, PY0 = 56, PY1 = 536, PC = 985, PH = 136, LY0 = 566, LY1 = 646;
     var V0 = 0, V1 = SESSION;
@@ -4364,6 +4365,8 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       pad = Math.max(1, (hi - lo) * 0.06);
     }
     var KB = lo - pad, KT = hi + pad;
+    if (GX_VIEW.yv && isFinite(GX_VIEW.yv.lo) && isFinite(GX_VIEW.yv.hi) && GX_VIEW.yv.hi > GX_VIEW.yv.lo) { KB = GX_VIEW.yv.lo; KT = GX_VIEW.yv.hi; }
+    window._gxY = { KB: KB, KT: KT, vbH: QQQ_CHART_VIEW.pane !== "none" ? 672 : 572 };
     function Y(k) { return PY0 + ((KT - k) / (KT - KB)) * (PY1 - PY0); }
     function inR(k) { return k != null && isFinite(k) && k >= KB && k <= KT; }
     var gstep = [0.5, 1, 2, 5, 10, 20].filter(function (s) { return (KT - KB) / s <= 12; })[0] || 20;
@@ -4632,7 +4635,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
           : '<div style="font-size:11.5px;color:#ffd600">Waiting for logger: needs per-minute strike snapshots (gex_frames.json).</div>') + '</div>';
 
     return '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start">' +
-      '<div style="flex:999 1 560px;min-width:0"><svg viewBox="0 0 1200 ' + vbH + '" width="100%" style="display:block" role="img" ' +
+      '<div style="flex:999 1 560px;min-width:0"><svg viewBox="0 0 1200 ' + vbH + '" width="100%" style="display:block;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair" role="img" ' +
         'aria-label="QQQ candles with zero gamma, walls, expected ranges and a strike GEX profile on the same price axis">' + svg + '</svg></div>' +
       '<div style="flex:1 1 250px;min-width:0;display:flex;flex-direction:column;gap:8px">' + side + '</div></div>';
   }
@@ -4660,9 +4663,9 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     if (a === "live") { GX_VIEW.at = null; gxRefresh(); return; }
     if (a === "w") GX_VIEW.w = v;
     else if (a === "hist") GX_VIEW.hist = v;
-    else if (a === "zoom") GX_VIEW.zoom = v;
+    else if (a === "zoom") { GX_VIEW.zoom = v; GX_VIEW.yv = null; }
     else if (a === "dots") GX_VIEW.dots = !GX_VIEW.dots;
-    else if (a === "tview") GX_VIEW.tview = v;
+    else if (a === "tview") { GX_VIEW.tview = v; GX_VIEW.yv = null; }
     gxSave();
     // renderAllWidgets skips a widget that holds focus, so let go of the button first.
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -4670,49 +4673,90 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     renderAllWidgets();
     window.scrollTo(0, y);
   });
-  function gxPlotTime(ev) {
-    var svg = ev.target && ev.target.closest ? ev.target.closest("#gx-dyn svg") : null, V = window._gxView;
-    if (!svg || !V) return null;
-    var r = svg.getBoundingClientRect(), sx = (ev.clientX - r.left) * 1200 / r.width;
-    if (sx < 60 || sx > 820) return null;
-    return { svg: svg, sx: sx, t: V.V0 + (sx - 60) / 760 * (V.V1 - V.V0), V: V, scale: 1200 / r.width };
+  // Chart gestures (TradingView-style): drag the plot to pan time and price,
+  // drag the price axis or the strike panel to stretch price, drag the time
+  // axis to stretch time, scroll to zoom time (shift or over the price axis
+  // zooms price), double-click to reset. Capture phase so nothing upstream
+  // can swallow them; works with mouse, trackpad, pen and touch.
+  function gxHit(ev) {
+    var svg = ev.target && ev.target.closest ? ev.target.closest("#gx-dyn svg") : null, V = window._gxView, G = window._gxY;
+    if (!svg || !V || !G) return null;
+    var r = svg.getBoundingClientRect(), k = 1200 / r.width;
+    var sx = (ev.clientX - r.left) * k, sy = (ev.clientY - r.top) * k, zone = null;
+    if (sx >= 60 && sx <= 820 && sy >= 56 && sy <= 536) zone = "plot";
+    else if (sx >= 60 && sx <= 820 && sy > 536) zone = "xaxis";
+    else if (sy >= 56 && sy <= 536 && (sx < 60 || sx > 820)) zone = "yaxis";
+    if (!zone) return null;
+    return { zone: zone, sx: sx, sy: sy, k: k, V: { V0: V.V0, V1: V.V1 }, G: { KB: G.KB, KT: G.KT },
+             t: V.V0 + (Math.min(820, Math.max(60, sx)) - 60) / 760 * (V.V1 - V.V0),
+             p: G.KT - (Math.min(536, Math.max(56, sy)) - 56) / 480 * (G.KT - G.KB) };
   }
   var gxRaf = 0;
   function gxSoon() { if (gxRaf) return; gxRaf = requestAnimationFrame(function () { gxRaf = 0; gxRefresh(); }); }
   function gxSetView(v0, v1) {
-    var span = Math.max(900, Math.min(23400, v1 - v0));
+    var span = Math.max(600, Math.min(23400, v1 - v0));
     v0 = Math.max(0, Math.min(23400 - span, v0));
     GX_VIEW.tview = { v0: v0, v1: v0 + span };
   }
+  function gxSetY(lo, hi) {
+    var span = Math.max(0.2, hi - lo), mid = (lo + hi) / 2;
+    GX_VIEW.yv = { lo: mid - span / 2, hi: mid + span / 2 };
+  }
   document.addEventListener("wheel", function (ev) {
-    var p = gxPlotTime(ev);
-    if (!p) return;
+    var h = gxHit(ev);
+    if (!h) return;
     ev.preventDefault();
-    var f = ev.deltaY > 0 ? 1.18 : 1 / 1.18, V = p.V;
-    gxSetView(p.t - (p.t - V.V0) * f, p.t + (V.V1 - p.t) * f);
+    var V = h.V, G = h.G;
+    var dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaY, dx = ev.deltaMode === 1 ? ev.deltaX * 16 : ev.deltaX;
+    if (h.zone === "yaxis" || ev.shiftKey) {
+      var fy = Math.exp((dy || dx) * 0.0025);
+      gxSetY(h.p - (h.p - G.KB) * fy, h.p + (G.KT - h.p) * fy);
+    } else if (!ev.ctrlKey && Math.abs(dx) > Math.abs(dy)) {
+      var dt = dx / 760 * (V.V1 - V.V0);
+      gxSetView(V.V0 + dt, V.V1 + dt);
+    } else {
+      var fx = Math.exp(dy * (ev.ctrlKey ? 0.01 : 0.0025));
+      gxSetView(h.t - (h.t - V.V0) * fx, h.t + (V.V1 - h.t) * fx);
+    }
     gxSoon();
-  }, { passive: false });
+  }, { passive: false, capture: true });
   var gxDrag = null;
   document.addEventListener("pointerdown", function (ev) {
-    var p = gxPlotTime(ev);
-    if (!p || ev.button !== 0) return;
-    gxDrag = { x: ev.clientX, V: { V0: p.V.V0, V1: p.V.V1 }, scale: p.scale, moved: false };
-  });
+    if (ev.button !== 0 && ev.pointerType === "mouse") return;
+    var h = gxHit(ev);
+    if (!h) return;
+    ev.preventDefault();
+    gxDrag = { h: h, x: ev.clientX, y: ev.clientY, moved: false, id: ev.pointerId };
+  }, true);
   document.addEventListener("pointermove", function (ev) {
-    if (!gxDrag) return;
-    var dx = (ev.clientX - gxDrag.x) * gxDrag.scale;
-    if (Math.abs(dx) < 3 && !gxDrag.moved) return;
+    if (!gxDrag || ev.pointerId !== gxDrag.id) return;
+    var h = gxDrag.h, dx = (ev.clientX - gxDrag.x) * h.k, dy = (ev.clientY - gxDrag.y) * h.k;
+    if (!gxDrag.moved && Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
     gxDrag.moved = true;
-    var dt = -dx / 760 * (gxDrag.V.V1 - gxDrag.V.V0);
-    gxSetView(gxDrag.V.V0 + dt, gxDrag.V.V1 + dt);
+    ev.preventDefault();
+    var V = h.V, G = h.G;
+    if (h.zone === "plot") {
+      var dt = -dx / 760 * (V.V1 - V.V0), dp = dy / 480 * (G.KT - G.KB);
+      gxSetView(V.V0 + dt, V.V1 + dt);
+      gxSetY(G.KB + dp, G.KT + dp);
+    } else if (h.zone === "yaxis") {
+      var fy = Math.exp(dy * 0.006), mid = (G.KB + G.KT) / 2;
+      gxSetY(mid - (mid - G.KB) * fy, mid + (G.KT - mid) * fy);
+    } else {
+      var fx = Math.exp(-dx * 0.006), c = (V.V0 + V.V1) / 2;
+      gxSetView(c - (c - V.V0) * fx, c + (V.V1 - c) * fx);
+    }
     gxSoon();
-  });
-  document.addEventListener("pointerup", function () { gxDrag = null; });
+  }, { passive: false, capture: true });
+  function gxEnd() { gxDrag = null; }
+  document.addEventListener("pointerup", gxEnd, true);
+  document.addEventListener("pointercancel", gxEnd, true);
   document.addEventListener("dblclick", function (ev) {
-    if (!gxPlotTime(ev)) return;
-    GX_VIEW.tview = "fit";
+    if (!gxHit(ev)) return;
+    ev.preventDefault();
+    GX_VIEW.tview = "fit"; GX_VIEW.yv = null;
     gxRefresh();
-  });
+  }, true);
   document.addEventListener("input", function (ev) {
     var t = ev.target;
     if (!t || t.id !== "gx-replay") return;
