@@ -1,7 +1,8 @@
 # ============================================================
 # QQQ Greeks Logger — MIDDAY burst
 # ============================================================
-# 12:15-1:30 PM Pacific: one snapshot every 1 minute, window +/-$7.
+# 12:15-1:30 PM Pacific: one snapshot every 1 minute, window +/-$15
+# (same strikes as the morning run, so the chart's profile doesn't shrink).
 #
 # GitHub cron can't fire every minute, so this ONE job starts at
 # 12:15 and loops internally every 60 seconds for 75 minutes.
@@ -55,13 +56,13 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run logger (12:15-1:30 PT, every 1 min, +/-$7)
+      - name: Run logger (12:15-1:30 PT, every 1 min, +/-$15)
         if: steps.guard.outputs.run == 'true'
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
           SESSION: 'pm'
-          WINDOW: '7'
+          WINDOW: '15'
           INTERVAL_SECONDS: '60'
           DURATION_SECONDS: '4500'
         run: python qqq_greeks_logger_alpaca.py

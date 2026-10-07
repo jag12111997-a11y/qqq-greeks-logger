@@ -51,6 +51,7 @@ jobs:
           git add market-dash/gex_live.json market-dash/gex_intraday.json market-dash/auction_live.json
           if [ -f market-dash/qqq_candle_history.json ]; then git add market-dash/qqq_candle_history.json; fi
           if [ -f market-dash/options_latest.json ]; then git add market-dash/options_latest.json; fi
+          if [ -f market-dash/gex_frames.json ]; then git add market-dash/gex_frames.json; fi
           git diff --cached --quiet && exit 0
           git commit -m "Refresh live QQQ chart $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           # Abort any stuck rebase left over from a previous attempt
