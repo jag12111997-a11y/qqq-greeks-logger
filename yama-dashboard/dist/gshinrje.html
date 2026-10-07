@@ -4110,7 +4110,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   // "All history" and 1H+ keep the original chart. Per-minute volume GEX,
   // change dots and max change light up once market-dash/gex_frames.json exists.
   var GX_SHOW_DEFAULT = { xhair: true, zg: true, cw: true, pw: true, mag: true, bars: true, dots: true,
-    sigma: true, garch: true, spot: true, scheme: "gexbot", ctype: "candles" };
+    sigma: true, garch: true, spot: true, scheme: "gexbot", ctype: "candles", emStyle: "cone" };
   var GX_VIEW = { w: "vol", hist: "smooth", zoom: "wide", at: null, tview: "fit", yv: null,
     side: true, settings: false, speed: 1, playing: false, show: JSON.parse(JSON.stringify(GX_SHOW_DEFAULT)) };
   try {
@@ -4124,6 +4124,14 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       if (typeof _gv.show[k] === typeof GX_SHOW_DEFAULT[k]) GX_VIEW.show[k] = _gv.show[k];
     });
   } catch (eGxView) {}
+  try {
+    if (!localStorage.getItem("md:gx-em-cone-v1")) {
+      QQQ_LAYERS.ranges = true;
+      GX_VIEW.show.emStyle = "cone";
+      localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS));
+      localStorage.setItem("md:gx-em-cone-v1", "1");
+    }
+  } catch (eGxEm) {}
   function gxSave() {
     try { localStorage.setItem("md:gx-view2", JSON.stringify({ w: GX_VIEW.w, hist: GX_VIEW.hist, zoom: GX_VIEW.zoom,
       side: GX_VIEW.side, speed: GX_VIEW.speed, show: GX_VIEW.show })); } catch (eGxSave) {}
@@ -4222,7 +4230,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     function icon(path) { return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>'; }
     var chartBox = '<div style="flex:999 1 560px;min-width:0;position:relative;background:' + GXC.bg + '">' +
       '<div id="gx-dyn">' + D.chart + '</div>' +
-      '<div style="' + tb + '">' +
+      '<div style="' + tb + ';opacity:.4;transition:opacity .15s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.4" onfocusin="this.style.opacity=1" onfocusout="this.style.opacity=.4">' +
         '<button type="button" data-gx="side" aria-label="' + (GX_VIEW.side ? "Hide sidebar" : "Show sidebar") + '" title="' + (GX_VIEW.side ? "Hide sidebar" : "Show sidebar") + '" style="' + ib + '">' +
           icon(GX_VIEW.side ? '<path d="M9 6l6 6-6 6"/>' : '<path d="M15 6l-6 6 6 6"/>') + '</button>' +
         '<button type="button" data-gx="fs" aria-label="Full screen" title="Full screen" style="' + ib + '">' + icon('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>') + '</button>' +
@@ -4455,6 +4463,29 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     if (QQQ_LAYERS.flow) [["van", GXC.van], ["chm", GXC.chm], ["tht", GXC.tht]].forEach(function (s) {
       svg += '<path d="' + path(ptsNow.map(function (p) { return [p.t, p[s[0]]]; }), 720, true) + '" fill="none" stroke="' + s[1] + '" stroke-width="1.2" stroke-dasharray="2 3"/>';
     });
+    // expected-move cone: opens from the current price toward the close ("<")
+    var coneTags = [];
+    if (QQQ_LAYERS.ranges && left > 0 && sig && S.emStyle === "cone") {
+      var tEnd = Math.min(V1, SESSION);
+      var cone = function (mult, sday, col, dash, wdt, label) {
+        var d = "";
+        for (var c2 = 0; c2 <= 24; c2++) {
+          var tt = tNow + (SESSION - tNow) * c2 / 24, pr = spot * (1 + mult * sday * Math.sqrt((tt - tNow) / SESSION));
+          d += (c2 ? "L" : "M") + X(tt).toFixed(1) + " " + Y(pr).toFixed(1);
+        }
+        svg += '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + wdt + '" stroke-dasharray="' + dash + '"/>';
+        if (tEnd > tNow) coneTags.push({ v: spot * (1 + mult * sday * Math.sqrt((tEnd - tNow) / SESSION)), col: col,
+          label: label + " " + (spot * (1 + mult * sday * Math.sqrt(left / SESSION))).toFixed(2) });
+      };
+      if (S.sigma) {
+        cone(2, sig, "#5c6bc0", "1 3", 1.3, "95%"); cone(-2, sig, "#5c6bc0", "1 3", 1.3, "95%");
+        cone(1, sig, "#29b6f6", "5 3", 1.5, "68%"); cone(-1, sig, "#29b6f6", "5 3", 1.5, "68%");
+      }
+      if (S.garch && isFinite(cvol) && cvol > 0) {
+        var gDay = cvol / Math.sqrt(252) / 100;
+        cone(1, gDay, GXC.garch, "4 4", 1.3, "G"); cone(-1, gDay, GXC.garch, "4 4", 1.3, "G");
+      }
+    }
     if (tNow >= V0 && tNow <= V1) svg += '<line x1="' + X(tNow).toFixed(1) + '" x2="' + X(tNow).toFixed(1) + '" y1="' + PY0 + '" y2="' + PY1 + '" stroke="' + GXC.spot + '" stroke-width="1"/>';
     svg += '</g>';
 
@@ -4504,7 +4535,11 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       if (!off) svg += line(y, col, dash, 1.1);
       sideArr.push({ y: y, col: col, txt: txt || "#000", label: (off ? (v > KT ? "↑ " : "↓ ") : "") + label });
     }
-    if (QQQ_LAYERS.ranges && sigLeft && left > 0) {
+    coneTags.forEach(function (c) {
+      var off = !inR(c.v);
+      rightPills.push({ y: off ? (c.v > KT ? PY0 + 9 : PY1 - 9) : Y(c.v), col: c.col, txt: c.col === "#5c6bc0" ? "#fff" : "#000", label: (off ? (c.v > KT ? "↑ " : "↓ ") : "") + c.label });
+    });
+    if (QQQ_LAYERS.ranges && sigLeft && left > 0 && S.emStyle !== "cone") {
       if (S.sigma) {
         lvl(spot * (1 + 2 * sigLeft), "#5f6368", "3 5", "+2σ " + (spot * (1 + 2 * sigLeft)).toFixed(2), rightPills, "#fff");
         lvl(spot * (1 - 2 * sigLeft), "#5f6368", "3 5", "−2σ " + (spot * (1 - 2 * sigLeft)).toFixed(2), rightPills, "#fff");
@@ -4628,6 +4663,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         rowOf("Chart type", optGx("ctype", "candles", "Candles", S.ctype === "candles" && QQQ_CHART_VIEW.mode === "raw") +
           '<button type="button" data-qqq-mode="ha" aria-pressed="' + (QQQ_CHART_VIEW.mode === "ha" ? "true" : "false") + '" data-gx-also="candles" style="flex:1;padding:6px 4px;border:1px solid #333;background:' + (QQQ_CHART_VIEW.mode === "ha" && S.ctype === "candles" ? "#2b2f36" : "transparent") + ';color:' + (QQQ_CHART_VIEW.mode === "ha" && S.ctype === "candles" ? "#8ab4f8" : "#e8eaed") + ';cursor:pointer;font:12px ' + GX_FONT + ';border-radius:5px">Heikin-Ashi</button>' +
           optGx("ctype", "line", "Line", S.ctype === "line")) +
+        rowOf("Expected move", optGx("em", "cone", "Cone  <", S.emStyle === "cone") + optGx("em", "lines", "Flat lines", S.emStyle !== "cone")) +
         rowOf("Candle colors", optGx("scheme", "gexbot", "Blue / gray", S.scheme === "gexbot") + optGx("scheme", "classic", "Green / red", S.scheme === "classic")) +
         rowOf("Lower pane", opt("data-qqq-pane", "none", "Off", QQQ_CHART_VIEW.pane === "none") + opt("data-qqq-pane", "volume", "Volume", QQQ_CHART_VIEW.pane === "volume") +
           opt("data-qqq-pane", "rsi", "RSI", QQQ_CHART_VIEW.pane === "rsi") + opt("data-qqq-pane", "adl", "ADL", QQQ_CHART_VIEW.pane === "adl")) +
@@ -4784,6 +4820,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     else if (a === "tview") { GX_VIEW.tview = v; GX_VIEW.yv = null; }
     else if (a === "show") GX_VIEW.show[v] = !GX_VIEW.show[v];
     else if (a === "scheme") GX_VIEW.show.scheme = v;
+    else if (a === "em") { GX_VIEW.show.emStyle = v; if (!QQQ_LAYERS.ranges) { QQQ_LAYERS.ranges = true; try { localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS)); } catch (eL) {} } }
     else if (a === "ctype") { GX_VIEW.show.ctype = v; if (v === "candles" && QQQ_CHART_VIEW.mode === "ha") { QQQ_CHART_VIEW.mode = "raw"; try { localStorage.setItem("md:qqq-chart-view", JSON.stringify(QQQ_CHART_VIEW)); } catch (eV) {} } }
     else if (a === "defaults") GX_VIEW.show = JSON.parse(JSON.stringify(GX_SHOW_DEFAULT));
     gxSave();
