@@ -4311,14 +4311,14 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     // ---- GEX source: per-minute frames when present, else snapshot + logger history ----
     var FR = gxFramesFor(day), g = M.g || {}, frames = null, fi = -1;
     if (FR) {
-      var seg = 0, prevT = null;
+      var fseg = 0, prevT = null;
       frames = FR.frames.map(function (f) {
         var t = f.t - T0, d = (f.d || []).slice().sort(function (a, b) { return a[0] - b[0]; });
-        if (prevT !== null && t - prevT > 180) seg++;
+        if (prevT !== null && t - prevT > 180) fseg++;
         prevT = t;
         var ks = d.map(function (r) { return Number(r[0]); }), map = {};
         d.forEach(function (r) { map[Number(r[0])] = { oi: r[1] / 1000, vol: r[2] / 1000 }; });
-        return { t: t, s: f.s, seg: seg, ks: ks, map: map, L: gxProfileFrom(map, ks, f.s) };
+        return { t: t, s: f.s, seg: fseg, ks: ks, map: map, L: gxProfileFrom(map, ks, f.s) };
       }).filter(function (f) { return f.t >= 0 && f.t <= SESSION; });
       frames.forEach(function (f, j) { if (f.t <= tNow) fi = j; });
       if (fi < 0) frames = null;
