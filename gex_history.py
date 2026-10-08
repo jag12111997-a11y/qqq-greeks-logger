@@ -50,7 +50,7 @@ OUT_DIR = Path("market-dash/history")
 OPEN_MIN, CLOSE_MIN = 9 * 60 + 30, 16 * 60     # 9:30 to 16:00 ET, minute starts
 WINDOW = 15.0                                  # strikes within +/- $15 of spot, as live
 STALE_MINUTES = 15                             # ignore trades older than this for IV
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 DAY_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
@@ -203,13 +203,33 @@ def logged_oi(by):
     return oi
 
 
-def logged_gex(day, slot):
-    """GEX for a logged minute, from the rows exactly as captured."""
+def logged_gex(day, slot, m=None, bars=None):
+    """GEX for a logged minute, from the rows as captured.
+
+    With the day's bars, two corrections: the live feed kept showing a
+    contract's previous-day volume until it first traded (Oct 6: the 751 call
+    read 7,013 until 9:47, then 10), so volume becomes the day's real
+    cumulative trade volume through the previous minute; and a row with no
+    two-sided quote whose contract had not traded yet today was priced off
+    yesterday's last trade, so its IV is dropped and filled from the smile.
+    """
     calls = [dict(r) for r in slot["call"].values()]
     puts = [dict(r) for r in slot["put"].values()]
     if not calls or not puts:
         return None
     spot = statistics.median(num(r["spot"]) for r in calls + puts if num(r.get("spot")))
+    if bars is not None and m is not None:
+        for kind, rows in (("call", calls), ("put", puts)):
+            for r in rows:
+                k = num(r.get("strike"))
+                if k is None:
+                    continue
+                traded_at, _, cum = bars.state(kind, k, m - 1)
+                r["volume"] = cum
+                bid, ask = num(r.get("bid")), num(r.get("ask"))
+                if not (bid and ask and bid > 0 and ask > 0) and traded_at is None:
+                    for key in ("iv", "delta", "gamma", "theta", "vega"):
+                        r[key] = ""
     for r in calls + puts:
         if r.get("iv") not in (None, "") and r.get("gamma") in (None, ""):
             r["iv"] = ""                               # recompute greeks consistently
@@ -332,25 +352,18 @@ def build_day(day, api, validate=False):
     report = {"day": day, "logged_minutes": len(complete), "missing_minutes": len(need)}
 
     bars, candles = None, []
-    if (need or validate) and api:
-        stock, feed = api.stock_bars(day)
-        report["stock_feed"] = feed
-        for b in stock:
-            t = dt.datetime.fromisoformat(b["t"].replace("Z", "+00:00"))
-            if OPEN_MIN <= et_minute(t) < CLOSE_MIN:
-                candles.append({"time": int(t.timestamp()), "open": b["o"], "high": b["h"],
-                                "low": b["l"], "close": b["c"], "volume": b.get("v", 0)})
-        if stock:
-            lo = min(float(b["l"]) for b in stock) - WINDOW - 1
-            hi = max(float(b["h"]) for b in stock) + WINDOW + 1
-            ks = [float(k) for k in range(math.floor(lo), math.ceil(hi) + 1)]
-            symbols = [occ(day, kind, k) for kind in ("call", "put") for k in ks]
-            bars = DayBars(day, stock, api.option_bars(symbols, day))
-            report["option_contracts_traded"] = sum(1 for v in bars.trades.values() if v)
-            for kind in ("call", "put"):
-                if not oi[kind]:
-                    oi[kind] = api.open_interest(day, kind, math.floor(lo), math.ceil(hi))
-                    report[f"{kind}_oi_source"] = "alpaca contracts"
+    # Rebuilding today mid-session: never past what Alpaca's history has (the
+    # free plan withholds the last 15 minutes), so no minute is invented ahead.
+    now_et = dt.datetime.now(NY)
+    last_min = CLOSE_MIN
+    if day == now_et.date().isoformat():
+        last_min = min(CLOSE_MIN, now_et.hour * 60 + now_et.minute - 16)
+    try:
+        if api:
+            bars, candles = fetch_day_bars(day, api, oi, report)
+    except Exception as exc:                            # logged minutes still get saved
+        report["alpaca_error"] = f"{exc.__class__.__name__}: {exc}"[:300]
+        bars, candles = None, []
     report["oi_strikes"] = {k: len(v) for k, v in oi.items()}
 
     # Walls are steadied across the whole day in time order, as live.
@@ -359,8 +372,8 @@ def build_day(day, api, validate=False):
     frames, points, rebuilt, skipped = [], [], 0, 0
     for m in range(OPEN_MIN, CLOSE_MIN):
         if m in complete:
-            gx, b = logged_gex(day, complete[m]), 0
-        elif bars:
+            gx, b = logged_gex(day, complete[m], m, bars), 0
+        elif bars and m <= last_min:
             gx, b = rebuild_minute(day, m, bars, oi), 1
         else:
             gx, b = None, 0
@@ -376,14 +389,47 @@ def build_day(day, api, validate=False):
             rebuilt += 1
         frames.append(frame)
         points.append(point)
-    report.update({"rebuilt_minutes": rebuilt, "empty_minutes": skipped, "api_calls": api.calls if api else 0})
+    report.update({"rebuilt_minutes": rebuilt, "empty_minutes": skipped, "api_calls": getattr(api, "calls", 0)})
+    return finish_day(day, frames, points, rebuilt, candles, report, validate, complete, bars, oi)
 
+
+def fetch_day_bars(day, api, oi, report):
+    """QQQ + option 1-minute bars for the day; fills a missing OI side."""
+    stock, feed = api.stock_bars(day)
+    report["stock_feed"] = feed
+    candles = []
+    for b in stock:
+        t = dt.datetime.fromisoformat(b["t"].replace("Z", "+00:00"))
+        if OPEN_MIN <= et_minute(t) < CLOSE_MIN:
+            candles.append({"time": int(t.timestamp()), "open": b["o"], "high": b["h"],
+                            "low": b["l"], "close": b["c"], "volume": b.get("v", 0)})
+    if not stock:
+        return None, candles
+    lo = min(float(b["l"]) for b in stock) - WINDOW - 1
+    hi = max(float(b["h"]) for b in stock) + WINDOW + 1
+    ks = [float(k) for k in range(math.floor(lo), math.ceil(hi) + 1)]
+    symbols = [occ(day, kind, k) for kind in ("call", "put") for k in ks]
+    bars = DayBars(day, stock, api.option_bars(symbols, day))
+    report["option_contracts_traded"] = sum(1 for v in bars.trades.values() if v)
+    for kind in ("call", "put"):
+        if not oi[kind]:
+            try:
+                oi[kind] = api.open_interest(day, kind, math.floor(lo), math.ceil(hi))
+                report[f"{kind}_oi_source"] = "alpaca contracts"
+            except Exception as exc:
+                report[f"{kind}_oi_error"] = f"{exc.__class__.__name__}: {exc}"[:200]
+    return bars, candles
+
+
+def finish_day(day, frames, points, rebuilt, candles, report, validate, complete, bars, oi):
     doc = {"symbol": "QQQ", "session_date": day, "version": FORMAT_VERSION,
            "units": "USD thousands",
            "built_utc": dt.datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S"),
            "sources": {"logged": len(frames) - rebuilt, "rebuilt": rebuilt,
                        "rebuilt_from": "Alpaca 1-minute option + stock bars (trades)"},
            "frames": frames, "points": points}
+    doc["sources"]["volume"] = ("the day's trades (1-minute option bars)" if bars else
+                                "live feed (can include a contract's prior-day volume before its first trade)")
     if candles:                     # QQQ 1-minute candles, for days the chart has none of
         doc["candles"] = candles
         doc["sources"]["candles"] = report.get("stock_feed")
@@ -473,6 +519,43 @@ def validate_day(day, complete, bars, oi):
                 "samples_$M_live_vs_rebuilt": diag["samples"]}}
 
 
+def merge_remote_csvs(day):
+    """Merge the day's CSVs as published on main into the local ones.
+
+    The end-of-day build runs in the midday job, whose checkout predates the
+    morning run's last publish (~12:05-12:07 PT), so those last logged minutes
+    would otherwise be rebuilt instead of used as logged.
+    """
+    import subprocess
+    from scripts.sync_local_history import merge_csv
+
+    def git(*args):
+        return subprocess.run(["git", *args], capture_output=True, text=True, timeout=180)
+
+    if git("fetch", "--depth=1", "origin", "main").returncode:
+        print("merge-remote: fetch failed; using local files only", flush=True)
+        return 0
+    listing = git("ls-tree", "-r", "--name-only", "FETCH_HEAD", f"data/{day}")
+    merged = 0
+    for path in listing.stdout.split():
+        if not path.endswith(".csv"):
+            continue
+        remote = git("show", f"FETCH_HEAD:{path}").stdout
+        local_path = Path(path)
+        local = local_path.read_text() if local_path.exists() else ""
+        try:
+            text = merge_csv(remote, local) if local.strip() else remote
+        except ValueError as exc:
+            print(f"merge-remote: {path} skipped ({exc})", flush=True)
+            continue
+        if text != local:
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            local_path.write_text(text)
+            merged += 1
+    print(f"merge-remote: {merged} file(s) updated from main", flush=True)
+    return merged
+
+
 def write_day(doc):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     path = OUT_DIR / f"{doc['session_date']}.json"
@@ -493,6 +576,8 @@ def main():
     ap.add_argument("--validate", nargs="*", help="days to accuracy-test (no files written)")
     ap.add_argument("--no-alpaca", action="store_true", help="logged minutes only")
     ap.add_argument("--publish", action="store_true", help="commit the written files (GitHub Actions)")
+    ap.add_argument("--merge-remote", action="store_true",
+                    help="first merge the days' CSVs from origin/main into the local ones")
     args = ap.parse_args()
     for d in (args.days or []) + (args.validate or []):
         if d != "today" and not DAY_RE.fullmatch(d):
@@ -522,6 +607,8 @@ def main():
     days = args.days or sorted(os.path.basename(p) for p in glob.glob("data/????-??-??"))
     days = [today if d == "today" else d for d in days]
     for day in days:
+        if args.merge_remote:
+            merge_remote_csvs(day)
         try:
             doc, rep = build_day(day, api)
         except Exception as exc:                        # one bad day must not stop the rest

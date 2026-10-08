@@ -97,6 +97,10 @@ WINDOW = float(os.environ.get("WINDOW", "15"))
 INTERVAL_SECONDS = int(os.environ.get("INTERVAL_SECONDS", "0"))
 DURATION_SECONDS = int(os.environ.get("DURATION_SECONDS", "0"))
 
+# A stalled request must never freeze the minute loop (the job would sit until
+# its timeout with no snapshots, publishes or relay uploads).
+HTTP_TIMEOUT = 15
+
 API_KEY = os.environ.get("ALPACA_API_KEY")
 API_SECRET = os.environ.get("ALPACA_API_SECRET")
 HEADERS = {
@@ -217,7 +221,8 @@ def _vanna_charm(S, K, T, r, q, sigma):
 # ---------- Alpaca data ----------
 
 def get_spot_price():
-    r = requests.get(f"{DATA_BASE}/v2/stocks/{SYMBOL}/trades/latest", headers=HEADERS)
+    r = requests.get(f"{DATA_BASE}/v2/stocks/{SYMBOL}/trades/latest", headers=HEADERS,
+                     timeout=HTTP_TIMEOUT)
     r.raise_for_status()
     return float(r.json()["trade"]["p"])
 
@@ -232,7 +237,7 @@ def get_option_chain(low, high, today, opt_type="call"):
         "limit": 1000,
     }
     r = requests.get(f"{DATA_BASE}/v1beta1/options/snapshots/{SYMBOL}",
-                     headers=HEADERS, params=params)
+                     headers=HEADERS, params=params, timeout=HTTP_TIMEOUT)
     r.raise_for_status()
     return r.json().get("snapshots", {})
 
@@ -283,6 +288,19 @@ def _round_or_blank(value, digits):
 
 # ---------- Snapshot + CSV ----------
 
+def _et_date(stamp):
+    """New York calendar date of an Alpaca RFC 3339 timestamp, or None."""
+    if not stamp:
+        return None
+    try:
+        t = datetime.datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=datetime.timezone.utc)
+        return t.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+    except ValueError:
+        return None
+
+
 def build_snapshot_rows(opt_type="call", spot=None):
     """Build rows for ONE option type ("call" or "put").
 
@@ -290,7 +308,9 @@ def build_snapshot_rows(opt_type="call", spot=None):
     mixed. Pass a shared `spot` so both types are priced off the same underlying.
     """
     now_utc = datetime.datetime.now(datetime.timezone.utc)
-    today = datetime.date.today().isoformat()
+    # The session's date in New York, not the runner's (UTC) date: after
+    # 5 PM PT the UTC date is already tomorrow.
+    today = now_utc.astimezone(ZoneInfo("America/New_York")).date().isoformat()
     if spot is None:
         spot = get_spot_price()
     low, high = spot - WINDOW, spot + WINDOW
@@ -312,7 +332,12 @@ def build_snapshot_rows(opt_type="call", spot=None):
         daily_bar = data.get("dailyBar") or {}
         bid = quote.get("bp")
         ask = quote.get("ap")
-        last = trade.get("p")
+        # Alpaca keeps a contract's previous-session bar and trade until it
+        # trades today (Oct 6: the 751 call showed 7,013 until 9:47, then 10).
+        # Only today's volume and today's last trade count; otherwise 0 / none.
+        last = trade.get("p") if _et_date(trade.get("t")) == today else None
+        bar_day = _et_date(daily_bar.get("t"))
+        volume = daily_bar.get("v") if (bar_day == today or (bar_day is None and not daily_bar.get("t"))) else 0
         if bid is not None and ask is not None and bid > 0 and ask > 0:
             price = (bid + ask) / 2.0
         else:
@@ -342,7 +367,7 @@ def build_snapshot_rows(opt_type="call", spot=None):
             "bid": bid,
             "ask": ask,
             "last": last,
-            "volume": daily_bar.get("v"),
+            "volume": volume,
             "open_interest": oi_map.get(symbol, ""),
             "iv": _round_or_blank(iv, 4),
             "delta": _round_or_blank(delta, 4),
@@ -628,16 +653,24 @@ _WALLS = {"date": None, "call": None, "put": None, "call_try": (None, 0), "put_t
 
 
 def _seed_walls(session_date):
-    """Start from the last published walls so a new run doesn't jump."""
+    """Start from the last saved wall state so a new run doesn't jump or reset
+    its 3-snapshot count (each refresh run is a fresh process)."""
+    try:
+        with open(GEX_LIVE_PATH) as f:
+            state = (json.load(f) or {}).get("wall_state") or {}
+        if state.get("date") == session_date:
+            return state
+    except (OSError, ValueError, TypeError, AttributeError):
+        pass
     try:
         with open(GEX_INTRADAY_PATH) as f:
             hist = json.load(f)
         if hist.get("session_date") == session_date and hist.get("points"):
             last = hist["points"][-1]
-            return last.get("call_wall"), last.get("put_wall")
+            return {"call": last.get("call_wall"), "put": last.get("put_wall")}
     except (OSError, ValueError, TypeError, AttributeError):
         pass
-    return None, None
+    return {}
 
 
 def stabilize_walls(gx):
@@ -653,9 +686,10 @@ def stabilize_walls(gx):
         stamp = datetime.datetime.now(datetime.timezone.utc)
     day = stamp.astimezone(ZoneInfo("America/New_York")).date().isoformat()
     if _WALLS["date"] != day:
-        call0, put0 = _seed_walls(day)
-        _WALLS.update({"date": day, "call": call0, "put": put0,
-                       "call_try": (None, 0), "put_try": (None, 0)})
+        seed = _seed_walls(day)
+        _WALLS.update({"date": day, "call": seed.get("call"), "put": seed.get("put"),
+                       "call_try": tuple(seed.get("call_try") or (None, 0)),
+                       "put_try": tuple(seed.get("put_try") or (None, 0))})
     sides = (
         ("call", "call_wall", {s["strike"]: s["call_gex"] for s in strikes},
          lambda new, cur: new > 0 and new >= WALL_SWITCH_EDGE * cur),
@@ -679,6 +713,8 @@ def stabilize_walls(gx):
             held, cand, n = cur, None, 0
         _WALLS[side], _WALLS[side + "_try"] = held, (cand, n)
         levels[key] = held
+    gx["wall_state"] = {"date": day, "call": _WALLS["call"], "put": _WALLS["put"],
+                        "call_try": list(_WALLS["call_try"]), "put_try": list(_WALLS["put_try"])}
     return gx
 
 
@@ -1090,6 +1126,10 @@ def main():
     # Single snapshot mode. Calls AND puts (separate files) + live GEX.
     if INTERVAL_SECONDS <= 0 or DURATION_SECONDS <= 0:
         snapshot_and_write(get_spot_price())
+        # Same isolated, merging publisher as the minute loop: no rebase
+        # conflicts with a logger run publishing the same files.
+        if CI_PUSH and not push_live_snapshots():
+            raise SystemExit("Publish failed (the relay upload above still went out).")
         return
 
     # Session / loop mode: snapshot every INTERVAL for DURATION.
