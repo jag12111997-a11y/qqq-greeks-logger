@@ -4257,10 +4257,19 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   }
   function gxFramesFor(day) {
     if (!day) return null;
-    if (LIVE_GEX_FRAMES && LIVE_GEX_FRAMES.session_date === day && LIVE_GEX_FRAMES.frames.length) return LIVE_GEX_FRAMES;
+    // Live frames for the day, counting only minutes inside the session.
+    var live = LIVE_GEX_FRAMES && LIVE_GEX_FRAMES.session_date === day ? LIVE_GEX_FRAMES : null, nLive = 0;
+    if (live) {
+      var t0 = gxSessionStart(day);
+      live.frames.forEach(function (f) { if (f.t >= t0 && f.t < t0 + 23400) nLive++; });
+    }
     var h = GX_HIST[day];
-    if (!h) { gxHistLoad(day); return null; }
-    return h.state === "ok" ? h.doc : null;
+    if (!h) gxHistLoad(day);
+    // The saved day wins once it holds more of the session than the live file
+    // (after the close, or if the live file missed minutes).
+    var nHist = h && h.state === "ok" ? h.doc.frames.length : 0;
+    if (nLive && nLive >= nHist) return live;
+    return nHist ? h.doc : (nLive ? live : null);
   }
 
   var GXC = { bg: "#111111", grid: "#1c1c1c", axis: "#9aa0a6", text: "#e8eaed", dim: "#9aa0a6", faint: "#6b7075",
