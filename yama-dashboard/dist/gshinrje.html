@@ -4210,9 +4210,26 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   }
 
 
+  // Saved sessions: market-dash/history/<day>.json holds every minute of a past
+  // day (logged minutes as captured, missed minutes rebuilt from trades, b:1).
+  var GX_HIST = {};
+  function gxHistLoad(day) {
+    if (GX_HIST[day]) return;
+    GX_HIST[day] = { state: "loading" };
+    fetch(LIVE_DATA_BASE + "history/" + day + ".json?t=" + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        GX_HIST[day] = j && Array.isArray(j.frames) && j.frames.length ? { state: "ok", doc: j } : { state: "none" };
+        if (GX_HIST[day].state === "ok" && QQQ_SESSION.date === day) gxFull();
+      })
+      .catch(function () { GX_HIST[day] = { state: "none" }; });
+  }
   function gxFramesFor(day) {
-    if (!day || !LIVE_GEX_FRAMES || LIVE_GEX_FRAMES.session_date !== day || !LIVE_GEX_FRAMES.frames.length) return null;
-    return LIVE_GEX_FRAMES;
+    if (!day) return null;
+    if (LIVE_GEX_FRAMES && LIVE_GEX_FRAMES.session_date === day && LIVE_GEX_FRAMES.frames.length) return LIVE_GEX_FRAMES;
+    var h = GX_HIST[day];
+    if (!h) { gxHistLoad(day); return null; }
+    return h.state === "ok" ? h.doc : null;
   }
 
   var GXC = { bg: "#111111", grid: "#1c1c1c", axis: "#9aa0a6", text: "#e8eaed", dim: "#9aa0a6", faint: "#6b7075",
@@ -4287,6 +4304,12 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       return good;
     }).sort(function (a, b) { return a.time - b.time; });
     var minute = qqqMergeLiveCandle(base, M).filter(function (b) { return qqqSessionDay(b.time) === day; });
+    if (!minute.length) {
+      var HD = gxFramesFor(day);
+      if (HD && Array.isArray(HD.candles)) minute = HD.candles.map(function (b) {
+        return { time: Number(b.time), open: Number(b.open), high: Number(b.high), low: Number(b.low), close: Number(b.close), volume: Number(b.volume) || 0 };
+      }).filter(function (b) { return isFinite(b.time) && isFinite(b.close) && qqqSessionDay(b.time) === day; });
+    }
     var candles = qqqAggregateCandles(minute, tf);
     if (!candles.length) {
       window._gxTimes = []; window._gxIdx = 0; window._gxClockText = ""; window._gxMap = null;
@@ -4318,7 +4341,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         prevT = t;
         var ks = d.map(function (r) { return Number(r[0]); }), map = {};
         d.forEach(function (r) { map[Number(r[0])] = { oi: r[1] / 1000, vol: r[2] / 1000 }; });
-        return { t: t, s: f.s, seg: fseg, ks: ks, map: map, L: gxProfileFrom(map, ks, f.s) };
+        return { t: t, s: f.s, seg: fseg, b: !!f.b, ks: ks, map: map, L: gxProfileFrom(map, ks, f.s) };
       }).filter(function (f) { return f.t >= 0 && f.t <= SESSION; });
       frames.forEach(function (f, j) { if (f.t <= tNow) fi = j; });
       if (fi < 0) frames = null;
@@ -4335,10 +4358,12 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       cur = { t: tNow, s: spot, ks: ks0, map: map0, L: ks0.length ? gxProfileFrom(map0, ks0, spot) : { oi: { zg: null, mp: null, mn: null, net: null }, vol: null } };
     }
     var Lc = cur.L[lk] || cur.L.oi, LO = cur.L.oi, LV = cur.L.vol, Lg = g.levels || {};
-    var pts = M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points)
-      ? LIVE_GEX_INTRADAY.points.filter(function (r) { return qqqSessionDay(Number(r.time)) === day; }).map(function (r) {
+    var ptSrc = FR && Array.isArray(FR.points) ? FR.points
+      : (M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points) ? LIVE_GEX_INTRADAY.points : null);
+    var pts = ptSrc
+      ? ptSrc.filter(function (r) { return qqqSessionDay(Number(r.time)) === day; }).map(function (r) {
           return { t: Number(r.time) - T0, flip: r.gamma_flip, cw: r.call_wall, pw: r.put_wall, mag: r.oi_magnet,
-                   van: r.vanna_strike, chm: r.charm_strike, tht: r.theta_strike };
+                   van: r.vanna_strike, chm: r.charm_strike, tht: r.theta_strike, b: !!r.b };
         }).sort(function (a, b) { return a.t - b.t; }) : [];
     var ptsNow = pts.filter(function (p) { return p.t <= tNow; }), lastP = ptsNow.length ? ptsNow[ptsNow.length - 1] : null;
     var callWall = lastP ? lastP.cw : Lg.call_wall, putWall = lastP ? lastP.pw : Lg.put_wall;
@@ -4417,6 +4442,32 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       svg += '<rect x="' + gx0.toFixed(1) + '" y="' + PY0 + '" width="' + gw.toFixed(1) + '" height="' + (PY1 - PY0) + '" fill="url(#gx-hatch)"/>';
       if (gw > 90) svg += '<text x="' + (gx0 + gw / 2).toFixed(1) + '" y="' + (PY0 + 18) + '" fill="#8a8f94" text-anchor="middle" style="' + sty + '">no GEX snapshots ' + gxClock(gapSrc[gi - 1]) + '–' + gxClock(gapSrc[gi]) + '</text>';
     }
+    // rebuilt minutes (saved days): a thin band on top, lines dimmed underneath
+    var rbSpans = [];
+    if (frames) frames.forEach(function (f) {
+      if (!f.b) return;
+      var last = rbSpans[rbSpans.length - 1];
+      if (last && f.t - 30 - last[1] <= 90) last[1] = f.t + 30; else rbSpans.push([f.t - 30, f.t + 30]);
+    });
+    var rbDefs = "";
+    if (rbSpans.length) {
+      var rbR = "", lgR = "", cx0 = PX0 - 2;
+      rbSpans.forEach(function (sp) {
+        var a = Math.max(PX0 - 2, X(sp[0])), z = Math.min(PX1 + 2, X(sp[1]));
+        if (z <= a) return;
+        rbR += '<rect x="' + a.toFixed(1) + '" y="0" width="' + (z - a).toFixed(1) + '" height="' + VBH + '"/>';
+        if (a > cx0) lgR += '<rect x="' + cx0.toFixed(1) + '" y="0" width="' + (a - cx0).toFixed(1) + '" height="' + VBH + '"/>';
+        cx0 = Math.max(cx0, z);
+        svg += '<rect x="' + a.toFixed(1) + '" y="' + PY0 + '" width="' + (z - a).toFixed(1) + '" height="3" fill="#8ab4f8" opacity=".45"/>';
+        if (z - a > 120) svg += '<text x="' + ((a + z) / 2).toFixed(1) + '" y="' + (PY0 + 16) + '" fill="#8a8f94" text-anchor="middle" style="' + sty + '">rebuilt from trades</text>';
+      });
+      if (cx0 < PX1 + 2) lgR += '<rect x="' + cx0.toFixed(1) + '" y="0" width="' + (PX1 + 2 - cx0).toFixed(1) + '" height="' + VBH + '"/>';
+      rbDefs = '<defs><clipPath id="gx-rb">' + rbR + '</clipPath><clipPath id="gx-lg">' + (lgR || '<rect width="0" height="0"/>') + '</clipPath></defs>';
+      svg += rbDefs;
+    }
+    function lineByKind(markup) {
+      return rbDefs ? '<g clip-path="url(#gx-lg)">' + markup + '</g><g clip-path="url(#gx-rb)" opacity=".45">' + markup + '</g>' : markup;
+    }
     // price
     var cw = PW_ * step * 60 / (V1 - V0), bw = Math.max(1, cw * 0.62);
     var upC = S.scheme === "gexbot" ? GXC.up : GXC.up2, dnC = S.scheme === "gexbot" ? GXC.down : GXC.down2;
@@ -4455,7 +4506,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       var gapS = frames ? 180 : 720, series = [[hz, GXC.zg, S.zg, true], [hp, GXC.cw, S.cw, true], [hn, GXC.pw, S.pw, true]];
       series.forEach(function (s) {
         if (!s[2]) return;
-        if (GX_VIEW.hist === "smooth") svg += '<path d="' + path(s[3] ? smooth(s[0]) : s[0], gapS, !s[3]) + '" fill="none" stroke="' + s[1] + '" stroke-width="1.4"/>';
+        if (GX_VIEW.hist === "smooth") svg += lineByKind('<path d="' + path(s[3] ? smooth(s[0]) : s[0], gapS, !s[3]) + '" fill="none" stroke="' + s[1] + '" stroke-width="1.4"/>');
         else s[0].forEach(function (p) { if (inR(p[1])) svg += '<circle cx="' + X(p[0]).toFixed(1) + '" cy="' + Y(p[1]).toFixed(1) + '" r="1.8" fill="' + s[1] + '"/>'; });
       });
       if (S.mag) svg += '<path d="' + path(ptsNow.map(function (p) { return [p.t, p.mag]; }), 720, true) + '" fill="none" stroke="' + GXC.mag + '" stroke-width="1.2" stroke-dasharray="2 3"/>';
@@ -4500,7 +4551,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       var bar = function (k, val, max, h, cp, cn) {
         var xv = PC + (val / max) * PH;
         svg += '<rect x="' + Math.min(PC, xv).toFixed(1) + '" y="' + (Y(k) - h / 2).toFixed(1) + '" width="' + Math.max(Math.abs(xv - PC), 1).toFixed(1) +
-          '" height="' + h.toFixed(1) + '" rx="' + Math.min(3, h / 2).toFixed(1) + '" fill="' + (val >= 0 ? cp : cn) + '" opacity=".92"/>';
+          '" height="' + h.toFixed(1) + '" rx="' + Math.min(3, h / 2).toFixed(1) + '" fill="' + (val >= 0 ? cp : cn) + '" opacity="' + (cur && cur.b ? ".5" : ".92") + '"/>';
       };
       kin.forEach(function (k) {
         var v = cur.map[k];
@@ -4677,7 +4728,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       side = '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:20px">gex chart</span>' +
           '<button type="button" data-gx="settings" aria-label="Settings" title="Settings" style="background:transparent;border:0;color:#e8eaed;cursor:pointer;width:34px;height:34px">' +
           '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>' +
-        '<div style="font-size:12px;color:#9aa0a6;margin:2px 0 10px">QQQ · ' + (frames ? "logger · per-minute" : M.latest ? "live 0DTE logger" : "saved session map") + ' · ' + cur.ks.length + ' strikes</div>' +
+        '<div style="font-size:12px;color:#9aa0a6;margin:2px 0 10px">QQQ · ' + (frames ? (FR && FR.sources ? "saved day · per-minute" : "logger · per-minute") : M.latest ? "live 0DTE logger" : "saved session map") + ' · ' + cur.ks.length + ' strikes</div>' +
         seg([{ label: "latest (" + md + ")", on: true }, { label: "next", dis: true, title: "Next expiry isn't captured yet (logger)" }, { label: "90d (agg)", dis: true, title: "90-day aggregate isn't captured yet (logger)" }]) +
         '<div style="display:flex;gap:4px;margin-top:8px">' + ["vol", "oi", "both"].map(function (v) {
           var on = frames ? GX_VIEW.w === v : v === "oi", dis = !frames && v !== "oi";
@@ -4686,6 +4737,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
         }).join("") + '</div>' +
         '<div style="' + hdr + '">update</div>' +
         row("date", day.slice(5, 7) + "/" + day.slice(8, 10) + "/" + day.slice(0, 4)) + row("time", clock + " ET") + row("spot", spot.toFixed(2)) +
+        (frames ? row("source", cur.b ? "rebuilt from trades" : "logged", null, cur.b ? "#8ab4f8" : null) : "") +
         '<div style="' + hdr + '">volume</div>' +
         (LV ? row("zero gamma", f2(LV.zg), GXC.zg) + row("major positive", f2(LV.mp), GXC.cw) + row("major negative", f2(LV.mn), GXC.pw) +
               row("net gex", gxMoney(LV.net), null, LV.net >= 0 ? "#00e676" : "#ff5252")
