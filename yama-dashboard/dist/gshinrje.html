@@ -3508,13 +3508,20 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var t = Date.parse(/[zZ]$|[+-]\d\d:?\d\d$/.test(st) ? st : st.replace(" ", "T") + "Z");
     return isFinite(t) ? Date.now() - t : Infinity;
   }
+  // A request that hangs (rather than failing) must not block the fallback.
+  function fetchWithin(url, opts, ms) {
+    if (typeof AbortController === "undefined") return fetch(url, opts);
+    var ac = new AbortController(), timer = setTimeout(function () { ac.abort(); }, ms);
+    return fetch(url, Object.assign({}, opts || {}, { signal: ac.signal }))
+      .finally(function () { clearTimeout(timer); });
+  }
   function liveFetch(name) {
     function pages() {
-      return fetch(LIVE_DATA_BASE + name + "?t=" + Date.now())
+      return fetchWithin(LIVE_DATA_BASE + name + "?t=" + Date.now(), null, 20000)
         .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
     }
     if (!RELAY_ON) return pages();
-    return fetch(LIVE_RELAY_BASE + name, { cache: "no-cache" })
+    return fetchWithin(LIVE_RELAY_BASE + name, { cache: "no-cache" }, 8000)
       .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
       .then(function (rj) {
         if (rj && liveAgeMs(rj) < 6 * 60000) return rj;        // fresh relay copy
@@ -4248,12 +4255,12 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     fetch(LIVE_DATA_BASE + "history/" + day + ".json?t=" + Date.now())
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
-        GX_HIST[day] = j && Array.isArray(j.frames) && j.frames.length ? { state: "ok", doc: j } : { state: "none" };
+        GX_HIST[day] = j && Array.isArray(j.frames) && j.frames.length ? { state: "ok", doc: j } : { state: "none", at: Date.now() };
         if (GX_HIST[day].state === "ok" && QQQ_SESSION.date === day) {
           if (document.getElementById("gx-chart-block")) gxFull(); else renderAllWidgets();
         }
       })
-      .catch(function () { GX_HIST[day] = { state: "none" }; });
+      .catch(function () { GX_HIST[day] = { state: "none", at: Date.now() }; });
   }
   function gxFramesFor(day) {
     if (!day) return null;
@@ -4264,6 +4271,9 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       live.frames.forEach(function (f) { if (f.t >= t0 && f.t < t0 + 23400) nLive++; });
     }
     var h = GX_HIST[day];
+    // Not there yet (today before ~4:17 PM ET) or a failed fetch: try again
+    // every 5 minutes instead of never.
+    if (h && h.state === "none" && Date.now() - (h.at || 0) > 5 * 60000) { delete GX_HIST[day]; h = null; }
     if (!h) gxHistLoad(day);
     // The saved day wins once it holds more of the session than the live file
     // (after the close, or if the live file missed minutes).
