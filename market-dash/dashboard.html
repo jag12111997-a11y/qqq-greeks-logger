@@ -165,6 +165,7 @@
   .qqq-top-grid .qqq-chart-canvas { height:300px; }
   .qqq-gex-profile { height:100%; border-left:1px solid #1c1c28; padding-left:12px; }
   .flow section.qqq-market-card { margin-bottom:12px; }
+  #gx-chart-block:fullscreen { background:#111; overflow:auto; padding:10px; }
   .qqq-gex-pane-title { display:flex; align-items:center; justify-content:space-between; gap:8px;
                         color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
                         text-transform:uppercase; margin:2px 0 10px; }
@@ -3550,58 +3551,120 @@
   // Live GEX from the 5-min greeks logger (market-dash/gex_live.json), fetched
   // client-side. Fully guarded: if the file is missing/unreadable, the card just
   // hides — it can never break the page.
+  // Repaint after live data changes (debounced; keeps the scroll position).
+  // The Journal and Performance tabs are iframes, so they are never repainted.
+  var _raT = 0;
+  function renderAllWidgets(now) {
+    if (TAB === "journal" || TAB === "perf") return;
+    clearTimeout(_raT);
+    _raT = setTimeout(function () {
+      var a = document.activeElement;
+      if (!now && a && a.matches && a.matches("input,select,textarea")) return;
+      var y = window.scrollY; render(); window.scrollTo(0, y);
+    }, now ? 0 : 250);
+  }
+
   var LIVE_GEX = null;
-  function loadLiveGex() {
-    return fetch("gex_live.json?t=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
+  var LIVE_DATA_BASE = new URL('./', location.href).href;   // data files sit next to this page
+  // Live relay (Cloudflare Worker): the logger uploads every minute's files
+  // there, so the chart is ~1 minute behind instead of 1-6. GitHub Pages stays
+  // the backup: if the relay is down or its copy is stale, Pages is used, and
+  // whichever copy is newer always wins.
+  var LIVE_RELAY_BASE = "https://gex-relay.jag12111997.workers.dev/v1/";
+  var RELAY_ON = /^https:\/\//.test(LIVE_RELAY_BASE);
+  function liveStamp(j) { return j ? String(j.generated_utc || j.updated_utc || "") : ""; }
+  function liveAgeMs(j) {
+    var st = liveStamp(j); if (!st) return Infinity;
+    var t = Date.parse(/[zZ]$|[+-]\d\d:?\d\d$/.test(st) ? st : st.replace(" ", "T") + "Z");
+    return isFinite(t) ? Date.now() - t : Infinity;
+  }
+  // A request that hangs (rather than failing) must not block the fallback.
+  function fetchWithin(url, opts, ms) {
+    if (typeof AbortController === "undefined") return fetch(url, opts);
+    var ac = new AbortController(), timer = setTimeout(function () { ac.abort(); }, ms);
+    return fetch(url, Object.assign({}, opts || {}, { signal: ac.signal }))
+      .finally(function () { clearTimeout(timer); });
+  }
+  function liveFetch(name) {
+    function pages() {
+      return fetchWithin(LIVE_DATA_BASE + name + "?t=" + Date.now(), null, 20000)
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }
+    if (!RELAY_ON) return pages();
+    return fetchWithin(LIVE_RELAY_BASE + name, { cache: "no-cache" }, 8000)
+      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      .then(function (rj) {
+        if (rj && liveAgeMs(rj) < 6 * 60000) return rj;        // fresh relay copy
+        return pages().then(function (pj) { return liveStamp(pj) > liveStamp(rj) ? pj : (rj || pj); });
+      });
+  }
+
+  var LIVE_CANDLE_HISTORY = null;
+  function loadCandleHistory() {
+    return fetch(LIVE_DATA_BASE + 'qqq_candle_history.json?t=' + Date.now())
+      .then(function(response) { return response.ok ? response.json() : null; })
+      .then(function(history) {
+        if (!history || !Array.isArray(history.daily) || !Array.isArray(history.minute)) return;
+        var changed = !LIVE_CANDLE_HISTORY || LIVE_CANDLE_HISTORY.generated_utc !== history.generated_utc;
+        LIVE_CANDLE_HISTORY = history;
+        if (changed) renderAllWidgets();
+      }).catch(function() { /* Keep existing bars and retry next cycle. */ });
+  }
+
+  function loadLiveGex(quiet) {
+    return liveFetch("gex_live.json")
       .then(function (j) {
         if (j && !j.error) {
           var changed = !LIVE_GEX || LIVE_GEX.generated_utc !== j.generated_utc;
           LIVE_GEX = j;
-          if (changed && idx === FULL.length - 1) {
-            var y = window.scrollY; render(); window.scrollTo(0, y);
+          if (changed && !quiet && idx === FULL.length - 1) {
+            renderAllWidgets();
           }
+          return changed;
         }
+        return false;
       })
-      .catch(function () {});
+      .catch(function () { return false; /* Retry on the next refresh; keep the last snapshot. */ });
   }
 
   // Compact one-point-per-snapshot history written by the same greeks logger.
   // This powers real step-lines through time; it is never reconstructed from
   // today's final level because doing that would make the past look predictive.
   var LIVE_GEX_INTRADAY = null;
-  function loadGexIntraday() {
-    return fetch("gex_intraday.json?t=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
+  function loadGexIntraday(quiet) {
+    return liveFetch("gex_intraday.json")
       .then(function (j) {
         if (j && Array.isArray(j.points)) {
           var changed = !LIVE_GEX_INTRADAY || LIVE_GEX_INTRADAY.updated_utc !== j.updated_utc;
           LIVE_GEX_INTRADAY = j;
-          if (changed && idx === FULL.length - 1) {
-            var y = window.scrollY; render(); window.scrollTo(0, y);
+          if (changed && !quiet && idx === FULL.length - 1) {
+            renderAllWidgets();
           }
+          return changed;
         }
+        return false;
       })
-      .catch(function () {});
+      .catch(function () { return false; /* Retry on the next refresh; keep the last snapshot. */ });
   }
 
   // Live auction metrics (VWAP, A/D line, opening range, volume) from the 60s
   // logger's QQQ 1-min IEX bars (market-dash/auction_live.json). Same guarded
   // pattern as Live GEX — missing file just hides the tiles, never breaks the page.
   var LIVE_AUCTION = null;
-  function loadAuction() {
-    return fetch("auction_live.json?t=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
+  function loadAuction(quiet) {
+    return liveFetch("auction_live.json")
       .then(function (j) {
         if (j && !j.error) {
           var changed = !LIVE_AUCTION || LIVE_AUCTION.generated_utc !== j.generated_utc;
           LIVE_AUCTION = j;
-          if (changed && idx === FULL.length - 1) {
-            var y = window.scrollY; render(); window.scrollTo(0, y);
+          if (changed && !quiet && idx === FULL.length - 1) {
+            renderAllWidgets();
           }
+          return changed;
         }
+        return false;
       })
-      .catch(function () {});
+      .catch(function () { return false; /* Retry on the next refresh; keep the last snapshot. */ });
   }
 
   // ---------- QQQ TRADINGVIEW CHART ----------
@@ -3615,6 +3678,15 @@
   // the chart at all while the user is working in it.
   var QQQ_VIEW_STATE = { userAdjusted: false, logicalRange: null };
   var QQQ_LAYERS = { core: true, ranges: true, flow: true };
+  // Session mode (GEX Chart day picker). date=null means all history, as before.
+  var QQQ_SESSION = { date: null, past: false, noGex: false };
+  var QQQ_SESS_FMT = null;
+  function qqqSessionDay(t) {
+    QQQ_SESS_FMT = QQQ_SESS_FMT || new Intl.DateTimeFormat('en-CA', { timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' });
+    var p = {}; QQQ_SESS_FMT.formatToParts(new Date(t * 1000)).forEach(function (x) { p[x.type] = x.value; });
+    var m = Number(p.hour) * 60 + Number(p.minute);
+    return (m >= 570 && m < 960) ? p.year + '-' + p.month + '-' + p.day : null;
+  }
   var QQQ_CHART_VIEW = { mode: "raw", ema: true, pane: "adl" };
   try {
     var _ql = JSON.parse(localStorage.getItem("md:qqq-layers") || "{}");
@@ -3663,7 +3735,7 @@
   }
 
   function qqqChartModel(e) {
-    var latest = idx === FULL.length - 1;
+    var latest = idx === FULL.length - 1 && !QQQ_SESSION.past;
     var g = (latest && LIVE_GEX) ? LIVE_GEX : get(e, "gex", {});
     var L = (g && g.levels) || {};
     var mk = {};
@@ -4135,9 +4207,909 @@
       '</div>' + heat + sectors + '</div>';
   }
 
-  function secQqqOpening(e, chartModel) {
-    var body =
-      '<div class="qqq-top-grid">' +
+  // ===== GEX Chart v2 (GEXBot-style layout) =====
+  // Full-width price chart with the strike GEX profile overlaid on the same
+  // price axis, a right sidebar (expiry, weighting, level tables, touch odds,
+  // max change, read, playback, settings), a crosshair with axis pills, level
+  // pills on the price axis and ±1σ lines. Used for one session at 1m/5m/15m;
+  // "All history" and 1H+ keep the original chart. Per-minute volume GEX,
+  // change dots and max change light up once market-dash/gex_frames.json exists.
+  var GX_SHOW_DEFAULT = { xhair: true, zg: true, cw: true, pw: true, mag: true, bars: true, dots: true,
+    sigma: true, garch: true, spot: true, scheme: "gexbot", ctype: "candles", emStyle: "cone" };
+  var GX_VIEW = { w: "vol", hist: "smooth", zoom: "wide", at: null, tview: "fit", yv: null,
+    side: true, settings: false, speed: 1, playing: false, show: JSON.parse(JSON.stringify(GX_SHOW_DEFAULT)) };
+  try {
+    var _gv = JSON.parse(localStorage.getItem("md:gx-view2") || "{}");
+    if (["vol", "oi", "both"].indexOf(_gv.w) >= 0) GX_VIEW.w = _gv.w;
+    if (["smooth", "raw"].indexOf(_gv.hist) >= 0) GX_VIEW.hist = _gv.hist;
+    if (["tight", "wide"].indexOf(_gv.zoom) >= 0) GX_VIEW.zoom = _gv.zoom;
+    if (typeof _gv.side === "boolean") GX_VIEW.side = _gv.side;
+    if ([1, 2, 5, 10].indexOf(_gv.speed) >= 0) GX_VIEW.speed = _gv.speed;
+    if (_gv.show && typeof _gv.show === "object") Object.keys(GX_SHOW_DEFAULT).forEach(function (k) {
+      if (typeof _gv.show[k] === typeof GX_SHOW_DEFAULT[k]) GX_VIEW.show[k] = _gv.show[k];
+    });
+  } catch (eGxView) {}
+  try {
+    if (!localStorage.getItem("md:gx-em-cone-v1")) {
+      QQQ_LAYERS.ranges = true;
+      GX_VIEW.show.emStyle = "cone";
+      localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS));
+      localStorage.setItem("md:gx-em-cone-v1", "1");
+    }
+  } catch (eGxEm) {}
+  function gxSave() {
+    try { localStorage.setItem("md:gx-view2", JSON.stringify({ w: GX_VIEW.w, hist: GX_VIEW.hist, zoom: GX_VIEW.zoom,
+      side: GX_VIEW.side, speed: GX_VIEW.speed, show: GX_VIEW.show })); } catch (eGxSave) {}
+  }
+
+  var LIVE_GEX_FRAMES = null;
+  function loadGexFrames(quiet) {
+    return liveFetch("gex_frames.json")
+      .then(function (j) {
+        if (j && Array.isArray(j.frames)) {
+          var changed = !LIVE_GEX_FRAMES || LIVE_GEX_FRAMES.updated_utc !== j.updated_utc;
+          LIVE_GEX_FRAMES = j;
+          if (changed && !quiet && idx === FULL.length - 1) renderAllWidgets();
+          return changed;
+        }
+        return false;
+      })
+      .catch(function () { return false; /* File not shipped yet: v2 shows "waiting for logger". */ });
+  }
+
+  function gxUseNew() {
+    var tf = window._gxTf || "1m";
+    return !!QQQ_SESSION.date && ["1m", "5m", "15m"].indexOf(tf) >= 0;
+  }
+
+  function gxSessionStart(day) {
+    var p = day.split("-").map(Number);
+    var t = Date.UTC(p[0], p[1] - 1, p[2], 13, 30) / 1000;
+    var f = gxSessionStart.f || (gxSessionStart.f = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }));
+    var q = {};
+    f.formatToParts(new Date(t * 1000)).forEach(function (x) { q[x.type] = x.value; });
+    return t + (570 - (Number(q.hour) * 60 + Number(q.minute))) * 60;
+  }
+  function gxClock(rel) {
+    var m = Math.floor(rel / 60) + 570, h = Math.floor(m / 60), mm = m % 60;
+    return h + ":" + (mm < 10 ? "0" : "") + mm;
+  }
+  function gxMoney(vM) {
+    if (vM == null || !isFinite(vM)) return "—";
+    var a = Math.abs(vM), s = vM < 0 ? "−$" : "$";
+    if (a >= 1000) return s + (a / 1000).toFixed(2) + "B";
+    if (a >= 1) return s + a.toFixed(1) + "M";
+    return s + (a * 1000).toFixed(0) + "K";
+  }
+  function gxLevels(ks, v, spot) {
+    var c = 0, crossings = [];
+    for (var i = 0; i < ks.length; i++) {
+      var before = c; c += v[i];
+      if (i > 0 && ((before < 0 && c >= 0) || (before > 0 && c <= 0)))
+        crossings.push(ks[i - 1] + ((0 - before) / (c - before)) * (ks[i] - ks[i - 1]));
+    }
+    var zg = null, best = 1e9;
+    crossings.forEach(function (z) { var d = Math.abs(z - spot); if (d < best) { best = d; zg = z; } });
+    var imax = -1, imin = -1;
+    for (var j = 0; j < ks.length; j++) {
+      if (v[j] > 0 && (imax < 0 || v[j] > v[imax])) imax = j;
+      if (v[j] < 0 && (imin < 0 || v[j] < v[imin])) imin = j;
+    }
+    function peak(i) {
+      if (i < 0) return null;
+      if (i > 0 && i < ks.length - 1 && ks[i + 1] - ks[i] === ks[i] - ks[i - 1]) {
+        var a = v[i - 1], b = v[i], cc = v[i + 1], den = a - 2 * b + cc;
+        var off = den !== 0 ? 0.5 * (a - cc) / den : 0;
+        return ks[i] + Math.max(-0.5, Math.min(0.5, off)) * (ks[i + 1] - ks[i]);
+      }
+      return ks[i];
+    }
+    var net = 0; v.forEach(function (x) { net += x; });
+    return { zg: zg, mp: peak(imax), mn: peak(imin), net: net };
+  }
+  function gxProfileFrom(map, ks, spot) {
+    return {
+      oi: gxLevels(ks, ks.map(function (k) { return map[k].oi; }), spot),
+      vol: map[ks[0]] && map[ks[0]].vol != null ? gxLevels(ks, ks.map(function (k) { return map[k].vol; }), spot) : null
+    };
+  }
+
+
+  // Saved sessions: market-dash/history/<day>.json holds every minute of a past
+  // day (logged minutes as captured, missed minutes rebuilt from trades, b:1).
+  var GX_HIST = {};
+  function gxHistLoad(day) {
+    if (GX_HIST[day]) return;
+    GX_HIST[day] = { state: "loading" };
+    fetch(LIVE_DATA_BASE + "history/" + day + ".json?t=" + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        GX_HIST[day] = j && Array.isArray(j.frames) && j.frames.length ? { state: "ok", doc: j } : { state: "none", at: Date.now() };
+        if (GX_HIST[day].state === "ok" && QQQ_SESSION.date === day) {
+          if (document.getElementById("gx-chart-block")) gxFull(); else renderAllWidgets();
+        }
+      })
+      .catch(function () { GX_HIST[day] = { state: "none", at: Date.now() }; });
+  }
+  function gxFramesFor(day) {
+    if (!day) return null;
+    // Live frames for the day, counting only minutes inside the session.
+    var live = LIVE_GEX_FRAMES && LIVE_GEX_FRAMES.session_date === day ? LIVE_GEX_FRAMES : null, nLive = 0;
+    if (live) {
+      var t0 = gxSessionStart(day);
+      live.frames.forEach(function (f) { if (f.t >= t0 && f.t < t0 + 23400) nLive++; });
+    }
+    var h = GX_HIST[day];
+    // Not there yet (today before ~4:17 PM ET) or a failed fetch: try again
+    // every 5 minutes instead of never.
+    if (h && h.state === "none" && Date.now() - (h.at || 0) > 5 * 60000) { delete GX_HIST[day]; h = null; }
+    if (!h) gxHistLoad(day);
+    // The saved day wins once it holds more of the session than the live file
+    // (after the close, or if the live file missed minutes).
+    var nHist = h && h.state === "ok" ? h.doc.frames.length : 0;
+    if (nLive && nLive >= nHist) return live;
+    return nHist ? h.doc : (nLive ? live : null);
+  }
+
+  var GXC = { bg: "#111111", grid: "#1c1c1c", axis: "#9aa0a6", text: "#e8eaed", dim: "#9aa0a6", faint: "#6b7075",
+    up: "#1e88e5", down: "#5f6368", up2: "#00e676", down2: "#ff453a", zg: "#fcb103", cw: "#66ff00", pw: "#ff3b30",
+    mag: "#b388ff", spot: "#00e5ff", sigma: "#a0a0a0", garch: "#ff00e5", posV: "#2BE05C", negV: "#FF4747",
+    posO: "#00942A", negO: "#940D0D", time: "#4dd0e1", van: "#00bfa5", chm: "#c792ea", tht: "#ff6d00",
+    d1: "#add8e6", d5: "#5dd6f5", d10: "#00a2de", d15: "#006cc0", d30: "#2a5bd7" };
+  var GX_FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+
+  function secGxChart(e, M) {
+    window._gxLast = { e: e, M: M };
+    var D = gxDynamic(e, M);
+    var tb = 'position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:4px;background:rgba(17,17,17,.85);border:1px solid #2a2a2a;border-radius:8px;padding:4px';
+    var ib = 'width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:#e8eaed;cursor:pointer;border-radius:6px';
+    function icon(path) { return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>'; }
+    var chartBox = '<div style="flex:999 1 560px;min-width:0;position:relative;background:' + GXC.bg + '">' +
+      '<div id="gx-dyn">' + D.chart + '</div>' +
+      '<div style="' + tb + ';opacity:.4;transition:opacity .15s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.4" onfocusin="this.style.opacity=1" onfocusout="this.style.opacity=.4">' +
+        '<button type="button" data-gx="side" aria-label="' + (GX_VIEW.side ? "Hide sidebar" : "Show sidebar") + '" title="' + (GX_VIEW.side ? "Hide sidebar" : "Show sidebar") + '" style="' + ib + '">' +
+          icon(GX_VIEW.side ? '<path d="M9 6l6 6-6 6"/>' : '<path d="M15 6l-6 6 6 6"/>') + '</button>' +
+        '<button type="button" data-gx="fs" aria-label="Full screen" title="Full screen" style="' + ib + '">' + icon('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>') + '</button>' +
+        '<button type="button" data-gx="shot" aria-label="Save chart image" title="Save chart image" style="' + ib + '">' + icon('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>') + '</button>' +
+        '<div style="text-align:center;font:600 11px ' + GX_FONT + ';color:#e8eaed;padding:2px 0 4px">' + esc(window._gxTf || "1m") + '</div>' +
+      '</div>' +
+      '<button type="button" data-gx="reset" aria-label="Reset view" title="Reset view (or double-click the chart)" style="position:absolute;right:10px;bottom:10px;' + ib + ';background:rgba(17,17,17,.85);border:1px solid #2a2a2a">' +
+        icon('<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>') + '</button>' +
+      '</div>';
+    var side = GX_VIEW.side ? '<aside id="gx-side" aria-label="GEX sidebar" style="flex:1 1 270px;max-width:330px;min-width:250px;background:#151515;border-left:1px solid #262626;display:flex;flex-direction:column;font-family:' + GX_FONT + ';color:' + GXC.text + '">' +
+      '<div id="gx-side-dyn" style="flex:1;padding:12px 12px 4px">' + D.side + '</div>' + gxPlayback() + '</aside>' : "";
+    return '<div id="gx-chart-block">' + (QQQ_SESSION.noGex ? "" : qqqLeverageMeter(M)) +
+      '<div style="display:flex;flex-wrap:wrap;border:1px solid #262626;border-radius:8px;overflow:hidden;margin-top:6px">' + chartBox + side + '</div></div>';
+  }
+
+  function gxPlayback() {
+    var T = window._gxTimes || [], pb = 'background:transparent;border:0;color:#e8eaed;cursor:pointer;min-width:36px;height:34px;border-radius:6px;font-size:15px';
+    return '<div style="border-top:1px solid #262626;padding:10px 12px 12px">' +
+      '<div style="display:flex;align-items:center;gap:8px;font-size:13px">' +
+        '<button type="button" data-gx="speed" title="Playback speed" style="background:#222;border:1px solid #333;color:#8ab4f8;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px">' + GX_VIEW.speed + 'x</button>' +
+        '<span id="gx-replay-clock" style="flex:1;text-align:center">' + esc(window._gxClockText || "") + '</span>' +
+        '<button type="button" data-gx="live" aria-pressed="' + (GX_VIEW.at === null ? "true" : "false") + '" title="Jump to latest" style="background:#222;border:1px solid #333;color:#e8eaed;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px">Latest</button>' +
+      '</div>' +
+      '<label for="gx-replay" style="position:absolute;left:-9999px">Replay time</label>' +
+      '<input id="gx-replay" type="range" min="0" max="' + Math.max(0, T.length - 1) + '" value="' + (window._gxIdx || 0) + '" style="width:100%;margin:10px 0 4px;accent-color:#8ab4f8">' +
+      '<div style="display:flex;justify-content:space-between">' +
+        '<button type="button" data-gx="step" data-gx-v="-1" aria-label="Back one candle" style="' + pb + '">‹</button>' +
+        '<button type="button" data-gx="step" data-gx-v="-10" aria-label="Back ten candles" style="' + pb + '">«</button>' +
+        '<button type="button" id="gx-play" data-gx="play" aria-label="Play or pause" style="' + pb + '">' + (GX_VIEW.playing ? "❚❚" : "▶") + '</button>' +
+        '<button type="button" data-gx="step" data-gx-v="10" aria-label="Forward ten candles" style="' + pb + '">»</button>' +
+        '<button type="button" data-gx="step" data-gx-v="1" aria-label="Forward one candle" style="' + pb + '">›</button>' +
+      '</div></div>';
+  }
+
+  function gxDynamic(e, M) {
+    var day = QQQ_SESSION.date, tf = window._gxTf || "1m", step = { "1m": 1, "5m": 5, "15m": 15 }[tf] || 1;
+    if (window._gxDay !== day) { if (window._gxDay) { GX_VIEW.tview = "fit"; GX_VIEW.yv = null; GX_VIEW.at = null; } window._gxDay = day; }
+    var S = GX_VIEW.show, T0 = gxSessionStart(day), SESSION = 23400;
+    var paneOn = QQQ_CHART_VIEW.pane !== "none";
+    var PX0 = 72, PX1 = 1192, PY0 = 34, PY1 = 600, LY0 = 640, LY1 = 720, VBH = paneOn ? 750 : 630;
+    var PW_ = PX1 - PX0, PC = PX0 + PW_ * 0.55, PH = PW_ * 0.33;
+    var V0 = 0, V1 = SESSION;
+    function X(rel) { return PX0 + ((rel - V0) / (V1 - V0)) * PW_; }
+    var sty = "font-family:" + GX_FONT + ";font-size:12px";
+
+    // ---- candles (same sources and live merge as the original chart) ----
+    var raw = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles) ? LIVE_AUCTION.candles.slice() : [];
+    if (LIVE_CANDLE_HISTORY) raw = raw.concat(LIVE_CANDLE_HISTORY.minute);
+    var seen = {}, base = raw.map(function (b) {
+      return { time: Number(b.time), open: Number(b.open), high: Number(b.high), low: Number(b.low), close: Number(b.close), volume: Number(b.volume) || 0 };
+    }).filter(function (b) {
+      var good = isFinite(b.time) && isFinite(b.open) && isFinite(b.high) && isFinite(b.low) && isFinite(b.close) && !seen[b.time];
+      if (good) seen[b.time] = 1;
+      return good;
+    }).sort(function (a, b) { return a.time - b.time; });
+    var minute = qqqMergeLiveCandle(base, M).filter(function (b) { return qqqSessionDay(b.time) === day; });
+    if (!minute.length) {
+      var HD = gxFramesFor(day);
+      if (HD && Array.isArray(HD.candles)) minute = HD.candles.map(function (b) {
+        return { time: Number(b.time), open: Number(b.open), high: Number(b.high), low: Number(b.low), close: Number(b.close), volume: Number(b.volume) || 0 };
+      }).filter(function (b) { return isFinite(b.time) && isFinite(b.close) && qqqSessionDay(b.time) === day; });
+    }
+    var candles = qqqAggregateCandles(minute, tf);
+    if (!candles.length) {
+      window._gxTimes = []; window._gxIdx = 0; window._gxClockText = ""; window._gxMap = null;
+      return { chart: '<div style="padding:60px 14px;text-align:center;color:#9aa0a6;font:13px ' + GX_FONT + '">No intraday candles for ' + esc(day) +
+        ' yet (1-minute history starts Aug 10, 2026).</div>', side: '<div style="color:#9aa0a6;font-size:12px">Waiting for candles.</div>' };
+    }
+    var times = candles.map(function (b) { return b.time; }), ci = candles.length - 1;
+    if (GX_VIEW.at !== null) { ci = 0; for (var q = 0; q < times.length; q++) if (times[q] <= GX_VIEW.at) ci = q; }
+    window._gxTimes = times; window._gxIdx = ci;
+    var tNow = times[ci] - T0 + step * 60;
+    if (ci === candles.length - 1 && minute.length) tNow = Math.min(tNow, minute[minute.length - 1].time - T0 + 60);
+    var clock = gxClock(Math.max(0, Math.min(tNow, SESSION) - 1));
+    window._gxClockText = clock + " ET" + (GX_VIEW.at === null ? "" : " · replay");
+    var lastT = candles[candles.length - 1].time - T0 + step * 60;
+    if (GX_VIEW.tview === "day") { V0 = 0; V1 = SESSION; }
+    else if (GX_VIEW.tview && typeof GX_VIEW.tview === "object") { V0 = GX_VIEW.tview.v0; V1 = GX_VIEW.tview.v1; }
+    else { V0 = 0; V1 = Math.min(SESSION, Math.max(3600, lastT + Math.max(1800, lastT * 0.15))); }
+    var shown = candles.slice(0, ci + 1);
+    var disp = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : candles;
+    var spot = (GX_VIEW.at === null && M.latest && isFinite(M.spot)) ? M.spot : shown[shown.length - 1].close;
+
+    // ---- GEX source: per-minute frames when present, else snapshot + logger history ----
+    var FR = gxFramesFor(day), g = QQQ_SESSION.noGex ? {} : (M.g || {}), frames = null, fi = -1;
+    if (FR) {
+      var fseg = 0, prevT = null;
+      frames = FR.frames.map(function (f) {
+        var t = f.t - T0, d = (f.d || []).slice().sort(function (a, b) { return a[0] - b[0]; });
+        if (prevT !== null && t - prevT > 180) fseg++;
+        prevT = t;
+        var ks = d.map(function (r) { return Number(r[0]); }), map = {};
+        d.forEach(function (r) { map[Number(r[0])] = { oi: r[1] / 1000, vol: r[2] / 1000 }; });
+        return { t: t, s: f.s, seg: fseg, b: !!f.b, ks: ks, map: map, L: gxProfileFrom(map, ks, f.s) };
+      }).filter(function (f) { return f.t >= 0 && f.t <= SESSION; });
+      frames.forEach(function (f, j) { if (f.t <= tNow) fi = j; });
+      if (fi < 0) frames = null;
+    }
+    var w = frames ? GX_VIEW.w : "oi", lk = w === "oi" ? "oi" : "vol", cur;
+    if (frames) cur = frames[fi];
+    else {
+      var ks0 = [], map0 = {};
+      (g.strikes || []).forEach(function (s) {
+        var k = Number(s.strike), n = Number(s.net_gex);
+        if (isFinite(k) && isFinite(n)) { ks0.push(k); map0[k] = { oi: n / 1e6, vol: null }; }
+      });
+      ks0.sort(function (a, b) { return a - b; });
+      cur = { t: tNow, s: spot, ks: ks0, map: map0, L: ks0.length ? gxProfileFrom(map0, ks0, spot) : { oi: { zg: null, mp: null, mn: null, net: null }, vol: null } };
+    }
+    var Lc = cur.L[lk] || cur.L.oi, LO = cur.L.oi, LV = cur.L.vol, Lg = g.levels || {};
+    var ptSrc = FR && Array.isArray(FR.points) ? FR.points
+      : (M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points) ? LIVE_GEX_INTRADAY.points : null);
+    var pts = ptSrc
+      ? ptSrc.filter(function (r) { return qqqSessionDay(Number(r.time)) === day; }).map(function (r) {
+          return { t: Number(r.time) - T0, flip: r.gamma_flip, cw: r.call_wall, pw: r.put_wall, mag: r.oi_magnet,
+                   van: r.vanna_strike, chm: r.charm_strike, tht: r.theta_strike, b: !!r.b };
+        }).sort(function (a, b) { return a.t - b.t; }) : [];
+    var ptsNow = pts.filter(function (p) { return p.t <= tNow; }), lastP = ptsNow.length ? ptsNow[ptsNow.length - 1] : null;
+    var callWall = lastP ? lastP.cw : Lg.call_wall, putWall = lastP ? lastP.pw : Lg.put_wall;
+    var magnet = lastP ? lastP.mag : Lg.highest_oi_strike;
+    var zgNow = Lc.zg != null ? Lc.zg : (lastP && lastP.flip != null ? lastP.flip : (g.gamma_flip_method === "zero crossing" ? g.gamma_flip : null));
+    var zgOI = LO && LO.zg != null ? LO.zg : (lastP && lastP.flip != null ? lastP.flip : (g.gamma_flip_method === "zero crossing" ? g.gamma_flip : null));
+
+    // ---- expected move ----
+    var left = Math.max(0, SESSION - tNow), sig = QQQ_SESSION.noGex ? null : M.sig,
+        cvol = QQQ_SESSION.noGex ? NaN : Number(get(e, "quant.garch.conditional_vol_pct"));
+    var sigLeft = sig ? sig * Math.sqrt(left / SESSION) : null;
+    var gsLeft = isFinite(cvol) && cvol > 0 ? cvol / Math.sqrt(252) / 100 * Math.sqrt(left / SESSION) : null;
+
+    // ---- price scale ----
+    var lo = 1e9, hi = -1e9;
+    shown.forEach(function (b) { var rt = b.time - T0; if (rt + step * 60 < V0 || rt > V1) return; lo = Math.min(lo, b.low); hi = Math.max(hi, b.high); });
+    if (lo > hi) shown.forEach(function (b) { lo = Math.min(lo, b.low); hi = Math.max(hi, b.high); });
+    lo = Math.min(lo, spot); hi = Math.max(hi, spot);
+    var pad = Math.max(0.6, (hi - lo) * 0.15);
+    if (GX_VIEW.zoom === "wide") {
+      [zgNow, callWall, putWall, magnet, QQQ_LAYERS.ranges && sigLeft ? spot * (1 + sigLeft) : null, QQQ_LAYERS.ranges && sigLeft ? spot * (1 - sigLeft) : null].forEach(function (k) {
+        k = Number(k); if (isFinite(k) && k > 0 && Math.abs(k - spot) / spot < 0.025) { lo = Math.min(lo, k); hi = Math.max(hi, k); }
+      });
+      pad = Math.max(0.8, (hi - lo) * 0.06);
+    }
+    var KB = lo - pad, KT = hi + pad;
+    if (GX_VIEW.yv && GX_VIEW.yv.hi > GX_VIEW.yv.lo) { KB = GX_VIEW.yv.lo; KT = GX_VIEW.yv.hi; }
+    function Y(k) { return PY0 + ((KT - k) / (KT - KB)) * (PY1 - PY0); }
+    function inR(k) { return k != null && isFinite(k) && k >= KB && k <= KT; }
+    var gstep = [0.25, 0.5, 1, 2, 5, 10, 20].filter(function (s) { return (KT - KB) / s <= 12; })[0] || 20;
+
+    function path(list, gapSec, stepMode) {
+      var d = "", open = false, pt = null;
+      list.forEach(function (p) {
+        var v = p[1] == null ? null : Number(p[1]);
+        if (v === null || !isFinite(v) || (pt !== null && p[0] - pt > gapSec)) open = false;
+        pt = p[0];
+        if (v === null || !isFinite(v)) return;
+        var x = X(p[0]).toFixed(1), y = Y(v).toFixed(1);
+        d += !open ? "M" + x + " " + y : (stepMode ? "H" + x + "V" + y : "L" + x + " " + y);
+        open = true;
+      });
+      return d;
+    }
+    function smooth(list) {
+      return list.map(function (p, j) {
+        if (p[1] == null) return [p[0], null];
+        var vals = [];
+        for (var a = Math.max(0, j - 4); a <= j; a++) if (list[a][1] != null && p[0] - list[a][0] <= 360) vals.push(Number(list[a][1]));
+        var s = 0; vals.forEach(function (x) { s += x; }); return [p[0], s / vals.length];
+      });
+    }
+    function line(y, col, dash, wdt, x0, x1) {
+      return '<line x1="' + (x0 || PX0) + '" x2="' + (x1 || PX1) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="' + col + '" stroke-width="' + (wdt || 1) + '"' + (dash ? ' stroke-dasharray="' + dash + '"' : "") + '/>';
+    }
+
+    var svg = '<defs><pattern id="gx-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
+      '<line x1="0" y1="0" x2="0" y2="8" stroke="#202020" stroke-width="4"/></pattern>' +
+      '<clipPath id="gx-clip"><rect x="' + PX0 + '" y="' + PY0 + '" width="' + PW_ + '" height="' + (PY1 - PY0) + '"/></clipPath>' +
+      '<clipPath id="gx-clip-pane"><rect x="' + PX0 + '" y="' + LY0 + '" width="' + PW_ + '" height="' + (LY1 - LY0) + '"/></clipPath></defs>';
+    svg += '<rect x="0" y="0" width="1200" height="' + VBH + '" fill="' + GXC.bg + '"/>';
+    var gridBottom = paneOn ? LY1 : PY1, timeY = gridBottom + 20;
+    for (var gk = Math.ceil(KB / gstep) * gstep; gk <= KT; gk += gstep) {
+      svg += line(Y(gk), GXC.grid) + '<text x="' + (PX0 - 8) + '" y="' + (Y(gk) + 4).toFixed(1) + '" fill="#bdc1c6" text-anchor="end" style="' + sty + '">' +
+        (gstep < 1 ? gk.toFixed(2) : gk.toFixed(0)) + '</text>';
+    }
+    var span = V1 - V0, tick = span <= 2400 ? 300 : span <= 5400 ? 600 : span <= 12000 ? 1800 : 3600;
+    for (var tt0 = Math.ceil((V0 + 1800) / tick) * tick - 1800; tt0 <= V1; tt0 += tick) {
+      if (tt0 < V0) continue;
+      svg += '<line x1="' + X(tt0).toFixed(1) + '" x2="' + X(tt0).toFixed(1) + '" y1="' + PY0 + '" y2="' + gridBottom + '" stroke="' + GXC.grid + '"/>' +
+        '<text x="' + X(tt0).toFixed(1) + '" y="' + timeY + '" fill="' + GXC.time + '" text-anchor="' + (X(tt0) > PX1 - 24 ? "end" : X(tt0) < PX0 + 24 ? "start" : "middle") + '" style="' + sty + ';font-weight:600">' + gxClock(tt0) + '</text>';
+    }
+
+    svg += '<g clip-path="url(#gx-clip)">';
+    var gapSrc = frames ? frames.map(function (f) { return f.t; }) : pts.map(function (p) { return p.t; }), gapMax = frames ? 180 : 720;
+    for (var gi = 1; gi < gapSrc.length; gi++) if (gapSrc[gi] - gapSrc[gi - 1] > gapMax) {
+      var gx0 = X(gapSrc[gi - 1]), gw = X(gapSrc[gi]) - gx0;
+      svg += '<rect x="' + gx0.toFixed(1) + '" y="' + PY0 + '" width="' + gw.toFixed(1) + '" height="' + (PY1 - PY0) + '" fill="url(#gx-hatch)"/>';
+      if (gw > 90) svg += '<text x="' + (gx0 + gw / 2).toFixed(1) + '" y="' + (PY0 + 18) + '" fill="#8a8f94" text-anchor="middle" style="' + sty + '">no GEX snapshots ' + gxClock(gapSrc[gi - 1]) + '–' + gxClock(gapSrc[gi]) + '</text>';
+    }
+    // rebuilt minutes (saved days): a thin band on top, lines dimmed underneath
+    var rbSpans = [];
+    if (frames) frames.forEach(function (f) {
+      if (!f.b) return;
+      var last = rbSpans[rbSpans.length - 1];
+      if (last && f.t - 30 - last[1] <= 90) last[1] = f.t + 30; else rbSpans.push([f.t - 30, f.t + 30]);
+    });
+    var rbDefs = "";
+    if (rbSpans.length) {
+      var rbR = "", lgR = "", cx0 = PX0 - 2;
+      rbSpans.forEach(function (sp) {
+        var a = Math.max(PX0 - 2, X(sp[0])), z = Math.min(PX1 + 2, X(sp[1]));
+        if (z <= a) return;
+        rbR += '<rect x="' + a.toFixed(1) + '" y="0" width="' + (z - a).toFixed(1) + '" height="' + VBH + '"/>';
+        if (a > cx0) lgR += '<rect x="' + cx0.toFixed(1) + '" y="0" width="' + (a - cx0).toFixed(1) + '" height="' + VBH + '"/>';
+        cx0 = Math.max(cx0, z);
+        svg += '<rect x="' + a.toFixed(1) + '" y="' + PY0 + '" width="' + (z - a).toFixed(1) + '" height="3" fill="#8ab4f8" opacity=".45"/>';
+        if (z - a > 120) svg += '<text x="' + ((a + z) / 2).toFixed(1) + '" y="' + (PY0 + 16) + '" fill="#8a8f94" text-anchor="middle" style="' + sty + '">rebuilt from trades</text>';
+      });
+      if (cx0 < PX1 + 2) lgR += '<rect x="' + cx0.toFixed(1) + '" y="0" width="' + (PX1 + 2 - cx0).toFixed(1) + '" height="' + VBH + '"/>';
+      rbDefs = '<defs><clipPath id="gx-rb">' + rbR + '</clipPath><clipPath id="gx-lg">' + (lgR || '<rect width="0" height="0"/>') + '</clipPath></defs>';
+      svg += rbDefs;
+    }
+    function lineByKind(markup) {
+      return rbDefs ? '<g clip-path="url(#gx-lg)">' + markup + '</g><g clip-path="url(#gx-rb)" opacity=".45">' + markup + '</g>' : markup;
+    }
+    // price
+    var cw = PW_ * step * 60 / (V1 - V0), bw = Math.max(1, cw * 0.62);
+    var upC = S.scheme === "gexbot" ? GXC.up : GXC.up2, dnC = S.scheme === "gexbot" ? GXC.down : GXC.down2;
+    if (S.ctype === "line") {
+      svg += '<path d="' + path(shown.map(function (b) { return [b.time - T0 + step * 30, b.close]; }), 1e9) + '" fill="none" stroke="' + upC + '" stroke-width="1.6"/>';
+    } else {
+      for (var b = 0; b <= ci; b++) {
+        var k = disp[b], x = X(k.time - T0 + step * 30);
+        if (x < PX0 - 20 || x > PX1 + 20) continue;
+        var col = k.close >= k.open ? upC : dnC;
+        svg += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + Y(k.high).toFixed(1) + '" y2="' + Y(k.low).toFixed(1) + '" stroke="' + col + '"/>' +
+          '<rect x="' + (x - bw / 2).toFixed(1) + '" y="' + Math.min(Y(k.open), Y(k.close)).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' +
+          Math.max(Math.abs(Y(k.open) - Y(k.close)), 1).toFixed(1) + '" fill="' + col + '"/>';
+      }
+    }
+    var e9 = qqqEma(candles, 9), e20 = qqqEma(candles, 20);
+    window._qqqEma9Last = e9.length ? e9[ci].value : null;
+    window._qqqEma20Last = e20.length ? e20[ci].value : null;
+    if (QQQ_CHART_VIEW.ema) {
+      svg += '<path d="' + path(e9.slice(0, ci + 1).map(function (p) { return [p.time - T0 + step * 30, p.value]; }), 1e9) + '" fill="none" stroke="#29b6f6" stroke-width="1.2" opacity=".8"/>';
+      svg += '<path d="' + path(e20.slice(0, ci + 1).map(function (p) { return [p.time - T0 + step * 30, p.value]; }), 1e9) + '" fill="none" stroke="#ff9f0a" stroke-width="1.2" opacity=".8"/>';
+    }
+    // level history: thin solid lines (raw = dots)
+    if (QQQ_LAYERS.core) {
+      var hz, hp, hn;
+      if (frames) {
+        var fNow = frames.slice(0, fi + 1);
+        hz = fNow.map(function (f) { return [f.t, (f.L[lk] || f.L.oi).zg]; });
+        hp = fNow.map(function (f) { return [f.t, (f.L[lk] || f.L.oi).mp]; });
+        hn = fNow.map(function (f) { return [f.t, (f.L[lk] || f.L.oi).mn]; });
+      } else {
+        hz = ptsNow.map(function (p) { return [p.t, p.flip]; });
+        hp = ptsNow.map(function (p) { return [p.t, p.cw]; });
+        hn = ptsNow.map(function (p) { return [p.t, p.pw]; });
+      }
+      var gapS = frames ? 180 : 720, series = [[hz, GXC.zg, S.zg, true], [hp, GXC.cw, S.cw, true], [hn, GXC.pw, S.pw, true]];
+      series.forEach(function (s) {
+        if (!s[2]) return;
+        if (GX_VIEW.hist === "smooth") svg += lineByKind('<path d="' + path(s[3] ? smooth(s[0]) : s[0], gapS, !s[3]) + '" fill="none" stroke="' + s[1] + '" stroke-width="1.4"/>');
+        else s[0].forEach(function (p) { if (inR(p[1])) svg += '<circle cx="' + X(p[0]).toFixed(1) + '" cy="' + Y(p[1]).toFixed(1) + '" r="1.8" fill="' + s[1] + '"/>'; });
+      });
+      if (S.mag) svg += '<path d="' + path(ptsNow.map(function (p) { return [p.t, p.mag]; }), 720, true) + '" fill="none" stroke="' + GXC.mag + '" stroke-width="1.2" stroke-dasharray="2 3"/>';
+    }
+    if (QQQ_LAYERS.flow) [["van", GXC.van], ["chm", GXC.chm], ["tht", GXC.tht]].forEach(function (s) {
+      svg += '<path d="' + path(ptsNow.map(function (p) { return [p.t, p[s[0]]]; }), 720, true) + '" fill="none" stroke="' + s[1] + '" stroke-width="1.2" stroke-dasharray="2 3"/>';
+    });
+    // expected-move cone: opens from the current price toward the close ("<")
+    var coneTags = [];
+    if (QQQ_LAYERS.ranges && left > 0 && sig && S.emStyle === "cone") {
+      var tEnd = Math.min(V1, SESSION);
+      var cone = function (mult, sday, col, dash, wdt, label) {
+        var d = "";
+        for (var c2 = 0; c2 <= 24; c2++) {
+          var tt = tNow + (SESSION - tNow) * c2 / 24, pr = spot * (1 + mult * sday * Math.sqrt((tt - tNow) / SESSION));
+          d += (c2 ? "L" : "M") + X(tt).toFixed(1) + " " + Y(pr).toFixed(1);
+        }
+        svg += '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + wdt + '" stroke-dasharray="' + dash + '"/>';
+        if (tEnd > tNow) coneTags.push({ v: spot * (1 + mult * sday * Math.sqrt((tEnd - tNow) / SESSION)), col: col,
+          label: label + " " + (spot * (1 + mult * sday * Math.sqrt(left / SESSION))).toFixed(2) });
+      };
+      if (S.sigma) {
+        cone(2, sig, "#5c6bc0", "1 3", 1.3, "95%"); cone(-2, sig, "#5c6bc0", "1 3", 1.3, "95%");
+        cone(1, sig, "#29b6f6", "5 3", 1.5, "68%"); cone(-1, sig, "#29b6f6", "5 3", 1.5, "68%");
+      }
+      if (S.garch && isFinite(cvol) && cvol > 0) {
+        var gDay = cvol / Math.sqrt(252) / 100;
+        cone(1, gDay, GXC.garch, "4 4", 1.3, "G"); cone(-1, gDay, GXC.garch, "4 4", 1.3, "G");
+      }
+    }
+    if (tNow >= V0 && tNow <= V1) svg += '<line x1="' + X(tNow).toFixed(1) + '" x2="' + X(tNow).toFixed(1) + '" y1="' + PY0 + '" y2="' + PY1 + '" stroke="' + GXC.spot + '" stroke-width="1"/>';
+    svg += '</g>';
+
+    // ---- strike profile overlaid on the price axis ----
+    var kin = cur.ks.filter(function (k) { return k >= KB && k <= KT; });
+    function mx(key) { var m = 0; kin.forEach(function (k) { var v = cur.map[k][key]; if (v != null) m = Math.max(m, Math.abs(v)); }); return m || 1; }
+    var mV = mx("vol"), mO = mx("oi"), ppk = kin.length > 1 ? Math.abs(Y(kin[1]) - Y(kin[0])) : 30;
+    var hBig = Math.max(3, Math.min(14, ppk * 0.55)), hSmall = Math.max(2, Math.min(7, ppk * 0.28));
+    var scaleMax = w === "oi" ? mO : mV;
+    if (S.bars) {
+      svg += '<line x1="' + PC.toFixed(1) + '" x2="' + PC.toFixed(1) + '" y1="' + PY0 + '" y2="' + PY1 + '" stroke="#2e7d32" stroke-dasharray="6 5" stroke-width="1.5"/>';
+      var bar = function (k, val, max, h, cp, cn) {
+        var xv = PC + (val / max) * PH;
+        svg += '<rect x="' + Math.min(PC, xv).toFixed(1) + '" y="' + (Y(k) - h / 2).toFixed(1) + '" width="' + Math.max(Math.abs(xv - PC), 1).toFixed(1) +
+          '" height="' + h.toFixed(1) + '" rx="' + Math.min(3, h / 2).toFixed(1) + '" fill="' + (val >= 0 ? cp : cn) + '" opacity="' + (cur && cur.b ? ".5" : ".92") + '"/>';
+      };
+      kin.forEach(function (k) {
+        var v = cur.map[k];
+        if (w === "both" && v.vol != null) { bar(k, v.oi, mO, hBig, GXC.posO, GXC.negO); bar(k, v.vol, mV, hSmall, GXC.posV, GXC.negV); }
+        else if (w === "vol" && v.vol != null) bar(k, v.vol, mV, hBig, GXC.posV, GXC.negV);
+        else bar(k, v.oi, mO, hBig, GXC.posV, GXC.negV);
+      });
+    }
+    function backIdx(mins) {
+      var target = frames[fi].t - mins * 60;
+      for (var j = fi; j >= 0; j--) if (frames[j].t <= target + 20) return (target - frames[j].t) <= 120 ? j : null;
+      return null;
+    }
+    if (frames && S.bars && S.dots && w !== "oi") {
+      [[30, GXC.d30], [15, GXC.d15], [10, GXC.d10], [5, GXC.d5], [1, GXC.d1]].forEach(function (p) {
+        var j = backIdx(p[0]); if (j === null) return;
+        kin.forEach(function (k) { var o = frames[j].map[k]; if (o) svg += '<circle cx="' + (PC + (o.vol / mV) * PH).toFixed(1) + '" cy="' + Y(k).toFixed(1) + '" r="3.2" fill="' + p[1] + '"/>'; });
+      });
+    }
+    // X2 (GEX) axis labels at the top
+    if (S.bars) svg += '<text x="' + PC.toFixed(1) + '" y="' + (PY0 - 12) + '" fill="#e8eaed" text-anchor="middle" style="' + sty + ';font-weight:700">0</text>' +
+      '<text x="' + (PC + PH).toFixed(1) + '" y="' + (PY0 - 12) + '" fill="#f6ae2d" text-anchor="middle" style="' + sty + '">' + gxMoney(scaleMax) + '</text>' +
+      '<text x="' + (PC - PH).toFixed(1) + '" y="' + (PY0 - 12) + '" fill="#f6ae2d" text-anchor="middle" style="' + sty + '">' + gxMoney(-scaleMax) + '</text>';
+
+    // ---- current levels: dashed lines, pills on the price axis (left) and right edge ----
+    function touch(k) { if (k == null || !sigLeft) return null; return Math.min(1, 2 * cdf(-Math.abs(Math.log(k / spot)) / sigLeft)); }
+    var leftPills = [], rightPills = [];
+    function lvl(v, col, dash, label, sideArr, txt) {
+      v = v == null ? null : Number(v);
+      if (v === null || !isFinite(v)) return;
+      var off = !inR(v), y = off ? (v > KT ? PY0 + 9 : PY1 - 9) : Y(v);
+      if (!off) svg += line(y, col, dash, 1.1);
+      sideArr.push({ y: y, col: col, txt: txt || "#000", label: (off ? (v > KT ? "↑ " : "↓ ") : "") + label });
+    }
+    coneTags.forEach(function (c) {
+      var off = !inR(c.v);
+      rightPills.push({ y: off ? (c.v > KT ? PY0 + 9 : PY1 - 9) : Y(c.v), col: c.col, txt: c.col === "#5c6bc0" ? "#fff" : "#000", label: (off ? (c.v > KT ? "↑ " : "↓ ") : "") + c.label });
+    });
+    if (QQQ_LAYERS.ranges && sigLeft && left > 0 && S.emStyle !== "cone") {
+      if (S.sigma) {
+        lvl(spot * (1 + 2 * sigLeft), "#5f6368", "3 5", "+2σ " + (spot * (1 + 2 * sigLeft)).toFixed(2), rightPills, "#fff");
+        lvl(spot * (1 - 2 * sigLeft), "#5f6368", "3 5", "−2σ " + (spot * (1 - 2 * sigLeft)).toFixed(2), rightPills, "#fff");
+        lvl(spot * (1 + sigLeft), GXC.sigma, "6 4", "+1σ " + (spot * (1 + sigLeft)).toFixed(2), rightPills, "#000");
+        lvl(spot * (1 - sigLeft), GXC.sigma, "6 4", "−1σ " + (spot * (1 - sigLeft)).toFixed(2), rightPills, "#000");
+      }
+      if (S.garch && gsLeft) {
+        lvl(spot * (1 + gsLeft), GXC.garch, "4 4", "G+ " + (spot * (1 + gsLeft)).toFixed(2), rightPills, "#000");
+        lvl(spot * (1 - gsLeft), GXC.garch, "4 4", "G− " + (spot * (1 - gsLeft)).toFixed(2), rightPills, "#000");
+      }
+    }
+    if (QQQ_LAYERS.core) {
+      if (S.zg) lvl(zgNow, GXC.zg, "7 5", (zgNow == null ? "" : Number(zgNow).toFixed(2)), rightPills);
+      if (S.cw) lvl(callWall, GXC.cw, "7 5", Number(callWall).toFixed(2), leftPills);
+      if (S.pw) lvl(putWall, GXC.pw, "7 5", Number(putWall).toFixed(2), leftPills, "#fff");
+      if (S.mag) lvl(magnet, GXC.mag, "2 4", Number(magnet).toFixed(2), leftPills);
+    }
+    if (QQQ_LAYERS.flow && lastP) {
+      lvl(lastP.van, GXC.van, "2 4", "VAN " + lastP.van, rightPills);
+      lvl(lastP.chm, GXC.chm, "2 4", "CHM " + lastP.chm, rightPills);
+      lvl(lastP.tht, GXC.tht, "2 4", "THT " + lastP.tht, rightPills);
+    }
+    if (S.spot) { svg += line(Y(spot), GXC.spot, "", 1); leftPills.push({ y: Y(spot), col: GXC.spot, txt: "#000", label: spot.toFixed(2), bold: true }); }
+    function pills(arr, xLeft, wdt, anchorRight) {
+      arr.sort(function (a, b) { return a.y - b.y; });
+      // spread overlapping pills apart, then pull the stack back inside the plot
+      for (var i = 1; i < arr.length; i++) if (arr[i].y - arr[i - 1].y < 19) arr[i].y = arr[i - 1].y + 19;
+      var over = arr.length ? arr[arr.length - 1].y - (PY1 - 9) : 0;
+      if (over > 0) arr.forEach(function (p) { p.y -= over; });
+      arr.forEach(function (p) {
+        var tw = Math.max(wdt, p.label.length * 7.4 + 12), x = anchorRight ? xLeft - tw : xLeft;
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + (p.y - 9.5).toFixed(1) + '" width="' + tw.toFixed(1) + '" height="19" rx="5" fill="' + p.col + '"/>' +
+          '<text x="' + (x + tw / 2).toFixed(1) + '" y="' + (p.y + 4.5).toFixed(1) + '" fill="' + p.txt + '" text-anchor="middle" style="' + sty + ';font-weight:700">' + esc(p.label) + '</text>';
+      });
+    }
+    pills(leftPills, 2, 66, false);
+    pills(rightPills, PX1 - 4, 60, true);
+
+    // ---- lower pane ----
+    if (paneOn) {
+      var pv = QQQ_CHART_VIEW.pane;
+      svg += '<rect x="' + PX0 + '" y="' + LY0 + '" width="' + PW_ + '" height="' + (LY1 - LY0) + '" fill="#0d0d0d"/>' +
+        '<text x="' + (PX0 + 6) + '" y="' + (LY0 - 8) + '" fill="#9aa0a6" style="' + sty + '">' + (pv === "volume" ? "IEX volume" : pv === "rsi" ? "RSI 14" : "ADL · IEX") + '</text>' +
+        '<g clip-path="url(#gx-clip-pane)">';
+      if (pv === "volume") {
+        var mvv = 1; shown.forEach(function (c) { mvv = Math.max(mvv, c.volume || 0); });
+        shown.forEach(function (c) {
+          var h = ((c.volume || 0) / mvv) * (LY1 - LY0);
+          svg += '<rect x="' + (X(c.time - T0 + step * 30) - bw / 2).toFixed(1) + '" y="' + (LY1 - h).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(h, 0.5).toFixed(1) +
+            '" fill="' + (c.close >= c.open ? upC : dnC) + '" opacity=".7"/>';
+        });
+      } else {
+        var ser = (pv === "rsi" ? qqqRsi(candles, 14) : qqqAdl(candles)).filter(function (p) { return p.time <= times[ci]; });
+        var vlo = pv === "rsi" ? 0 : 1e18, vhi = pv === "rsi" ? 100 : -1e18;
+        if (pv !== "rsi") ser.forEach(function (p) { vlo = Math.min(vlo, p.value); vhi = Math.max(vhi, p.value); });
+        if (vhi === vlo) vhi = vlo + 1;
+        var d = "";
+        ser.forEach(function (p, j) { d += (j ? "L" : "M") + X(p.time - T0 + step * 30).toFixed(1) + " " + (LY1 - (p.value - vlo) / (vhi - vlo) * (LY1 - LY0)).toFixed(1); });
+        if (pv === "rsi") [30, 70].forEach(function (lv) { svg += line(LY1 - lv / 100 * (LY1 - LY0), "#3a3a3a", "3 3"); });
+        svg += '<path d="' + d + '" fill="none" stroke="#29b6f6" stroke-width="1.3"/>';
+      }
+      svg += '</g>';
+      if (pv === "rsi") [30, 70].forEach(function (lv) { svg += '<text x="' + (PX0 - 8) + '" y="' + (LY1 - lv / 100 * (LY1 - LY0) + 4) + '" fill="#9aa0a6" text-anchor="end" style="' + sty + '">' + lv + '</text>'; });
+    }
+    svg += '<g id="gx-xhair"></g>';
+
+    var prof = {}; kin.forEach(function (k) { prof[k] = cur.map[k][lk === "oi" ? "oi" : "vol"]; });
+    window._gxMap = { PX0: PX0, PX1: PX1, PY0: PY0, PY1: PY1, LY1: paneOn ? LY1 : PY1, PC: PC, PH: PH, V0: V0, V1: V1, KB: KB, KT: KT,
+      T0: T0, step: step, scaleMax: scaleMax, prof: prof, ks: kin, vbH: VBH, cand: shown.map(function (c) { return [c.time - T0, c.open, c.high, c.low, c.close]; }) };
+    window._gxView = { V0: V0, V1: V1 };
+    window._gxY = { KB: KB, KT: KT, vbH: VBH };
+
+    var chart = '<svg viewBox="0 0 1200 ' + VBH + '" width="100%" style="display:block;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair" role="img" ' +
+      'aria-label="QQQ price with zero gamma, walls, expected move and the strike GEX profile on the same price axis">' + svg + '</svg>';
+
+    // ---- sidebar ----
+    var above = zgNow != null && spot >= zgNow, rc = zgNow == null ? "#e8eaed" : above ? "#00e676" : "#ff5252";
+    var hdr = 'font-weight:700;font-size:13px;padding:6px 0 5px;border-bottom:1px solid #333;margin:12px 0 6px;display:flex;justify-content:space-between;align-items:center';
+    function row(label, val, lc, vc) {
+      return '<div style="display:flex;justify-content:space-between;font-size:12.5px;line-height:1.75"><span style="color:' + (lc || "#e8eaed") + '">' + label + '</span><span style="color:' + (vc || "#e8eaed") + ';font-variant-numeric:tabular-nums">' + val + '</span></div>';
+    }
+    function f2(v) { v = v == null ? null : Number(v); return v === null || !isFinite(v) ? "—" : v.toFixed(2); }
+    function seg(items) {
+      return '<div style="display:flex;flex-direction:column;border:1px solid #333;border-radius:6px;overflow:hidden">' + items.map(function (it, i) {
+        return '<button type="button"' + (it.attr || "") + (it.dis ? " disabled" : "") + ' title="' + esc(it.title || "") + '" style="padding:8px;border:0;' + (i ? "border-top:1px solid #333;" : "") +
+          'background:' + (it.on ? "#2b2f36" : "transparent") + ';color:' + (it.dis ? "#5f6368" : it.on ? "#8ab4f8" : "#e8eaed") + ';cursor:' + (it.dis ? "not-allowed" : "pointer") + ';font:13px ' + GX_FONT + '">' + esc(it.label) + '</button>';
+      }).join("") + '</div>';
+    }
+    var md = day.slice(5).replace("-", "/"), side;
+    if (GX_VIEW.settings) {
+      var tog = function (key, label, on, attr) {
+        return '<button type="button" ' + (attr || ('data-gx="show" data-gx-v="' + key + '"')) + ' aria-pressed="' + (on ? "true" : "false") + '" style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:6px 0;background:transparent;border:0;color:#e8eaed;cursor:pointer;font:12.5px ' + GX_FONT + '">' +
+          '<span>' + label + '</span><span style="width:34px;height:18px;border-radius:9px;background:' + (on ? "#8ab4f8" : "#3c4043") + ';position:relative;display:inline-block">' +
+          '<span style="position:absolute;top:2px;left:' + (on ? 18 : 2) + 'px;width:14px;height:14px;border-radius:50%;background:#fff"></span></span></button>';
+      };
+      var opt = function (attr, val, label, on) {
+        return '<button type="button" ' + attr + '="' + val + '" aria-pressed="' + (on ? "true" : "false") + '" style="flex:1;padding:6px 4px;border:1px solid #333;background:' + (on ? "#2b2f36" : "transparent") + ';color:' + (on ? "#8ab4f8" : "#e8eaed") + ';cursor:pointer;font:12px ' + GX_FONT + ';border-radius:5px">' + label + '</button>';
+      };
+      var optGx = function (a, val, label, on) {
+        return '<button type="button" data-gx="' + a + '" data-gx-v="' + val + '" aria-pressed="' + (on ? "true" : "false") + '" style="flex:1;padding:6px 4px;border:1px solid #333;background:' + (on ? "#2b2f36" : "transparent") + ';color:' + (on ? "#8ab4f8" : "#e8eaed") + ';cursor:pointer;font:12px ' + GX_FONT + ';border-radius:5px">' + label + '</button>';
+      };
+      var rowOf = function (title, inner) { return '<div style="font-size:11.5px;color:#9aa0a6;margin:10px 0 4px">' + title + '</div><div style="display:flex;gap:4px">' + inner + '</div>'; };
+      side = '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:20px">settings</span>' +
+        '<button type="button" data-gx="settings" aria-label="Back" title="Back" style="background:#222;border:1px solid #333;color:#e8eaed;border-radius:50%;width:34px;height:34px;cursor:pointer">⌂</button></div>' +
+        '<div style="margin-top:8px">' +
+        tog("xhair", "Cursor crosshair", S.xhair) +
+        tog("", '<span style="color:' + GXC.zg + '">GEX history + odds</span>', QQQ_LAYERS.core, 'data-qqq-layer="core"') +
+        tog("zg", '<span style="color:' + GXC.zg + '">Zero gamma</span>', S.zg) +
+        tog("cw", '<span style="color:' + GXC.cw + '">Call wall / major +</span>', S.cw) +
+        tog("pw", '<span style="color:' + GXC.pw + '">Put wall / major −</span>', S.pw) +
+        tog("mag", '<span style="color:' + GXC.mag + '">OI magnet</span>', S.mag) +
+        tog("bars", '<span style="color:' + GXC.posV + '">GEX bars by strike</span>', S.bars) +
+        tog("dots", '<span style="color:' + GXC.d5 + '">1/5/10/15/30 min dots</span>' + (frames ? "" : ' <span style="color:#5f6368">(logger)</span>'), S.dots) +
+        tog("", '<span style="color:' + GXC.sigma + '">Expected move</span>', QQQ_LAYERS.ranges, 'data-qqq-layer="ranges"') +
+        tog("sigma", '<span style="color:' + GXC.sigma + '">±1σ / ±2σ</span>', S.sigma) +
+        tog("garch", '<span style="color:' + GXC.garch + '">GARCH 68%</span>', S.garch) +
+        tog("", '<span style="color:' + GXC.van + '">Vanna / charm / theta</span>', QQQ_LAYERS.flow, 'data-qqq-layer="flow"') +
+        tog("spot", '<span style="color:' + GXC.spot + '">Spot line</span>', S.spot) +
+        tog("", '<span style="color:#29b6f6">EMA 9</span> / <span style="color:#ff9f0a">EMA 20</span>', QQQ_CHART_VIEW.ema, 'data-qqq-ema="ema"') +
+        '</div>' +
+        rowOf("Chart type", optGx("ctype", "candles", "Candles", S.ctype === "candles" && QQQ_CHART_VIEW.mode === "raw") +
+          '<button type="button" data-qqq-mode="ha" aria-pressed="' + (QQQ_CHART_VIEW.mode === "ha" ? "true" : "false") + '" data-gx-also="candles" style="flex:1;padding:6px 4px;border:1px solid #333;background:' + (QQQ_CHART_VIEW.mode === "ha" && S.ctype === "candles" ? "#2b2f36" : "transparent") + ';color:' + (QQQ_CHART_VIEW.mode === "ha" && S.ctype === "candles" ? "#8ab4f8" : "#e8eaed") + ';cursor:pointer;font:12px ' + GX_FONT + ';border-radius:5px">Heikin-Ashi</button>' +
+          optGx("ctype", "line", "Line", S.ctype === "line")) +
+        rowOf("Expected move", optGx("em", "cone", "Cone  <", S.emStyle === "cone") + optGx("em", "lines", "Flat lines", S.emStyle !== "cone")) +
+        rowOf("Candle colors", optGx("scheme", "gexbot", "Blue / gray", S.scheme === "gexbot") + optGx("scheme", "classic", "Green / red", S.scheme === "classic")) +
+        rowOf("Lower pane", opt("data-qqq-pane", "none", "Off", QQQ_CHART_VIEW.pane === "none") + opt("data-qqq-pane", "volume", "Volume", QQQ_CHART_VIEW.pane === "volume") +
+          opt("data-qqq-pane", "rsi", "RSI", QQQ_CHART_VIEW.pane === "rsi") + opt("data-qqq-pane", "adl", "ADL", QQQ_CHART_VIEW.pane === "adl")) +
+        rowOf("History lines", optGx("hist", "smooth", "Smoothed", GX_VIEW.hist === "smooth") + optGx("hist", "raw", "Raw dots", GX_VIEW.hist === "raw")) +
+        rowOf("Price scale", optGx("zoom", "tight", "Tight", GX_VIEW.zoom === "tight") + optGx("zoom", "wide", "Wide", GX_VIEW.zoom === "wide")) +
+        rowOf("Time", optGx("tview", "fit", "Fit", GX_VIEW.tview === "fit") + optGx("tview", "day", "Full day", GX_VIEW.tview === "day")) +
+        '<div style="font-size:11.5px;color:#9aa0a6;margin-top:12px;line-height:1.5">Scroll = zoom time · drag = pan · drag the price axis = stretch price · double-click = reset</div>' +
+        '<button type="button" data-gx="defaults" style="margin-top:10px;width:100%;padding:7px;background:transparent;border:1px solid #333;color:#e8eaed;border-radius:6px;cursor:pointer;font:12px ' + GX_FONT + '">Reset settings</button>';
+    } else {
+      var wait = "Needs per-minute volume GEX from the logger";
+      side = '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:20px">gex chart</span>' +
+          '<button type="button" data-gx="settings" aria-label="Settings" title="Settings" style="background:transparent;border:0;color:#e8eaed;cursor:pointer;width:34px;height:34px">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>' +
+        '<div style="font-size:12px;color:#9aa0a6;margin:2px 0 10px">QQQ · ' + (frames ? (FR && FR.sources ? "saved day · per-minute" : "logger · per-minute") : M.latest ? "live 0DTE logger" : "saved session map") + ' · ' + cur.ks.length + ' strikes</div>' +
+        seg([{ label: "latest (" + md + ")", on: true }, { label: "next", dis: true, title: "Next expiry isn't captured yet (logger)" }, { label: "90d (agg)", dis: true, title: "90-day aggregate isn't captured yet (logger)" }]) +
+        '<div style="display:flex;gap:4px;margin-top:8px">' + ["vol", "oi", "both"].map(function (v) {
+          var on = frames ? GX_VIEW.w === v : v === "oi", dis = !frames && v !== "oi";
+          return '<button type="button" data-gx="w" data-gx-v="' + v + '"' + (dis ? " disabled" : "") + ' title="' + (dis ? wait : "") + '" aria-pressed="' + (on ? "true" : "false") + '" style="flex:1;padding:6px 4px;border:1px solid #333;border-radius:5px;background:' + (on ? "#2b2f36" : "transparent") +
+            ';color:' + (dis ? "#5f6368" : on ? "#8ab4f8" : "#e8eaed") + ';cursor:' + (dis ? "not-allowed" : "pointer") + ';font:12px ' + GX_FONT + '">' + (v === "vol" ? "Volume" : v === "oi" ? "OI" : "Both") + '</button>';
+        }).join("") + '</div>' +
+        '<div style="' + hdr + '">update</div>' +
+        row("date", day.slice(5, 7) + "/" + day.slice(8, 10) + "/" + day.slice(0, 4)) + row("time", clock + " ET") + row("spot", spot.toFixed(2)) +
+        (frames ? row("source", cur.b ? "rebuilt from trades" : "logged", null, cur.b ? "#8ab4f8" : null) : "") +
+        '<div style="' + hdr + '">volume</div>' +
+        (LV ? row("zero gamma", f2(LV.zg), GXC.zg) + row("major positive", f2(LV.mp), GXC.cw) + row("major negative", f2(LV.mn), GXC.pw) +
+              row("net gex", gxMoney(LV.net), null, LV.net >= 0 ? "#00e676" : "#ff5252")
+            : '<div style="font-size:12px;color:#fcb103;line-height:1.5">Waiting for logger: per-minute volume GEX.</div>') +
+        '<div style="' + hdr + '">open interest</div>' +
+        row("zero gamma", f2(zgOI), GXC.zg) + row("call wall", f2(callWall), GXC.cw) + row("put wall", f2(putWall), GXC.pw) +
+        row("OI magnet", f2(magnet), GXC.mag) + row("net gex", gxMoney(LO && LO.net), null, LO && LO.net >= 0 ? "#00e676" : "#ff5252") +
+        '<div style="' + hdr + '">touch odds · by close <span style="font-weight:400;color:#9aa0a6;font-size:11.5px">σ ' + (sigLeft ? (sigLeft * 100).toFixed(2) + "%" : "—") + '</span></div>' +
+        [["zero gamma", zgNow, GXC.zg], ["call wall", callWall, GXC.cw], ["put wall", putWall, GXC.pw], ["OI magnet", magnet, GXC.mag]].map(function (r) {
+          var p = touch(r[1] == null ? null : Number(r[1]));
+          return row(r[0], (p == null ? "—" : Math.round(p * 100) + "%"), r[2]);
+        }).join("") +
+        '<div style="' + hdr + '">max change gex</div>' +
+        (frames ? [[1, GXC.d1], [5, GXC.d5], [10, GXC.d10], [15, GXC.d15], [30, GXC.d30]].map(function (m) {
+            var j = backIdx(m[0]);
+            if (j === null) return row(m[0] + " min", "no data", m[1], "#5f6368");
+            var bk = null, bd = 0;
+            cur.ks.forEach(function (k) { var o = frames[j].map[k]; if (!o || o[lk] == null) return; var dl = cur.map[k][lk] - o[lk]; if (Math.abs(dl) > Math.abs(bd)) { bd = dl; bk = k; } });
+            return '<div style="display:grid;grid-template-columns:1fr .8fr 1.2fr;font-size:12.5px;line-height:1.75"><span style="color:' + m[1] + '">' + m[0] + ' min</span>' +
+              '<span style="text-align:right;color:' + (bd >= 0 ? "#00e676" : "#ff5252") + '">' + (bk === null ? "—" : bk) + '</span><span style="text-align:right;color:' + (bd >= 0 ? "#00e676" : "#ff5252") + ';font-variant-numeric:tabular-nums">' +
+              (bk === null ? "—" : (bd >= 0 ? "+" : "") + gxMoney(bd)) + '</span></div>';
+          }).join("") : '<div style="font-size:12px;color:#fcb103;line-height:1.5">Waiting for logger: per-minute strike snapshots.</div>') +
+        '<div style="' + hdr + '">read</div>' +
+        '<div style="font-size:13px;font-weight:700;color:' + rc + '">' + (zgNow == null ? "No zero-gamma crossing" : above ? "Above zero gamma · absorbing" : "Below zero gamma · extending") + '</div>' +
+        '<div style="font-size:12px;line-height:1.55;color:#bdc1c6;margin-top:4px">' + (zgNow == null ? "Net gamma has one sign across the captured strikes." :
+          "QQQ " + spot.toFixed(2) + " is " + Math.abs(spot - zgNow).toFixed(2) + " " + (above ? "above" : "below") + " zero gamma. " +
+          (above ? "Moves have tended to get absorbed; acceptance above the call wall is the tell." : "Moves have tended to extend; wait for a reclaim of zero gamma before fading.")) +
+        '<br><span style="color:#6b7075">Positioning map, not proof of dealer side.</span></div>';
+    }
+    return { chart: chart, side: side };
+  }
+
+  function gxRefresh() {
+    var L = window._gxLast, dyn = document.getElementById("gx-dyn");
+    if (!dyn || !L) return;
+    var D = gxDynamic(L.e, L.M);
+    dyn.innerHTML = D.chart;
+    var sd = document.getElementById("gx-side-dyn");
+    if (sd) sd.innerHTML = D.side;
+    var r = document.getElementById("gx-replay"), c = document.getElementById("gx-replay-clock"), p = document.getElementById("gx-play");
+    if (r) { r.max = Math.max(0, (window._gxTimes || []).length - 1); r.value = window._gxIdx || 0; }
+    if (c) c.textContent = window._gxClockText || "";
+    if (p) p.textContent = GX_VIEW.playing ? "❚❚" : "▶";
+    var lb = document.querySelector('#gx-chart-block [data-gx="live"]');
+    if (lb) lb.setAttribute("aria-pressed", GX_VIEW.at === null ? "true" : "false");
+  }
+  function gxFull() {
+    var el = document.getElementById("gx-chart-block"), L = window._gxLast;
+    if (!el || !L) return;
+    var y = window.scrollY;
+    el.outerHTML = secGxChart(L.e, L.M);
+    window.scrollTo(0, y);
+  }
+
+  // Playback: advance one candle per tick; 1x = 0.6s per candle.
+  function gxStop() { GX_VIEW.playing = false; if (window._gxTimer) { clearInterval(window._gxTimer); window._gxTimer = null; } }
+  function gxPlay() {
+    gxStop();
+    var T = window._gxTimes || [];
+    if (!T.length) return;
+    if (GX_VIEW.at === null) GX_VIEW.at = T[0];
+    GX_VIEW.playing = true;
+    window._gxTimer = setInterval(function () {
+      var Tn = window._gxTimes || [], i = (window._gxIdx || 0) + 1;
+      if (!document.getElementById("gx-dyn") || i >= Tn.length - 1) { GX_VIEW.at = null; gxStop(); gxRefresh(); return; }
+      GX_VIEW.at = Tn[i];
+      gxRefresh();
+    }, Math.max(40, 600 / GX_VIEW.speed));
+  }
+
+  // Crosshair with price / time / GEX pills and an OHLC readout.
+  function gxXhair(sx, sy) {
+    var g = document.getElementById("gx-xhair"), Mp = window._gxMap;
+    if (!g || !Mp) return;
+    if (sx === null || !GX_VIEW.show.xhair) { g.innerHTML = ""; return; }
+    var sty = "font-family:" + GX_FONT + ";font-size:12px";
+    var t = Mp.V0 + (sx - Mp.PX0) / (Mp.PX1 - Mp.PX0) * (Mp.V1 - Mp.V0);
+    var inPrice = sy >= Mp.PY0 && sy <= Mp.PY1;
+    var price = Mp.KT - (sy - Mp.PY0) / (Mp.PY1 - Mp.PY0) * (Mp.KT - Mp.KB);
+    var h = '<line x1="' + sx.toFixed(1) + '" x2="' + sx.toFixed(1) + '" y1="' + Mp.PY0 + '" y2="' + Mp.LY1 + '" stroke="#9aa0a6" stroke-dasharray="3 3"/>';
+    if (inPrice) {
+      h += '<line x1="' + Mp.PX0 + '" x2="' + Mp.PX1 + '" y1="' + sy.toFixed(1) + '" y2="' + sy.toFixed(1) + '" stroke="#9aa0a6" stroke-dasharray="3 3"/>' +
+        '<rect x="2" y="' + (sy - 10).toFixed(1) + '" width="66" height="20" rx="4" fill="#000" stroke="#5f6368"/>' +
+        '<text x="35" y="' + (sy + 4.5).toFixed(1) + '" fill="#fff" text-anchor="middle" style="' + sty + ';font-weight:700">' + price.toFixed(2) + '</text>';
+    }
+    var tl = gxClock(Math.max(0, t));
+    h += '<rect x="' + (sx - 32).toFixed(1) + '" y="' + (Mp.LY1 + 6) + '" width="64" height="20" rx="4" fill="#000" stroke="#5f6368"/>' +
+      '<text x="' + sx.toFixed(1) + '" y="' + (Mp.LY1 + 20.5) + '" fill="#fff" text-anchor="middle" style="' + sty + ';font-weight:700">' + tl + '</text>';
+    if (GX_VIEW.show.bars) {
+      var gv = (sx - Mp.PC) / Mp.PH * Mp.scaleMax;
+      h += '<rect x="' + (sx - 40).toFixed(1) + '" y="2" width="80" height="18" rx="4" fill="#000" stroke="#5f6368"/>' +
+        '<text x="' + sx.toFixed(1) + '" y="15" fill="#f6ae2d" text-anchor="middle" style="' + sty + ';font-weight:700">' + gxMoney(gv) + '</text>';
+    }
+    var c = null;
+    (Mp.cand || []).forEach(function (r) { if (r[0] <= t && t < r[0] + Mp.step * 60) c = r; });
+    var near = null, nd = 1e9;
+    if (inPrice) (Mp.ks || []).forEach(function (k) { var d = Math.abs(k - price); if (d < nd) { nd = d; near = k; } });
+    var txt = (c ? "O " + c[1].toFixed(2) + "  H " + c[2].toFixed(2) + "  L " + c[3].toFixed(2) + "  C " + c[4].toFixed(2) : "") +
+      (near !== null && nd <= 0.6 ? "   ·   " + near + " GEX " + gxMoney(Mp.prof[near]) : "");
+    if (txt) h += '<rect x="' + (Mp.PX0 + 6) + '" y="' + (Mp.PY0 + 4) + '" width="' + (txt.length * 7 + 16) + '" height="20" rx="4" fill="rgba(0,0,0,.75)"/>' +
+      '<text x="' + (Mp.PX0 + 14) + '" y="' + (Mp.PY0 + 18) + '" fill="#e8eaed" style="' + sty + '">' + esc(txt) + '</text>';
+    g.innerHTML = h;
+  }
+
+  document.addEventListener("click", function (ev) {
+    var t = ev.target && ev.target.closest ? ev.target.closest("[data-gx]") : null;
+    if (!t || t.disabled) return;
+    var a = t.getAttribute("data-gx"), v = t.getAttribute("data-gx-v");
+    var T = window._gxTimes || [];
+    if (a === "step") {
+      gxStop();
+      var i = Math.max(0, Math.min(T.length - 1, (window._gxIdx || 0) + Number(v)));
+      GX_VIEW.at = i >= T.length - 1 ? null : T[i];
+      gxRefresh(); return;
+    }
+    if (a === "live") { gxStop(); GX_VIEW.at = null; gxRefresh(); return; }
+    if (a === "play") { if (GX_VIEW.playing) { gxStop(); gxRefresh(); } else gxPlay(); return; }
+    if (a === "speed") {
+      GX_VIEW.speed = { 1: 2, 2: 5, 5: 10, 10: 1 }[GX_VIEW.speed] || 1;
+      t.textContent = GX_VIEW.speed + "x"; gxSave();
+      if (GX_VIEW.playing) gxPlay();
+      return;
+    }
+    if (a === "reset") { GX_VIEW.tview = "fit"; GX_VIEW.yv = null; gxRefresh(); return; }
+    if (a === "fs") { var fsEl = document.getElementById("gx-chart-block"); if (document.fullscreenElement) document.exitFullscreen(); else if (fsEl && fsEl.requestFullscreen) fsEl.requestFullscreen(); return; }
+    if (a === "shot") { gxShot(); return; }
+    if (a === "side") GX_VIEW.side = !GX_VIEW.side;
+    else if (a === "settings") GX_VIEW.settings = !GX_VIEW.settings;
+    else if (a === "w") GX_VIEW.w = v;
+    else if (a === "hist") GX_VIEW.hist = v;
+    else if (a === "zoom") { GX_VIEW.zoom = v; GX_VIEW.yv = null; }
+    else if (a === "tview") { GX_VIEW.tview = v; GX_VIEW.yv = null; }
+    else if (a === "show") GX_VIEW.show[v] = !GX_VIEW.show[v];
+    else if (a === "scheme") GX_VIEW.show.scheme = v;
+    else if (a === "em") { GX_VIEW.show.emStyle = v; if (!QQQ_LAYERS.ranges) { QQQ_LAYERS.ranges = true; try { localStorage.setItem("md:qqq-layers", JSON.stringify(QQQ_LAYERS)); } catch (eL) {} } }
+    else if (a === "ctype") { GX_VIEW.show.ctype = v; if (v === "candles" && QQQ_CHART_VIEW.mode === "ha") { QQQ_CHART_VIEW.mode = "raw"; try { localStorage.setItem("md:qqq-chart-view", JSON.stringify(QQQ_CHART_VIEW)); } catch (eV) {} } }
+    else if (a === "defaults") GX_VIEW.show = JSON.parse(JSON.stringify(GX_SHOW_DEFAULT));
+    gxSave();
+    gxFull();
+  });
+  // Heikin-Ashi from settings also switches the chart type back to candles.
+  document.addEventListener("click", function (ev) {
+    var t = ev.target && ev.target.closest ? ev.target.closest("[data-gx-also]") : null;
+    if (t) { GX_VIEW.show.ctype = "candles"; gxSave(); }
+  }, true);
+
+  function gxShot() {
+    var svg = document.querySelector("#gx-dyn svg");
+    if (!svg) return;
+    try {
+      var xml = new XMLSerializer().serializeToString(svg);
+      if (xml.indexOf("xmlns=") < 0) xml = xml.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+      var vb = svg.viewBox.baseVal, img = new Image(), url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml" }));
+      img.onload = function () {
+        var cv = document.createElement("canvas"); cv.width = vb.width * 2; cv.height = vb.height * 2;
+        var cx = cv.getContext("2d"); cx.fillStyle = GXC.bg; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        var a = document.createElement("a"); a.download = "qqq-gex-" + (QQQ_SESSION.date || "chart") + "-" + (window._gxClockText || "").split(" ")[0].replace(":", "") + ".png";
+        a.href = cv.toDataURL("image/png"); document.body.appendChild(a); a.click(); a.remove();
+      };
+      img.src = url;
+    } catch (eShot) {}
+  }
+
+  // Chart gestures: drag the plot to pan time and price, drag the price axis to
+  // stretch price, drag the time axis to stretch time, scroll to zoom time
+  // (shift or over the price axis zooms price), double-click to reset.
+  function gxHit(ev) {
+    var svg = ev.target && ev.target.closest ? ev.target.closest("#gx-dyn svg") : null, Mp = window._gxMap;
+    if (!svg || !Mp) return null;
+    var r = svg.getBoundingClientRect(), k = 1200 / r.width;
+    var sx = (ev.clientX - r.left) * k, sy = (ev.clientY - r.top) * k, zone = null;
+    if (sx >= Mp.PX0 && sx <= Mp.PX1 && sy >= Mp.PY0 && sy <= Mp.PY1) zone = "plot";
+    else if (sx >= Mp.PX0 && sx <= Mp.PX1 && sy > Mp.PY1) zone = "xaxis";
+    else if (sx < Mp.PX0 && sy >= Mp.PY0 && sy <= Mp.PY1) zone = "yaxis";
+    if (!zone) return null;
+    return { zone: zone, sx: sx, sy: sy, k: k, Mp: Mp, V: { V0: Mp.V0, V1: Mp.V1 }, G: { KB: Mp.KB, KT: Mp.KT },
+      t: Mp.V0 + (Math.min(Mp.PX1, Math.max(Mp.PX0, sx)) - Mp.PX0) / (Mp.PX1 - Mp.PX0) * (Mp.V1 - Mp.V0),
+      p: Mp.KT - (Math.min(Mp.PY1, Math.max(Mp.PY0, sy)) - Mp.PY0) / (Mp.PY1 - Mp.PY0) * (Mp.KT - Mp.KB) };
+  }
+  var gxRaf = 0, gxHover = null;
+  function gxSoon() { if (gxRaf) return; gxRaf = requestAnimationFrame(function () { gxRaf = 0; gxRefresh(); if (gxHover) gxXhair(gxHover[0], gxHover[1]); }); }
+  function gxSetView(v0, v1) { var span = Math.max(600, Math.min(23400, v1 - v0)); v0 = Math.max(0, Math.min(23400 - span, v0)); GX_VIEW.tview = { v0: v0, v1: v0 + span }; }
+  function gxSetY(lo, hi) { var span = Math.max(0.2, hi - lo), mid = (lo + hi) / 2; GX_VIEW.yv = { lo: mid - span / 2, hi: mid + span / 2 }; }
+  document.addEventListener("wheel", function (ev) {
+    var h = gxHit(ev);
+    if (!h) return;
+    ev.preventDefault();
+    var V = h.V, G = h.G, W = h.Mp.PX1 - h.Mp.PX0;
+    var dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaY, dx = ev.deltaMode === 1 ? ev.deltaX * 16 : ev.deltaX;
+    if (h.zone === "yaxis" || ev.shiftKey) { var fy = Math.exp((dy || dx) * 0.0025); gxSetY(h.p - (h.p - G.KB) * fy, h.p + (G.KT - h.p) * fy); }
+    else if (!ev.ctrlKey && Math.abs(dx) > Math.abs(dy)) { var dt = dx / W * (V.V1 - V.V0); gxSetView(V.V0 + dt, V.V1 + dt); }
+    else { var fx = Math.exp(dy * (ev.ctrlKey ? 0.01 : 0.0025)); gxSetView(h.t - (h.t - V.V0) * fx, h.t + (V.V1 - h.t) * fx); }
+    gxSoon();
+  }, { passive: false, capture: true });
+  var gxDrag = null;
+  document.addEventListener("pointerdown", function (ev) {
+    if (ev.button !== 0 && ev.pointerType === "mouse") return;
+    var h = gxHit(ev);
+    if (!h) return;
+    ev.preventDefault();
+    gxDrag = { h: h, x: ev.clientX, y: ev.clientY, moved: false, id: ev.pointerId };
+  }, true);
+  document.addEventListener("pointermove", function (ev) {
+    if (!gxDrag) {
+      var hh = gxHit(ev);
+      if (hh && (hh.zone === "plot" || hh.zone === "xaxis")) { gxHover = [hh.sx, hh.sy]; gxXhair(hh.sx, hh.sy); }
+      else if (gxHover) { gxHover = null; gxXhair(null); }
+      return;
+    }
+    if (ev.pointerId !== gxDrag.id) return;
+    var h = gxDrag.h, dx = (ev.clientX - gxDrag.x) * h.k, dy = (ev.clientY - gxDrag.y) * h.k;
+    if (!gxDrag.moved && Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
+    gxDrag.moved = true;
+    ev.preventDefault();
+    var V = h.V, G = h.G, W = h.Mp.PX1 - h.Mp.PX0, Hh = h.Mp.PY1 - h.Mp.PY0;
+    if (h.zone === "plot") { var dt = -dx / W * (V.V1 - V.V0), dp = dy / Hh * (G.KT - G.KB); gxSetView(V.V0 + dt, V.V1 + dt); gxSetY(G.KB + dp, G.KT + dp); }
+    else if (h.zone === "yaxis") { var fy = Math.exp(dy * 0.006), mid = (G.KB + G.KT) / 2; gxSetY(mid - (mid - G.KB) * fy, mid + (G.KT - mid) * fy); }
+    else { var fx = Math.exp(-dx * 0.006), c = (V.V0 + V.V1) / 2; gxSetView(c - (c - V.V0) * fx, c + (V.V1 - c) * fx); }
+    gxHover = null;
+    gxSoon();
+  }, { passive: false, capture: true });
+  function gxEnd() { gxDrag = null; }
+  document.addEventListener("pointerup", gxEnd, true);
+  document.addEventListener("pointercancel", gxEnd, true);
+  document.addEventListener("dblclick", function (ev) {
+    if (!gxHit(ev)) return;
+    ev.preventDefault();
+    GX_VIEW.tview = "fit"; GX_VIEW.yv = null;
+    gxRefresh();
+  }, true);
+  document.addEventListener("input", function (ev) {
+    var t = ev.target;
+    if (!t || t.id !== "gx-replay") return;
+    gxStop();
+    var T = window._gxTimes || [], i = Number(t.value);
+    GX_VIEW.at = i >= T.length - 1 ? null : T[i];
+    gxRefresh();
+  });
+
+  // The chart part of the QQQ card. The cockpit and options positioning live in
+  // their own collapsible section (secQqqCockpitSection) below it.
+  function qqqOpeningChart(e, chartModel) {
+    // A day with no Market Dash snapshot can still have a saved per-minute day.
+    if (QQQ_SESSION.noGex && !(gxUseNew() && gxFramesFor(QQQ_SESSION.date))) {
+      return '<div style="font-size:12px;color:var(--dim);margin:2px 0 8px">No GEX snapshot for this day: price only.</div>' +
+        '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>';
+    }
+    if (gxUseNew()) return '<div class="qqq-gx-wrap">' + secGxChart(e, chartModel || qqqChartModel(e)) + '</div>';
+    return '<div class="qqq-top-grid">' +
         '<div class="qqq-primary-chart">' +
           secQqqTradingChart(e, true, chartModel) +
         '</div>' +
@@ -4145,12 +5117,15 @@
           'title="Strike price shares the QQQ chart scale. Green and red net-GEX bars extend right and left from zero; lines match the dealer-map overlays.">' +
           secQqqGexProfile(e, true, chartModel) +
         '</aside>' +
-      '</div>' +
-      '<div id="qqq-cockpit-block" class="qqq-call-strip">' +
+      '</div>';
+  }
+
+  function secQqqCockpitSection(e, chartModel) {
+    var body = '<div id="qqq-cockpit-block" class="qqq-call-strip">' +
         secQuadrantCockpit(e, chartModel) +
       '</div>' +
       secQqqPositioning(e);
-    return secWide("QQQ · live price + synchronized GEX", body)
+    return secWide("QQQ · cockpit + options positioning", body)
       .replace('<section class="wide">', '<section class="wide qqq-market-card">');
   }
 
@@ -4306,6 +5281,57 @@
     });
   }
 
+  function qqqTimeBucket(time, timeframe) {
+    var formatter = qqqTimeBucket.formatter || (qqqTimeBucket.formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'
+    }));
+    var parts = formatter.formatToParts(new Date(time * 1000));
+    var p = {};
+    parts.forEach(function(part) { p[part.type] = part.value; });
+    var day = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day)) / 1000;
+    if (timeframe === '1D') return day;
+    if (timeframe === '1W') return day - ((new Date(day * 1000).getUTCDay() + 6) % 7) * 86400;
+    if (timeframe === '1M') return Date.UTC(Number(p.year), Number(p.month) - 1, 1) / 1000;
+    var step = {'1m':1, '5m':5, '15m':15, '1H':60, '4H':240}[timeframe] || 1;
+    var minutes = Number(p.hour) * 60 + Number(p.minute);
+    var sessionStart = time - (minutes - 570) * 60 - Number(p.second);
+    return sessionStart + Math.floor((minutes - 570) / step) * step * 60;
+  }
+
+  function qqqAggregateCandles(rows, timeframe) {
+    var buckets = new Map();
+    rows.slice().sort(function(a,b) { return a.time - b.time; }).forEach(function(bar) {
+      var time = qqqTimeBucket(bar.time, timeframe);
+      var candle = buckets.get(time);
+      if (!candle) buckets.set(time, {
+        time:time, open:bar.open, high:bar.high, low:bar.low,
+        close:bar.close, volume:bar.volume || 0
+      });
+      else {
+        candle.high = Math.max(candle.high, bar.high);
+        candle.low = Math.min(candle.low, bar.low);
+        candle.close = bar.close;
+        candle.volume += bar.volume || 0;
+      }
+    });
+    return Array.from(buckets.values());
+  }
+
+  function qqqChartCandles(minuteRows, dailyRows, timeframe) {
+    if (['1D','1W','1M'].indexOf(timeframe) < 0) return qqqAggregateCandles(minuteRows, timeframe);
+    var byDay = new Map();
+    // Real daily OHLC bars are authoritative for completed sessions.
+    dailyRows.forEach(function(bar) {
+      var day = qqqTimeBucket(bar.time, '1D');
+      byDay.set(day, Object.assign({}, bar, {time:day + 16 * 3600}));
+    });
+    qqqAggregateCandles(minuteRows, '1D').forEach(function(bar) {
+      if (!byDay.has(bar.time)) byDay.set(bar.time, Object.assign({}, bar, {time:bar.time + 16 * 3600}));
+    });
+    return qqqAggregateCandles(Array.from(byDay.values()), timeframe);
+  }
+
   function qqqMergeLiveCandle(src, M) {
     var rows = src.map(function (b) {
       return { time:b.time, open:b.open, high:b.high, low:b.low,
@@ -4391,6 +5417,11 @@
     var el = document.getElementById("qqq-tv-chart");
     var TV = window.LightweightCharts;
     if (!el) return;
+    var timeframe = window._gxTf || '1m';
+    if (QQQ_VIEW_STATE.timeframe !== timeframe) {
+      QQQ_VIEW_STATE = {timeframe:timeframe, userAdjusted:false, logicalRange:null};
+    }
+    var calendarTimeframe = ['1D','1W','1M'].indexOf(timeframe) >= 0;
     if (!TV || !TV.createChart) {
       el.innerHTML = '<div style="padding:54px 16px;text-align:center;color:var(--faint)">' +
         "Chart library unavailable. QQQ and GEX cards below are unchanged.</div>";
@@ -4423,7 +5454,7 @@
       rightPriceScale: { borderColor: "#1e1e2a", minimumWidth: 74 },
       timeScale: {
         borderColor: "#1e1e2a",
-        timeVisible: true,
+        timeVisible: !calendarTimeframe,
         secondsVisible: false,
         rightOffset: 4,
         barSpacing: 7,
@@ -4436,9 +5467,20 @@
       localization: { locale: "en-US", priceFormatter: function (p) { return "$" + p.toFixed(2); } }
     });
 
+    if (!calendarTimeframe) {
+      var qqqEtF = new Intl.DateTimeFormat('en-US', { timeZone:'America/New_York', hour:'2-digit', minute:'2-digit', hourCycle:'h23' });
+      var qqqEtD = new Intl.DateTimeFormat('en-US', { timeZone:'America/New_York', weekday:'short', month:'short', day:'numeric' });
+      var qqqEtM = new Intl.DateTimeFormat('en-US', { timeZone:'America/New_York', month:'short', day:'numeric' });
+      chart.applyOptions({
+        localization: { timeFormatter: function (t) { var d = new Date(Number(t) * 1000); return qqqEtD.format(d) + ' ' + qqqEtF.format(d) + ' ET'; } },
+        timeScale: { tickMarkFormatter: function (t, type) { var d = new Date(Number(t) * 1000); return type <= 2 ? qqqEtM.format(d) : qqqEtF.format(d); } }
+      });
+    }
     var M = chartModel || qqqChartModel(e);
     var raw = M.latest && LIVE_AUCTION && Array.isArray(LIVE_AUCTION.candles)
-      ? LIVE_AUCTION.candles : [];
+      ? LIVE_AUCTION.candles.slice() : [];
+    // Current-session bars take precedence when the historical file overlaps.
+    if (LIVE_CANDLE_HISTORY) raw = raw.concat(LIVE_CANDLE_HISTORY.minute);
     var seen = {}, baseCandles = raw.map(function (b) {
       return {
         time: Number(b.time), open: Number(b.open), high: Number(b.high),
@@ -4450,14 +5492,39 @@
       if (good) seen[b.time] = 1;
       return good;
     }).sort(function (a, b) { return a.time - b.time; });
-    var candles = qqqMergeLiveCandle(baseCandles, M);
+    var minuteCandles = qqqMergeLiveCandle(baseCandles, M);
+    var dailySource = LIVE_CANDLE_HISTORY ? LIVE_CANDLE_HISTORY.daily : [];
+    var candles = qqqChartCandles(minuteCandles, dailySource, timeframe);
+    if (QQQ_SESSION.date && !calendarTimeframe) {
+      candles = candles.filter(function (b) { return qqqSessionDay(b.time) === QQQ_SESSION.date; });
+    }
+    el.dataset.timeframe = timeframe;
+    el.dataset.candleCount = String(candles.length);
+    var status = document.createElement('div');
+    status.className = 'qqq-candle-status';
+    status.style.cssText = 'font-size:11px;color:var(--dim);padding:5px 8px';
+    status.textContent = timeframe + ' · ' + candles.length + ' candle' + (candles.length === 1 ? '' : 's') +
+      (candles.length ? (LIVE_CANDLE_HISTORY ? ' · IEX history; latest candle may be incomplete.' : ' · Available session only; historical bars have not loaded yet.') : ' · Waiting for historical candle data.');
+    var oldStatus = el.parentElement.querySelector('.qqq-candle-status');
+    if (oldStatus) oldStatus.remove();
+    el.parentElement.appendChild(status);
+    if (QQQ_SESSION.date && !calendarTimeframe && !candles.length) status.textContent = 'No intraday candles for ' + QQQ_SESSION.date + ' (1-minute history starts Aug 10, 2026). The day\'s numbers are below; pick All history + 1D to see it on the daily chart.';
     var displayCandles = QQQ_CHART_VIEW.mode === "ha" ? qqqHaCandles(candles) : qqqRawDisplay(candles);
 
     var series, ema9Series = null, ema20Series = null, indicatorSeries = null;
     var gexTrailSeries = [];
     var trailRows = M.latest && LIVE_GEX_INTRADAY && Array.isArray(LIVE_GEX_INTRADAY.points)
       ? LIVE_GEX_INTRADAY.points.slice() : [];
-    var hasGexTrail = candles.length && trailRows.length >= 2;
+    if (QQQ_SESSION.date) trailRows = trailRows.filter(function (r) { return qqqSessionDay(Number(r.time)) === QQQ_SESSION.date; });
+    // Align overlays to the same candle buckets, so they cannot add minute ticks
+    // back to a chart displaying a larger interval.
+    var trailBuckets = new Map();
+    trailRows.sort(function(a,b) { return a.time - b.time; }).forEach(function(row) {
+      var time = qqqTimeBucket(Number(row.time), timeframe);
+      trailBuckets.set(time, Object.assign({}, row, {time:time}));
+    });
+    trailRows = Array.from(trailBuckets.values());
+    var hasGexTrail = candles.length > 0 && trailRows.length >= 2;
     if (candles.length) {
       series = chart.addSeries(TV.CandlestickSeries, {
         upColor: "#00e676", downColor: "#ff453a",
@@ -4515,27 +5582,11 @@
         if (indicatorSeries && chart.panes && chart.panes()[1]) chart.panes()[1].setHeight(74);
       } catch (paneHeightErr) {}
     } else {
-      var cut = H.indexOf(e);
-      var hist = cut >= 0 ? H.slice(0, cut + 1) : H.slice();
-      var daily = {};
-      hist.forEach(function (entry) {
-        var q = null;
-        (entry.watchlist || []).forEach(function (w) { if (w.symbol === "QQQ") q = w; });
-        if (q && has(q.last) && entry.entry_date) {
-          // AM and PM snapshots can share a date. Keep the later real QQQ
-          // value so Lightweight Charts receives one strictly ordered point
-          // per session date.
-          daily[String(entry.entry_date).slice(0, 10)] = Number(q.last);
-        }
+      // No invented daily highs/lows: wait for real OHLC bars from the logger.
+      series = chart.addSeries(TV.CandlestickSeries, {
+        upColor:'#00e676', downColor:'#ff453a', priceLineVisible:false
       });
-      var points = Object.keys(daily).sort().map(function (day) {
-        return { time: day, value: daily[day] };
-      });
-      series = chart.addSeries(TV.LineSeries, {
-        color: "#ff2be0", lineWidth: 2, priceLineVisible: false,
-        lastValueVisible: true, crosshairMarkerRadius: 4
-      });
-      series.setData(points);
+      series.setData([]);
     }
 
     // The reference-style moving GEX system: each logger snapshot becomes one
@@ -4597,6 +5648,7 @@
     // Same-price signals are combined into one labelled line. This is common
     // when the call wall, put wall and OI magnet all sit on one strike.
     var active = M.levels.filter(function (x) {
+      if (QQQ_SESSION.noGex) return false;
       if (hasGexTrail && (x.group === "core" || x.group === "flow")) return false;
       return x.group === "spot" || QQQ_LAYERS[x.group];
     }).sort(function (a, b) { return a.priority - b.priority; });
@@ -4670,7 +5722,7 @@
     });
     QQQ_TV = { chart: chart, resize: ro, quoteSeries: null,
                series: series, candleSeries: candles.length ? series : null,
-               rawCandles: candles, ema9Series: ema9Series, ema20Series: ema20Series,
+               rawCandles: minuteCandles, dailySource:dailySource, timeframe:timeframe, ema9Series: ema9Series, ema20Series: ema20Series,
                indicatorSeries: indicatorSeries, paneType: QQQ_CHART_VIEW.pane,
                gexTrailSeries: gexTrailSeries,
                mode: QQQ_CHART_VIEW.mode, rangeHandler: rangeHandler,
@@ -4683,7 +5735,7 @@
   // Chart label overlay removed (2026-08-31) — reverted to plain TradingView chart.
 
   function updateMountedQqqQuote(e) {
-    if (idx !== FULL.length - 1) return;
+    if (!e || idx !== FULL.length - 1 || QQQ_SESSION.past) return;
     var M = qqqChartModel(e);
     var leverageMeter = document.getElementById("qqq-leverage-meter");
     if (leverageMeter) {
@@ -4705,14 +5757,17 @@
             after.high !== before.high || after.low !== before.low);
           if (changed) {
             QQQ_TV.rawCandles = mergedLive;
-            var shown = QQQ_TV.mode === "ha" ? qqqHaCandles(mergedLive) : qqqRawDisplay(mergedLive);
+            var grouped = qqqChartCandles(mergedLive, QQQ_TV.dailySource, QQQ_TV.timeframe);
+            var shown = QQQ_TV.mode === "ha" ? qqqHaCandles(grouped) : qqqRawDisplay(grouped);
+            after = grouped[grouped.length - 1];
+            QQQ_TV.el.dataset.candleCount = String(grouped.length);
             QQQ_TV.candleSeries.update(shown[shown.length - 1]);
             if (QQQ_TV.ema9Series) {
-              var e9 = qqqEma(mergedLive, 9);
+              var e9 = qqqEma(grouped, 9);
               if (e9.length) { QQQ_TV.ema9Series.update(e9[e9.length - 1]); window._qqqEma9Last = e9[e9.length - 1].value; }
             }
             if (QQQ_TV.ema20Series) {
-              var e20 = qqqEma(mergedLive, 20);
+              var e20 = qqqEma(grouped, 20);
               if (e20.length) { QQQ_TV.ema20Series.update(e20[e20.length - 1]); window._qqqEma20Last = e20[e20.length - 1].value; }
             }
             if (QQQ_TV.indicatorSeries) {
@@ -4720,10 +5775,10 @@
                 QQQ_TV.indicatorSeries.update({ time:after.time, value:after.volume || 0,
                   color:after.close >= after.open ? "rgba(0,230,118,.55)" : "rgba(255,69,58,.55)" });
               } else if (QQQ_TV.paneType === "adl") {
-                var ad = qqqAdl(mergedLive);
+                var ad = qqqAdl(grouped);
                 if (ad.length) QQQ_TV.indicatorSeries.update(ad[ad.length - 1]);
               } else if (QQQ_TV.paneType === "rsi") {
-                var rsi = qqqRsi(mergedLive, 14);
+                var rsi = qqqRsi(grouped, 14);
                 if (rsi.length) QQQ_TV.indicatorSeries.update(rsi[rsi.length - 1]);
               }
             }
@@ -4734,9 +5789,10 @@
         }
         if (M.quoteFresh && qqqMarketOpen() && QQQ_TV.gexTrailSeries) {
           QQQ_TV.gexTrailSeries.forEach(function (trail) {
-            if (quoteBarTime >= trail.time) {
-              trail.series.update({ time:quoteBarTime, value:trail.value });
-              trail.time = quoteBarTime;
+            var trailTime = qqqTimeBucket(quoteBarTime, QQQ_TV.timeframe);
+            if (trailTime >= trail.time) {
+              trail.series.update({ time:trailTime, value:trail.value });
+              trail.time = trailTime;
             }
           });
         }
@@ -5020,7 +6076,7 @@
     var q3 = '<div class="qqq-quad-title" style="color:var(--info);">' +
       '<span class="qdot" style="background:var(--info)"></span>Auction &amp; Flow</div>';
 
-    var A = (idx === FULL.length - 1) ? LIVE_AUCTION : null;
+    var A = (idx === FULL.length - 1 && !QQQ_SESSION.past) ? LIVE_AUCTION : null;
     var haveA = A && (has(A.ad_z) || has(A.vol_pace));
 
     if (haveA && has(A.ad_z)) {
@@ -5040,7 +6096,7 @@
       q3 += qn("Volume", "—", "waiting", "rgba(41,182,246,.2)", "var(--faint)", true);
     }
 
-    if (LIVE_GEX && has(LIVE_GEX.net_gex)) {
+    if (LIVE_GEX && has(LIVE_GEX.net_gex) && !QQQ_SESSION.past) {
       q3 += qn("GEX", fmtBig(LIVE_GEX.net_gex),
         has(LIVE_GEX.net_dex) ? "DEX " + fmtBig(LIVE_GEX.net_dex) : "",
         "rgba(41,182,246,.25)", "var(--txt)", true);
@@ -5623,6 +6679,291 @@
       '<div class="qqq-command-flow">' + detail + '</div></div></details></section>';
   }
 
+  // ===== GEX CHART · SESSION MODE =====
+  // Day picker, plain-English headline, four day cards and a day log around the
+  // GEX Chart. Opens on the latest day; "All history" shows the continuous chart.
+  var GS = { date: "latest", tf: "1m", logN: 30 };
+  var GS_TF_MIN = { "1m": 1, "5m": 5, "15m": 15, "1H": 60, "4H": 240 };
+  try {
+    var _gsStored = JSON.parse(localStorage.getItem("md:gex-session") || "{}");
+    if (GS_TF_MIN[_gsStored.tf]) GS.tf = _gsStored.tf;
+  } catch (eGsStored) {}
+  function gsSave() {
+    try { localStorage.setItem("md:gex-session", JSON.stringify({ tf: GS.tf })); } catch (eGsSave) {}
+  }
+  function qqqSetSession(date, past, noGex) {
+    date = date || null;
+    if (QQQ_SESSION.date !== date) QQQ_VIEW_STATE = { timeframe: QQQ_VIEW_STATE.timeframe, userAdjusted: false, logicalRange: null };
+    QQQ_SESSION.date = date; QQQ_SESSION.past = !!past; QQQ_SESSION.noGex = !!noGex;
+  }
+
+  var SD = { candles: null, loading: false, err: null, at: 0 };
+  var _sdFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+  function _sdET(t){var o={};_sdFmt.formatToParts(new Date(t*1000)).forEach(function(x){o[x.type]=x.value;});return {d:o.year+'-'+o.month+'-'+o.day,m:(+o.hour%24)*60+(+o.minute)};}
+  function _sdNum(v){return typeof v==='number'&&isFinite(v);}
+  function _sdF(v,d){return _sdNum(v)?v.toFixed(d==null?2:d):'—';}
+  function _sdBig(v){if(!_sdNum(v))return '—';var a=Math.abs(v);return (v<0?'-':'')+(a>=1e9?(a/1e9).toFixed(2)+'B':(a/1e6).toFixed(0)+'M');}
+  function _sdHM(m){var h=Math.floor(m/60),mm=m%60;return (h>12?h-12:h)+':'+(mm<10?'0':'')+mm+(h>=12?'p':'a');}
+  function _sdLoad(){
+    if(SD.loading||(SD.at&&Date.now()-SD.at<300000))return;
+    SD.loading=true;
+    fetch(LIVE_DATA_BASE+'qqq_candle_history.json?t='+Date.now())
+      .then(function(r){if(!r.ok)throw Error('HTTP '+r.status);return r.json();})
+      .then(function(j){SD.candles=j;SD.err=null;})
+      .catch(function(e){SD.err='Candle data could not load ('+e.message+').';})
+      .then(function(){SD.loading=false;SD.at=Date.now();_sdRedrawAll();});
+  }
+  function _sdBuild(){
+    var days={};function day(d){return days[d]||(days[d]={date:d});}
+    var c=SD.candles||{};
+    (c.daily||[]).forEach(function(k){var r=day(_sdET(k.time).d);r.o=k.open;r.h=k.high;r.l=k.low;r.c=k.close;r.v=k.volume;r.src='daily';});
+    var mins={};
+    (c.minute||[]).forEach(function(k){var e=_sdET(k.time);if(e.m<570||e.m>=960)return;(mins[e.d]=mins[e.d]||[]).push({m:e.m,k:k});});
+    Object.keys(mins).forEach(function(d){
+      var a=mins[d].sort(function(x,y){return x.m-y.m;}),r=day(d),b={};
+      r.o=a[0].k.open;r.c=a[a.length-1].k.close;r.h=-Infinity;r.l=Infinity;r.v=0;r.src='minute';
+      a.forEach(function(x){var k=x.k;r.h=Math.max(r.h,k.high);r.l=Math.min(r.l,k.low);r.v+=k.volume||0;
+        var s=570+Math.floor((x.m-570)/10)*10;var q=b[s]||(b[s]={m:s,o:k.open,h:k.high,l:k.low,c:k.close,v:0});q.c=k.close;q.h=Math.max(q.h,k.high);q.l=Math.min(q.l,k.low);q.v+=k.volume||0;});
+      r.up=0;r.dn=0;r.big=null;
+      Object.keys(b).forEach(function(s){var q=b[s];if(q.c>q.o)r.up++;else if(q.c<q.o)r.dn++;if(!r.big||q.v>r.big.v)r.big={m:+s,v:q.v};});
+      r.bars=Object.keys(b).length;
+      r.b10=Object.keys(b).map(function(s){return b[s];}).sort(function(x,y){return x.m-y.m;});
+      r.mins=a;
+    });
+    (window.MARKET_DASH_HISTORY||[]).forEach(function(e){
+      if(!e||!e.entry_date)return;var r=day(e.entry_date);
+      if(r.snap==='pm'&&e.session!=='pm')return;
+      var q=e.quant||{},rv=q.realized_vs_implied||{},g=e.gex||{},lv=g.levels||{};
+      r.snap=e.session||'pm';
+      r.hv=_sdNum(rv.realized_vol_pct)?rv.realized_vol_pct:q.qqq_realized_vol_21d_pct;r.iv=rv.implied_vol_pct;
+      r.flip=g.gamma_flip;r.flipFb=/nearest/i.test(g.gamma_flip_method||'');r.ngex=g.net_gex;r.cw=lv.call_wall;r.pw=lv.put_wall;r.reg=g.regime;
+    });
+    return Object.keys(days).sort().map(function(d){
+      var r=days[d];
+      if(_sdNum(r.o)&&_sdNum(r.c)&&_sdNum(r.h)&&_sdNum(r.l)){var rg=r.h-r.l,mv=r.c-r.o;r.rng=rg;r.mv=mv;r.trend=(rg===0||Math.abs(mv)<0.25*rg)?'Balanced':(mv>0?'Up':'Down');}
+      return r;
+    });
+  }
+  // re-bucket a day's 1-minute candles into tf-minute candles
+  function _sdAgg(r,tf){
+    if(!r.mins||!r.mins.length)return r;
+    var b={},out=Object.assign({},r);
+    r.mins.forEach(function(x){var k=x.k,s=570+Math.floor((x.m-570)/tf)*tf;var q=b[s]||(b[s]={m:s,o:k.open,h:k.high,l:k.low,c:k.close,v:0});q.c=k.close;q.h=Math.max(q.h,k.high);q.l=Math.min(q.l,k.low);q.v+=k.volume||0;});
+    out.b10=Object.keys(b).map(function(s){return b[s];}).sort(function(x,y){return x.m-y.m;});
+    out.up=0;out.dn=0;out.big=null;
+    out.b10.forEach(function(q){if(q.c>q.o)out.up++;else if(q.c<q.o)out.dn++;if(!out.big||q.v>out.big.v)out.big={m:q.m,v:q.v};});
+    out.bars=out.b10.length;out.tf=tf;return out;
+  }
+  var _sdCache={key:null,rows:null};
+  function _sdRows(){
+    var k=SD.at+':'+((window.MARKET_DASH_HISTORY||[]).length);
+    if(_sdCache.key!==k){_sdCache.rows=_sdBuild().filter(function(r){return _sdNum(r.o)&&_sdNum(r.c);});_sdCache.key=k;}
+    return _sdCache.rows;
+  }
+  function _sdRedrawAll(){ _sdCache.key=null; if (TAB === "nasdaq") renderAllWidgets(); }
+  var GS_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function _gsNice(d){var p=d.split('-'),dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getUTCDay()]+' '+GS_MON[+p[1]-1]+' '+(+p[2]);}
+  function _gsEntryFor(d){var hit=null;for(var i=0;i<FULL.length;i++)if(FULL[i]&&FULL[i].entry_date===d)hit=FULL[i];return hit;}
+  function _gsBtn(attr,val,label,on,title){return '<button type="button" class="qqq-layer" '+attr+'="'+val+'" aria-pressed="'+(on?'true':'false')+'"'+(title?' title="'+title+'"':'')+'>'+label+'</button>';}
+  function _gsSep(){return '<span style="width:1px;height:18px;background:var(--line);margin:0 4px"></span>';}
+  function _gsCard(title,body,verdict,col){
+    return '<div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;min-width:0">'
+      +'<div style="font-size:11px;letter-spacing:.16em;color:var(--dim)">'+title+'</div>'+body
+      +'<div style="margin-top:auto;padding:7px 9px;border-radius:6px;background:'+col+'1a;color:'+col+';font-size:12px;line-height:1.4">'+verdict+'</div></div>';
+  }
+  function _gsIvBar(l,v,col){
+    return '<div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:120px;color:var(--dim)">'+l+'</span>'
+      +'<div style="flex:1;height:8px;background:var(--line);border-radius:4px"><div style="width:'+(_sdNum(v)?Math.min(100,v/30*100):0).toFixed(0)+'%;height:8px;border-radius:4px;background:'+col+'"></div></div>'
+      +'<span style="width:56px;text-align:right;font-size:15px">'+(_sdNum(v)?v.toFixed(1)+'%':'—')+'</span></div>';
+  }
+  function _gsRung(label,v,col,close,bold,n){
+    var dist=_sdNum(n)&&_sdNum(close)&&!bold?(n>=close?'+':'−')+Math.abs(n-close).toFixed(2)+(n>=close?' above':' below'):'';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line)"><span style="width:9px;height:9px;border-radius:2px;background:'+col+'"></span>'
+      +'<span style="flex:1;font-size:12px;color:'+(bold?'var(--fg,#e8dede)':'var(--dim)')+'">'+label+'</span><span style="font-size:15px;color:'+(bold?'inherit':col)+'">'+v+'</span>'
+      +'<span style="width:92px;text-align:right;font-size:11px;color:var(--dim)">'+dist+'</span></div>';
+  }
+  function _gsDayPanel(r0,tf,isToday){
+    var r=_sdAgg(r0,GS_TF_MIN[tf]||1),UP='#00e676',DN='#ff453a',FL='#ffd600',E9='#29b6f6',E20='#ff9f0a';
+    var mv=_sdNum(r.mv)?r.mv:NaN,pct=_sdNum(mv)&&r.o?mv/r.o*100:NaN,col=mv>0?UP:mv<0?DN:'var(--dim)';
+    var sign=function(x){return (x>=0?'+':'−')+Math.abs(x).toFixed(2);};
+    var hasSnap=_sdNum(r.hv)||_sdNum(r.flip);
+    // headline
+    var hl=_gsNice(r.date)+(isToday?' (so far)':'')+': QQQ '+(mv>=0?'rose':'fell')+' <span style="color:'+col+'">$'+Math.abs(mv).toFixed(2)+'</span>';
+    if(_sdNum(r.flip))hl+=', '+(isToday?'is':'closed')+' <span style="color:'+FL+'">'+(r.c>=r.flip?'above':'below')+' the gamma flip ('+(r.flipFb?'≈':'')+r.flip.toFixed(0)+')</span>';
+    if(_sdNum(r.hv)&&_sdNum(r.iv))hl+=', and the market moved '+(r.hv>r.iv?'more':'less')+' than options priced in';
+    hl+='.';
+    var tag=r.trend==='Up'?['▲ UP DAY',UP]:r.trend==='Down'?['▼ DOWN DAY',DN]:['◆ BALANCED DAY','#b0b0c8'];
+    var head='<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin:8px 0">'
+      +'<span style="padding:5px 9px;border-radius:6px;background:'+tag[1]+'1f;color:'+tag[1]+';font-size:12px;white-space:nowrap">'+tag[0]+'</span>'
+      +'<span style="font-size:14px;line-height:1.45">'+hl+'</span></div>';
+    // PRICE card
+    var pos=function(v){return r.h>r.l?(v-r.l)/(r.h-r.l)*100:50;};
+    var a=Math.min(pos(r.o),pos(r.c)),w=Math.abs(pos(r.c)-pos(r.o));
+    var price='<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:26px">'+_sdF(r.c)+'</span><span style="font-size:15px;color:'+col+'">'+(_sdNum(mv)?sign(mv)+' ('+sign(pct)+'%)':'')+'</span></div>'
+      +'<div style="font-size:11px;color:var(--dim)">'+(isToday?'last':'close')+' · change from the 9:30 open</div>'
+      +'<div style="position:relative;height:30px"><div style="position:absolute;left:0;right:0;top:12px;height:6px;border-radius:3px;background:var(--line)"></div>'
+      +'<div style="position:absolute;left:'+a.toFixed(1)+'%;width:'+Math.max(1,w).toFixed(1)+'%;top:12px;height:6px;border-radius:3px;background:'+col+'"></div>'
+      +'<div style="position:absolute;left:'+pos(r.o).toFixed(1)+'%;top:0;font-size:10px;color:var(--dim);transform:translateX(-50%)">open</div>'
+      +'<div style="position:absolute;left:'+pos(r.c).toFixed(1)+'%;top:19px;font-size:10px;transform:translateX(-50%)">'+(isToday?'now':'close')+'</div></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)"><span>Low <b style="color:inherit;font-weight:400;color:#e8dede">'+_sdF(r.l)+'</b></span><span>Range <span style="color:#e8dede">$'+_sdF(r.rng)+'</span></span><span>High <span style="color:#e8dede">'+_sdF(r.h)+'</span></span></div>';
+    var pv=r.trend==='Up'?'Up day: closed $'+Math.abs(mv).toFixed(2)+' above the open.':r.trend==='Down'?'Down day: closed $'+Math.abs(mv).toFixed(2)+' below the open.':'Balanced day: open and close ended close together.';
+    if(isToday)pv=pv.replace('closed','is trading');
+    // VOLATILITY card
+    var vol,vv,vc;
+    if(_sdNum(r.hv)&&_sdNum(r.iv)){
+      vol=_gsIvBar('Real moves (21d)',r.hv,E20)+_gsIvBar('Options priced in',r.iv,E9)+'<div style="font-size:11px;color:var(--dim)">Gap '+(r.hv-r.iv>=0?'+':'')+(r.hv-r.iv).toFixed(2)+' pts · Hist IV vs Actual IV'+(r.ivFrom?' · from the '+_gsNice(r.ivFrom)+' snapshot':'')+'</div>';
+      vv=r.hv>r.iv?'Market moved MORE than options priced in: edge to option buyers.':'Market moved LESS than options priced in: edge to option sellers.';vc=r.hv>r.iv?E20:E9;
+    }else{vol='<div style="font-size:12px;color:var(--dim)">No logger snapshot for this day.</div>';vv='IV snapshots start Jul 14, 2026.';vc='#8b8ba6';}
+    // DEALER MAP card
+    var dealer,dv,dc;
+    if(hasSnap){
+      var lad=[];
+      if(_sdNum(r.flip))lad.push(['Gamma flip',r.flip,FL,(r.flipFb?'≈':'')+r.flip.toFixed(0)]);
+      if(_sdNum(r.cw))lad.push(['Call wall',r.cw,'#5eead4',r.cw.toFixed(0)]);
+      if(_sdNum(r.pw))lad.push(['Put wall',r.pw,E20,r.pw.toFixed(0)]);
+      lad.push([isToday?'Last':'Close',r.c,'#e8dede',_sdF(r.c),true]);
+      lad.sort(function(x,y){return y[1]-x[1];});
+      dealer=lad.map(function(x){return _gsRung(x[0],x[3],x[2],r.c,!!x[4],x[1]);}).join('')
+        +'<div style="font-size:11px;color:var(--dim)">Net GEX '+_sdBig(r.ngex)+(r.reg?' · '+r.reg.toLowerCase():'')+(r.gexLive?' · live logger':'')+' · sorted high → low</div>';
+      if(r.flipFb){dv='No true flip found that day (≈ nearest strike), so treat the regime with caution.';dc='#8b8ba6';}
+      else if(_sdNum(r.flip)){var below=r.c<r.flip,pos=r.reg?/POS/i.test(r.reg):!below;dv=(pos?'Positive':'Negative')+' gamma: moves tend to '+(pos?'get absorbed.':'run.');if(Math.abs(r.c-r.flip)/r.c<0.002)dv+=' Price is sitting right at the flip ('+r.flip.toFixed(2)+'), so this can switch fast.';else dv+=' Price is '+(below?'below':'above')+' the flip.';dc=pos?UP:DN;}
+      else{dv='No gamma flip in this snapshot.';dc='#8b8ba6';}
+    }else{dealer='<div style="font-size:12px;color:var(--dim)">No GEX snapshot for this day.</div>';dv='GEX snapshots start Jul 14, 2026.';dc='#8b8ba6';}
+    // ACTIVITY card
+    var act,av,ac='#5eead4';
+    if(r.bars){
+      var upP=r.up/r.bars*100,dnP=r.dn/r.bars*100;
+      act='<div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:26px">'+r.up+' up</span><span style="font-size:17px;color:var(--dim)">/ '+r.dn+' down</span></div>'
+        +'<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line)"><div style="width:'+upP.toFixed(1)+'%;background:'+UP+'"></div><div style="flex:1"></div><div style="width:'+dnP.toFixed(1)+'%;background:'+DN+'"></div></div>'
+        +'<div style="font-size:11px;color:var(--dim)">'+tf+' candles · '+r.bars+' total · follows your candle size</div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)"><span>Busiest bar <span style="color:#e8dede">'+(r.big?_sdHM(r.big.m):'—')+'</span></span><span>IEX vol <span style="color:#e8dede">'+(_sdNum(r.v)?(r.v>=1e6?(r.v/1e6).toFixed(2)+'M':Math.round(r.v/1e3)+'K'):'—')+'</span></span></div>';
+      av=r.up>r.dn*1.2?'Buyers won more candles.':r.dn>r.up*1.2?'Sellers won more candles.':'Even tug-of-war between buyers and sellers.';
+      if(r.big)av+=' Heaviest volume at '+_sdHM(r.big.m)+'.';
+    }else{act='<div style="font-size:12px;color:var(--dim)">No intraday candles for this day (they start Aug 10, 2026).</div>';av='Daily candle only.';ac='#8b8ba6';}
+    var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:8px">'
+      +_gsCard('PRICE',price,pv,col==='var(--dim)'?'#8b8ba6':col)+_gsCard('VOLATILITY',vol,vv,vc)+_gsCard('DEALER MAP',dealer,dv,dc)+_gsCard('ACTIVITY',act,av,ac)+'</div>';
+    return {head:head,cards:h};
+  }
+  function _gsLog(rows,sel,n){
+    var list=rows.slice().reverse(),shown=list.slice(0,n),UP='#00e676',DN='#ff453a',FL='#ffd600';
+    var cols='grid-template-columns:118px 150px 80px 150px minmax(150px,1fr) 150px';
+    var h='<div style="margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.14em;color:var(--dim)"><span>DAY LOG · NEWEST FIRST · CLICK A DAY TO LOAD IT ON THE CHART</span><span>'+shown.length+' of '+list.length+' days</span></div>'
+      +'<div style="overflow-x:auto"><div style="min-width:860px">'
+      +'<div style="display:grid;'+cols+';gap:12px;padding:6px 12px;font-size:10px;letter-spacing:.1em;color:var(--dim);border-bottom:1px solid var(--line)"><span>DAY</span><span>OPEN → CLOSE</span><span>RANGE</span><span>VS GAMMA FLIP</span><span>REAL vs PRICED MOVE</span><span>OPEN/CLOSE IN RANGE</span></div>'
+      +'<div style="max-height:300px;overflow-y:auto" data-gs-logscroll="1">';
+    shown.forEach(function(r){r=_gsLiveFill(r,_gsLastG);
+      var on=r.date===sel,mv=r.mv,col=mv>0?UP:mv<0?DN:'var(--dim)',pct=_sdNum(mv)&&r.o?mv/r.o*100:NaN;
+      var chip='<span style="color:var(--dim)">—</span>';
+      if(_sdNum(r.flip)&&_sdNum(r.c)){var ab=r.c>=r.flip,cc=ab?UP:FL;chip='<span style="padding:2px 7px;border-radius:9px;font-size:11px;background:'+cc+'1f;color:'+cc+'">'+(ab?'above':'below')+' '+(r.flipFb?'≈':'')+r.flip.toFixed(0)+'</span>';}
+      var iv=_sdNum(r.hv)&&_sdNum(r.iv)?'<span style="color:'+(r.hv>r.iv?'#ff9f0a':'#29b6f6')+'">moved '+(r.hv>r.iv?'more':'less')+'</span> <span style="color:var(--dim)">'+r.hv.toFixed(1)+' / '+r.iv.toFixed(1)+'</span>':'<span style="color:var(--dim)">—</span>';
+      var p=function(v){return r.h>r.l?(v-r.l)/(r.h-r.l)*100:50;};
+      var bar=_sdNum(r.o)?'<div style="position:relative;height:7px;background:var(--line);border-radius:4px"><div style="position:absolute;left:'+Math.min(p(r.o),p(r.c)).toFixed(0)+'%;width:'+Math.max(2,Math.abs(p(r.c)-p(r.o))).toFixed(0)+'%;height:7px;border-radius:4px;background:'+col+'"></div></div>':'';
+      h+='<button type="button" data-gs-day="'+r.date+'" style="display:grid;'+cols+';gap:12px;align-items:center;width:100%;min-height:40px;padding:6px 12px;font:inherit;font-size:13px;text-align:left;color:inherit;cursor:pointer;background:'+(on?'rgba(255,43,224,.12)':'transparent')+';border:0;border-bottom:1px solid var(--line)">'
+        +'<span style="color:'+(on?'var(--accent)':'inherit')+'">'+_gsNice(r.date)+(r.date.slice(0,4)!==String(new Date().getFullYear())?' '+r.date.slice(0,4):'')+'</span>'
+        +'<span style="color:'+col+'">'+(_sdNum(mv)?(mv>=0?'+':'−')+Math.abs(mv).toFixed(2)+' ('+(pct>=0?'+':'−')+Math.abs(pct).toFixed(2)+'%)':'—')+'</span>'
+        +'<span>$'+_sdF(r.rng)+'</span><span>'+chip+'</span><span>'+iv+'</span>'+bar+'</button>';
+    });
+    h+='</div></div></div>';
+    if(list.length>shown.length)h+='<div style="padding:8px 12px"><button type="button" class="qqq-layer" data-gs-more="1">Show 30 more days</button></div>';
+    return h+'</div>';
+  }
+  var _gsLastG = null;
+  // Picks the day for the chart. GS.date: "latest" = newest day, null = all history.
+  function gsPrepare(e){
+    _sdLoad();
+    var rows=_sdRows(),last=rows.length?rows[rows.length-1].date:null;
+    var sdate=GS.date==="latest"?last:GS.date;
+    if(sdate&&!rows.some(function(r){return r.date===sdate;}))sdate=GS.date==="latest"?null:last;
+    var latestDate=e&&e.entry_date,entry=e,noGex=false,past=false;
+    var live=!!sdate&&sdate===last&&(!latestDate||sdate>=latestDate);
+    if(sdate&&!live){
+      var hit=_gsEntryFor(sdate);
+      if(sdate!==latestDate){past=true;if(hit)entry=hit;else noGex=true;}
+    }
+    qqqSetSession(sdate,past,noGex);
+    _gsLastG={rows:rows,last:last,sdate:sdate,entry:entry,noGex:noGex,past:past,live:live,latestEntry:e};
+    return _gsLastG;
+  }
+  function gsControls(G){
+    var tf=GS.tf;
+    var h='<div class="qqq-chart-controls" style="flex-wrap:wrap;gap:6px;align-items:center"><span class="label">Session</span>'
+      +_gsBtn('data-gs-step','-1','◀',false,'Previous day')
+      +'<input type="date" data-gs-pick="1" aria-label="Pick a day" value="'+(G.sdate||'')+'" min="'+(G.rows.length?G.rows[0].date:'')+'" max="'+(G.last||'')+'" style="font:inherit;font-size:12px;padding:3px 6px;color:inherit;background:transparent;border:1px solid var(--line);border-radius:4px;color-scheme:dark">'
+      +_gsBtn('data-gs-step','1','▶',false,'Next day')
+      +_gsBtn('data-gs-go','today','Today',!!G.sdate&&G.sdate===G.last,'Latest day')
+      +_gsBtn('data-gs-go','all','All history',!G.sdate,'Continuous chart')
+      +_gsSep()+'<span class="label">Candles</span>';
+    ['1m','5m','15m','1H','4H'].forEach(function(t){h+=_gsBtn('data-gs-tf',t,t,tf===t);});
+    return h+'</div>';
+  }
+  function _gsLiveFill(r,G){
+    if(!G||!G.live||r.date!==G.sdate)return r;
+    var o=Object.assign({},r),LG=LIVE_GEX,le=G.latestEntry||{};
+    if(LG&&_sdNum(LG.net_gex)){var lv=LG.levels||{};o.flip=LG.gamma_flip;o.flipFb=/nearest/i.test(LG.gamma_flip_method||'');o.ngex=LG.net_gex;o.cw=lv.call_wall;o.pw=lv.put_wall;o.reg=LG.regime;o.gexLive=true;}
+    if(!_sdNum(o.hv)){var q=le.quant||{},rv=q.realized_vs_implied||{};if(_sdNum(rv.realized_vol_pct)){o.hv=rv.realized_vol_pct;o.iv=rv.implied_vol_pct;o.ivFrom=le.entry_date;}}
+    return o;
+  }
+  function _gsPanelFor(G){
+    if(!G.sdate||!SD.candles)return null;
+    var r=G.rows.filter(function(x){return x.date===G.sdate;})[0];
+    return r?_gsDayPanel(_gsLiveFill(r,G),GS.tf,G.sdate===G.last&&!G.past):null;
+  }
+  function gsHeadline(G){var P=_gsPanelFor(G);return P?P.head:'';}
+  function gsBelow(G){
+    if(!SD.candles&&!SD.err)return '<div style="padding:8px;color:var(--dim);font-size:12px">Loading day stats…</div>';
+    if(SD.err)return '<div style="padding:8px;color:#ff453a;font-size:12px">'+SD.err+'</div>';
+    var h='',P=_gsPanelFor(G);
+    if(P)h+=P.cards;
+    else h+='<div style="margin-top:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--dim)">Showing all history. Pick a day (◀ ▶, Today, or the day log) to lock the chart to that session and see its numbers.</div>';
+    h+=_gsLog(G.rows,G.sdate,GS.logN);
+    h+='<div style="font-size:11px;color:var(--dim);padding:6px 2px">Prices: IEX feed (match full market within cents). Volume: IEX only, ~1–2% of total, so use it for shape, not size. IV &amp; GEX: logger snapshot for that day.</div>';
+    return '<div style="position:relative;z-index:2;padding-top:4px;clear:both">'+h+'</div>';
+  }
+
+  // The GEX Chart card: session controls, the chart, then the day cards and log.
+  function secGexMain(e) {
+    var G = gsPrepare(e);
+    window._gxTf = GS.tf;
+    var M = qqqChartModel(G.entry);
+    var waiting = GS.date === "latest" && !SD.candles && !SD.err;
+    var chart = waiting
+      ? '<div style="padding:60px 16px;text-align:center;color:var(--faint)">Loading the GEX chart…</div>'
+      : qqqOpeningChart(G.entry, M);
+    return { G: G, M: M, html: secWide("QQQ · live price + synchronized GEX",
+      gsControls(G) + gsHeadline(G) + chart + gsBelow(G))
+      .replace('<section class="wide">', '<section class="wide qqq-market-card">') };
+  }
+
+  function _gsGo(date){
+    if (date !== null && date !== "latest") {
+      var rows = _sdRows();
+      if (rows.length && date === rows[rows.length - 1].date) date = "latest";
+    }
+    GS.date = date;
+    renderAllWidgets(true);
+  }
+  document.addEventListener('click',function(ev){
+    var b=ev.target.closest&&ev.target.closest('[data-gs-step],[data-gs-go],[data-gs-tf],[data-gs-day],[data-gs-more]');if(!b)return;
+    var rows=_sdRows();if(!rows.length&&!b.hasAttribute('data-gs-tf'))return;
+    if(b.hasAttribute('data-gs-tf')){GS.tf=b.getAttribute('data-gs-tf');gsSave();renderAllWidgets(true);return;}
+    if(b.hasAttribute('data-gs-more')){GS.logN+=30;renderAllWidgets(true);return;}
+    if(b.hasAttribute('data-gs-day'))return _gsGo(b.getAttribute('data-gs-day'));
+    if(b.hasAttribute('data-gs-go'))return _gsGo(b.getAttribute('data-gs-go')==='all'?null:'latest');
+    var cur=(_gsLastG&&_gsLastG.sdate)||rows[rows.length-1].date,i=rows.findIndex(function(x){return x.date===cur;});if(i<0)i=rows.length-1;
+    i=Math.max(0,Math.min(rows.length-1,i+(+b.getAttribute('data-gs-step'))));
+    _gsGo(rows[i].date);
+  });
+  document.addEventListener('change',function(ev){
+    if(!ev.target.matches||!ev.target.matches('[data-gs-pick]'))return;
+    var v=ev.target.value,rows=_sdRows();if(!v)return _gsGo(null);
+    if(!rows.length)return;
+    // snap weekends/holidays to the nearest earlier trading day
+    var pick=null;rows.forEach(function(r){if(r.date<=v)pick=r.date;});
+    _gsGo(pick||rows[0].date);
+  });
+  setInterval(function(){ if (TAB === "nasdaq") _sdLoad(); }, 300000);
+
   function render() {
     var e = FULL[idx];
     destroyQqqChart();
@@ -5654,13 +6995,13 @@
 
     // VIX history first. The 3× twins move into the compact live meter inside
     // the QQQ card, while their detailed rows remain at the bottom.
-    var _qqqModel = qqqChartModel(e);
+    var _gex = TAB === "nasdaq" ? secGexMain(e) : null;
     var _leverageChart = secNasdaqStars(e, "chart");
     var _leverageTable = secNasdaqStars(e, "table");
     var _qqqBody =
       (_leverageChart ? band("Volatility · VIX") +
         '<div class="grid qqq-leverage-last">' + _leverageChart + '</div>' : "") +
-      secQqqOpening(e, _qqqModel) +   // includes the live chart, GEX and unified cockpit
+      (_gex ? _gex.html + secQqqCockpitSection(_gex.G.entry, _gex.M) : "") +
       secNasdaqDeepDive(e) +
       (_leverageTable ? band("Leverage family · data") +
         '<div class="grid qqq-leverage-last">' + _leverageTable + '</div>' : "");
@@ -5732,8 +7073,9 @@
     });
 
     applyCollapseState();   // restore whatever you had folded last visit
-    if (TAB === "nasdaq") {
-      window.requestAnimationFrame(function () { mountQqqChart(e, _qqqModel); });
+    // The continuous chart (All history, 1H, 4H) mounts after the HTML is in place.
+    if (_gex && document.getElementById("qqq-tv-chart")) {
+      window.requestAnimationFrame(function () { mountQqqChart(_gex.G.entry, _gex.M); });
     }
   }
 
@@ -5964,8 +7306,13 @@
     }
 
     function cycle() {
+      // Skip refreshes while hidden, but always load once.
+      if (document.hidden && cycle.ran) return;
+      cycle.ran = true;
+      loadCandleHistory();
       loadLiveGex();
       loadGexIntraday();
+      loadGexFrames();
       loadAuction();
       fetchAll().then(function () {
         var info = applyLive();
@@ -5976,7 +7323,7 @@
           if (TAB === "nasdaq" && QQQ_TV && QQQ_VIEW_STATE.userAdjusted) {
             updateMountedQqqQuote(FULL[FULL.length - 1]);
           } else {
-            var y = window.scrollY; render(); window.scrollTo(0, y);
+            renderAllWidgets();
           }
         }
         stamp(info);
@@ -5990,13 +7337,29 @@
       Promise.all([fetchOne("QQQ"), fetchOne("TQQQ"), fetchOne("SQQQ")]).then(function () {
         var info = applyLive();
         if (idx === FULL.length - 1) updateMountedQqqQuote(FULL[FULL.length - 1]);
+        // GEX Chart: redraw the current candle and levels with the fresh quote.
+        if (idx === FULL.length - 1 && window._gxLast && document.getElementById("gx-dyn")) {
+          try { window._gxLast.M = qqqChartModel(window._gxLast.e); gxRefresh(); } catch (eGxQuote) {}
+        }
         stamp(info);
       });
     }
 
     cycle();                     // paint as soon as the page opens
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) cycle(); });
     setInterval(cycle, 60000);   // keep it fresh every 60s while the page is open
     setInterval(cycleQqq, 15000); // keep the QQQ chart quote aligned with the live price
+    // With the relay on, check the live GEX files every 20s during the session
+    // (ETag: unchanged files cost a 304) and repaint once if anything changed.
+    if (RELAY_ON) setInterval(function () {
+      if (document.hidden || idx !== FULL.length - 1) return;
+      var et = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+      var mins = et.getHours() * 60 + et.getMinutes(), wd = et.getDay();
+      if (wd === 0 || wd === 6 || mins < 9 * 60 + 20 || mins > 16 * 60 + 20) return;
+      Promise.all([loadLiveGex(true), loadGexIntraday(true), loadGexFrames(true), loadAuction(true)]).then(function (ch) {
+        if (ch.some(Boolean) && idx === FULL.length - 1) renderAllWidgets();
+      });
+    }, 20000);
   }
   startLivePrices();
 })();
