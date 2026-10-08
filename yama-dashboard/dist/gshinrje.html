@@ -3496,6 +3496,31 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   var LIVE_GEX = null;
   // The dashboard and logger files live in different repository folders.
   var LIVE_DATA_BASE = new URL('../../market-dash/', location.href).href;
+  // Live relay (Cloudflare Worker): the logger uploads every minute's files
+  // there, so the chart is ~1 minute behind instead of 1-6. GitHub Pages stays
+  // the backup: if the relay is down or its copy is stale, Pages is used, and
+  // whichever copy is newer always wins.
+  var LIVE_RELAY_BASE = "https://gex-relay.jag12111997.workers.dev/v1/";
+  var RELAY_ON = /^https:\/\//.test(LIVE_RELAY_BASE);
+  function liveStamp(j) { return j ? String(j.generated_utc || j.updated_utc || "") : ""; }
+  function liveAgeMs(j) {
+    var st = liveStamp(j); if (!st) return Infinity;
+    var t = Date.parse(/[zZ]$|[+-]\d\d:?\d\d$/.test(st) ? st : st.replace(" ", "T") + "Z");
+    return isFinite(t) ? Date.now() - t : Infinity;
+  }
+  function liveFetch(name) {
+    function pages() {
+      return fetch(LIVE_DATA_BASE + name + "?t=" + Date.now())
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }
+    if (!RELAY_ON) return pages();
+    return fetch(LIVE_RELAY_BASE + name, { cache: "no-cache" })
+      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      .then(function (rj) {
+        if (rj && liveAgeMs(rj) < 6 * 60000) return rj;        // fresh relay copy
+        return pages().then(function (pj) { return liveStamp(pj) > liveStamp(rj) ? pj : (rj || pj); });
+      });
+  }
 
   var LIVE_CANDLE_HISTORY = null;
   function loadCandleHistory() {
@@ -3509,57 +3534,60 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       }).catch(function() { /* Keep existing bars and retry next cycle. */ });
   }
 
-  function loadLiveGex() {
-    return fetch(LIVE_DATA_BASE + "gex_live.json?t=" + Date.now())
-      .then(function (r) { return r.ok ? r.json() : null; })
+  function loadLiveGex(quiet) {
+    return liveFetch("gex_live.json")
       .then(function (j) {
         if (j && !j.error) {
           var changed = !LIVE_GEX || LIVE_GEX.generated_utc !== j.generated_utc;
           LIVE_GEX = j;
-          if (changed && idx === FULL.length - 1) {
+          if (changed && !quiet && idx === FULL.length - 1) {
             renderAllWidgets();
           }
+          return changed;
         }
+        return false;
       })
-      .catch(function () { /* Retry on the next refresh; keep the last snapshot. */ });
+      .catch(function () { return false; /* Retry on the next refresh; keep the last snapshot. */ });
   }
 
   // Compact one-point-per-snapshot history written by the same greeks logger.
   // This powers real step-lines through time; it is never reconstructed from
   // today's final level because doing that would make the past look predictive.
   var LIVE_GEX_INTRADAY = null;
-  function loadGexIntraday() {
-    return fetch(LIVE_DATA_BASE + "gex_intraday.json?t=" + Date.now())
-      .then(function (r) { return r.ok ? r.json() : null; })
+  function loadGexIntraday(quiet) {
+    return liveFetch("gex_intraday.json")
       .then(function (j) {
         if (j && Array.isArray(j.points)) {
           var changed = !LIVE_GEX_INTRADAY || LIVE_GEX_INTRADAY.updated_utc !== j.updated_utc;
           LIVE_GEX_INTRADAY = j;
-          if (changed && idx === FULL.length - 1) {
+          if (changed && !quiet && idx === FULL.length - 1) {
             renderAllWidgets();
           }
+          return changed;
         }
+        return false;
       })
-      .catch(function () { /* Retry on the next refresh; keep the last snapshot. */ });
+      .catch(function () { return false; /* Retry on the next refresh; keep the last snapshot. */ });
   }
 
   // Live auction metrics (VWAP, A/D line, opening range, volume) from the 60s
   // logger's QQQ 1-min IEX bars (market-dash/auction_live.json). Same guarded
   // pattern as Live GEX — missing file just hides the tiles, never breaks the page.
   var LIVE_AUCTION = null;
-  function loadAuction() {
-    return fetch(LIVE_DATA_BASE + "auction_live.json?t=" + Date.now())
-      .then(function (r) { return r.ok ? r.json() : null; })
+  function loadAuction(quiet) {
+    return liveFetch("auction_live.json")
       .then(function (j) {
         if (j && !j.error) {
           var changed = !LIVE_AUCTION || LIVE_AUCTION.generated_utc !== j.generated_utc;
           LIVE_AUCTION = j;
-          if (changed && idx === FULL.length - 1) {
+          if (changed && !quiet && idx === FULL.length - 1) {
             renderAllWidgets();
           }
+          return changed;
         }
+        return false;
       })
-      .catch(function () { /* Retry on the next refresh; keep the last snapshot. */ });
+      .catch(function () { return false; /* Retry on the next refresh; keep the last snapshot. */ });
   }
 
   // ---------- QQQ TRADINGVIEW CHART ----------
@@ -4138,17 +4166,18 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   }
 
   var LIVE_GEX_FRAMES = null;
-  function loadGexFrames() {
-    return fetch(LIVE_DATA_BASE + "gex_frames.json?t=" + Date.now())
-      .then(function (r) { return r.ok ? r.json() : null; })
+  function loadGexFrames(quiet) {
+    return liveFetch("gex_frames.json")
       .then(function (j) {
         if (j && Array.isArray(j.frames)) {
           var changed = !LIVE_GEX_FRAMES || LIVE_GEX_FRAMES.updated_utc !== j.updated_utc;
           LIVE_GEX_FRAMES = j;
-          if (changed && idx === FULL.length - 1) renderAllWidgets();
+          if (changed && !quiet && idx === FULL.length - 1) renderAllWidgets();
+          return changed;
         }
+        return false;
       })
-      .catch(function () { /* File not shipped yet: v2 shows "waiting for logger". */ });
+      .catch(function () { return false; /* File not shipped yet: v2 shows "waiting for logger". */ });
   }
 
   function gxUseNew() {
@@ -6999,6 +7028,17 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     document.addEventListener("visibilitychange", function () { if (!document.hidden) cycle(); });
     setInterval(cycle, 60000);   // keep it fresh every 60s while the page is open
     setInterval(cycleQqq, 15000); // keep the QQQ chart quote aligned with the live price
+    // With the relay on, check the live GEX files every 20s during the session
+    // (ETag: unchanged files cost a 304) and repaint once if anything changed.
+    if (RELAY_ON) setInterval(function () {
+      if (document.hidden || idx !== FULL.length - 1) return;
+      var et = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+      var mins = et.getHours() * 60 + et.getMinutes(), wd = et.getDay();
+      if (wd === 0 || wd === 6 || mins < 9 * 60 + 20 || mins > 16 * 60 + 20) return;
+      Promise.all([loadLiveGex(true), loadGexIntraday(true), loadGexFrames(true), loadAuction(true)]).then(function (ch) {
+        if (ch.some(Boolean) && idx === FULL.length - 1) renderAllWidgets();
+      });
+    }, 20000);
   }
   // startLivePrices() — now called by loadHistoryData() after data loads
 
