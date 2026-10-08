@@ -44,28 +44,3 @@ jobs:
           INTERVAL_SECONDS: '0'
           DURATION_SECONDS: '0'
         run: python qqq_greeks_logger_alpaca.py
-
-      - name: Publish chart data
-        run: |
-          git config user.name "qqq-logger-bot"
-          git config user.email "actions@github.com"
-          git add market-dash/gex_live.json market-dash/gex_intraday.json market-dash/auction_live.json
-          if [ -f market-dash/qqq_candle_history.json ]; then git add market-dash/qqq_candle_history.json; fi
-          if [ -f market-dash/options_latest.json ]; then git add market-dash/options_latest.json; fi
-          if [ -f market-dash/gex_frames.json ]; then git add market-dash/gex_frames.json; fi
-          git diff --cached --quiet && exit 0
-          git commit -m "Refresh live QQQ chart $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          # Abort any stuck rebase left over from a previous attempt
-          git rebase --abort 2>/dev/null || true
-          # Retry loop: handles concurrent pushes from other workflows
-          for attempt in 1 2 3; do
-            git pull --rebase --autostash origin main || {
-              echo "Rebase failed (attempt $attempt), cleaning up..."
-              git rebase --abort 2>/dev/null || true
-              sleep $((attempt * 5))
-              continue
-            }
-            git push origin HEAD:main && exit 0 || sleep $((attempt * 5))
-          done
-          echo "Publishing failed after 3 attempts" >&2
-          exit 1
