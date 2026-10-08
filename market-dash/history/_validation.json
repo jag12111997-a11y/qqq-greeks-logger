@@ -1,0 +1,127 @@
+[
+ {
+  "day": "2026-10-01",
+  "logged_minutes": 158,
+  "missing_minutes": 232,
+  "stock_feed": "sip",
+  "option_contracts_traded": 84,
+  "oi_strikes": {
+   "call": 36,
+   "put": 36
+  },
+  "rebuilt_minutes": 232,
+  "empty_minutes": 0,
+  "api_calls": 3,
+  "validation": {
+   "minutes": 158,
+   "call_wall_same_pct": 91.8,
+   "call_wall_within_1_pct": 91.8,
+   "put_wall_same_pct": 67.1,
+   "put_wall_within_1_pct": 69.6,
+   "zero_gamma_median_err": 0.2,
+   "net_gex_median_rel_err": 0.109,
+   "volume_gex_median_rel_err": 0.248,
+   "net_gex_same_sign_pct": 100.0
+  }
+ },
+ {
+  "day": "2026-10-02",
+  "logged_minutes": 157,
+  "missing_minutes": 233,
+  "stock_feed": "sip",
+  "option_contracts_traded": 82,
+  "oi_strikes": {
+   "call": 37,
+   "put": 32
+  },
+  "rebuilt_minutes": 233,
+  "empty_minutes": 0,
+  "api_calls": 6,
+  "validation": {
+   "minutes": 157,
+   "call_wall_same_pct": 96.8,
+   "call_wall_within_1_pct": 96.8,
+   "put_wall_same_pct": 41.4,
+   "put_wall_within_1_pct": 71.3,
+   "zero_gamma_median_err": 0.13,
+   "net_gex_median_rel_err": 0.016,
+   "volume_gex_median_rel_err": 0.351,
+   "net_gex_same_sign_pct": 100.0
+  }
+ },
+ {
+  "day": "2026-10-05",
+  "logged_minutes": 158,
+  "missing_minutes": 232,
+  "stock_feed": "sip",
+  "option_contracts_traded": 80,
+  "oi_strikes": {
+   "call": 34,
+   "put": 30
+  },
+  "rebuilt_minutes": 232,
+  "empty_minutes": 0,
+  "api_calls": 9,
+  "validation": {
+   "minutes": 158,
+   "call_wall_same_pct": 100.0,
+   "call_wall_within_1_pct": 100.0,
+   "put_wall_same_pct": 36.7,
+   "put_wall_within_1_pct": 43.0,
+   "zero_gamma_median_err": 1.05,
+   "net_gex_median_rel_err": 0.032,
+   "volume_gex_median_rel_err": 0.145,
+   "net_gex_same_sign_pct": 100.0
+  }
+ },
+ {
+  "day": "2026-10-06",
+  "logged_minutes": 158,
+  "missing_minutes": 232,
+  "stock_feed": "sip",
+  "option_contracts_traded": 74,
+  "oi_strikes": {
+   "call": 31,
+   "put": 24
+  },
+  "rebuilt_minutes": 232,
+  "empty_minutes": 0,
+  "api_calls": 12,
+  "validation": {
+   "minutes": 158,
+   "call_wall_same_pct": 95.6,
+   "call_wall_within_1_pct": 95.6,
+   "put_wall_same_pct": 38.6,
+   "put_wall_within_1_pct": 41.8,
+   "zero_gamma_median_err": 0.51,
+   "net_gex_median_rel_err": 0.033,
+   "volume_gex_median_rel_err": 0.204,
+   "net_gex_same_sign_pct": 100.0
+  }
+ },
+ {
+  "day": "2026-10-07",
+  "logged_minutes": 156,
+  "missing_minutes": 234,
+  "stock_feed": "sip",
+  "option_contracts_traded": 82,
+  "oi_strikes": {
+   "call": 34,
+   "put": 33
+  },
+  "rebuilt_minutes": 234,
+  "empty_minutes": 0,
+  "api_calls": 15,
+  "validation": {
+   "minutes": 156,
+   "call_wall_same_pct": 82.1,
+   "call_wall_within_1_pct": 83.3,
+   "put_wall_same_pct": 76.9,
+   "put_wall_within_1_pct": 80.1,
+   "zero_gamma_median_err": 0.39,
+   "net_gex_median_rel_err": 0.139,
+   "volume_gex_median_rel_err": 0.232,
+   "net_gex_same_sign_pct": 98.7
+  }
+ }
+]
