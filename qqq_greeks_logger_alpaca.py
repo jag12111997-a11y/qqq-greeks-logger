@@ -45,6 +45,7 @@
 # ============================================================
 
 import csv
+import hashlib
 import json
 import os
 import math
@@ -81,6 +82,15 @@ AUCTION_LIVE_PATH = os.path.join("market-dash", "auction_live.json")
 # DURING the session so the dashboard updates in eve's 7:17-8:30 window instead
 # of only when the 2-hour run ends. ~5 min because GitHub Pages rebuilds ~10x/hr.
 CI_PUSH = os.environ.get("GITHUB_ACTIONS") == "true"
+
+# Live relay (Cloudflare Worker, cloudflare/relay): every snapshot's live files
+# go there within seconds, so the chart is ~1 minute behind instead of waiting
+# for the 5-minute git push + Pages rebuild. Git stays the backup and archive.
+RELAY_URL = os.environ.get("RELAY_URL", "https://gex-relay.jag12111997.workers.dev").rstrip("/")
+RELAY_KEY = os.environ.get("RELAY_KEY", "")
+RELAY_FILES = ("gex_live.json", "gex_intraday.json", "gex_frames.json",
+               "auction_live.json", "options_latest.json")
+_RELAY_SENT = {}
 LIVE_PUSH_SECONDS = int(os.environ.get("LIVE_PUSH_SECONDS", "300"))
 
 WINDOW = float(os.environ.get("WINDOW", "15"))
@@ -988,6 +998,32 @@ def push_live_snapshots():
         return False
 
 
+def push_relay():
+    """Send the live files that changed to the relay. Never raises."""
+    if not RELAY_KEY or not RELAY_URL.startswith("https://"):
+        return
+    for name in RELAY_FILES:
+        path = os.path.join("market-dash", name)
+        try:
+            with open(path, "rb") as f:
+                body = f.read()
+        except OSError:
+            continue
+        digest = hashlib.sha1(body).hexdigest()
+        if _RELAY_SENT.get(name) == digest:
+            continue
+        try:
+            r = requests.put(f"{RELAY_URL}/v1/{name}", data=body, timeout=10,
+                             headers={"Authorization": f"Bearer {RELAY_KEY}",
+                                      "Content-Type": "application/json"})
+            if r.status_code == 200:
+                _RELAY_SENT[name] = digest
+            else:
+                print(f"Relay {name}: HTTP {r.status_code} (git push still covers it)", flush=True)
+        except requests.RequestException as exc:
+            print(f"Relay {name} skipped: {exc.__class__.__name__}", flush=True)
+
+
 def snapshot_and_write(spot):
     """Capture calls + puts (separate CSVs) and write the live GEX json."""
     got = {}
@@ -1033,6 +1069,8 @@ def snapshot_and_write(spot):
             write_auction_live(a)
     except Exception as e:
         print(f"auction metrics skipped (continuing): {e}")
+
+    push_relay()
 
 
 def main():
