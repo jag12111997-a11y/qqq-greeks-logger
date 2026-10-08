@@ -4220,7 +4220,9 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         GX_HIST[day] = j && Array.isArray(j.frames) && j.frames.length ? { state: "ok", doc: j } : { state: "none" };
-        if (GX_HIST[day].state === "ok" && QQQ_SESSION.date === day) gxFull();
+        if (GX_HIST[day].state === "ok" && QQQ_SESSION.date === day) {
+          if (document.getElementById("gx-chart-block")) gxFull(); else renderAllWidgets();
+        }
       })
       .catch(function () { GX_HIST[day] = { state: "none" }; });
   }
@@ -4259,7 +4261,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
       '</div>';
     var side = GX_VIEW.side ? '<aside id="gx-side" aria-label="GEX sidebar" style="flex:1 1 270px;max-width:330px;min-width:250px;background:#151515;border-left:1px solid #262626;display:flex;flex-direction:column;font-family:' + GX_FONT + ';color:' + GXC.text + '">' +
       '<div id="gx-side-dyn" style="flex:1;padding:12px 12px 4px">' + D.side + '</div>' + gxPlayback() + '</aside>' : "";
-    return '<div id="gx-chart-block">' + qqqLeverageMeter(M) +
+    return '<div id="gx-chart-block">' + (QQQ_SESSION.noGex ? "" : qqqLeverageMeter(M)) +
       '<div style="display:flex;flex-wrap:wrap;border:1px solid #262626;border-radius:8px;overflow:hidden;margin-top:6px">' + chartBox + side + '</div></div>';
   }
 
@@ -4332,7 +4334,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var spot = (GX_VIEW.at === null && M.latest && isFinite(M.spot)) ? M.spot : shown[shown.length - 1].close;
 
     // ---- GEX source: per-minute frames when present, else snapshot + logger history ----
-    var FR = gxFramesFor(day), g = M.g || {}, frames = null, fi = -1;
+    var FR = gxFramesFor(day), g = QQQ_SESSION.noGex ? {} : (M.g || {}), frames = null, fi = -1;
     if (FR) {
       var fseg = 0, prevT = null;
       frames = FR.frames.map(function (f) {
@@ -4369,9 +4371,11 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
     var callWall = lastP ? lastP.cw : Lg.call_wall, putWall = lastP ? lastP.pw : Lg.put_wall;
     var magnet = lastP ? lastP.mag : Lg.highest_oi_strike;
     var zgNow = Lc.zg != null ? Lc.zg : (lastP && lastP.flip != null ? lastP.flip : (g.gamma_flip_method === "zero crossing" ? g.gamma_flip : null));
+    var zgOI = LO && LO.zg != null ? LO.zg : (lastP && lastP.flip != null ? lastP.flip : (g.gamma_flip_method === "zero crossing" ? g.gamma_flip : null));
 
     // ---- expected move ----
-    var left = Math.max(0, SESSION - tNow), sig = M.sig, cvol = Number(get(e, "quant.garch.conditional_vol_pct"));
+    var left = Math.max(0, SESSION - tNow), sig = QQQ_SESSION.noGex ? null : M.sig,
+        cvol = QQQ_SESSION.noGex ? NaN : Number(get(e, "quant.garch.conditional_vol_pct"));
     var sigLeft = sig ? sig * Math.sqrt(left / SESSION) : null;
     var gsLeft = isFinite(cvol) && cvol > 0 ? cvol / Math.sqrt(252) / 100 * Math.sqrt(left / SESSION) : null;
 
@@ -4743,7 +4747,7 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
               row("net gex", gxMoney(LV.net), null, LV.net >= 0 ? "#00e676" : "#ff5252")
             : '<div style="font-size:12px;color:#fcb103;line-height:1.5">Waiting for logger: per-minute volume GEX.</div>') +
         '<div style="' + hdr + '">open interest</div>' +
-        row("zero gamma", f2(zgNow), GXC.zg) + row("call wall", f2(callWall), GXC.cw) + row("put wall", f2(putWall), GXC.pw) +
+        row("zero gamma", f2(zgOI), GXC.zg) + row("call wall", f2(callWall), GXC.cw) + row("put wall", f2(putWall), GXC.pw) +
         row("OI magnet", f2(magnet), GXC.mag) + row("net gex", gxMoney(LO && LO.net), null, LO && LO.net >= 0 ? "#00e676" : "#ff5252") +
         '<div style="' + hdr + '">touch odds · by close <span style="font-weight:400;color:#9aa0a6;font-size:11.5px">σ ' + (sigLeft ? (sigLeft * 100).toFixed(2) + "%" : "—") + '</span></div>' +
         [["zero gamma", zgNow, GXC.zg], ["call wall", callWall, GXC.cw], ["put wall", putWall, GXC.pw], ["OI magnet", magnet, GXC.mag]].map(function (r) {
@@ -4979,7 +4983,8 @@ var H = (window.MARKET_DASH_HISTORY || []).slice();
   });
 
   function secQqqOpening(e, chartModel) {
-    if (QQQ_SESSION.noGex) {
+    // A day with no Market Dash snapshot can still have a saved per-minute day.
+    if (QQQ_SESSION.noGex && !(gxUseNew() && gxFramesFor(QQQ_SESSION.date))) {
       return secWide("QQQ · price (no GEX snapshot for this day)",
         '<div class="qqq-primary-chart">' + secQqqTradingChart(e, true, chartModel) + '</div>')
         .replace('<section class="wide">', '<section class="wide qqq-market-card">');
