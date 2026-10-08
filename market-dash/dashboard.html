@@ -4889,7 +4889,8 @@
           (above ? "Moves have tended to get absorbed; acceptance above the call wall is the tell." : "Moves have tended to extend; wait for a reclaim of zero gamma before fading.")) +
         '<br><span style="color:#6b7075">Positioning map, not proof of dealer side.</span></div>';
     }
-    return { chart: chart, side: side };
+    return { chart: chart, side: side, lv: { spot: spot, zg: zgNow, cw: callWall, pw: putWall, mag: magnet,
+      net: LV ? LV.net : (LO ? LO.net : null) } };
   }
 
   function gxRefresh() {
@@ -6964,6 +6965,210 @@
   });
   setInterval(function(){ if (TAB === "nasdaq") _sdLoad(); }, 300000);
 
+  // ===== MINI FLOAT =====
+  // A small always-on-top window (Chrome's Document Picture-in-Picture) with a
+  // mini live GEX chart, a key-levels strip and the cockpit read. It always
+  // shows the latest session, whatever day the main chart is on.
+  var FLOAT = { win: null, timer: 0 };
+
+  // Run the GEX engine for the latest day without disturbing the main chart:
+  // every global it touches is saved first and put back after.
+  function floatSnapshot() {
+    var e = FULL[FULL.length - 1];
+    if (!e) return null;
+    var rows = _sdRows(), last = rows.length ? rows[rows.length - 1].date : null;
+    var liveDay = LIVE_GEX_FRAMES && LIVE_GEX_FRAMES.session_date;
+    var day = liveDay && (!last || liveDay >= last) ? liveDay : last;
+    if (!day) return null;
+    var keep = {
+      sess: { date: QQQ_SESSION.date, past: QQQ_SESSION.past, noGex: QQQ_SESSION.noGex },
+      tf: window._gxTf, day: window._gxDay, times: window._gxTimes, idx: window._gxIdx,
+      clock: window._gxClockText, map: window._gxMap, view: window._gxView, y: window._gxY,
+      tview: GX_VIEW.tview, yv: GX_VIEW.yv, at: GX_VIEW.at, pane: QQQ_CHART_VIEW.pane
+    };
+    var out = null;
+    try {
+      QQQ_SESSION.date = day; QQQ_SESSION.past = false; QQQ_SESSION.noGex = false;
+      window._gxTf = "1m"; window._gxDay = day;
+      GX_VIEW.tview = "fit"; GX_VIEW.yv = null; GX_VIEW.at = null; QQQ_CHART_VIEW.pane = "none";
+      var M = qqqChartModel(e), D = gxDynamic(e, M);
+      var scratch = document.getElementById("float-scratch");
+      if (!scratch) {
+        scratch = document.createElement("div");
+        scratch.id = "float-scratch";
+        scratch.setAttribute("aria-hidden", "true");
+        scratch.style.cssText = "position:absolute;left:-99999px;top:0;width:900px;visibility:hidden;pointer-events:none";
+        document.body.appendChild(scratch);
+      }
+      scratch.innerHTML = secQuadrantCockpit(e, M).replace('id="qqq-quad-cockpit"', "");
+      out = { day: day, e: e, M: M, map: window._gxMap, lv: D.lv || {}, clock: window._gxClockText,
+              row: rows.filter(function (r) { return r.date === day; })[0] || null, scratch: scratch };
+    } catch (eFloat) {
+      out = null;
+    } finally {
+      QQQ_SESSION.date = keep.sess.date; QQQ_SESSION.past = keep.sess.past; QQQ_SESSION.noGex = keep.sess.noGex;
+      window._gxTf = keep.tf; window._gxDay = keep.day; window._gxTimes = keep.times; window._gxIdx = keep.idx;
+      window._gxClockText = keep.clock; window._gxMap = keep.map; window._gxView = keep.view; window._gxY = keep.y;
+      GX_VIEW.tview = keep.tview; GX_VIEW.yv = keep.yv; GX_VIEW.at = keep.at; QQQ_CHART_VIEW.pane = keep.pane;
+    }
+    return out;
+  }
+
+  // Mini chart: today's candles on the left, the strike GEX profile on the
+  // right, on one price scale, with the key level lines across both.
+  function floatChart(S) {
+    var Mp = S.map, lv = S.lv;
+    if (!Mp || !Mp.cand || !Mp.cand.length) return '<div style="padding:40px 8px;text-align:center;color:#9aa0a6">Waiting for today\'s first candles…</div>';
+    var W = 400, H = 200, X0 = 34, X1 = 262, G0 = 270, G1 = 354, Y0 = 8, Y1 = 186;
+    // Price scale: today's range plus nearby levels. A level far away gets an
+    // edge pill with an arrow instead of squashing the candles.
+    var lo = Infinity, hi = -Infinity, tEnd = 0;
+    Mp.cand.forEach(function (r) { lo = Math.min(lo, r[3]); hi = Math.max(hi, r[2]); tEnd = Math.max(tEnd, r[0]); });
+    var reach = Math.max(2, (hi - lo) * 0.6);
+    [lv.zg, lv.cw, lv.pw, lv.mag, lv.spot].forEach(function (v) {
+      if (v != null && isFinite(v) && v > lo - reach && v < hi + reach) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    });
+    var pad = Math.max(0.4, (hi - lo) * 0.08); lo -= pad; hi += pad;
+    var y = function (p) { return Y1 - (p - lo) / (hi - lo) * (Y1 - Y0); };
+    // Time scale: the session so far plus 30 minutes (at least 2 hours).
+    var TS = Math.min(23400, Math.max(7200, tEnd + 1800));
+    var x = function (t) { return X0 + Math.min(1, Math.max(0, t / TS)) * (X1 - X0); };
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block" role="img" aria-label="Mini GEX chart">' +
+      '<rect width="' + W + '" height="' + H + '" fill="#111"/>';
+    // price grid
+    var step = (hi - lo) > 12 ? 4 : (hi - lo) > 6 ? 2 : 1;
+    for (var p = Math.ceil(lo / step) * step; p <= hi; p += step) {
+      s += '<line x1="' + X0 + '" x2="' + G1 + '" y1="' + y(p).toFixed(1) + '" y2="' + y(p).toFixed(1) + '" stroke="#1c1c1c"/>' +
+        '<text x="' + (X0 - 4) + '" y="' + (y(p) + 3).toFixed(1) + '" fill="#9aa0a6" font-size="8.5" text-anchor="end">' + p + '</text>';
+    }
+    // time ticks
+    var tick = TS <= 9000 ? 1800 : 3600;
+    for (var tk = 0; tk <= TS; tk += tick) {
+      var mm = 570 + tk / 60, lab = Math.floor(mm / 60) + ":" + (mm % 60 < 10 ? "0" : "") + (mm % 60);
+      s += '<text x="' + x(tk).toFixed(1) + '" y="' + (H - 3) + '" fill="#4dd0e1" font-size="8" text-anchor="middle">' + lab + '</text>';
+    }
+    // GEX profile (right panel)
+    var ks = (Mp.ks || []).filter(function (k) { return k >= lo && k <= hi; }), mx = 0;
+    ks.forEach(function (k) { mx = Math.max(mx, Math.abs(Mp.prof[k] || 0)); });
+    var mid = (G0 + G1) / 2, half = (G1 - G0) / 2, bh = Math.max(2, Math.min(7, (Y1 - Y0) / Math.max(1, ks.length) * 0.75));
+    s += '<line x1="' + mid + '" x2="' + mid + '" y1="' + Y0 + '" y2="' + Y1 + '" stroke="#333" stroke-dasharray="2 2"/>';
+    ks.forEach(function (k) {
+      var v = Mp.prof[k] || 0, w = mx ? Math.abs(v) / mx * half : 0;
+      s += '<rect x="' + (v >= 0 ? mid : mid - w).toFixed(1) + '" y="' + (y(k) - bh / 2).toFixed(1) + '" width="' + w.toFixed(1) +
+        '" height="' + bh.toFixed(1) + '" fill="' + (v >= 0 ? "#2BE05C" : "#FF4747") + '"/>';
+    });
+    // candles
+    var cw = Math.max(0.6, (X1 - X0) / (TS / 60) * 0.7 * (Mp.step || 1));
+    Mp.cand.forEach(function (r) {
+      var up = r[4] >= r[1], col = up ? "#1e88e5" : "#5f6368", xc = x(r[0] + (Mp.step || 1) * 30);
+      s += '<line x1="' + xc.toFixed(1) + '" x2="' + xc.toFixed(1) + '" y1="' + y(r[2]).toFixed(1) + '" y2="' + y(r[3]).toFixed(1) + '" stroke="' + col + '" stroke-width="0.6"/>' +
+        '<rect x="' + (xc - cw / 2).toFixed(1) + '" y="' + y(Math.max(r[1], r[4])).toFixed(1) + '" width="' + cw.toFixed(1) +
+        '" height="' + Math.max(0.5, Math.abs(y(r[1]) - y(r[4]))).toFixed(1) + '" fill="' + col + '"/>';
+    });
+    // level lines + right-edge pills
+    var pills = [];
+    [["ZG", lv.zg, "#fcb103", "4 3"], ["CW", lv.cw, "#66ff00", "2 2"], ["PW", lv.pw, "#ff3b30", "2 2"],
+     ["MAG", lv.mag, "#b388ff", "1 2"], ["", lv.spot, "#00e5ff", ""]].forEach(function (L) {
+      if (L[1] == null || !isFinite(L[1])) return;
+      if (L[1] < lo || L[1] > hi) {   // off-scale: pill at the edge, arrow shows the way
+        pills.push({ y: L[1] > hi ? Y0 + 5 : Y1 - 5, t: (L[1] > hi ? "↑" : "↓") + (L[0] || "") + " " + Number(L[1]).toFixed(1), c: L[2] });
+        return;
+      }
+      var yy = y(L[1]);
+      s += '<line x1="' + X0 + '" x2="' + G1 + '" y1="' + yy.toFixed(1) + '" y2="' + yy.toFixed(1) + '" stroke="' + L[2] + '" stroke-width="' + (L[0] ? 0.8 : 1) + '"' + (L[3] ? ' stroke-dasharray="' + L[3] + '"' : "") + '/>';
+      pills.push({ y: yy, t: (L[0] ? L[0] + " " : "") + Number(L[1]).toFixed(2), c: L[2] });
+    });
+    pills.sort(function (a, b) { return a.y - b.y; });
+    for (var i = 1; i < pills.length; i++) if (pills[i].y - pills[i - 1].y < 11) pills[i].y = pills[i - 1].y + 11;
+    pills.forEach(function (q) {
+      s += '<rect x="357" y="' + (q.y - 5.5).toFixed(1) + '" width="42" height="11" rx="2" fill="' + q.c + '"/>' +
+        '<text x="378" y="' + (q.y + 3).toFixed(1) + '" fill="#000" font-size="7" font-weight="700" text-anchor="middle">' + esc(q.t) + '</text>';
+    });
+    return s + '</svg>';
+  }
+
+  // The cockpit read, same layout as the Yama float.
+  function floatCockpit(S) {
+    var b = S.scratch, t = function (el) { return el ? el.textContent.trim() : "—"; };
+    var col = function (el) { return el ? getComputedStyle(el).color : "inherit"; };
+    var tiles = {}, chips = {};
+    b.querySelectorAll(".qqq-qnode").forEach(function (n) { var k = t(n.querySelector(".qk")); if (k) tiles[k] = { v: t(n.querySelector(".qv")), c: col(n) }; });
+    b.querySelectorAll(".qqq-compass-chip").forEach(function (n) { chips[t(n.querySelector(".ck"))] = { v: t(n.querySelector(".cv")), c: col(n) }; });
+    var cEl = b.querySelector(".qh-call"), call = t(cEl);
+    var chip = function (k, l) { var q = chips[k]; return q ? '<span style="color:' + q.c + '">' + (l || k) + ' <b>' + esc(q.v) + '</b></span>' : ""; };
+    var tl = function (k, l) { var q = tiles[k]; return q ? '<span style="color:' + q.c + '">' + (l || k) + ' <b>' + esc(q.v) + '</b></span>' : ""; };
+    var kv = function (l, v) { return v ? '<span>' + l + ' <b style="color:#e8d8d8">' + v + '</b></span>' : ""; };
+    var line = function (a) { return '<div style="line-height:1.65">' + a.filter(Boolean).join(" · ") + '</div>'; };
+    var sep = function (x) { return '<div style="margin:5px 0 1px;font-size:9px;letter-spacing:1px;color:#b0408f;text-transform:uppercase">' + x + '</div>'; };
+    var r = S.row ? _gsLiveFill(S.row, { live: true, sdate: S.day, latestEntry: S.e }) : null;
+    var a = r ? _sdAgg(r, GS_TF_MIN[GS.tf] || 1) : null, f = function (v, d) { return _sdNum(v) ? v.toFixed(d == null ? 2 : d) : null; };
+    var gap = r && _sdNum(r.hv) && _sdNum(r.iv) ? (r.hv - r.iv >= 0 ? "+" : "−") + Math.abs(r.hv - r.iv).toFixed(2) + " pts" : null;
+    return '<div style="font-size:14px;font-weight:700;color:' + col(cEl) + '">' + esc(call) +
+        ' <span style="font-size:11px;color:#c8a0d0;font-weight:400">' + esc(t(b.querySelector(".qh-count"))) + '</span></div>' +
+      sep("price / levels") + line([chip("QQQ Live", "QQQ"), chip("γ Flip"), tl("Walls"), chip("VIX")]) +
+      sep("regime") + line([tl("Gamma"), tl("GEX", "NetGEX"), tl("Stretch"), tl("Leverage", "Lev")]) +
+      sep("momentum / vol") + line([chip("EMA 9 / 20", "EMA"), tl("Range", "Rng%"), kv("Real", r && f(r.hv, 1) && f(r.hv, 1) + "%"),
+        kv("Priced", r && f(r.iv, 1) && f(r.iv, 1) + "%"), kv("Gap", gap)]) +
+      sep("internals") + line([tl("√det(G)"), tl("VR(2)"), tl("Edge"), tl("ADL"), tl("Volume", "Vol"), tl("G Ratio", "GR")]) +
+      sep("context") + line([tl("GARCH"), tl("P/C Skew", "P/C"), tl("Vanna/Charm", "V/C"), tl("Catalyst")]) +
+      sep("reference") + line([kv("L", r && f(r.l)), kv("H", r && f(r.h)), kv("Rng $", r && f(r.rng)),
+        kv("U/D", a && a.bars ? a.up + "/" + a.dn : null),
+        kv("IEXvol", r && _sdNum(r.v) ? (r.v >= 1e6 ? (r.v / 1e6).toFixed(2) + "M" : Math.round(r.v / 1e3) + "K") : null)]);
+  }
+
+  function floatPaint() {
+    var w = FLOAT.win;
+    if (!w || w.closed) return;
+    var box = w.document.getElementById("float-box");
+    if (!box) return;
+    var S = floatSnapshot();
+    if (!S) { box.innerHTML = '<div style="padding:20px;color:#c8a0d0">Loading today\'s data…</div>'; return; }
+    var lv = S.lv, cand = S.map && S.map.cand, open = cand && cand.length ? cand[0][1] : null;
+    var spot = _sdNum(lv.spot) ? lv.spot : null, ch = spot != null && open != null ? spot - open : null;
+    var chCol = ch == null ? "#9aa0a6" : ch >= 0 ? "#00e676" : "#ff453a";
+    var above = lv.zg != null && spot != null && spot >= lv.zg;
+    var lvl = function (k, v, c) { return v == null || !isFinite(v) ? "" : '<span style="color:' + c + '">' + k + ' <b>' + Number(v).toFixed(2) + '</b></span>'; };
+    var dataAge = S.clock ? S.clock : "";
+    box.innerHTML =
+      '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">' +
+        '<b style="font-size:17px;color:#e8eaed">' + (spot != null ? spot.toFixed(2) : "—") + '</b>' +
+        '<span style="color:' + chCol + '">' + (ch == null ? "" : (ch >= 0 ? "+" : "−") + Math.abs(ch).toFixed(2) + " (" + (ch >= 0 ? "+" : "−") + Math.abs(ch / open * 100).toFixed(2) + "%)") + '</span>' +
+        '<span style="flex:1"></span><span style="color:#9aa0a6;font-size:10.5px"><span style="color:#00e676">●</span> ' + esc(dataAge) + '</span>' +
+      '</div>' +
+      floatChart(S) +
+      '<div style="margin:5px 0 2px;line-height:1.6">' + [lvl("ZG", lv.zg, "#fcb103"), lvl("CW", lv.cw, "#66ff00"), lvl("PW", lv.pw, "#ff3b30"),
+        lvl("MAG", lv.mag, "#b388ff"),
+        lv.net != null ? '<span style="color:' + (lv.net >= 0 ? "#00e676" : "#ff5252") + '">Net <b>' + gxMoney(lv.net) + '</b></span>' : "",
+        lv.zg != null && spot != null ? '<b style="color:' + (above ? "#00e676" : "#ff5252") + '">' + (above ? "+γ absorbing" : "−γ extending") + '</b>' : ""]
+        .filter(Boolean).join(" · ") + '</div>' +
+      '<div style="border-top:1px solid #3b0e33;margin-top:4px;padding-top:4px">' + floatCockpit(S) + '</div>';
+  }
+
+  function floatOpen() {
+    if (FLOAT.win && !FLOAT.win.closed) { try { FLOAT.win.focus(); } catch (eF) {} return; }
+    window.documentPictureInPicture.requestWindow({ width: 430, height: 520 }).then(function (w) {
+      FLOAT.win = w;
+      var d = w.document;
+      d.title = "QQQ GEX";
+      d.body.style.cssText = "margin:0;background:#0a0210;color:#e8d8e8;font:11px ui-monospace,Menlo,monospace;padding:8px 10px;overflow-y:auto";
+      var box = d.createElement("div"); box.id = "float-box"; d.body.appendChild(box);
+      floatPaint();
+      FLOAT.timer = setInterval(floatPaint, 2000);
+      w.addEventListener("pagehide", function () { clearInterval(FLOAT.timer); FLOAT.win = null; });
+    }).catch(function () {});
+  }
+
+  function floatButton() {
+    if (!("documentPictureInPicture" in window) || document.getElementById("floatBtn")) return;
+    var btn = document.createElement("button");
+    btn.id = "floatBtn"; btn.type = "button"; btn.textContent = "📌 Float";
+    btn.title = "Open the mini GEX float (stays on top)";
+    btn.style.cssText = "position:fixed;right:12px;bottom:44px;z-index:9999;padding:7px 13px;font:12px ui-monospace,Menlo,monospace;" +
+      "background:#ff2be0;color:#0a0210;border:0;border-radius:8px;cursor:pointer;font-weight:700";
+    btn.addEventListener("click", floatOpen);
+    document.body.appendChild(btn);
+  }
+
   function render() {
     var e = FULL[idx];
     destroyQqqChart();
@@ -7080,6 +7285,7 @@
   }
 
   render();
+  floatButton();
 
   // Overlay-chart controls: mode toggle, expand, and click-to-hide a line.
   // Delegated on document so it survives every re-render.
