@@ -1,0 +1,58 @@
+name: GEX History - Rebuild saved days
+
+# Builds market-dash/history/<day>.json for the GEX Chart's past-day view:
+# every minute of each session, logged minutes as captured and missed minutes
+# rebuilt from Alpaca's 1-minute option + stock bars (flagged "b": 1).
+#   validate  rebuild minutes we DID log, from bars only, and compare with the
+#             log (writes market-dash/history/_validation.json). No day files.
+#   build     write the day files (blank days = every day in data/).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'validate or build'
+        required: true
+        default: 'validate'
+        type: choice
+        options: [validate, build]
+      days:
+        description: 'Days, YYYY-MM-DD separated by spaces (blank = validate: last 5 logged days, build: every day)'
+        required: false
+        default: ''
+
+concurrency:
+  group: gex-history
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Rebuild saved days
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          MODE: ${{ inputs.mode }}
+          DAYS: ${{ inputs.days }}
+        run: |
+          if [ "$MODE" = "validate" ]; then
+            if [ -z "$DAYS" ]; then DAYS=$(ls -d data/????-??-?? | tail -5 | xargs -n1 basename | tr '\n' ' '); fi
+            python gex_history.py --validate $DAYS --publish
+          else
+            python gex_history.py ${DAYS:+--days $DAYS} --publish
+          fi

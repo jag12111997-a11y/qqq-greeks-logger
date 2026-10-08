@@ -79,3 +79,10 @@ jobs:
       - name: Publish captured history safely
         if: always() && steps.guard.outputs.run == 'true'
         run: python publish_history.py --session pm
+
+      - name: Save today's session for the chart (every minute, gaps rebuilt)
+        if: always() && steps.guard.outputs.run == 'true'
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+        run: python gex_history.py --days today --publish
