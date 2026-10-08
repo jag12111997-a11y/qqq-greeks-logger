@@ -218,6 +218,7 @@ def logged_gex(day, slot):
     if gx.get("error"):
         return None
     gx["generated_utc"] = slot["stamp"].strftime("%Y-%m-%d %H:%M:%S")
+    gx["_rows"] = {"call": calls, "put": puts}
     return gx
 
 
@@ -317,6 +318,7 @@ def rebuild_minute(day, m, bars, oi, wall_strikes=None):
     if gx.get("error"):
         return None
     gx["generated_utc"] = now.strftime("%Y-%m-%d %H:%M:%S")
+    gx["_rows"] = rows
     return gx
 
 
@@ -393,6 +395,8 @@ def build_day(day, api, validate=False):
 def validate_day(day, complete, bars, oi):
     """Rebuild minutes we DID log, from bars only, and compare with the log."""
     rows = []
+    diag = {"vol_ratio": [], "iv_diff_otm": [], "iv_diff_itm": [], "put_pairs": __import__("collections").Counter(),
+            "put_live_gap": [], "put_reb_gap": [], "samples": []}
     for m in sorted(complete):
         live = logged_gex(day, complete[m])
         reb = rebuild_minute(day, m, bars, oi)
@@ -412,11 +416,42 @@ def validate_day(day, complete, bars, oi):
                         if live.get("net_gex_vol") and reb.get("net_gex_vol") is not None else None),
             "net_sign": (reb["net_gex"] > 0) == (live["net_gex"] > 0),
         })
+        # where do they differ? volume, IV and the put wall, per strike
+        for kind in ("call", "put"):
+            lrows = {num(r["strike"]): r for r in live["_rows"][kind]}
+            for r in reb["_rows"][kind]:
+                lr = lrows.get(r["strike"])
+                if not lr:
+                    continue
+                lvv, rvv = num(lr.get("volume")), num(r.get("volume"))
+                if lvv:
+                    diag["vol_ratio"].append(rvv / lvv if rvv is not None else 0)
+                li, ri = num(lr.get("iv")), num(r.get("iv"))
+                if li and ri:
+                    otm = r["strike"] >= reb["spot"] if kind == "call" else r["strike"] < reb["spot"]
+                    diag["iv_diff_otm" if otm else "iv_diff_itm"].append(ri - li)
+        if lv["put_wall"] != rb["put_wall"]:
+            diag["put_pairs"][f"{lv['put_wall']:g}->{rb['put_wall']:g}"] += 1
+            ln = {s_["strike"]: s_["net_gex"] for s_ in live["strikes"]}
+            rn = {s_["strike"]: s_["net_gex"] for s_ in reb["strikes"]}
+            a, b = lv["put_wall"], rb["put_wall"]
+            if a in ln and b in ln and ln[a]:
+                diag["put_live_gap"].append((ln[b] - ln[a]) / abs(ln[a]))   # how close the tie was live
+            if a in rn and b in rn and rn[b]:
+                diag["put_reb_gap"].append((rn[a] - rn[b]) / abs(rn[b]))
+        if m % 30 == 0 and len(diag["samples"]) < 6:
+            diag["samples"].append({"minute": f"{m // 60}:{m % 60:02d}", "spot_live": live["spot"], "spot_reb": reb["spot"],
+                                    "strikes": [[s_["strike"], round(s_["net_gex"] / 1e6, 1),
+                                                 round(next((t["net_gex"] for t in reb["strikes"] if t["strike"] == s_["strike"]), 0) / 1e6, 1)]
+                                                for s_ in live["strikes"]]})
     if not rows:
         return {"minutes": 0}
 
     def pct(key):
         return round(100 * sum(1 for r in rows if r[key]) / len(rows), 1)
+
+    def q(vals):
+        return round(statistics.median(vals), 4) if vals else None
 
     def med(key):
         vals = [r[key] for r in rows if r[key] is not None]
@@ -426,7 +461,16 @@ def validate_day(day, complete, bars, oi):
             "call_wall_within_1_pct": pct("call_wall_near"), "put_wall_same_pct": pct("put_wall"),
             "put_wall_within_1_pct": pct("put_wall_near"), "zero_gamma_median_err": med("flip_err"),
             "net_gex_median_rel_err": med("net_err"), "volume_gex_median_rel_err": med("vol_err"),
-            "net_gex_same_sign_pct": pct("net_sign")}
+            "net_gex_same_sign_pct": pct("net_sign"),
+            "diagnostics": {
+                "contract_volume_ratio_median": q(diag["vol_ratio"]),
+                "iv_diff_otm_median_abs": q([abs(x) for x in diag["iv_diff_otm"]]),
+                "iv_diff_otm_median": q(diag["iv_diff_otm"]),
+                "iv_diff_itm_median": q(diag["iv_diff_itm"]),
+                "put_wall_mismatches": dict(diag["put_pairs"].most_common(6)),
+                "put_wall_live_tie_gap_median": q(diag["put_live_gap"]),
+                "put_wall_rebuilt_tie_gap_median": q(diag["put_reb_gap"]),
+                "samples_$M_live_vs_rebuilt": diag["samples"]}}
 
 
 def write_day(doc):
