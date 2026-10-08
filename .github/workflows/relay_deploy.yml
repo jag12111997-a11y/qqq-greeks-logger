@@ -1,0 +1,39 @@
+name: GEX Relay - Deploy
+
+# Deploys the Cloudflare Worker in cloudflare/relay (the live relay the GEX
+# Chart reads every ~20 s). Needs three repository secrets:
+#   CLOUDFLARE_API_TOKEN   "Edit Cloudflare Workers" API token
+#   CLOUDFLARE_ACCOUNT_ID  your Cloudflare account ID
+#   RELAY_KEY              shared password the logger uses to upload
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ['cloudflare/relay/**']
+
+concurrency:
+  group: relay-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Deploy the Worker (and set its RELAY_KEY secret)
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: cloudflare/relay
+          wranglerVersion: '4.148.0'
+          secrets: |
+            RELAY_KEY
+        env:
+          RELAY_KEY: ${{ secrets.RELAY_KEY }}
