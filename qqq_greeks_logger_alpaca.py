@@ -763,15 +763,12 @@ def append_gex_intraday(gx):
     os.replace(tmp, GEX_INTRADAY_PATH)
 
 
-def append_gex_frame(gx):
-    """Append one per-minute strike profile to gex_frames.json.
-
-    Each frame keeps net gamma per strike weighted by OI and by volume, in
-    $ thousands, so the page can replay the day and measure how fast each
-    strike's gamma changed over 1/5/10/15/30 minutes.
-    """
+def gex_frame(gx):
+    """One per-minute strike profile: net gamma per strike by OI and by
+    volume, in $ thousands. Shared by the live logger and gex_history.py.
+    Returns (session_date, frame) or (None, None)."""
     if not gx or gx.get("error") or not gx.get("strikes"):
-        return
+        return None, None
     try:
         stamp = datetime.datetime.strptime(gx["generated_utc"], "%Y-%m-%d %H:%M:%S")
         stamp = stamp.replace(tzinfo=datetime.timezone.utc)
@@ -797,6 +794,16 @@ def append_gex_frame(gx):
                int(r.get("call_vol") or 0), int(r.get("put_vol") or 0)]
               for r in gx["strikes"]],
     }
+    return session_date, frame
+
+
+def append_gex_frame(gx):
+    """Append one per-minute strike profile to gex_frames.json, so the page
+    can replay the day and measure how fast each strike's gamma changed."""
+    session_date, frame = gex_frame(gx)
+    if not frame:
+        return
+    t = frame["t"]
     doc = {"symbol": SYMBOL, "session_date": session_date, "units": "USD thousands", "frames": []}
     try:
         with open(GEX_FRAMES_PATH) as f:
