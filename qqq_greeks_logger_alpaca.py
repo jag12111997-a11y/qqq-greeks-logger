@@ -92,6 +92,7 @@ RELAY_FILES = ("gex_live.json", "gex_intraday.json", "gex_frames.json",
                "auction_live.json", "options_latest.json")
 _RELAY_SENT = {}
 LIVE_PUSH_SECONDS = int(os.environ.get("LIVE_PUSH_SECONDS", "300"))
+CANDLE_REFRESH_SECONDS = int(os.environ.get("CANDLE_REFRESH_SECONDS", "300"))
 
 WINDOW = float(os.environ.get("WINDOW", "15"))
 INTERVAL_SECONDS = int(os.environ.get("INTERVAL_SECONDS", "0"))
@@ -1109,19 +1110,26 @@ def snapshot_and_write(spot):
     push_relay()
 
 
-def main():
-    if not API_KEY or not API_SECRET:
-        print("STOP: ALPACA_API_KEY / ALPACA_API_SECRET not set.")
-        return
-
-    # Once per run, fetch history for every chart interval. A failed data request
-    # leaves the prior file intact and must not stop options logging.
+def refresh_candles():
+    """Rewrite market-dash/qqq_candle_history.json. The dashboard picks "today"
+    from this file, so the logger keeps it current during the session."""
     try:
         from qqq_candle_history import update_history
         history = update_history(HEADERS)
         print(f"Candle history: {len(history['daily'])} daily, {len(history['minute'])} minute bars")
     except Exception as exc:
         print(f"Candle history skipped (keeping previous data): {exc}")
+
+
+def main():
+    if not API_KEY or not API_SECRET:
+        print("STOP: ALPACA_API_KEY / ALPACA_API_SECRET not set.")
+        return
+
+    # Fetch candle history at the start of every run (and every few minutes in
+    # the loop below). A failed data request leaves the prior file intact and
+    # must not stop options logging.
+    refresh_candles()
 
     # Single snapshot mode. Calls AND puts (separate files) + live GEX.
     if INTERVAL_SECONDS <= 0 or DURATION_SECONDS <= 0:
@@ -1137,6 +1145,7 @@ def main():
           f"(window +/-{WINDOW:g}, calls + puts to separate files).")
     start = time.monotonic()
     last_push = start
+    last_candles = start
     retry_push = False
     count = 0
     while time.monotonic() - start < DURATION_SECONDS:
@@ -1145,6 +1154,10 @@ def main():
             count += 1
         except Exception as e:
             print(f"Snapshot error (continuing): {e}")
+        # Refresh today's candles every few minutes so the next push carries them.
+        if time.monotonic() - last_candles >= CANDLE_REFRESH_SECONDS:
+            refresh_candles()
+            last_candles = time.monotonic()
         # Push the live JSONs mid-run so the dashboard is fresh DURING the window.
         # A failed push is retried on the very next snapshot, not 5 minutes later.
         if CI_PUSH and (retry_push or time.monotonic() - last_push >= LIVE_PUSH_SECONDS):
