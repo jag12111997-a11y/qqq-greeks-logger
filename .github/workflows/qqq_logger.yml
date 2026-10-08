@@ -61,6 +61,7 @@ jobs:
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          RELAY_KEY: ${{ secrets.RELAY_KEY }}
           SESSION: 'am'
           WINDOW: '15'
           INTERVAL_SECONDS: '60'
