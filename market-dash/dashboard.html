@@ -4970,7 +4970,9 @@
         '<br><span style="color:#6b7075">Positioning map, not proof of dealer side.</span></div>';
     }
     return { chart: chart, side: side, settings: setHtml, lv: { spot: spot, zg: zgNow, cw: callWall, pw: putWall, mag: magnet,
-      net: LV ? LV.net : (LO ? LO.net : null) } };
+      net: LV ? LV.net : (LO ? LO.net : null),
+      odds: { cw: touch(callWall), pw: touch(putWall), zg: touch(zgNow) },
+      dots: (function () { if (!frames || w === "oi") return null; var out = {}; [1, 5, 10, 15, 30].forEach(function (m) { var j = backIdx(m); if (j === null) return; var o = {}; kin.forEach(function (k) { var f = frames[j].map[k]; if (f && f.vol != null) o[k] = f.vol; }); out[m] = o; }); return out; })() } };
   }
 
   function gxRefresh() {
@@ -7051,7 +7053,7 @@
   // A small always-on-top window (Chrome's Document Picture-in-Picture) with a
   // mini live GEX chart, a key-levels strip and the cockpit read. It always
   // shows the latest session, whatever day the main chart is on.
-  var FLOAT = { win: null, timer: 0 };
+  var FLOAT = { win: null, timer: 0, more: false };
 
   // Run the GEX engine for the latest day without disturbing the main chart:
   // every global it touches is saved first and put back after.
@@ -7101,7 +7103,7 @@
   function floatChart(S) {
     var Mp = S.map, lv = S.lv;
     if (!Mp || !Mp.cand || !Mp.cand.length) return '<div style="padding:40px 8px;text-align:center;color:#9aa0a6">Waiting for today\'s first candles…</div>';
-    var W = 400, H = 200, X0 = 34, X1 = 262, G0 = 270, G1 = 354, Y0 = 8, Y1 = 186;
+    var W = 400, H = 175, X0 = 34, X1 = 236, G0 = 244, G1 = 354, Y0 = 8, Y1 = 161;
     // Price scale: today's range plus nearby levels. A level far away gets an
     // edge pill with an arrow instead of squashing the candles.
     var lo = Infinity, hi = -Infinity, tEnd = 0;
@@ -7139,6 +7141,17 @@
       s += '<rect x="' + (v >= 0 ? mid : mid - w).toFixed(1) + '" y="' + (y(k) - bh / 2).toFixed(1) + '" width="' + w.toFixed(1) +
         '" height="' + bh.toFixed(1) + '" fill="' + (v >= 0 ? "#2BE05C" : "#FF4747") + '"/>';
     });
+    // Quick dots: where each strike's GEX was 30/15/10/5/1 min ago (dark = older,
+    // light = recent). A dot far from its bar = a big change.
+    if (lv.dots && mx) [[30, "#2a5bd7"], [15, "#006cc0"], [10, "#00a2de"], [5, "#5dd6f5"], [1, "#add8e6"]].forEach(function (D) {
+      var m = lv.dots[D[0]];
+      if (!m) return;
+      ks.forEach(function (k) {
+        if (m[k] == null) return;
+        var cx = mid + Math.max(-1, Math.min(1, m[k] / mx)) * half, moved = Math.abs((Mp.prof[k] || 0) - m[k]) / mx;
+        s += '<circle cx="' + cx.toFixed(1) + '" cy="' + y(k).toFixed(1) + '" r="' + (1.4 + Math.min(1.8, moved * 6)).toFixed(1) + '" fill="' + D[1] + '"/>';
+      });
+    });
     // candles
     var cw = Math.max(0.6, (X1 - X0) / (TS / 60) * 0.7 * (Mp.step || 1));
     Mp.cand.forEach(function (r) {
@@ -7169,33 +7182,41 @@
     return s + '</svg>';
   }
 
-  // The cockpit read, same layout as the Yama float.
-  function floatCockpit(S) {
-    var b = S.scratch, t = function (el) { return el ? el.textContent.trim() : "—"; };
-    var col = function (el) { return el ? getComputedStyle(el).color : "inherit"; };
-    var tiles = {}, chips = {};
-    b.querySelectorAll(".qqq-qnode").forEach(function (n) { var k = t(n.querySelector(".qk")); if (k) tiles[k] = { v: t(n.querySelector(".qv")), c: col(n) }; });
-    b.querySelectorAll(".qqq-compass-chip").forEach(function (n) { chips[t(n.querySelector(".ck"))] = { v: t(n.querySelector(".cv")), c: col(n) }; });
-    var cEl = b.querySelector(".qh-call"), call = t(cEl);
-    var chip = function (k, l) { var q = chips[k]; return q ? '<span style="color:' + q.c + '">' + (l || k) + ' <b>' + esc(q.v) + '</b></span>' : ""; };
-    var tl = function (k, l) { var q = tiles[k]; return q ? '<span style="color:' + q.c + '">' + (l || k) + ' <b>' + esc(q.v) + '</b></span>' : ""; };
-    var kv = function (l, v) { return v ? '<span>' + l + ' <b style="color:#e8d8d8">' + v + '</b></span>' : ""; };
-    var line = function (a) { return '<div style="line-height:1.65">' + a.filter(Boolean).join(" · ") + '</div>'; };
-    var sep = function (x) { return '<div style="margin:5px 0 1px;font-size:9px;letter-spacing:1px;color:#b0408f;text-transform:uppercase">' + x + '</div>'; };
-    var r = S.row ? _gsLiveFill(S.row, { live: true, sdate: S.day, latestEntry: S.e }) : null;
-    var a = r ? _sdAgg(r, GS_TF_MIN[GS.tf] || 1) : null, f = function (v, d) { return _sdNum(v) ? v.toFixed(d == null ? 2 : d) : null; };
-    var gap = r && _sdNum(r.hv) && _sdNum(r.iv) ? (r.hv - r.iv >= 0 ? "+" : "−") + Math.abs(r.hv - r.iv).toFixed(2) + " pts" : null;
-    return '<div style="font-size:14px;font-weight:700;color:' + col(cEl) + '">' + esc(call) +
-        ' <span style="font-size:11px;color:#c8a0d0;font-weight:400">' + esc(t(b.querySelector(".qh-count"))) + '</span></div>' +
-      sep("price / levels") + line([chip("QQQ Live", "QQQ"), chip("γ Flip"), tl("Walls"), chip("VIX")]) +
-      sep("regime") + line([tl("Gamma"), tl("GEX", "NetGEX"), tl("Stretch"), tl("Leverage", "Lev")]) +
-      sep("momentum / vol") + line([chip("EMA 9 / 20", "EMA"), tl("Range", "Rng%"), kv("Real", r && f(r.hv, 1) && f(r.hv, 1) + "%"),
-        kv("Priced", r && f(r.iv, 1) && f(r.iv, 1) + "%"), kv("Gap", gap)]) +
-      sep("internals") + line([tl("√det(G)"), tl("VR(2)"), tl("Edge"), tl("ADL"), tl("Volume", "Vol"), tl("G Ratio", "GR")]) +
-      sep("context") + line([tl("GARCH"), tl("P/C Skew", "P/C"), tl("Vanna/Charm", "V/C"), tl("Catalyst")]) +
-      sep("reference") + line([kv("L", r && f(r.l)), kv("H", r && f(r.h)), kv("Rng $", r && f(r.rng)),
-        kv("U/D", a && a.bars ? a.up + "/" + a.dn : null),
-        kv("IEXvol", r && _sdNum(r.v) ? (r.v >= 1e6 ? (r.v / 1e6).toFixed(2) + "M" : Math.round(r.v / 1e3) + "K") : null)]);
+  // The call (Stand down / Go / Caution) and its hostile/friendly count, from the cockpit.
+  function floatCall(S) {
+    var b = S.scratch, cEl = b.querySelector(".qh-call");
+    return { text: cEl ? cEl.textContent.trim() : "—", color: cEl ? getComputedStyle(cEl).color : "#c8a0d0",
+             count: (b.querySelector(".qh-count") || { textContent: "" }).textContent.trim() };
+  }
+
+  // Hidden until "more": the 4 strongest signals and the touch odds.
+  function floatMore(S) {
+    var b = S.scratch, tiles = {};
+    b.querySelectorAll(".qqq-qnode").forEach(function (n) {
+      var k = n.querySelector(".qk"), v = n.querySelector(".qv"), q = n.querySelector(".qs");
+      if (k) tiles[k.textContent.trim()] = { v: v ? v.textContent.trim() : "—", s: q ? q.textContent.trim() : "", c: getComputedStyle(n).color };
+    });
+    var tile = function (key, label) {
+      var t = tiles[key];
+      if (!t) return "";
+      var tint = /^rgb\(/.test(t.c) ? t.c.replace("rgb(", "rgba(").replace(")", ", 0.12)") : "rgba(255,255,255,.05)";
+      return '<div style="background:' + tint + ';border-radius:6px;padding:5px 7px">' +
+        '<div style="color:#9a7a9a;font-size:9px;letter-spacing:1px">' + label + '</div>' +
+        '<div style="color:' + t.c + ';font-weight:700">' + esc(t.v) + (t.s ? ' <span style="font-weight:400;opacity:.8">· ' + esc(t.s) + '</span>' : "") + '</div></div>';
+    };
+    var o = S.lv.odds || {};
+    var bar = function (label, p, c) {
+      return '<div style="display:flex;align-items:center;gap:6px"><span style="width:64px;color:' + c + '">' + label + '</span>' +
+        '<div style="flex:1;height:6px;background:#2a0c25;border-radius:3px"><div style="width:' + (p == null ? 0 : Math.round(p * 100)) + '%;height:6px;background:' + c + ';border-radius:3px"></div></div>' +
+        '<span style="width:32px;text-align:right">' + (p == null ? "—" : Math.round(p * 100) + "%") + '</span></div>';
+    };
+    return '<div style="border-top:1px solid #3b0e33;margin-top:6px;padding-top:6px;display:flex;flex-direction:column;gap:5px">' +
+      '<div style="color:#b0408f;font-size:9px;letter-spacing:1px">WHY · 4 SIGNALS</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px">' +
+        tile("GEX", "NET GEX") + tile("Stretch", "STRETCH") + tile("VR(2)", "VR(2)") + tile("Edge", "EDGE") + '</div>' +
+      '<div style="color:#b0408f;font-size:9px;letter-spacing:1px;margin-top:2px">TOUCH ODDS · BY CLOSE</div>' +
+      bar("call wall", o.cw, "#66ff00") + bar("put wall", o.pw, "#ff3b30") + bar("zero γ", o.zg, "#fcb103") +
+    '</div>';
   }
 
   function floatPaint() {
@@ -7208,31 +7229,48 @@
     var lv = S.lv, cand = S.map && S.map.cand, open = cand && cand.length ? cand[0][1] : null;
     var spot = _sdNum(lv.spot) ? lv.spot : null, ch = spot != null && open != null ? spot - open : null;
     var chCol = ch == null ? "#9aa0a6" : ch >= 0 ? "#00e676" : "#ff453a";
-    var above = lv.zg != null && spot != null && spot >= lv.zg;
-    var lvl = function (k, v, c) { return v == null || !isFinite(v) ? "" : '<span style="color:' + c + '">' + k + ' <b>' + Number(v).toFixed(2) + '</b></span>'; };
-    var dataAge = S.clock ? S.clock : "";
+    var reg = lv.zg == null || spot == null ? null : spot >= lv.zg;
+    var regPill = reg === null ? '<span style="color:#9aa0a6;font-size:10px">NO FLIP</span>' :
+      '<span style="background:' + (reg ? "rgba(0,230,118,.14)" : "rgba(255,69,58,.16)") + ';color:' + (reg ? "#00e676" : "#ff6b62") +
+      ';border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700">' + (reg ? "+γ ABSORBING" : "−γ EXTENDING") + '</span>';
+    var chip = function (label, v, c, border) {
+      if (v == null || !isFinite(v)) return '<div style="border:1px solid #3b0e33;border-radius:6px;padding:4px 6px"><div style="color:' + c + ';font-size:9px;letter-spacing:1px">' + label + '</div><div style="color:#9aa0a6">—</div></div>';
+      var d = spot == null ? null : v - spot;
+      return '<div style="border:1px solid ' + border + ';border-radius:6px;padding:4px 6px"><div style="color:' + c + ';font-size:9px;letter-spacing:1px">' + label + '</div>' +
+        '<div><b style="color:#e8eaed">' + Number(v).toFixed(2) + '</b>' + (d == null ? "" : ' <span style="color:' + c + '">' + (d >= 0 ? "▲" : "▼") + Math.abs(d).toFixed(2) + '</span>') + '</div></div>';
+    };
+    var C = floatCall(S);
     box.innerHTML =
-      '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">' +
-        '<b style="font-size:17px;color:#e8eaed">' + (spot != null ? spot.toFixed(2) : "—") + '</b>' +
-        '<span style="color:' + chCol + '">' + (ch == null ? "" : (ch >= 0 ? "+" : "−") + Math.abs(ch).toFixed(2) + " (" + (ch >= 0 ? "+" : "−") + Math.abs(ch / open * 100).toFixed(2) + "%)") + '</span>' +
-        '<span style="flex:1"></span><span style="color:#9aa0a6;font-size:10.5px"><span style="color:#00e676">●</span> ' + esc(dataAge) + '</span>' +
+      '<div style="display:flex;align-items:baseline;gap:7px;margin-bottom:5px">' +
+        '<b style="font-size:18px;color:#e8eaed">' + (spot != null ? spot.toFixed(2) : "—") + '</b>' +
+        '<span style="color:' + chCol + '">' + (ch == null ? "" : (ch >= 0 ? "+" : "−") + Math.abs(ch).toFixed(2)) + '</span>' + regPill +
+        '<span style="flex:1"></span><span style="color:#9aa0a6;font-size:10.5px"><span style="color:#00e676">●</span> ' + esc((S.clock || "").replace(" ET", "")) + '</span>' +
       '</div>' +
       floatChart(S) +
-      '<div style="margin:5px 0 2px;line-height:1.6">' + [lvl("ZG", lv.zg, "#fcb103"), lvl("CW", lv.cw, "#66ff00"), lvl("PW", lv.pw, "#ff3b30"),
-        lvl("MAG", lv.mag, "#b388ff"),
-        lv.net != null ? '<span style="color:' + (lv.net >= 0 ? "#00e676" : "#ff5252") + '">Net <b>' + gxMoney(lv.net) + '</b></span>' : "",
-        lv.zg != null && spot != null ? '<b style="color:' + (above ? "#00e676" : "#ff5252") + '">' + (above ? "+γ absorbing" : "−γ extending") + '</b>' : ""]
-        .filter(Boolean).join(" · ") + '</div>' +
-      '<div style="border-top:1px solid #3b0e33;margin-top:4px;padding-top:4px">' + floatCockpit(S) + '</div>';
+      '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:6px">' +
+        chip("CALL WALL", lv.cw, "#66ff00", "rgba(102,255,0,.35)") + chip("PUT WALL", lv.pw, "#ff6b62", "rgba(255,59,48,.4)") + chip("ZERO γ", lv.zg, "#fcb103", "rgba(252,177,3,.4)") +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-top:6px">' +
+        '<span style="color:' + C.color + ';font-weight:700;font-size:13px">' + esc(C.text) + '</span>' +
+        '<span style="color:#9a7a9a">' + esc(C.count) + '</span><span style="flex:1"></span>' +
+        '<button type="button" data-fmore="1" style="background:transparent;border:1px solid #3b0e33;color:#c8a0d0;border-radius:5px;padding:2px 8px;font:inherit;cursor:pointer">' + (FLOAT.more ? "▴ less" : "▾ more") + '</button>' +
+      '</div>' +
+      (FLOAT.more ? floatMore(S) : "");
   }
 
   function floatOpen() {
     if (FLOAT.win && !FLOAT.win.closed) { try { FLOAT.win.focus(); } catch (eF) {} return; }
-    window.documentPictureInPicture.requestWindow({ width: 430, height: 520 }).then(function (w) {
+    window.documentPictureInPicture.requestWindow({ width: 380, height: 330 }).then(function (w) {
       FLOAT.win = w;
       var d = w.document;
       d.title = "QQQ GEX";
       d.body.style.cssText = "margin:0;background:#0a0210;color:#e8d8e8;font:11px ui-monospace,Menlo,monospace;padding:8px 10px;overflow-y:auto";
+      d.addEventListener("click", function (ev) {
+        if (!ev.target.closest || !ev.target.closest("[data-fmore]")) return;
+        FLOAT.more = !FLOAT.more;
+        try { w.resizeTo(w.outerWidth, FLOAT.more ? 540 : 330); } catch (eSize) {}
+        floatPaint();
+      });
       var box = d.createElement("div"); box.id = "float-box"; d.body.appendChild(box);
       floatPaint();
       FLOAT.timer = setInterval(floatPaint, 2000);
