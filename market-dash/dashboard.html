@@ -166,6 +166,15 @@
   .qqq-gex-profile { height:100%; border-left:1px solid #1c1c28; padding-left:12px; }
   .flow section.qqq-market-card { margin-bottom:12px; }
   #gx-chart-block:fullscreen { background:#111; overflow:auto; padding:10px; }
+  .gx-side-in { position:absolute; inset:0; overflow-y:auto; overscroll-behavior:contain; }
+  @container (max-width: 840px) {
+    .gx-row { display:contents !important; }
+    .gx-box { order:1; flex:none !important; }
+    .gx-resize { order:2; }
+    #gx-replay-bar { order:3; }
+    .gx-side { order:4; flex:none !important; max-width:none !important; min-width:0 !important; border-left:0 !important; border-top:1px solid #262626; }
+    .gx-side-in { position:static; max-height:60vh; }
+  }
   .qqq-gex-pane-title { display:flex; align-items:center; justify-content:space-between; gap:8px;
                         color:var(--accent); font-size:10.5px; letter-spacing:1.4px;
                         text-transform:uppercase; margin:2px 0 10px; }
@@ -4225,6 +4234,8 @@
     if (["tight", "wide"].indexOf(_gv.zoom) >= 0) GX_VIEW.zoom = _gv.zoom;
     if (typeof _gv.side === "boolean") GX_VIEW.side = _gv.side;
     if ([1, 2, 5, 10].indexOf(_gv.speed) >= 0) GX_VIEW.speed = _gv.speed;
+    if (typeof _gv.vbh === "number" && _gv.vbh >= 300 && _gv.vbh <= 1600) GX_VIEW.vbh = _gv.vbh;
+    if (_gv.setPos && typeof _gv.setPos.x === "number" && typeof _gv.setPos.y === "number") GX_VIEW.setPos = { x: Math.max(0, _gv.setPos.x), y: Math.max(0, _gv.setPos.y) };
     if (_gv.show && typeof _gv.show === "object") Object.keys(GX_SHOW_DEFAULT).forEach(function (k) {
       if (typeof _gv.show[k] === typeof GX_SHOW_DEFAULT[k]) GX_VIEW.show[k] = _gv.show[k];
     });
@@ -4239,7 +4250,7 @@
   } catch (eGxEm) {}
   function gxSave() {
     try { localStorage.setItem("md:gx-view2", JSON.stringify({ w: GX_VIEW.w, hist: GX_VIEW.hist, zoom: GX_VIEW.zoom,
-      side: GX_VIEW.side, speed: GX_VIEW.speed, show: GX_VIEW.show })); } catch (eGxSave) {}
+      side: GX_VIEW.side, speed: GX_VIEW.speed, show: GX_VIEW.show, vbh: GX_VIEW.vbh || null, setPos: GX_VIEW.setPos || null })); } catch (eGxSave) {}
   }
 
   var LIVE_GEX_FRAMES = null;
@@ -4359,55 +4370,125 @@
     d1: "#add8e6", d5: "#5dd6f5", d10: "#00a2de", d15: "#006cc0", d30: "#2a5bd7" };
   var GX_FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
+  // GEX Chart layout (cockpit): chart and data side by side at the same height
+  // (the data column scrolls on its own), a drag bar to resize the chart, the
+  // replay strip right under the chart, and settings in a floating panel over
+  // the chart so the data stays in view.
   function secGxChart(e, M) {
     window._gxLast = { e: e, M: M };
     var D = gxDynamic(e, M);
     var tb = 'position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:4px;background:rgba(17,17,17,.85);border:1px solid #2a2a2a;border-radius:8px;padding:4px';
     var ib = 'width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;color:#e8eaed;cursor:pointer;border-radius:6px';
     function icon(path) { return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>'; }
-    var chartBox = '<div style="flex:999 1 560px;min-width:0;position:relative;background:' + GXC.bg + '">' +
+    var chartBox = '<div id="gx-chart-box" class="gx-box" style="flex:999 1 560px;min-width:0;position:relative;background:' + GXC.bg + '">' +
       '<div id="gx-dyn">' + D.chart + '</div>' +
       '<div style="' + tb + ';opacity:.4;transition:opacity .15s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.4" onfocusin="this.style.opacity=1" onfocusout="this.style.opacity=.4">' +
-        '<button type="button" data-gx="side" aria-label="' + (GX_VIEW.side ? "Hide sidebar" : "Show sidebar") + '" title="' + (GX_VIEW.side ? "Hide sidebar" : "Show sidebar") + '" style="' + ib + '">' +
+        '<button type="button" data-gx="side" aria-label="' + (GX_VIEW.side ? "Hide data column" : "Show data column") + '" title="' + (GX_VIEW.side ? "Hide data column" : "Show data column") + '" style="' + ib + '">' +
           icon(GX_VIEW.side ? '<path d="M9 6l6 6-6 6"/>' : '<path d="M15 6l-6 6 6 6"/>') + '</button>' +
+        '<button type="button" data-gx="settings" aria-pressed="' + (GX_VIEW.settings ? "true" : "false") + '" aria-label="Chart settings" title="Chart settings" style="' + ib + '">' +
+          icon('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>') + '</button>' +
         '<button type="button" data-gx="fs" aria-label="Full screen" title="Full screen" style="' + ib + '">' + icon('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>') + '</button>' +
         '<button type="button" data-gx="shot" aria-label="Save chart image" title="Save chart image" style="' + ib + '">' + icon('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>') + '</button>' +
         '<div style="text-align:center;font:600 11px ' + GX_FONT + ';color:#e8eaed;padding:2px 0 4px">' + esc(window._gxTf || "1m") + '</div>' +
       '</div>' +
       '<button type="button" data-gx="reset" aria-label="Reset view" title="Reset view (or double-click the chart)" style="position:absolute;right:10px;bottom:10px;' + ib + ';background:rgba(17,17,17,.85);border:1px solid #2a2a2a">' +
         icon('<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>') + '</button>' +
+      (GX_VIEW.settings ? gxSettingsPanel(D.settings) : "") +
       '</div>';
-    var side = GX_VIEW.side ? '<aside id="gx-side" aria-label="GEX sidebar" style="flex:1 1 270px;max-width:330px;min-width:250px;background:#151515;border-left:1px solid #262626;display:flex;flex-direction:column;font-family:' + GX_FONT + ';color:' + GXC.text + '">' +
-      '<div id="gx-side-dyn" style="flex:1;padding:12px 12px 4px">' + D.side + '</div>' + gxPlayback() + '</aside>' : "";
-    return '<div id="gx-chart-block">' + (QQQ_SESSION.noGex ? "" : qqqLeverageMeter(M)) +
-      '<div style="display:flex;flex-wrap:wrap;border:1px solid #262626;border-radius:8px;overflow:hidden;margin-top:6px">' + chartBox + side + '</div></div>';
-  }
-
-  function gxPlayback() {
-    var T = window._gxTimes || [], pb = 'background:transparent;border:0;color:#e8eaed;cursor:pointer;min-width:36px;height:34px;border-radius:6px;font-size:15px';
-    return '<div style="border-top:1px solid #262626;padding:10px 12px 12px">' +
-      '<div style="display:flex;align-items:center;gap:8px;font-size:13px">' +
-        '<button type="button" data-gx="speed" title="Playback speed" style="background:#222;border:1px solid #333;color:#8ab4f8;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px">' + GX_VIEW.speed + 'x</button>' +
-        '<span id="gx-replay-clock" style="flex:1;text-align:center">' + esc(window._gxClockText || "") + '</span>' +
-        '<button type="button" data-gx="live" aria-pressed="' + (GX_VIEW.at === null ? "true" : "false") + '" title="Jump to latest" style="background:#222;border:1px solid #333;color:#e8eaed;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px">Latest</button>' +
-      '</div>' +
-      '<label for="gx-replay" style="position:absolute;left:-9999px">Replay time</label>' +
-      '<input id="gx-replay" type="range" min="0" max="' + Math.max(0, T.length - 1) + '" value="' + (window._gxIdx || 0) + '" style="width:100%;margin:10px 0 4px;accent-color:#8ab4f8">' +
-      '<div style="display:flex;justify-content:space-between">' +
-        '<button type="button" data-gx="step" data-gx-v="-1" aria-label="Back one candle" style="' + pb + '">‹</button>' +
-        '<button type="button" data-gx="step" data-gx-v="-10" aria-label="Back ten candles" style="' + pb + '">«</button>' +
-        '<button type="button" id="gx-play" data-gx="play" aria-label="Play or pause" style="' + pb + '">' + (GX_VIEW.playing ? "❚❚" : "▶") + '</button>' +
-        '<button type="button" data-gx="step" data-gx-v="10" aria-label="Forward ten candles" style="' + pb + '">»</button>' +
-        '<button type="button" data-gx="step" data-gx-v="1" aria-label="Forward one candle" style="' + pb + '">›</button>' +
+    var side = GX_VIEW.side ? '<aside id="gx-side" class="gx-side" aria-label="GEX data" style="flex:1 1 270px;max-width:330px;min-width:250px;position:relative;background:#151515;border-left:1px solid #262626;font-family:' + GX_FONT + ';color:' + GXC.text + '">' +
+      '<div id="gx-side-dyn" class="gx-side-in" style="padding:12px 12px 8px;box-sizing:border-box">' + D.side + '</div></aside>' : "";
+    return '<div id="gx-chart-block" style="container-type:inline-size">' + (QQQ_SESSION.noGex ? "" : qqqLeverageMeter(M)) +
+      '<div class="gx-wrap" style="display:flex;flex-direction:column;border:1px solid #262626;border-radius:8px;overflow:hidden;margin-top:6px">' +
+        '<div class="gx-row" style="display:flex;flex-wrap:wrap">' + chartBox + side + '</div>' +
+        '<div data-gx-resize="1" class="gx-resize" role="separator" aria-orientation="horizontal" aria-label="Drag to resize the chart" title="Drag to resize the chart · double-click for the default size" ' +
+          'style="height:12px;background:#1a1a1a;border-top:1px solid #262626;cursor:ns-resize;touch-action:none;display:flex;align-items:center;justify-content:center">' +
+          '<span style="width:44px;height:4px;border-radius:2px;background:#4a4a4a"></span></div>' +
+        gxPlayback() +
       '</div></div>';
   }
+
+  // Settings float over the chart; drag the top bar to move them.
+  function gxSettingsPanel(body) {
+    var P = GX_VIEW.setPos || { x: 70, y: 14 };
+    return '<section id="gx-set" aria-label="Chart settings" style="position:absolute;left:' + P.x + 'px;top:' + P.y + 'px;width:290px;max-height:calc(100% - ' + (P.y + 14) + 'px);display:flex;flex-direction:column;' +
+        'background:rgba(21,21,21,.97);border:1px solid #3a3a3a;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.55);font-family:' + GX_FONT + ';color:' + GXC.text + ';z-index:5">' +
+      '<div data-gx-setdrag="1" title="Drag to move" style="display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;border-bottom:1px solid #2a2a2a;cursor:move;touch-action:none;user-select:none">' +
+        '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><g fill="#6b7075"><circle cx="4" cy="3" r="1.3"/><circle cx="10" cy="3" r="1.3"/><circle cx="4" cy="7" r="1.3"/><circle cx="10" cy="7" r="1.3"/><circle cx="4" cy="11" r="1.3"/><circle cx="10" cy="11" r="1.3"/></g></svg>' +
+        '<span style="flex:1;font-weight:700;font-size:14px">chart settings</span>' +
+        '<button type="button" data-gx="settings" aria-label="Close settings" title="Close" style="background:transparent;border:0;color:#9aa0a6;cursor:pointer;font-size:16px;width:28px;height:28px">✕</button>' +
+      '</div>' +
+      '<div style="overflow-y:auto;min-height:0;padding:4px 12px 12px;overscroll-behavior:contain">' + body + '</div>' +
+    '</section>';
+  }
+
+  // Replay strip, full width right under the chart.
+  function gxPlayback() {
+    var T = window._gxTimes || [];
+    var b = 'background:transparent;border:1px solid #333;color:#e8eaed;cursor:pointer;min-width:38px;height:32px;border-radius:6px;font-size:15px';
+    return '<div id="gx-replay-bar" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;background:#151515;border-top:1px solid #262626;font-family:' + GX_FONT + ';color:#e8eaed;font-size:13px">' +
+      '<button type="button" data-gx="speed" title="Playback speed" style="background:#222;border:1px solid #333;color:#8ab4f8;border-radius:6px;padding:0 10px;height:32px;cursor:pointer;font-size:12px">' + GX_VIEW.speed + 'x</button>' +
+      '<button type="button" data-gx="step" data-gx-v="-10" aria-label="Back ten candles" title="Back 10" style="' + b + '">«</button>' +
+      '<button type="button" data-gx="step" data-gx-v="-1" aria-label="Back one candle" title="Back 1" style="' + b + '">‹</button>' +
+      '<button type="button" id="gx-play" data-gx="play" aria-label="Play or pause" style="' + b + ';min-width:46px;background:#8ab4f8;color:#111;border-color:#8ab4f8">' + (GX_VIEW.playing ? "❚❚" : "▶") + '</button>' +
+      '<button type="button" data-gx="step" data-gx-v="1" aria-label="Forward one candle" title="Forward 1" style="' + b + '">›</button>' +
+      '<button type="button" data-gx="step" data-gx-v="10" aria-label="Forward ten candles" title="Forward 10" style="' + b + '">»</button>' +
+      '<label for="gx-replay" style="position:absolute;left:-9999px">Replay time</label>' +
+      '<input id="gx-replay" type="range" min="0" max="' + Math.max(0, T.length - 1) + '" value="' + (window._gxIdx || 0) + '" style="flex:1 1 200px;min-width:160px;accent-color:#8ab4f8">' +
+      '<span id="gx-replay-clock" style="min-width:130px;text-align:center;font-variant-numeric:tabular-nums">' + esc(window._gxClockText || "") + '</span>' +
+      '<button type="button" data-gx="live" aria-pressed="' + (GX_VIEW.at === null ? "true" : "false") + '" title="Jump to latest" style="background:#222;border:1px solid #333;color:#e8eaed;border-radius:6px;padding:0 12px;height:32px;cursor:pointer;font-size:12px">Latest</button>' +
+    '</div>';
+  }
+
+  // Move the settings panel; resize the chart from the bar under it.
+  var gxSetDrag = null, gxSizeDrag = null;
+  document.addEventListener("pointerdown", function (ev) {
+    var t = ev.target;
+    if (!t || !t.closest) return;
+    var h = t.closest("[data-gx-setdrag]");
+    if (h && !t.closest("button")) {
+      var p = document.getElementById("gx-set"), box = document.getElementById("gx-chart-box");
+      if (!p || !box) return;
+      ev.preventDefault();
+      gxSetDrag = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, l: p.offsetLeft, t: p.offsetTop, p: p, box: box };
+      return;
+    }
+    if (t.closest("[data-gx-resize]")) {
+      var svg = document.querySelector("#gx-dyn svg");
+      if (!svg) return;
+      var r = svg.getBoundingClientRect();
+      ev.preventDefault();
+      gxSizeDrag = { id: ev.pointerId, y: ev.clientY, h: r.height, w: r.width };
+    }
+  });
+  document.addEventListener("pointermove", function (ev) {
+    if (gxSetDrag && ev.pointerId === gxSetDrag.id) {
+      var d = gxSetDrag, nx = Math.max(0, Math.min(d.box.clientWidth - d.p.offsetWidth, d.l + ev.clientX - d.x)),
+          ny = Math.max(0, Math.min(d.box.clientHeight - 120, d.t + ev.clientY - d.y));
+      d.p.style.left = nx + "px"; d.p.style.top = ny + "px"; d.p.style.maxHeight = "calc(100% - " + (ny + 14) + "px)";
+      GX_VIEW.setPos = { x: Math.round(nx), y: Math.round(ny) };
+    } else if (gxSizeDrag && ev.pointerId === gxSizeDrag.id) {
+      var s = gxSizeDrag, hpx = Math.max(260, Math.min(1400, s.h + ev.clientY - s.y));
+      GX_VIEW.vbh = Math.round(hpx * 1200 / s.w);
+      gxSoon();
+    }
+  });
+  function gxDragEnd() {
+    if (gxSetDrag || gxSizeDrag) { gxSetDrag = gxSizeDrag = null; gxSave(); }
+  }
+  document.addEventListener("pointerup", gxDragEnd);
+  document.addEventListener("pointercancel", gxDragEnd);
+  document.addEventListener("dblclick", function (ev) {
+    if (!ev.target || !ev.target.closest || !ev.target.closest("[data-gx-resize]")) return;
+    GX_VIEW.vbh = null; gxSave(); gxFull();
+  });
 
   function gxDynamic(e, M) {
     var day = QQQ_SESSION.date, tf = window._gxTf || "1m", step = { "1m": 1, "5m": 5, "15m": 15 }[tf] || 1;
     if (window._gxDay !== day) { if (window._gxDay) { GX_VIEW.tview = "fit"; GX_VIEW.yv = null; GX_VIEW.at = null; } window._gxDay = day; }
     var S = GX_VIEW.show, T0 = gxSessionStart(day), SESSION = 23400;
     var paneOn = QQQ_CHART_VIEW.pane !== "none";
-    var PX0 = 72, PX1 = 1192, PY0 = 34, PY1 = 600, LY0 = 640, LY1 = 720, VBH = paneOn ? 750 : 630;
+    var VBH = GX_VIEW.vbh ? Math.max(paneOn ? 520 : 400, Math.min(1600, GX_VIEW.vbh)) : (paneOn ? 750 : 630);
+    var PX0 = 72, PX1 = 1192, PY0 = 34, PY1 = VBH - (paneOn ? 150 : 30), LY0 = PY1 + 40, LY1 = PY1 + 120;
     var PW_ = PX1 - PX0, PC = PX0 + PW_ * 0.55, PH = PW_ * 0.33;
     var V0 = 0, V1 = SESSION;
     function X(rel) { return PX0 + ((rel - V0) / (V1 - V0)) * PW_; }
@@ -4801,7 +4882,7 @@
           'background:' + (it.on ? "#2b2f36" : "transparent") + ';color:' + (it.dis ? "#5f6368" : it.on ? "#8ab4f8" : "#e8eaed") + ';cursor:' + (it.dis ? "not-allowed" : "pointer") + ';font:13px ' + GX_FONT + '">' + esc(it.label) + '</button>';
       }).join("") + '</div>';
     }
-    var md = day.slice(5).replace("-", "/"), side;
+    var md = day.slice(5).replace("-", "/"), side, setHtml = "";
     if (GX_VIEW.settings) {
       var tog = function (key, label, on, attr) {
         return '<button type="button" ' + (attr || ('data-gx="show" data-gx-v="' + key + '"')) + ' aria-pressed="' + (on ? "true" : "false") + '" style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:6px 0;background:transparent;border:0;color:#e8eaed;cursor:pointer;font:12.5px ' + GX_FONT + '">' +
@@ -4815,9 +4896,7 @@
         return '<button type="button" data-gx="' + a + '" data-gx-v="' + val + '" aria-pressed="' + (on ? "true" : "false") + '" style="flex:1;padding:6px 4px;border:1px solid #333;background:' + (on ? "#2b2f36" : "transparent") + ';color:' + (on ? "#8ab4f8" : "#e8eaed") + ';cursor:pointer;font:12px ' + GX_FONT + ';border-radius:5px">' + label + '</button>';
       };
       var rowOf = function (title, inner) { return '<div style="font-size:11.5px;color:#9aa0a6;margin:10px 0 4px">' + title + '</div><div style="display:flex;gap:4px">' + inner + '</div>'; };
-      side = '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:20px">settings</span>' +
-        '<button type="button" data-gx="settings" aria-label="Back" title="Back" style="background:#222;border:1px solid #333;color:#e8eaed;border-radius:50%;width:34px;height:34px;cursor:pointer">⌂</button></div>' +
-        '<div style="margin-top:8px">' +
+      setHtml = '<div style="margin-top:4px">' +
         tog("xhair", "Cursor crosshair", S.xhair) +
         tog("", '<span style="color:' + GXC.zg + '">GEX history + odds</span>', QQQ_LAYERS.core, 'data-qqq-layer="core"') +
         tog("zg", '<span style="color:' + GXC.zg + '">Zero gamma</span>', S.zg) +
@@ -4845,7 +4924,8 @@
         rowOf("Time", optGx("tview", "fit", "Fit", GX_VIEW.tview === "fit") + optGx("tview", "day", "Full day", GX_VIEW.tview === "day")) +
         '<div style="font-size:11.5px;color:#9aa0a6;margin-top:12px;line-height:1.5">Scroll = zoom time · drag = pan · drag the price axis = stretch price · double-click = reset</div>' +
         '<button type="button" data-gx="defaults" style="margin-top:10px;width:100%;padding:7px;background:transparent;border:1px solid #333;color:#e8eaed;border-radius:6px;cursor:pointer;font:12px ' + GX_FONT + '">Reset settings</button>';
-    } else {
+    }
+    {
       var wait = "Needs per-minute volume GEX from the logger";
       side = '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:20px">gex chart</span>' +
           '<button type="button" data-gx="settings" aria-label="Settings" title="Settings" style="background:transparent;border:0;color:#e8eaed;cursor:pointer;width:34px;height:34px">' +
@@ -4889,7 +4969,7 @@
           (above ? "Moves have tended to get absorbed; acceptance above the call wall is the tell." : "Moves have tended to extend; wait for a reclaim of zero gamma before fading.")) +
         '<br><span style="color:#6b7075">Positioning map, not proof of dealer side.</span></div>';
     }
-    return { chart: chart, side: side, lv: { spot: spot, zg: zgNow, cw: callWall, pw: putWall, mag: magnet,
+    return { chart: chart, side: side, settings: setHtml, lv: { spot: spot, zg: zgNow, cw: callWall, pw: putWall, mag: magnet,
       net: LV ? LV.net : (LO ? LO.net : null) } };
   }
 
@@ -4899,7 +4979,7 @@
     var D = gxDynamic(L.e, L.M);
     dyn.innerHTML = D.chart;
     var sd = document.getElementById("gx-side-dyn");
-    if (sd) sd.innerHTML = D.side;
+    if (sd) { var st = sd.scrollTop; sd.innerHTML = D.side; sd.scrollTop = st; }
     var r = document.getElementById("gx-replay"), c = document.getElementById("gx-replay-clock"), p = document.getElementById("gx-play");
     if (r) { r.max = Math.max(0, (window._gxTimes || []).length - 1); r.value = window._gxIdx || 0; }
     if (c) c.textContent = window._gxClockText || "";
@@ -4910,9 +4990,11 @@
   function gxFull() {
     var el = document.getElementById("gx-chart-block"), L = window._gxLast;
     if (!el || !L) return;
-    var y = window.scrollY;
+    var y = window.scrollY, sd0 = document.getElementById("gx-side-dyn"), st = sd0 ? sd0.scrollTop : 0;
     el.outerHTML = secGxChart(L.e, L.M);
     window.scrollTo(0, y);
+    var sd1 = document.getElementById("gx-side-dyn");
+    if (sd1) sd1.scrollTop = st;
   }
 
   // Playback: advance one candle per tick; 1x = 0.6s per candle.
