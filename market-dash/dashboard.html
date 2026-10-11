@@ -3564,7 +3564,7 @@
   // The Journal and Performance tabs are iframes, so they are never repainted.
   var _raT = 0;
   function renderAllWidgets(now) {
-    if (TAB === "journal" || TAB === "perf") return;
+    if (TAB === "journal" || TAB === "perf" || TAB === "strategy") return;
     clearTimeout(_raT);
     _raT = setTimeout(function () {
       var a = document.activeElement;
@@ -6013,7 +6013,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + tab("journal", "Trading Journal") + tab("perf", "Trading Performance") + "</div>";
+      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + tab("journal", "Trading Journal") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
@@ -7240,7 +7240,7 @@
         '<div><b style="color:#e8eaed">' + Number(v).toFixed(2) + '</b>' + (d == null ? "" : ' <span style="color:' + c + '">' + (d >= 0 ? "▲" : "▼") + Math.abs(d).toFixed(2) + '</span>') + '</div></div>';
     };
     var C = floatCall(S);
-    box.innerHTML =
+    box.innerHTML = hrFloatBanner() +
       '<div style="display:flex;align-items:baseline;gap:7px;margin-bottom:5px">' +
         '<b style="font-size:18px;color:#e8eaed">' + (spot != null ? spot.toFixed(2) : "—") + '</b>' +
         '<span style="color:' + chCol + '">' + (ch == null ? "" : (ch >= 0 ? "+" : "−") + Math.abs(ch).toFixed(2)) + '</span>' + regPill +
@@ -7289,6 +7289,319 @@
     document.body.appendChild(btn);
   }
 
+  // ---------- HOME RUN ENGINE (Rulebook v3.2 · Tulip Mania) ----------
+  // Pure functions, same rules as home_run.py. candles: [{time,high,low,close,volume}],
+  // points: minute(epoch/60) -> level record, prev: {high,low,close}, slotMed: {"0": median 30-min range, ...}
+  var HR_RULES = { types: ["gamma_flip", "call_wall", "put_wall", "max_pos_gamma", "max_neg_gamma", "oi_magnet"],
+    merge: 0.15, persist: 15, touch: 0.06, away: 0.40, minbox: 0.30, vlo: -0.37, vhi: 0.05,
+    win0: 65, win1: 124, days: [2, 3, 4, 5], stop: 0.30, target: 2.00, hold: 60, maxTrades: 2, ready: 0.41, through: 0.15, wallNear: 0.15, wallFar: 0.50,
+    volFast: 5, volSlow: 30, volMax: 1.0, smaFast: 4, smaSlow: 7, chips: { fullMax: 5, fullMin: 2, one: 2, low: 1 } };
+  function hrClusters(vals) {
+    var s = vals.slice().sort(function (a, b) { return a - b; }), out = [];
+    s.forEach(function (v) { var g = out[out.length - 1]; if (g && v - g[g.length - 1] <= HR_RULES.merge) g.push(v); else out.push([v]); });
+    return out.map(function (g) { return g.reduce(function (a, b) { return a + b; }, 0) / g.length; });
+  }
+  // v3.1: a yesterday-only level with a GEX level 15-50c past it is skipped (price tends to run to the wall first).
+  function hrWallBeyond(L, side, p) {
+    var R = HR_RULES, gex = [];
+    if (p) R.types.forEach(function (t) { if (p[t]) gex.push(p[t]); });
+    if (gex.some(function (x) { return Math.abs(x - L) <= R.wallNear; })) return null;
+    var sg = side === "ceil" ? 1 : -1;
+    var past = gex.map(function (x) { return sg * (x - L); }).filter(function (d) { return d > R.wallNear && d <= R.wallFar; }).sort(function (a, b) { return a - b; });
+    return past.length ? Math.round((L + sg * past[0]) * 100) / 100 : null;
+  }
+  // v3.2: the three checks at minute m, from bars before m (same as home_run.py checks()).
+  function hrChecks(P, m, side, wall) {
+    var R = HR_RULES, mean = function (a) { return a.reduce(function (x, y) { return x + y; }, 0) / a.length; };
+    var fast = P.vol.slice(Math.max(0, m - R.volFast), m), slow = P.vol.slice(Math.max(0, m - R.volFast - R.volSlow), Math.max(0, m - R.volFast));
+    var ratio = fast.length && slow.length && mean(slow) ? mean(fast) / mean(slow) : null;
+    var s4 = m >= R.smaFast ? mean(P.cl.slice(m - R.smaFast, m)) : null, s7 = m >= R.smaSlow ? mean(P.cl.slice(m - R.smaSlow, m)) : null;
+    var sg = side === "floor" ? 1 : -1;
+    var ok = { wall_clear: wall === null, vol_ok: ratio !== null && ratio < R.volMax, turn_ok: s4 !== null && s7 !== null && sg * (s4 - s7) > 0 };
+    var n = (ok.wall_clear ? 1 : 0) + (ok.vol_ok ? 1 : 0) + (ok.turn_ok ? 1 : 0);
+    return { vol_ratio: ratio, sma4: s4, sma7: s7, wall_clear: ok.wall_clear, vol_ok: ok.vol_ok, turn_ok: ok.turn_ok, checks_n: n, tier: n === 3 ? "full" : n === 2 ? "one" : "low" };
+  }
+  function hrChips(tier, fullNext) { var C = HR_RULES.chips; return tier === "full" ? (fullNext || C.fullMax) : tier === "one" ? C.one : C.low; }
+  function hrRange(hi, lo, a, b) {
+    var mx = -Infinity, mn = Infinity;
+    for (var i = a; i < b; i++) { if (hi[i] > mx) mx = hi[i]; if (lo[i] < mn) mn = lo[i]; }
+    return mx - mn;
+  }
+  function hrPrep(candles, points, prev, slotMed) {
+    var R = HR_RULES, n = candles.length;
+    var hi = candles.map(function (c) { return c.high; }), lo = candles.map(function (c) { return c.low; }),
+        cl = candles.map(function (c) { return c.close; }), vol = candles.map(function (c) { return c.volume || 0; }), mins = candles.map(function (c) { return Math.floor(c.time / 60); });
+    var yday = prev ? [prev.high, prev.low, prev.close] : [];
+    var rawC = {};
+    function raw(m) {
+      if (!rawC[m]) {
+        var p = points[mins[m]], v = [];
+        if (p) R.types.forEach(function (t) { if (p[t]) v.push(p[t]); });
+        rawC[m] = hrClusters(v.concat(yday));
+      }
+      return rawC[m];
+    }
+    function sticky(m) {
+      if (m < R.persist) return [];
+      return raw(m).filter(function (L) {
+        for (var k = m - R.persist + 1; k < m; k++) {
+          if (!raw(k).some(function (x) { return Math.abs(L - x) <= R.merge; })) return false;
+        }
+        return true;
+      });
+    }
+    function unit(m) {
+      var slot = slotMed[String(Math.floor(m / 30))] || null;
+      var real = m >= 10 ? hrRange(hi, lo, Math.max(0, m - 30), m) * (30 / Math.min(30, m)) : null;
+      if (slot && real) return 0.5 * slot + 0.5 * real;
+      return slot || real;
+    }
+    var vwap = [], pv = 0, vv = 0;
+    candles.forEach(function (c) { pv += (c.high + c.low + c.close) / 3 * c.volume; vv += c.volume; vwap.push(vv ? pv / vv : c.close); });
+    return { n: n, hi: hi, lo: lo, cl: cl, vol: vol, mins: mins, sticky: sticky, unit: unit, vwap: vwap, points: points };
+  }
+  // Every completed-minute test of the day, flagged home_run like home_run.py (frames are not checked live).
+  function hrDetect(P, weekday) {
+    var R = HR_RULES, tests = [], last = { ceil: [], floor: [] };
+    for (var m = 1; m < P.n; m++) {
+      var U = P.unit(m); if (!U) continue;
+      var touch = R.touch * U, away = R.away * U, lv = P.sticky(m - 1), pc = P.cl[m - 1];
+      var ups = lv.filter(function (L) { return L > pc + touch; }), dns = lv.filter(function (L) { return L < pc - touch; });
+      var ceil = ups.length ? Math.min.apply(null, ups) : null, floor = dns.length ? Math.max.apply(null, dns) : null;
+      if (ceil !== null && floor !== null && ceil - floor < R.minbox * U) continue;
+      [["ceil", ceil], ["floor", floor]].forEach(function (sl) {
+        var side = sl[0], L = sl[1];
+        if (L === null) return;
+        if (!(side === "ceil" ? P.hi[m] >= L - touch : P.lo[m] <= L + touch)) return;
+        var prior = last[side].filter(function (e) { return Math.abs(e[0] - L) <= R.merge; });
+        var start = prior.length ? prior[prior.length - 1][1] + 1 : Math.max(0, m - 30);
+        var win = P.cl.slice(start, m);
+        if (!win.length || !(side === "ceil" ? Math.min.apply(null, win) <= L - away : Math.max.apply(null, win) >= L + away)) return;
+        last[side].push([L, m]);
+        var vd = ((pc - P.vwap[m - 1]) / U) * (side === "ceil" ? -1 : 1);
+        var wall = hrWallBeyond(L, side, P.points[P.mins[m - 1]]), ck = hrChecks(P, m, side, wall);
+        tests.push(Object.assign({ m: m, side: side, kind: side === "floor" ? "call" : "put", L: L, U: U, test_no: prior.length + 1,
+          vwap: P.vwap[m - 1], vwap_dist_U: vd, wall_beyond: wall,
+          home_run: R.days.indexOf(weekday) >= 0 && m >= R.win0 && m < R.win1 && vd >= R.vlo && vd < R.vhi && m >= 16 }, ck));
+      });
+    }
+    return { tests: tests, last: last };
+  }
+
+  // ---------- HOME RUN BOX (live game plan) ----------
+  var HR_CTX = null, HR_OPTS = null, HR_MEM = {};
+  function loadHrCtx() {
+    return fetch(LIVE_DATA_BASE + "home_run_ctx.json?t=" + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.slot_median_30m) HR_CTX = j; }).catch(function () {});
+  }
+  function loadHrOptions() {
+    return liveFetch("options_latest.json").then(function (j) { if (j && Array.isArray(j.contracts)) HR_OPTS = j; }).catch(function () {});
+  }
+  var HR_ET_FMT = null;
+  function hrET(ms) {
+    HR_ET_FMT = HR_ET_FMT || new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", weekday: "short", hourCycle: "h23" });
+    var p = {}; HR_ET_FMT.formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
+    var wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(p.weekday);
+    return { date: p.year + "-" + p.month + "-" + p.day, mins: Number(p.hour) * 60 + Number(p.minute), sec: Number(p.second), wd: wd };
+  }
+  function hrPT(m) { var t = 570 + m - 180; return ((Math.floor(t / 60) + 11) % 12 + 1) + ":" + String(t % 60).padStart(2, "0"); }
+  function hrStrike(L, kind) { var atm = Math.round(L); return kind === "call" ? atm + 1 : atm - 1; }   // 1 OTM
+  function hrQuote(kind, strike, date) {
+    var c = HR_OPTS && HR_OPTS.contracts ? HR_OPTS.contracts.filter(function (x) { return x.kind === kind && Number(x.strike) === strike && x.expiration === date; })[0] : null;
+    return c && c.ask > 0 ? { bid: Number(c.bid), ask: Number(c.ask) } : null;
+  }
+  function hrAgeMin(stamp) {
+    if (!stamp) return Infinity;
+    var t = Date.parse(/[zZ]$|[+-]\d\d:?\d\d$/.test(stamp) ? stamp : String(stamp).replace(" ", "T") + "Z");
+    return isFinite(t) ? (Date.now() - t) / 60000 : Infinity;
+  }
+
+  function hrState() {
+    var R = HR_RULES, et = hrET(Date.now()), m = et.mins - 570;
+    var S = { et: et, m: m, zones: [] };
+    if (R.days.indexOf(et.wd) < 0) { S.stage = "offday"; return S; }
+    if (m < -15) { S.stage = "early"; return S; }
+    if (!HR_CTX) { S.stage = "loading"; return S; }
+    var gi = LIVE_GEX_INTRADAY, au = LIVE_AUCTION;
+    var fresh = gi && au && gi.session_date === et.date && au.session_date === et.date;
+    if (m >= 0 && m < 390 && (!fresh || hrAgeMin(gi.updated_utc) > 2.5 || hrAgeMin(au.generated_utc) > 2.5)) {
+      S.stage = m < 3 ? "early" : "stale"; S.age = Math.round(Math.max(hrAgeMin(gi && gi.updated_utc), hrAgeMin(au && au.generated_utc))); return S;
+    }
+    if (!fresh) { S.stage = m < 0 ? "early" : "closed"; return S; }
+    // Today's 1-minute bars, filling any minute IEX skipped with the last close.
+    var open = Date.parse(et.date + "T13:30:00Z") / 1000, raw = {}, candles = [];
+    (au.candles || []).forEach(function (c) { var k = Math.floor((c.time - open) / 60); if (k >= 0 && k < 390) raw[k] = c; });
+    var maxK = Math.max.apply(null, Object.keys(raw).map(Number).concat([-1])), lastC = null;
+    for (var k = 0; k <= maxK; k++) {
+      var c = raw[k] || (lastC ? { time: open + k * 60, open: lastC.close, high: lastC.close, low: lastC.close, close: lastC.close, volume: 0 } : null);
+      if (!c) continue;
+      candles.push(c); lastC = c;
+    }
+    if (candles.length < 2) { S.stage = m < R.win0 ? "prep" : "stale"; return S; }
+    var points = {}; (gi.points || []).forEach(function (p) { points[Math.floor(p.time / 60)] = p; });
+    var prev = HR_CTX.for_session_after < et.date ? HR_CTX.yesterday : null;
+    S.ctxOld = HR_CTX.for_session_after >= et.date;
+    var P = hrPrep(candles, points, prev, HR_CTX.slot_median_30m), D = hrDetect(P, et.wd);
+    var n = P.n, U = P.unit(n) || P.unit(n - 1), spot = (LIVE_GEX && LIVE_GEX.spot) || P.cl[n - 1], vw = P.vwap[n - 1];
+    S.spot = spot; S.vwap = vw; S.U = U;
+    // Trades the rules have already fired today.
+    var fired = D.tests.filter(function (t) { return t.home_run; });
+    S.trades = [];
+    var free = 0;
+    fired.forEach(function (t) {
+      if (t.m < free || S.trades.length >= R.maxTrades) return;
+      var key = et.date + "|" + t.m + "|" + t.kind, strike = hrStrike(t.L, t.kind);
+      if (!HR_MEM[key]) {
+        var saved = null; try { saved = JSON.parse(localStorage.getItem("md:hr:" + key) || "null"); } catch (eS) {}
+        var q = hrQuote(t.kind, strike, et.date);
+        HR_MEM[key] = saved || { entry: q && m - t.m <= 3 ? q.ask : null };
+        if (!saved && HR_MEM[key].entry != null) { try { localStorage.setItem("md:hr:" + key, JSON.stringify(HR_MEM[key])); } catch (eS2) {} }
+      }
+      var tr = { t: t, strike: strike, entry: HR_MEM[key].entry, until: t.m + R.hold, chips: hrChips(t.tier, HR_CTX.full_chips_next) };
+      S.trades.push(tr); free = t.m + R.hold;
+    });
+    var active = S.trades.filter(function (tr) { return m < tr.until; })[0];
+    if (active) {
+      S.stage = "live"; S.trade = active;
+      var q = hrQuote(active.t.kind, active.strike, et.date); S.quote = q;
+      return S;
+    }
+    if (m >= R.win1) { S.stage = S.trades.length ? "done" : "sitout"; return S; }
+    if (S.trades.length >= R.maxTrades) { S.stage = "done"; return S; }
+    // Zones: the nearest sticky floor and ceiling, with what a touch would mean right now.
+    var touch = R.touch * U, lv = P.sticky(n - 1), pc = P.cl[n - 1];
+    var ups = lv.filter(function (L) { return L > pc + touch; }), dns = lv.filter(function (L) { return L < pc - touch; });
+    var sides = [["floor", dns.length ? Math.max.apply(null, dns) : null], ["ceil", ups.length ? Math.min.apply(null, ups) : null]];
+    sides.forEach(function (sl) {
+      var side = sl[0], L = sl[1]; if (L === null) return;
+      var prior = D.last[side].filter(function (e) { return Math.abs(e[0] - L) <= R.merge; });
+      var start = prior.length ? prior[prior.length - 1][1] + 1 : Math.max(0, n - 30), win = P.cl.slice(start, n);
+      var armed = win.length && (side === "ceil" ? Math.min.apply(null, win) <= L - R.away * U : Math.max.apply(null, win) >= L + R.away * U);
+      var vd = ((pc - vw) / U) * (side === "ceil" ? -1 : 1);     // the rule checks the minute before the touch: i.e. now
+      var kind = side === "floor" ? "call" : "put", strike = hrStrike(L, kind), dist = Math.abs(spot - L);
+      var wallZ = hrWallBeyond(L, side, P.points[P.mins[n - 1]]), ckZ = hrChecks(P, n, side, wallZ);
+      var pace = 0; for (var j = Math.max(1, n - 5); j < n; j++) pace += (side === "floor" ? P.cl[j - 1] - P.cl[j] : P.cl[j] - P.cl[j - 1]);
+      pace = pace / Math.min(5, n - 1);
+      S.zones.push({ side: side, kind: kind, L: L, strike: strike, armed: !!armed, vwapOk: vd >= R.vlo && vd < R.vhi, vd: vd, dist: dist,
+        near: dist <= R.ready * U, eta: pace > 0.005 ? Math.max(1, Math.round((dist - touch) / pace)) : null,
+        trigger: side === "floor" ? L + touch : L - touch, test_no: prior.length + 1, quote: hrQuote(kind, strike, et.date),
+        wall: wallZ, ck: ckZ, chips: hrChips(ckZ.tier, HR_CTX.full_chips_next) });
+    });
+    S.zones.sort(function (a, b) { return a.dist - b.dist; });
+    var near = S.zones.filter(function (z) { return z.near; });
+    S.zone = near.filter(function (z) { return z.armed; })[0] || near[0] || S.zones[0] || null;
+    S.stage = m < R.win0 ? "prep" : (S.zone && S.zone.near ? "ready" : "watching");
+    if (S.stage === "ready" && S.trades.length === 1) S.second = true;
+    return S;
+  }
+
+  function hrMoney(v) { return v == null || !isFinite(v) ? "—" : "$" + Number(v).toFixed(2); }
+  function hrHtml() {
+    var S; try { S = hrState(); } catch (eHr) { S = { stage: "error" }; }
+    var R = HR_RULES, col = { prep: "#9a7a9a", watching: "#fcb103", ready: "#fcb103", live: "#66ff00", done: "#ff6b62", sitout: "#9a7a9a" };
+    var steps = [["prep", "1 · PREP"], ["ready", "2 · GET READY"], ["go", "3 · GO / CANCEL"], ["live", "4 · MANAGE"]];
+    var stepAt = { prep: 0, watching: 1, ready: 1, live: 3 }[S.stage];
+    function pill(t, bg, fg) { return '<span style="background:' + bg + ';color:' + fg + ';border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700">' + t + "</span>"; }
+    function box(head, body, border) {
+      return '<div style="border:' + (border || "1px solid #3b0e33") + ';border-radius:12px;background:#0a0210;padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-family:ui-monospace,Menlo,monospace;color:#e8d8e8;font-size:12.5px">' +
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="color:#b0408f;font-size:11px;letter-spacing:2px">HOME RUN · GAME PLAN</span><span style="flex:1"></span>' + head + "</div>" + body + "</div>";
+    }
+    function stepper() {
+      if (stepAt == null) return "";
+      return '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">' + steps.map(function (s, i) {
+        var done = i < stepAt, now = i === stepAt;
+        return '<div style="border-radius:8px;padding:6px 8px;' + (now ? "border:2px solid #fcb103;background:rgba(252,177,3,.12)" : done ? "border:1px solid rgba(102,255,0,.4);background:rgba(102,255,0,.06)" : "border:1px solid #3b0e33") +
+          '"><div style="font-size:10px;letter-spacing:1px;color:' + (now ? "#fcb103" : done ? "#66ff00" : "#9a7a9a") + ';font-weight:' + (now ? 700 : 400) + '">' + s[1] + "</div></div>";
+      }).join("") + "</div>";
+    }
+    function tiles(t) {
+      return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px">' + t.map(function (x) {
+        return '<div style="border:1px solid ' + (x[2] || "#3b0e33") + ';border-radius:8px;padding:6px 8px"><div style="color:' + (x[3] || "#9a7a9a") + ';font-size:10px;letter-spacing:1px">' + x[0] + '</div><div style="font-size:14px;font-weight:700;color:' + (x[3] || "#e8eaed") + '">' + x[1] + "</div></div>";
+      }).join("") + "</div>";
+    }
+    function zoneLine(z) {
+      var bits = [(z.side === "floor" ? "floor " : "ceiling ") + z.L.toFixed(2), (z.kind === "call" ? "call " : "put ") + z.strike,
+        "$" + z.dist.toFixed(2) + " away" + (z.eta ? " · ~" + z.eta + " min at this pace" : ""), z.vwapOk ? "VWAP ✓" : "VWAP ✗ for now", z.armed ? "armed ✓" : "not armed (needs a bounce away first)", z.ck.checks_n + "/3 checks · " + z.chips + " chip" + (z.chips > 1 ? "s" : "")];
+      return '<div style="color:' + (z.armed && z.vwapOk ? "#e8d8e8" : "#9a7a9a") + '">' + esc(bits.join(" · ")) + "</div>";
+    }
+    var rulesLine = '<div style="color:#9a7a9a;font-size:11px;border-top:1px solid #3b0e33;padding-top:8px">Tue–Fri · 7:35–8:35 PT · stop −$0.30 · target +$2.00 · out by 60 min · one loss = done · chips: 3/3 = 5, 2/3 = 2, 1–0/3 = 1 · Rulebook v3.2 Tulip Mania · paper test: trade 1 chip</div>';
+    function ckHtml(ck, wall, kind) {
+      var row = function (ok, label, d) { return '<span style="color:' + (ok ? '#66ff00' : '#ff6b62') + ';font-weight:700">' + (ok ? '✓' : '✗') + '</span><span>' + label + '</span><span style="color:#9a7a9a;text-align:right">' + d + '</span>'; };
+      return '<div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:baseline">' +
+        row(ck.wall_clear, 'Wall clear', wall != null ? 'GEX wall ' + wall.toFixed(2) + ' just past' : 'no wall 15–50¢ past') +
+        row(ck.vol_ok, 'Volume drying up', ck.vol_ratio != null ? ck.vol_ratio.toFixed(2) + '× (needs under 1.00)' : 'not enough bars') +
+        row(ck.turn_ok, '1-min SMA 4 ' + (kind === 'call' ? 'above' : 'below') + ' SMA 7', ck.sma4 != null ? ck.sma4.toFixed(2) + ' vs ' + ck.sma7.toFixed(2) : '—') + '</div>';
+    }
+    if (S.stage === "offday") return box(pill("SIT OUT", "rgba(154,122,154,.18)", "#c8a0d0"), '<div style="font-size:18px;font-weight:700">Not a home-run day.</div><div style="color:#9a7a9a">Home runs trade Tuesday to Friday only.</div>' + rulesLine);
+    if (S.stage === "early" || S.stage === "loading") return box(pill("WAITING FOR THE OPEN", "rgba(154,122,154,.18)", "#c8a0d0"), '<div style="color:#9a7a9a">' + (S.stage === "loading" ? "Loading the game plan…" : "The plan builds once today's levels have been in place for 15 minutes. Window: 7:35–8:35 PT.") + "</div>" + rulesLine);
+    if (S.stage === "stale") return box(pill("DATA STALE", "rgba(255,69,58,.16)", "#ff6b62"), '<div style="font-size:18px;font-weight:700;color:#ff6b62">Don\'t trust the box right now.</div><div style="color:#9a7a9a">Live data is ' + (isFinite(S.age) ? S.age + " min" : "too") + " old. No signals until it updates.</div>" + rulesLine, "1px solid rgba(255,69,58,.45)");
+    if (S.stage === "error") return box(pill("ERROR", "rgba(255,69,58,.16)", "#ff6b62"), '<div style="color:#9a7a9a">The game plan hit an error. Trade off your own read today.</div>');
+    if (S.stage === "closed") return box(pill("CLOSED", "rgba(154,122,154,.18)", "#c8a0d0"), '<div style="color:#9a7a9a">Market closed. Today\'s signals land in the paper log after the close.</div>' + rulesLine);
+    var ctxNote = S.ctxOld ? '<div style="color:#fcb103;font-size:11px">Yesterday\'s levels not loaded yet; using today\'s levels only.</div>' : "";
+    if (S.stage === "live") {
+      var t = S.trade, entry = t.entry, left = t.until - S.m, q = S.quote;
+      var open = entry != null && q ? (q.bid - entry) * 100 : null;
+      return box(pill("SETUP FIRED · " + hrPT(t.t.m) + " PT", "#66ff00", "#0a0210"),
+        stepper() +
+        '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:24px;font-weight:700;color:#e8eaed">BUY ' + t.chips + ' × ' + (t.t.kind === "call" ? "CALL " : "PUT ") + t.strike + '</span><span style="color:#9a7a9a">' + t.t.checks_n + '/3 checks · paper test: 1 chip · 1 out of the money · 0DTE · ' + (t.t.side === "floor" ? "floor " : "ceiling ") + t.t.L.toFixed(2) + " test #" + t.t.test_no + "</span></div>" +
+        tiles([["ENTRY", entry != null ? hrMoney(entry) : "your fill"], ["STOP", entry != null ? hrMoney(entry - R.stop) : "fill − $0.30", "rgba(255,59,48,.5)", "#ff6b62"],
+               ["TARGET", entry != null ? hrMoney(entry + R.target) : "fill + $2.00", "rgba(102,255,0,.5)", "#66ff00"], ["OUT BY", hrPT(t.until) + " PT"]]) +
+        '<div style="display:flex;justify-content:space-between;color:#9a7a9a;font-size:11px"><span>' + Math.max(0, left) + " min left</span><span" + (open == null ? ">" : ' style="color:' + (open >= 0 ? "#66ff00" : "#ff6b62") + ';font-weight:700">' + (open >= 0 ? "+" : "−") + "$" + Math.abs(open).toFixed(0) + " open (bid)") + "</span></div>" +
+        '<div style="height:8px;background:#2a0c25;border-radius:4px"><div style="width:' + Math.min(100, Math.max(0, 100 * (R.hold - left) / R.hold)).toFixed(0) + '%;height:8px;background:#00e5ff;border-radius:4px"></div></div>' +
+        '<div style="color:#9a7a9a;font-size:11px">Winners took about 28 min. Set the stop and target in Webull and let it work.</div>' + rulesLine, "2px solid #66ff00");
+    }
+    if (S.stage === "done") return box(pill("DONE FOR THE DAY", "rgba(255,69,58,.16)", "#ff6b62"), '<div style="font-size:18px;font-weight:700">' + S.trades.length + " signal" + (S.trades.length > 1 ? "s" : "") + " today. Close the app.</div>" +
+      '<div style="color:#9a7a9a">' + (S.m < HR_RULES.win1 ? "Max trades reached." : "The window is closed.") + " If your last trade was a loss, you're done either way.</div>" + rulesLine);
+    if (S.stage === "sitout") return box(pill("SIT OUT", "rgba(154,122,154,.18)", "#c8a0d0"), '<div style="font-size:18px;font-weight:700">No setup today. That\'s the trade.</div><div style="color:#9a7a9a">The 7:35–8:35 PT window closed without a home run. Sitting out costs $0.</div>' + rulesLine);
+    // prep / watching / ready
+    var z = S.zone, head, body;
+    var zonesHtml = S.zones.length ? S.zones.map(zoneLine).join("") : '<div style="color:#9a7a9a">No sticky floor or ceiling near price yet.</div>';
+    if (S.stage === "ready" && z) {
+      var q2 = z.quote;
+      head = pill("GET READY · " + z.chips + " CHIP" + (z.chips > 1 ? "S" : ""), z.chips >= 3 ? "rgba(102,255,0,.16)" : "rgba(252,177,3,.18)", z.chips >= 3 ? "#66ff00" : "#fcb103");
+      body = stepper() +
+        '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:24px;font-weight:700;color:#fcb103">GET READY · ' + (z.kind === "call" ? "CALL " : "PUT ") + z.strike + '</span><span style="color:#9a7a9a">' +
+        (z.side === "floor" ? "floor " : "ceiling ") + z.L.toFixed(2) + " · price $" + z.dist.toFixed(2) + " away" + (z.eta ? " · ~" + z.eta + " min at this pace" : "") + "</span></div>" +
+        '<div style="border:1px solid ' + (z.chips >= 3 ? 'rgba(102,255,0,.45)' : '#3b0e33') + ';border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px">' +
+          '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-size:20px;color:' + (z.chips >= 3 ? '#66ff00' : z.chips === 2 ? '#fcb103' : '#c8a0d0') + '">' + z.chips + ' chip' + (z.chips > 1 ? 's' : '') + '</b><span style="color:#9a7a9a">' +
+          z.ck.checks_n + ' of 3 checks right now · they update every minute until the touch · paper test: trade 1</span></div>' + ckHtml(z.ck, z.wall, z.kind) + '</div>' +
+        tiles([["TICKET", (z.kind === "call" ? "Call " : "Put ") + z.strike + " · 1 OTM"], ["EST. ENTRY", q2 ? "≈ " + hrMoney(q2.ask) : "—"], ["STOP", "−$0.30", "rgba(255,59,48,.5)", "#ff6b62"], ["TARGET", "+$2.00", "rgba(102,255,0,.5)", "#66ff00"]]) +
+        '<div style="border-top:1px solid #3b0e33;padding-top:8px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px">' +
+          '<span>Price ' + (z.side === "floor" ? "drops to " : "rises to ") + z.trigger.toFixed(2) + " while VWAP stays near</span><b style=\"color:#66ff00\">GO · send the " + z.kind + " ticket</b>" +
+          '<span>Closes 15¢+ through ' + z.L.toFixed(2) + " first</span><b style=\"color:#ff6b62\">CANCEL</b>" +
+          (z.armed ? "" : "<span>Zone not armed yet (price hasn't backed off $" + (HR_RULES.away * S.U).toFixed(2) + " since its last test): it can arm in the last minute</span><b style=\"color:#fcb103\">WATCH</b>") +
+          "<span>Price not near VWAP " + S.vwap.toFixed(2) + " the minute before the touch" + (z.vwapOk ? " (OK right now)" : " (too far right now)") + "</span><b style=\"color:#ff6b62\">NO GO</b>" +
+          "<span>8:35 PT, no touch</span><b style=\"color:#c8a0d0\">SIT OUT</b></div>" +
+        (S.second ? '<div style="color:#fcb103;font-size:11px">2nd signal today: only take it if trade #1 was a win.</div>' : "") +
+        '<div style="color:#9a7a9a;font-size:11px">Trigger off Webull\'s real-time chart; this box confirms about a minute later.</div>';
+    } else {
+      head = S.stage === "prep" ? pill("PREP · window opens 7:35 PT", "rgba(154,122,154,.18)", "#c8a0d0") : pill("WATCHING · " + (HR_RULES.win1 - S.m) + " min left", "rgba(252,177,3,.14)", "#fcb103");
+      body = stepper() + '<div style="font-size:18px;font-weight:700;color:#e8eaed">' + (S.stage === "prep" ? "Zones to watch" : "No setup yet. Don't force it.") + "</div>" + zonesHtml +
+        '<div style="color:#9a7a9a;font-size:11px">Get ready fires when price is about $' + (HR_RULES.ready * (S.U || 0)).toFixed(2) + " from an armed zone near VWAP. QQQ " + (S.spot ? S.spot.toFixed(2) : "—") + " · VWAP " + (S.vwap ? S.vwap.toFixed(2) : "—") + "</div>";
+    }
+    return box(head, ctxNote + body + rulesLine, S.stage === "ready" ? "2px solid #fcb103" : null);
+  }
+  function secHomeRun() { return '<div class="band"><span>Home run · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + hrHtml() + "</div>"; }
+  function hrPaint() { var el = document.getElementById("hr-box"); if (el) el.innerHTML = hrHtml(); }
+  function hrFloatBanner() {
+    var S; try { S = hrState(); } catch (eHrF) { return ""; }
+    if (S.stage === "live") {
+      var t = S.trade, entry = t.entry;
+      return '<div style="background:#66ff00;color:#0a0210;border-radius:6px;padding:5px 8px;margin-bottom:6px;font-weight:700;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
+        "<span>HOME RUN LIVE · " + t.chips + "× " + (t.t.kind === "call" ? "CALL " : "PUT ") + t.strike + (entry != null ? " @ " + entry.toFixed(2) : "") + "</span><span>" +
+        (entry != null ? "stop " + (entry - HR_RULES.stop).toFixed(2) + " · target " + (entry + HR_RULES.target).toFixed(2) + " · " : "") + Math.max(0, t.until - S.m) + "m left</span></div>";
+    }
+    if (S.stage === "ready" && S.zone) {
+      var z = S.zone;
+      return '<div style="background:rgba(252,177,3,.18);color:#fcb103;border:1px solid #fcb103;border-radius:6px;padding:5px 8px;margin-bottom:6px;font-weight:700">GET READY · ' + z.chips + ' chip' + (z.chips > 1 ? 's' : '') + ' · ' +
+        (z.kind === "call" ? "CALL " : "PUT ") + z.strike + " · GO at " + z.trigger.toFixed(2) + " · $" + z.dist.toFixed(2) + " away</div>";
+    }
+    if (S.stage === "stale") return '<div style="color:#ff6b62;font-size:10px;margin-bottom:4px">HOME RUN BOX: DATA STALE</div>';
+    return "";
+  }
+
   function render() {
     var e = FULL[idx];
     destroyQqqChart();
@@ -7324,6 +7637,7 @@
     var _leverageChart = secNasdaqStars(e, "chart");
     var _leverageTable = secNasdaqStars(e, "table");
     var _qqqBody =
+      (TAB === "nasdaq" && idx === FULL.length - 1 ? secHomeRun() : "") +
       (_leverageChart ? band("Volatility · VIX") +
         '<div class="grid qqq-leverage-last">' + _leverageChart + '</div>' : "") +
       (_gex ? _gex.html + secQqqCockpitSection(_gex.G.entry, _gex.M) : "") +
@@ -7377,7 +7691,9 @@
       _pipeFooter + '</div>';
 
     app.innerHTML = _header + tabBar() +
-      (TAB === "perf"
+      (TAB === "strategy"
+        ? ('<div class="flow"><iframe src="tulip-mania.html" title="Trading Strategy: Tulip Mania" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0c0710"></iframe></div>')
+        : TAB === "perf"
         ? ('<div class="flow"><iframe src="trading-performance.html" title="Trading Performance" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#160a0e"></iframe></div>')
         : TAB === "journal"
         ? ('<div class="flow"><iframe src="notebook.html" title="Trading Journal" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0d0625"></iframe></div>')
@@ -7643,7 +7959,7 @@
       fetchAll().then(function () {
         var info = applyLive();
         // Repaint without losing scroll or which session you are viewing.
-        if (info.painted && idx === FULL.length - 1 && TAB !== "journal" && TAB !== "perf") {
+        if (info.painted && idx === FULL.length - 1 && TAB !== "journal" && TAB !== "perf" && TAB !== "strategy") {
           // Once the user has positioned the Nasdaq chart, the minute refresh
           // updates its live quote in place instead of destroying the chart.
           if (TAB === "nasdaq" && QQQ_TV && QQQ_VIEW_STATE.userAdjusted) {
@@ -7674,6 +7990,11 @@
     cycle();                     // paint as soon as the page opens
     document.addEventListener("visibilitychange", function () { if (!document.hidden) cycle(); });
     setInterval(cycle, 60000);   // keep it fresh every 60s while the page is open
+    // Home run box: its context once (and every 30 min), option quotes every 30s, repaint every 15s.
+    loadHrCtx().then(hrPaint); loadHrOptions().then(hrPaint);
+    setInterval(loadHrCtx, 1800000);
+    setInterval(function () { if (!document.hidden) loadHrOptions().then(hrPaint); }, 30000);
+    setInterval(function () { if (!document.hidden) hrPaint(); }, 15000);
     setInterval(cycleQqq, 15000); // keep the QQQ chart quote aligned with the live price
     // With the relay on, check the live GEX files every 20s during the session
     // (ETag: unchanged files cost a 304) and repaint once if anything changed.

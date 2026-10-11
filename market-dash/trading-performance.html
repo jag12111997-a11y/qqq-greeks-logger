@@ -325,12 +325,51 @@ function _timing(D){
   return '<div style="display:flex;gap:4px"><div style="flex:1">'+_box(t1)+'</div><div style="flex:1">'+_box(t2)+'</div></div>';
 }
 
+
+// ===== HOME RUN · PAPER TEST (system log; your own trades are compared at month end) =====
+var HR_LOG = null;
+fetch('home_run_log.json?t=' + Date.now()).then(function (r) { return r.ok ? r.json() : null; })
+  .then(function (j) { if (j && j.signals) { HR_LOG = j; var el = document.getElementById('root'); if (el && el.innerHTML) el.innerHTML = renderCombinedWidget(); } })
+  .catch(function () {});
+function _hrEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function _hrPaperPanel() {
+  var L = HR_LOG, mute = 'rgba(200,160,160,0.55)', box = 'border:1px solid rgba(140,20,20,0.25);border-radius:6px;padding:8px 10px;background:rgba(10,2,16,0.5)';
+  if (!L) return '<div style="' + box + ';color:' + mute + ';font-size:10px">HOME RUN · PAPER TEST — loading…</div>';
+  var P = L.summary.paper, B = L.summary.backtest, pf = L.pass_fail || {};
+  var st = pf.status || '—', stCol = st === 'pass' ? '#66ff00' : st === 'review' ? '#ff6b62' : '#fcb103';
+  var rows = L.signals.filter(function (s) { return s.period === 'paper'; }).slice().reverse();
+  var tile = function (k, v, c) { return '<div style="flex:1;min-width:84px"><div style="color:' + mute + ';font-size:7.5px;letter-spacing:0.12em">' + k + '</div><div style="font-size:15px;font-weight:700;color:' + (c || '#e6c8c8') + '">' + v + '</div></div>'; };
+  var h = '<div style="' + box + ';display:flex;flex-direction:column;gap:8px">';
+  h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="color:#b0408f;font-size:8px;letter-spacing:0.15em">HOME RUN · PAPER TEST · unseen days after ' + _hrEsc(L.paper_since) + '</span><span style="flex:1"></span>' +
+       '<span style="border:1px solid ' + stCol + ';color:' + stCol + ';border-radius:999px;padding:1px 8px;font-size:9px;font-weight:700">' + _hrEsc(st.toUpperCase()) + '</span></div>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+       tile('SIGNALS', P.signals) + tile('TRADES', P.trades + ' / 8 needed') +
+       tile('P&L · 1 CONTRACT', perfNum(P.pnl), P.pnl > 0 ? '#66ff00' : P.pnl < 0 ? '#ff6b62' : null) +
+       tile('PROFIT FACTOR', P.profit_factor != null ? P.profit_factor.toFixed(2) : '—', P.profit_factor != null ? (P.profit_factor >= pf.min_profit_factor ? '#66ff00' : '#ff6b62') : null) +
+       tile('AVG LOSS', P.avg_loss != null ? perfNum(P.avg_loss) : '—', P.avg_loss != null ? (P.avg_loss >= pf.max_avg_loss ? '#66ff00' : '#ff6b62') : null) + '</div>';
+  h += '<div style="color:' + mute + ';font-size:8.5px">Pass after 8+ trades if profit factor ≥ ' + pf.min_profit_factor + ' and average loss ≤ $' + Math.abs(pf.max_avg_loss) + '. Backtest for reference: ' + B.trades + ' trades, ' + perfNum(B.pnl) + ', PF ' + (B.profit_factor != null ? B.profit_factor.toFixed(2) : '—') + '.</div>';
+  if (!rows.length) {
+    h += '<div style="color:' + mute + ';font-size:9.5px;padding:6px 0">No paper signals yet. Each one lands here after the close on the day it fires (about 1 a week).</div>';
+  } else {
+    h += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:9.5px"><tr style="color:' + mute + '">' +
+         ['Day', 'Time PT', 'Contract', 'Entry', 'Exit', 'P&L', 'Held', 'Why out'].map(function (x, i) { return '<th style="text-align:' + (i < 3 || i === 7 ? 'left' : 'right') + ';padding:3px 5px;font-weight:400;border-bottom:1px solid rgba(140,20,20,0.25)">' + x + '</th>'; }).join('') + '</tr>';
+    rows.forEach(function (s) {
+      var trade = s.status === 'trade', c = trade ? (s.pnl > 0 ? '#66ff00' : '#ff6b62') : mute;
+      var cells = [s.weekday + ' ' + s.date.slice(5), s.time_pt, trade ? (s.kind === 'call' ? 'Call ' : 'Put ') + s.strike : (s.kind === 'call' ? 'call' : 'put') + ' · ' + s.status,
+                   trade ? '$' + s.entry.toFixed(2) : '', trade ? '$' + s.exit.toFixed(2) : '', trade ? perfNum(s.pnl) : '', trade ? s.held + 'm' : '', trade ? s.exit_reason : ''];
+      h += '<tr>' + cells.map(function (x, i) { return '<td style="text-align:' + (i < 3 || i === 7 ? 'left' : 'right') + ';padding:3px 5px;border-bottom:1px solid rgba(140,20,20,0.12);' + (i === 5 ? 'color:' + c + ';font-weight:700' : '') + '">' + _hrEsc(x) + '</td>'; }).join('') + '</tr>';
+    });
+    h += '</table></div>';
+  }
+  return h + '</div>';
+}
 function renderCombinedWidget(){
   var D=_getPerfData('perf-combined');
   var css='font-family:ui-monospace,monospace;font-size:10px;display:grid;gap:7px;grid-template-columns:1fr 1fr;';
   var html='<div style="'+css+'">';
   html+='<div style="grid-column:1/-1">'+_filterBar('perf-combined')+'</div>';
   html+='<div style="grid-column:1/-1">'+_combinedHero(D)+'</div>';
+  html+='<div style="grid-column:1/-1">'+_hrPaperPanel()+'</div>';
   var hasData=(D.winrate&&D.winrate.total)||(D.equity&&D.equity.length);
   if(!hasData){
     html+='<div style="grid-column:1/-1" class="tp-empty">No trades yet — official data starts September.<br>This fills in once trade data is loaded.</div>';
