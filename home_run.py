@@ -47,7 +47,6 @@ WIN_START, WIN_END = 65, 124                    # minutes after 9:30 ET
 TRADE_DAYS = (1, 2, 3, 4)                       # Tue..Fri (Monday = 0)
 STOP, TARGET, MAX_HOLD = 0.30, 2.00, 60
 MAX_TRADES = 2
-UTC_OFFSET_H = 4                                # ET = UTC-4 through Nov 1 2026
 FROZEN = "2026-10-08"                           # rules were built on data through Oct 8: later days are unseen (paper test)
 
 
@@ -177,9 +176,16 @@ def load_history():
     return days
 
 
+def utc_offset_h(day):
+    """Eastern time: UTC-4 from the 2nd Sunday of March to the 1st Sunday of November, UTC-5 the rest of the year."""
+    mar = dt.date(day.year, 3, 8); mar += dt.timedelta(days=(6 - mar.weekday()) % 7)
+    nov = dt.date(day.year, 11, 1); nov += dt.timedelta(days=(6 - nov.weekday()) % 7)
+    return 4 if mar <= day < nov else 5
+
+
 def et_min(stamp):
     t = dt.datetime.strptime(stamp[:19], "%Y-%m-%d %H:%M:%S")
-    return t.hour * 60 + t.minute - UTC_OFFSET_H * 60 - 570
+    return t.hour * 60 + t.minute - utc_offset_h(t.date()) * 60 - 570
 
 
 def option_book(date):
