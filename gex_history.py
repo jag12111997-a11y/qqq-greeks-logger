@@ -618,6 +618,11 @@ def main():
             written.append(write_day(doc))
         print(json.dumps(rep), flush=True)
     write_index()
+    try:                                                # home-run paper log + the live box's context
+        import home_run
+        written += home_run.write()
+    except Exception as exc:                            # never let it block the history publish
+        print(f"home run log skipped: {exc}", flush=True)
     if args.publish and written:
         publish(written + [OUT_DIR / "index.json"])
 
