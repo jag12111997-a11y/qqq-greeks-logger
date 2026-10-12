@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trade Replay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>html,body{margin:0;background:#0c0710;color:#eadbe6;} #rp{margin:12px 12px 24px !important;}</style>
+</head><body>
+<!-- ===== REPLAY MY TRADES (own section, not part of the widget above) ===== -->
+<style>
+#rp { --bg:#0c0710; --panel:#140c19; --line:#2a1a2f; --grid:rgba(190,150,200,0.08); --fg:#eadbe6; --mute:#9c879a; --accent:#c2479d;
+  --up:#38c793; --down:#f0605c; --vwap:#f2b134; --level:#ffffff; --win:#6ee06a; --loss:#ff6b62; --shake:#f2b134; --you:#3fd3ff;
+  --cw:#ff7a7a; --pw:#5fd18a; --gf:#f5e663; --yd:#8c7f8c; --s4:#3fd3ff; --s7:#ff9a3c;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  margin:18px 16px 30px; border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg); font-family:var(--display); }
+#rp > summary { list-style:none; cursor:default; padding:14px 16px; display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; }
+#rp > summary::-webkit-details-marker { display:none; }
+#rp > summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:12px; }
+#rp > summary h2 { margin:0; font-size:20px; letter-spacing:0.01em; }
+#rp > summary .arrow { font:600 13px var(--mono); color:var(--accent); transition:transform .15s; display:inline-block; }
+#rp[open] > summary .arrow { transform:rotate(90deg); }
+#rp > summary .sub { color:var(--mute); font-size:13px; }
+#rp * { box-sizing:border-box; }
+#rp .wrap { padding:0 14px 16px; display:flex; flex-direction:column; gap:14px; }
+#rp .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+#rp .eyebrow { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--mute); margin:0; }
+#rp .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+#rp .kpi { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
+#rp .kpi small { font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--mute); }
+#rp .kpi b { font:600 20px var(--mono); font-variant-numeric:tabular-nums; }
+#rp .kpi span { font-size:11.5px; color:var(--mute); line-height:1.35; }
+#rp .pos { color:var(--win); } #rp .neg { color:var(--loss); } #rp .mut { color:var(--mute); }
+#rp .grid2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+@media (max-width:900px) { #rp .grid2 { grid-template-columns:minmax(0,1fr); } }
+#rp .tbl { overflow-x:auto; }
+#rp table { border-collapse:collapse; width:100%; font-size:13px; }
+#rp th { text-align:left; font-weight:600; color:var(--mute); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+#rp td { padding:7px 8px; border-bottom:1px solid var(--line); white-space:nowrap; vertical-align:top; }
+#rp td.n, #rp th.n { text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; }
+#rp tr.hl td { background:color-mix(in srgb,var(--accent) 10%,transparent); }
+#rp tr.click { cursor:pointer; } #rp tr.click:hover td { background:var(--grid); }
+#rp tr.sel td { box-shadow:inset 0 0 0 9999px color-mix(in srgb,var(--accent) 16%,transparent); }
+#rp .fine { font-size:12px; color:var(--mute); line-height:1.5; margin:0; }
+#rp .note { border-left:3px solid var(--accent); padding-left:12px; font-size:13.5px; line-height:1.5; margin:0; }
+#rp canvas { width:100%; display:block; }
+#rp .legend { display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12px; color:var(--mute); }
+#rp .legend i { display:inline-block; width:14px; height:0; border-top:2.5px solid; margin-right:5px; vertical-align:middle; }
+#rp .ev { display:flex; flex-direction:column; gap:8px; }
+#rp .evrow { display:grid; grid-template-columns:minmax(0,260px) minmax(0,1fr) 70px; gap:8px; align-items:center; font-size:12.5px; }
+@media (max-width:640px) { #rp .evrow { grid-template-columns:minmax(0,1fr) 70px; } #rp .evrow > span { grid-row:1; grid-column:1; } #rp .evrow > b { grid-row:1; grid-column:2; text-align:right; } #rp .evrow .bar { grid-row:2; grid-column:1/-1; } }
+#rp .bar { height:14px; background:var(--grid); border-radius:3px; position:relative; overflow:hidden; }
+#rp .bar i { position:absolute; left:0; top:0; bottom:0; border-radius:3px; }
+#rp .mono { font-family:var(--mono); }
+#rp .chips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+#rp .chip { font:600 12.5px var(--display); letter-spacing:0.04em; padding:5px 11px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--fg); cursor:pointer; }
+#rp .chip[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
+#rp .chip:focus-visible, #rp .card:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+#rp .month { font:700 15px var(--display); letter-spacing:0.06em; margin:4px 0 0; }
+#rp .day { display:flex; flex-direction:column; gap:6px; }
+#rp .dayhead { display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; font-size:13px; border-top:1px solid var(--line); padding-top:8px; }
+#rp .dayhead b { font-size:14px; }
+#rp .strip { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px; }
+#rp .card { text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px 10px; color:var(--fg); cursor:pointer; display:flex; flex-direction:column; gap:5px; font-family:var(--display); }
+#rp .card[aria-current="true"] { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+#rp .card .top { display:flex; justify-content:space-between; gap:8px; font-size:13px; }
+#rp .card .pnl { font:600 13px var(--mono); }
+#rp .card canvas { height:64px; }
+#rp .tags { display:flex; flex-wrap:wrap; gap:4px; }
+#rp .tag { font:600 10.5px var(--display); letter-spacing:0.05em; text-transform:uppercase; padding:2px 6px; border-radius:4px; border:1px solid var(--line); color:var(--mute); }
+#rp .tag.bad { color:var(--loss); border-color:currentColor; } #rp .tag.warn { color:var(--shake); border-color:currentColor; } #rp .tag.ok { color:var(--win); border-color:currentColor; }
+#rp .tag.tulip { color:var(--win); border-style:dashed; }
+#rp .desk { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:14px; align-items:start; }
+@media (max-width:1000px) { #rp .desk { grid-template-columns:minmax(0,1fr); } }
+#rp .main canvas { height:430px; } #rp .opt canvas { height:220px; }
+@media (max-width:640px) { #rp .main canvas { height:340px; } }
+#rp .readout { font:12px var(--mono); color:var(--mute); min-height:18px; overflow-wrap:anywhere; }
+#rp .rules { display:grid; grid-template-columns:16px minmax(0,1.15fr) minmax(0,1fr); gap:5px 10px; align-items:baseline; font-size:13px; }
+#rp .rules .ok { color:var(--win); font-weight:700; } #rp .rules .no { color:var(--loss); font-weight:700; } #rp .rules .na { color:var(--mute); }
+#rp .rules .d { font:12px var(--mono); color:var(--mute); text-align:right; overflow-wrap:anywhere; }
+#rp .verdict { font-size:15px; font-weight:700; }
+#rp .tw { border:1px dashed var(--win); border-radius:8px; padding:8px 10px; font-size:13px; line-height:1.45; }
+#rp .tw.miss { border-color:var(--mute); }
+</style>
+<details id="rp" open>
+  <summary><h2>Replay my trades</h2><span class="sub">What you did, where it broke the Tulip Mania rules, and what the strategy made instead</span></summary>
+  <div class="wrap" id="rp-wrap"><p class="fine" id="rp-load">Loading your trades…</p></div>
+</details>
+<script>
+(function () {
+  var det = document.getElementById('rp'), loaded = false;
+  det.querySelector('summary').addEventListener('click', function (e) { e.preventDefault(); });
+  (function load() {
+    if (loaded) return; loaded = true;
+    var s = document.createElement('script'); s.src = 'my_trades_replay.js?t=' + Date.now();
+    s.onload = function () { try { rpInit(window.REPLAY); } catch (e) { document.getElementById('rp-load').textContent = 'Could not draw the replay: ' + e.message; } };
+    s.onerror = function () { document.getElementById('rp-load').textContent = 'Replay data file (my_trades_replay.js) is missing.'; };
+    document.head.appendChild(s);
+  })();
+
+  function rpInit(R) {
+    var root = det, css = function (n) { return getComputedStyle(root).getPropertyValue(n).trim(); };
+    var usd = function (v) { return (v < 0 ? '−$' : '+$') + Math.round(Math.abs(v)).toLocaleString('en-US'); };
+    var usd0 = function (v) { return v ? usd(v) : '$0'; };
+    var cl = function (v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : 'mut'; };
+    var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var pt = function (m) { var t = 390 + Math.floor(m), h = Math.floor(t / 60); return ((h - 1) % 12 + 1) + ':' + String(t % 60).padStart(2, '0'); };
+    var mname = function (m) { return new Date(m + '-15T12:00:00Z').toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }); };
+    var mmdd = function (d) { return new Date(d + 'T12:00:00Z').toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }); };
+    var C = R.cards, DAYS = R.days;
+    // per-day SMA 4 / 7 on 1-min closes (same as the live box: average of the bars before each minute)
+    Object.keys(DAYS).forEach(function (k) {
+      var cs = DAYS[k].candles.map(function (c) { return c[3]; }), s4 = [], s7 = [];
+      for (var i = 0; i < cs.length; i++) {
+        s4.push(i >= 4 ? (cs[i - 1] + cs[i - 2] + cs[i - 3] + cs[i - 4]) / 4 : null);
+        var a = 0; if (i >= 7) { for (var j = 1; j <= 7; j++) a += cs[i - j]; s7.push(a / 7); } else s7.push(null);
+      }
+      DAYS[k].sma4 = s4; DAYS[k].sma7 = s7;
+    });
+    var tulipAll = R.tulipc, won = C.filter(function (c) { return c.pnl > 0; }).length;
+    var html = '';
+    // ---------- 1. headline ----------
+    var lk = R.leaks.slice().sort(function (a, b) { return a.pnl - b.pnl; })[0];
+    html += '<div class="kpis">' + [
+      ['You · QQQ trades', usd(R.you_qqq), C.length + ' trades · ' + won + ' won' + (R.skipped.length ? ' · ' + usd(R.you_all) + ' with ' + R.skipped.length + ' non-QQQ' : ''), cl(R.you_qqq)],
+      ['Tulip Mania · at chips', usd(R.tulipc), R.daily.reduce(function (n, d) { return n + d.tulip.length; }, 0) + ' trades · ' + usd(R.tulip1) + ' at 1 contract', cl(R.tulipc)],
+      ['The gap', usd(R.tulipc - R.you_qqq), 'what following the plan was worth', 'pos'],
+      ['Matched the rules', R.n_setup + ' of ' + C.length, 'trades that were a Tulip Mania setup', R.n_setup ? '' : 'neg'],
+      ['Biggest leak', lk ? usd(lk.pnl) : '—', lk ? lk.label + ' (' + lk.n + ')' : '', 'neg'],
+    ].map(function (x) { return '<div class="kpi"><small>' + x[0] + '</small><b class="' + (x[3] || '') + '">' + x[1] + '</b><span>' + x[2] + '</span></div>'; }).join('') + '</div>';
+    // ---------- 2. you vs the strategy ----------
+    html += '<div class="grid2"><section class="panel"><p class="eyebrow">What you made vs what Tulip Mania made · tap a day</p><div class="tbl"><table id="rp-daily"></table></div><p class="fine" id="rp-daily-n"></p></section>' +
+      '<section class="panel"><p class="eyebrow">Running total</p><canvas id="rp-cum" style="height:240px"></canvas>' +
+      '<div class="legend"><span><i style="border-color:var(--you)"></i>You</span><span><i style="border-color:var(--win)"></i>Tulip Mania at chips</span><span><i style="border-color:var(--shake);border-top-style:dashed"></i>Tulip Mania at 1 contract</span></div>' +
+      '<p class="readout" id="rp-cum-r">Hover the chart for a day.</p></section></div>';
+    // ---------- 3. rule scoreboard ----------
+    html += '<div class="grid2"><section class="panel"><p class="eyebrow">Where it went wrong · your trades vs the v3.2 rules</p><div class="tbl"><table id="rp-rules"></table></div></section>' +
+      '<section class="panel"><p class="eyebrow">Leaks · P&amp;L of the trades that did it</p><div class="ev" id="rp-leaks"></div><p class="note" id="rp-lesson"></p></section></div>';
+    // ---------- 4. chart room ----------
+    html += '<div class="desk"><section class="panel main"><p class="eyebrow" id="rp-title"></p><canvas id="rp-main"></canvas>' +
+      '<div class="legend"><span><i style="border-color:var(--vwap)"></i>VWAP</span><span><i style="border-color:var(--s4)"></i>SMA 4</span><span><i style="border-color:var(--s7)"></i>SMA 7</span>' +
+      '<span><i style="border-color:var(--cw)"></i>Call wall</span><span><i style="border-color:var(--pw)"></i>Put wall</span><span><i style="border-color:var(--gf)"></i>Gamma flip</span>' +
+      '<span><i style="border-color:var(--yd);border-top-style:dashed"></i>Yesterday H/L/C</span><span><i style="border-color:var(--level)"></i>Level you bought</span><span>▲ your buy · ▼ your sell · ★ Tulip Mania</span><span>Shaded: 7:35–8:35 window</span></div>' +
+      '<p class="readout" id="rp-main-r">Hover the chart for a minute.</p>' +
+      '<p class="eyebrow" id="rp-opt-t"></p><div class="opt"><canvas id="rp-opt"></canvas></div><p class="fine" id="rp-opt-n"></p></section>' +
+      '<section class="panel" id="rp-side"></section></div>' +
+      '<section class="panel"><p class="eyebrow">Every trade, in order · tap one to put it on the chart above</p><div class="chips" id="rp-f"></div><div id="rp-strip"></div></section>';
+    if (R.skipped.length) html += '<p class="fine">Not shown (no QQQ chart): ' + R.skipped.map(function (s) { return mmdd(s.date) + ' ' + esc(s.sym) + ' ' + usd(s.pnl); }).join(' · ') + '. Built from ' + esc(R.source) + ' on ' + esc(R.built) + '.</p>';
+    document.getElementById('rp-wrap').innerHTML = html;
+
+    // daily table
+    var sel = { date: null, card: null };
+    function dailyTable() {
+      var tY = 0, t1 = 0, tc = 0, mY = 0, m1 = 0, mc = 0, rows = '';
+      var tot = function (lab, a, b, c) { return '<tr class="hl"><td><b>' + lab + '</b></td><td class="n ' + cl(a) + '"><b>' + usd(a) + '</b></td><td></td><td class="mut">at 1 contract ' + usd(b) + '</td><td class="n ' + cl(c) + '"><b>' + usd(c) + '</b></td><td class="n ' + cl(c - a) + '"><b>' + usd0(c - a) + '</b></td></tr>'; };
+      R.daily.forEach(function (d, i) {
+        tY += d.you; t1 += d.tulip1; tc += d.tulipc; mY += d.you; m1 += d.tulip1; mc += d.tulipc;
+        var tl = d.tulip.length ? d.tulip.map(function (s) { return s.time_pt + ' ' + (s.kind === 'call' ? 'call ' : 'put ') + s.strike + ' · ' + s.chips + 'c'; }).join(', ') :
+          (d.unscored.length ? '<span class="mut">setup fired, no complete data</span>' : '<span class="mut">no setup</span>');
+        rows += '<tr class="click' + (sel.date === d.date ? ' sel' : '') + '" tabindex="0" data-d="' + d.date + '"><td>' + d.weekday + ' ' + d.date.slice(5) + '</td><td class="n ' + cl(d.you) + '">' + (d.n ? usd(d.you) : '—') + '</td><td class="n mut">' + (d.n ? d.won + '/' + d.n : '') +
+          '</td><td>' + tl + '</td><td class="n ' + cl(d.tulipc) + '">' + (d.tulip.length ? usd(d.tulipc) : '—') + '</td><td class="n ' + cl(d.tulipc - d.you) + '">' + usd0(d.tulipc - d.you) + '</td></tr>';
+        var nx = R.daily[i + 1];
+        if (!nx || nx.date.slice(0, 7) !== d.date.slice(0, 7)) { rows += tot(mname(d.date.slice(0, 7)), mY, m1, mc); mY = m1 = mc = 0; }
+      });
+      document.getElementById('rp-daily').innerHTML = '<thead><tr><th>Day</th><th class="n">You</th><th class="n">Won</th><th>Tulip Mania</th><th class="n">At chips</th><th class="n">Gap</th></tr></thead><tbody>' + rows +
+        (R.months.length > 1 ? tot('All months', tY, t1, tc) : '') + '</tbody>';
+      document.querySelectorAll('#rp-daily tr.click').forEach(function (tr) {
+        var go = function () { var d = tr.dataset.d, first = C.filter(function (c) { return c.date === d; })[0]; select(d, first || null, true); };
+        tr.addEventListener('click', go); tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+      });
+    }
+    var uns = R.daily.filter(function (d) { return d.unscored.length; }).map(function (d) { return mmdd(d.date); });
+    document.getElementById('rp-daily-n').textContent = (uns.length ? 'Tulip Mania fired on ' + uns.join(', ') + ' too, but the option data was incomplete, so those results are unknown and not counted. ' : '') +
+      (function () { var b = R.daily.slice().sort(function (x, y) { return (y.tulipc - y.you) - (x.tulipc - x.you); })[0]; return b && b.tulipc - b.you > 0 ? 'Biggest miss: ' + b.weekday + ' ' + mmdd(b.date) + ', Tulip Mania ' + usd(b.tulipc) + ' vs you ' + usd0(b.you) + '.' : ''; })();
+
+    // running total chart
+    function cum() {
+      var cv = document.getElementById('rp-cum'), S = setup(cv), g = S[0], w = S[1], h = S[2], pad = { l: 56, r: 104, t: 12, b: 24 };
+      var a = 0, b = 0, c = 0, Y1 = [0], T1 = [0], TC = [0];
+      R.daily.forEach(function (d) { a += d.you; b += d.tulip1; c += d.tulipc; Y1.push(a); T1.push(b); TC.push(c); });
+      var all = Y1.concat(T1, TC), lo = Math.min.apply(null, all), hi = Math.max.apply(null, all), sp = hi - lo; lo -= sp * 0.08; hi += sp * 0.1;
+      var n = Y1.length, X = function (i) { return pad.l + i / (n - 1) * (w - pad.l - pad.r); }, Y = function (v) { return pad.t + (hi - v) / (hi - lo) * (h - pad.t - pad.b); };
+      var step = [50, 100, 250, 500, 1000].find(function (s) { return (hi - lo) / s <= 6; }) || 1000;
+      g.font = '11px ' + css('--mono'); g.textBaseline = 'middle';
+      for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) { g.strokeStyle = css(v === 0 ? '--mute' : '--grid'); g.beginPath(); g.moveTo(pad.l, Y(v)); g.lineTo(w - pad.r, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText((v < 0 ? '−$' : '$') + Math.abs(v), 4, Y(v)); }
+      g.textBaseline = 'alphabetic';
+      var every = Math.max(1, Math.ceil(R.daily.length * 44 / (w - pad.l - pad.r))); R.daily.forEach(function (d, i) { if (i % every === 0) { g.fillStyle = css('--mute'); g.fillText(d.date.slice(5), X(i + 1) - 14, h - 6); } });
+      [[TC, '--win', [], 'Tulip ' + usd(c)], [T1, '--shake', [5, 4], '1 ct ' + usd(b)], [Y1, '--you', [], 'You ' + usd(a)]].forEach(function (s) {
+        g.strokeStyle = css(s[1]); g.setLineDash(s[2]); g.lineWidth = 2; g.beginPath(); s[0].forEach(function (v, i) { i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)); }); g.stroke(); g.setLineDash([]);
+        g.fillStyle = css('--fg'); g.font = '600 11px ' + css('--mono'); g.fillText(s[3], w - pad.r + 6, Y(s[0][n - 1]) + 4); g.font = '11px ' + css('--mono');
+      });
+      cv.onmousemove = function (e) { var r = cv.getBoundingClientRect(), i = Math.round((e.clientX - r.left - pad.l) / (w - pad.l - pad.r) * (n - 1)); i = Math.max(1, Math.min(n - 1, i)); var d = R.daily[i - 1];
+        document.getElementById('rp-cum-r').textContent = d.weekday + ' ' + mmdd(d.date) + ' · you ' + usd0(d.you) + ' (running ' + usd(Y1[i]) + ') · Tulip ' + usd0(d.tulipc) + ' at chips (running ' + usd(TC[i]) + ')'; };
+    }
+
+    // rules scoreboard
+    var ORDER = ['day', 'time', 'level', 'vwap', 'wall', 'vol', 'turn', 'otm', 'stop', 'target', 'oneloss', 'max2'];
+    document.getElementById('rp-rules').innerHTML = '<thead><tr><th>Rule</th><th class="n">Followed</th><th class="n">Broke</th><th class="n">P&amp;L when broken</th></tr></thead><tbody>' +
+      ORDER.map(function (k) { var r = R.rules[k]; if (!r) return ''; return '<tr><td>' + esc(r.label) + '</td><td class="n">' + r.ok + '</td><td class="n ' + (r.no ? 'neg' : 'mut') + '">' + r.no + '</td><td class="n ' + cl(r.pnl_no) + '">' + (r.no ? usd(r.pnl_no) : '—') + '</td></tr>'; }).join('') + '</tbody>';
+    var mx = Math.max.apply(null, R.leaks.map(function (l) { return Math.abs(l.pnl); }).concat([1]));
+    document.getElementById('rp-leaks').innerHTML = R.leaks.filter(function (l) { return l.n; }).map(function (l) {
+      return '<div class="evrow"><span>' + esc(l.label) + ' <span class="mut">(' + l.n + ')</span></span><div class="bar"><i style="width:' + (100 * Math.abs(l.pnl) / mx).toFixed(1) + '%;background:var(' + (l.pnl < 0 ? '--loss' : '--win') + ')"></i></div><b class="mono ' + cl(l.pnl) + '">' + usd(l.pnl) + '</b></div>'; }).join('');
+    var outW = R.rules.time, noLv = R.rules.level;
+    document.getElementById('rp-lesson').textContent = outW.no + ' of ' + C.length + ' trades were outside 7:35–8:35 and ' + noLv.no + ' had no tested level behind them. ' + (R.n_setup ? R.n_setup + ' of your trades were a Tulip Mania setup' : 'None of your trades was a Tulip Mania setup') + '; ' +
+      'the strategy needed ' + R.daily.reduce(function (n, d) { return n + d.tulip.length; }, 0) + ' trades to make ' + usd(R.tulipc) + '. The fix is mostly waiting, not trading better.';
+
+    // filters + strip
+    var FILT = [['all', 'All'], ['win', 'Wins'], ['loss', 'Losses'], ['outside window', 'Outside window'], ['re', 'Re-try / revenge'], ['held past stop', 'Held past stop'], ['close to a setup', 'Close to a setup'], ['near the setup', 'Near a Tulip trade']];
+    var filter = 'all';
+    var fOk = function (c) { return filter === 'all' || (filter === 'win' ? c.pnl > 0 : filter === 'loss' ? c.pnl <= 0 : filter === 're' ? (c.tags.indexOf('re-try') >= 0 || c.tags.indexOf('revenge') >= 0) : c.tags.indexOf(filter) >= 0); };
+    document.getElementById('rp-f').innerHTML = FILT.map(function (f) { var n = C.filter(function (c) { var o = filter; filter = f[0]; var r = fOk(c); filter = o; return r; }).length;
+      return '<button class="chip" data-f="' + f[0] + '" aria-pressed="' + (f[0] === filter) + '"' + (n || f[0] === 'all' ? '' : ' hidden') + '>' + f[1] + ' · ' + n + '</button>'; }).join('');
+    document.querySelectorAll('#rp-f .chip').forEach(function (b) { b.addEventListener('click', function () { filter = b.dataset.f; document.querySelectorAll('#rp-f .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); strip(); }); });
+    var TAGC = { 'outside window': 'bad', 'no level': 'bad', 'far from VWAP': 'warn', 're-try': 'warn', 'revenge': 'bad', 'held past stop': 'bad', 'sold early': 'warn', 'near the setup': 'tulip', 'close to a setup': 'tulip', 'tulip setup': 'ok', 'expired': 'bad' };
+    function strip() {
+      var el = document.getElementById('rp-strip'), h = '', lastM = '', days = {};
+      C.forEach(function (c, i) { if (fOk(c)) (days[c.date] = days[c.date] || []).push(i); });
+      R.daily.forEach(function (d) {
+        var L = days[d.date]; if (!L && !(filter === 'all' && d.tulip.length)) return;
+        if (d.date.slice(0, 7) !== lastM) { lastM = d.date.slice(0, 7); h += '<p class="month">' + mname(lastM) + '</p>'; }
+        h += '<div class="day"><div class="dayhead"><b>' + d.weekday + ' ' + mmdd(d.date) + '</b><span class="' + cl(d.you) + '">you ' + (d.n ? usd(d.you) : 'no trades') + '</span>' +
+          (d.tulip.length ? '<span>Tulip Mania ' + d.tulip.map(function (s) { return s.time_pt + ' ' + s.kind + ' · ' + s.chips + 'c · <span class="' + cl(s.pnlc) + '">' + usd(s.pnlc) + '</span>'; }).join(', ') + '</span>' : '') +
+          (!L ? '<button class="chip" data-d="' + d.date + '">view the setup</button>' : '') + '</div><div class="strip">';
+        (L || []).forEach(function (i) { var c = C[i];
+          h += '<button class="card" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><div class="top"><span>' + c.time_pt + ' · ' + (c.kind === 'call' ? 'Call ' : 'Put ') + c.strike + (c.qty > 1 ? ' ×' + c.qty : '') + '</span><span class="pnl ' + cl(c.pnl) + '">' + usd(c.pnl) + '</span></div><canvas></canvas><div class="tags">' +
+            c.tags.map(function (t) { return '<span class="tag ' + (TAGC[t] || '') + '">' + esc(t) + '</span>'; }).join('') + '<span class="tag">broke ' + c.broke.length + ' rule' + (c.broke.length === 1 ? '' : 's') + '</span></div></button>'; });
+        h += '</div></div>';
+      });
+      el.innerHTML = h;
+      el.querySelectorAll('.card').forEach(function (b) { var c = C[+b.dataset.i]; mini(b.querySelector('canvas'), c); b.addEventListener('click', function () { select(c.date, c, true); }); });
+      el.querySelectorAll('.dayhead .chip').forEach(function (b) { b.addEventListener('click', function () { select(b.dataset.d, null, true); }); });
+    }
+    function setup(cv) {
+      var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+      var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); return [g, w, h];
+    }
+    function span(c) { var D = DAYS[c.date], n = D.candles.length; return [Math.max(0, Math.floor(c.m) - 30), Math.min(n - 1, Math.ceil(c.exit_m) + 15)]; }
+    function mini(cv, c) {
+      var S = setup(cv), g = S[0], w = S[1], h = S[2], D = DAYS[c.date], ab = span(c), a = ab[0], z = ab[1], cs = D.candles.slice(a, z + 1);
+      var lo = Math.min.apply(null, cs.map(function (x) { return x[2]; })), hi = Math.max.apply(null, cs.map(function (x) { return x[1]; })), p = (hi - lo) * 0.08 || 0.1; lo -= p; hi += p;
+      var X = function (i) { return 2 + (i - a) / Math.max(1, z - a) * (w - 4); }, Y = function (v) { return h - 2 - (v - lo) / (hi - lo) * (h - 4); };
+      g.fillStyle = css('--grid'); g.fillRect(X(c.m), 0, X(Math.min(z, c.exit_m)) - X(c.m), h);
+      g.strokeStyle = css('--vwap'); g.lineWidth = 1; g.beginPath(); cs.forEach(function (x, k) { k ? g.lineTo(X(a + k), Y(x[5])) : g.moveTo(X(a + k), Y(x[5])); }); g.stroke();
+      g.strokeStyle = css('--fg'); g.lineWidth = 1.5; g.beginPath(); cs.forEach(function (x, k) { k ? g.lineTo(X(a + k), Y(x[3])) : g.moveTo(X(a + k), Y(x[3])); }); g.stroke();
+      var ci = Math.min(D.candles.length - 1, Math.floor(c.m)); g.fillStyle = css('--you'); g.beginPath(); g.arc(X(c.m), Y(D.candles[ci][3]), 3.5, 0, 7); g.fill();
+      var xi = Math.min(D.candles.length - 1, Math.floor(c.exit_m)); g.fillStyle = css(c.pnl > 0 ? '--win' : '--loss'); g.beginPath(); g.arc(X(c.exit_m), Y(D.candles[xi][3]), 3.5, 0, 7); g.fill();
+    }
+
+    // ---------- main chart ----------
+    var hoverM = null;
+    function drawMain() {
+      var D = DAYS[sel.date], c = sel.card, cv = document.getElementById('rp-main'), S = setup(cv), g = S[0], w = S[1], h = S[2], n = D.candles.length;
+      var ms = []; if (c) { ms.push(c.m, c.exit_m); if (c.test_m != null) ms.push(c.test_m); }
+      D.strategy.forEach(function (s) { if (!c || Math.abs(s.m - c.m) <= 40) ms.push(s.m, s.exit_min); });
+      var a = Math.max(0, Math.floor(Math.min.apply(null, ms)) - 40), z = Math.min(n - 1, Math.ceil(Math.max.apply(null, ms)) + 20);
+      var padL = 6, padR = 78, top = 8, ph = Math.round(h * 0.74), vTop = ph + 20, vh = h - vTop - 18;
+      var vis = D.candles.slice(a, z + 1);
+      var lo = Math.min.apply(null, vis.map(function (x) { return x[2]; })), hi = Math.max.apply(null, vis.map(function (x) { return x[1]; }));
+      if (c && c.L) { lo = Math.min(lo, c.L); hi = Math.max(hi, c.L); }
+      var pd = (hi - lo) * 0.1 || 0.2; lo -= pd; hi += pd;
+      var pw = w - padL - padR, cw = pw / (z - a + 1);
+      var X = function (i) { return padL + (i - a + 0.5) * cw; }, Y = function (v) { return top + (hi - v) / (hi - lo) * (ph - top); };
+      var inR = function (v) { return v != null && v >= lo && v <= hi; };
+      g.fillStyle = css('--grid'); var w0 = Math.max(a, 65), w1 = Math.min(z, 123); if (w1 >= w0) g.fillRect(X(w0) - cw / 2, top, X(w1) - X(w0) + cw, ph - top);
+      var step = [0.25, 0.5, 1, 2, 2.5, 5].find(function (s) { return (hi - lo) / s <= 7; }) || 5;
+      g.font = '11px ' + css('--mono'); g.textBaseline = 'middle';
+      for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) { g.strokeStyle = css('--grid'); g.lineWidth = 1; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText(v.toFixed(2), w - padR + 6, Y(v)); }
+      g.textBaseline = 'alphabetic';
+      var tstep = (z - a) > 150 ? 30 : 15;
+      for (var m = Math.ceil(a / tstep) * tstep; m <= z; m += tstep) { g.fillStyle = css('--mute'); g.fillText(pt(m), X(m) - 14, h - 4); }
+      var labels = [], yd = D.yday || {}; g.setLineDash([4, 4]); g.lineWidth = 1;
+      [['high', 'Y high'], ['low', 'Y low'], ['close', 'Y close']].forEach(function (p) { if (!inR(yd[p[0]])) return; g.strokeStyle = css('--yd'); g.beginPath(); g.moveTo(padL, Y(yd[p[0]])); g.lineTo(w - padR, Y(yd[p[0]])); g.stroke(); g.fillStyle = css('--yd'); g.fillText(p[1], padL + 4, Y(yd[p[0]]) - 3); });
+      g.setLineDash([]);
+      [['call_wall', '--cw', 'Call wall'], ['put_wall', '--pw', 'Put wall'], ['gamma_flip', '--gf', 'Gamma flip']].forEach(function (q) {
+        var s = D.levels[q[0]]; if (!s) return; g.strokeStyle = css(q[1]); g.lineWidth = 1.2; g.globalAlpha = 0.85; g.beginPath(); var on = false, lv = null;
+        for (var i = a; i <= z; i++) { var v2 = s[i]; if (!inR(v2)) { on = false; continue; } var y = Y(v2); if (!on || v2 !== lv) { g.moveTo(X(i) - cw / 2, y); on = true; } g.lineTo(X(i) + cw / 2, y); lv = v2; }
+        g.stroke(); g.globalAlpha = 1; var last = s[z]; if (inR(last)) labels.push([Y(last), q[2] + ' ' + last.toFixed(0), q[1]]);
+      });
+      if (c && c.L) { g.strokeStyle = css('--level'); g.lineWidth = 2.5; g.beginPath(); g.moveTo(padL, Y(c.L)); g.lineTo(w - padR, Y(c.L)); g.stroke(); labels.push([Y(c.L), 'LEVEL ' + c.L.toFixed(2), '--level']); }
+      D.strategy.forEach(function (s) { if (inR(s.L) && !(c && c.L === s.L)) { g.strokeStyle = css('--win'); g.globalAlpha = 0.6; g.setLineDash([6, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(padL, Y(s.L)); g.lineTo(w - padR, Y(s.L)); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; labels.push([Y(s.L), 'Tulip lvl ' + s.L.toFixed(2), '--win']); } });
+      g.strokeStyle = css('--vwap'); g.lineWidth = 2; g.beginPath(); for (var i = a; i <= z; i++) { var y = Y(D.candles[i][5]); i === a ? g.moveTo(X(i), y) : g.lineTo(X(i), y); } g.stroke(); labels.push([Y(D.candles[z][5]), 'VWAP', '--vwap']);
+      [['sma4', '--s4'], ['sma7', '--s7']].forEach(function (q) { g.strokeStyle = css(q[1]); g.lineWidth = 1.3; g.beginPath(); var st = false; for (var i = a; i <= z; i++) { var v3 = D[q[0]][i]; if (v3 == null) continue; st ? g.lineTo(X(i), Y(v3)) : g.moveTo(X(i), Y(v3)); st = true; } g.stroke(); });
+      var vmax = Math.max.apply(null, vis.map(function (x) { return x[4]; }));
+      if (c && c.m - 35 >= a) { var vr = c.rules.filter(function (r) { return r.k === 'vol'; })[0]; g.fillStyle = css('--grid'); g.fillRect(X(Math.floor(c.m) - 35) - cw / 2, vTop, 30 * cw, vh);
+        if (vr && vr.ok != null) { g.globalAlpha = 0.35; g.fillStyle = css(vr.ok ? '--win' : '--loss'); g.fillRect(X(Math.floor(c.m) - 5) - cw / 2, vTop, 5 * cw, vh); g.globalAlpha = 1;
+          g.fillStyle = css('--fg'); g.font = '600 11px ' + css('--display'); g.fillText('volume into your buy: ' + vr.d + (vr.ok ? ' ✓ drying up' : ' ✗ rising'), X(Math.floor(c.m) - 35), vTop - 4); g.font = '11px ' + css('--mono'); } }
+      for (var i2 = a; i2 <= z; i2++) {
+        var k = D.candles[i2], col = css(k[3] >= k[0] ? '--up' : '--down'); g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(X(i2), Y(k[1])); g.lineTo(X(i2), Y(k[2])); g.stroke();
+        var bw = Math.max(1, cw * 0.62), y1 = Y(Math.max(k[0], k[3])), y2 = Y(Math.min(k[0], k[3])); g.fillRect(X(i2) - bw / 2, y1, bw, Math.max(1, y2 - y1));
+        g.globalAlpha = 0.55; var vhh = k[4] / vmax * vh; g.fillRect(X(i2) - bw / 2, vTop + vh - vhh, bw, vhh); g.globalAlpha = 1;
+      }
+      g.fillStyle = css('--mute'); g.fillText('Volume', padL + 2, vTop + 10);
+      var px = function (m) { var j = Math.max(0, Math.min(n - 1, Math.floor(m))); return D.candles[j][3]; };
+      var tri = function (m, up, col, txt, row) {
+        var x = X(Math.floor(m)) + (m % 1) * cw, y = Y(px(m)); g.strokeStyle = css(col); g.setLineDash([3, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(x, top); g.lineTo(x, vTop + vh); g.stroke(); g.setLineDash([]);
+        g.fillStyle = css('--panel'); g.beginPath(); up ? (g.moveTo(x, y - 9), g.lineTo(x - 8, y + 6), g.lineTo(x + 8, y + 6)) : (g.moveTo(x, y + 9), g.lineTo(x - 8, y - 6), g.lineTo(x + 8, y - 6)); g.closePath(); g.fill();
+        g.fillStyle = css(col); g.beginPath(); up ? (g.moveTo(x, y - 7), g.lineTo(x - 6, y + 5), g.lineTo(x + 6, y + 5)) : (g.moveTo(x, y + 7), g.lineTo(x - 6, y - 5), g.lineTo(x + 6, y - 5)); g.closePath(); g.fill();
+        g.fillStyle = css('--fg'); g.font = '600 11px ' + css('--display'); var tx = Math.min(x + 6, w - padR - g.measureText(txt).width - 4); g.fillText(txt, Math.max(padL, tx), top + 12 + row * 14); g.font = '11px ' + css('--mono');
+      };
+      var row = 0;
+      if (c) {
+        var groups = {}; c.fills.forEach(function (f) { var key = f.side + Math.round(f.m * 4); (groups[key] = groups[key] || []).push(f); });
+        Object.keys(groups).forEach(function (key) { var F = groups[key], f = F[0], q = F.reduce(function (s, x) { return s + x.qty; }, 0);
+          var buy = f.side === 'Buy'; tri(f.m, buy, buy ? '--you' : (c.pnl > 0 ? '--win' : '--loss'), (buy ? 'BUY ' : 'SELL ') + q + ' @ ' + f.px.toFixed(2) + ' · ' + f.pt.slice(0, -3), row % 3); row++; });
+      }
+      D.strategy.forEach(function (s) {
+        if (s.m < a || s.m > z) return; var x = X(s.m), y = Y(px(s.m)); g.fillStyle = css('--win'); g.font = '700 18px ' + css('--display'); g.fillText('★', x - 7, y + 6);
+        g.font = '600 11px ' + css('--display'); var txt = 'TULIP ' + s.kind.toUpperCase() + ' ' + s.strike + ' · ' + s.chips + 'c · ' + usd(s.pnlc); g.fillText(txt, Math.min(x + 10, w - padR - g.measureText(txt).width - 4), y - 10);
+        if (s.exit_min <= z) { g.strokeStyle = css('--win'); g.setLineDash([2, 3]); g.beginPath(); g.moveTo(X(s.exit_min), top); g.lineTo(X(s.exit_min), ph); g.stroke(); g.setLineDash([]); g.fillText(s.why === 'take profit' ? 'TARGET' : 'STOP', X(s.exit_min) + 3, ph - 4); }
+        g.font = '11px ' + css('--mono');
+      });
+      labels.sort(function (p, q) { return p[0] - q[0]; }); var prevY = -99; g.font = '600 10.5px ' + css('--display');
+      labels.forEach(function (L) { var yy = Math.max(L[0], prevY + 12); prevY = yy; g.fillStyle = css('--panel'); g.fillRect(w - padR + 2, yy - 7, padR - 2, 13); g.fillStyle = css(L[2]); g.fillText(L[1], w - padR + 5, yy + 4); });
+      if (hoverM != null && hoverM >= a && hoverM <= z) { g.strokeStyle = css('--mute'); g.lineWidth = 1; g.beginPath(); g.moveTo(X(hoverM), top); g.lineTo(X(hoverM), vTop + vh); g.stroke(); }
+      cv._map = { a: a, z: z, padL: padL, cw: cw };
+    }
+    var mc = null;
+    function hookMain() {
+      var cv = document.getElementById('rp-main');
+      cv.onmousemove = function (e) { var mp = cv._map; if (!mp) return; var r = cv.getBoundingClientRect(), m = Math.round(mp.a + (e.clientX - r.left - mp.padL) / mp.cw - 0.5); m = Math.max(mp.a, Math.min(mp.z, m));
+        hoverM = m; drawMain(); var D = DAYS[sel.date], k = D.candles[m];
+        document.getElementById('rp-main-r').textContent = pt(m) + ' PT · O ' + k[0].toFixed(2) + ' H ' + k[1].toFixed(2) + ' L ' + k[2].toFixed(2) + ' C ' + k[3].toFixed(2) + ' · VWAP ' + k[5].toFixed(2) + (D.sma4[m] ? ' · SMA4 ' + D.sma4[m].toFixed(2) + ' / SMA7 ' + D.sma7[m].toFixed(2) : '') + ' · vol ' + k[4].toLocaleString('en-US'); };
+      cv.onmouseleave = function () { hoverM = null; drawMain(); };
+    }
+
+    // ---------- contract chart ----------
+    function drawOpt() {
+      var c = sel.card, D = DAYS[sel.date], cv = document.getElementById('rp-opt'), S = setup(cv), g = S[0], w = S[1], h = S[2];
+      var s0 = D.strategy[0], O, entry, tgt, a, z, fills = [], title, isYou = !!c;
+      if (c) { O = c.opt; entry = c.avg_buy; a = Math.floor(c.m) - 10; z = Math.ceil(c.exit_m) + 15; fills = c.fills; title = 'Your contract · ' + (c.kind === 'call' ? 'Call ' : 'Put ') + c.strike + ' · bid (line) / ask (faint)'; }
+      else { O = s0.opt; entry = s0.entry; a = s0.m - 10; z = s0.m + 60; title = 'Tulip Mania contract · ' + (s0.kind === 'call' ? 'Call ' : 'Put ') + s0.strike + ' · bid (line) / ask (faint)'; }
+      document.getElementById('rp-opt-t').textContent = title;
+      var pts = O.filter(function (o) { return o[0] >= a && o[0] <= z; });
+      var vals = pts.map(function (o) { return o[1]; }).concat(pts.map(function (o) { return o[2]; }), fills.map(function (f) { return f.px; }), [entry - R.stop - 0.1, entry + 0.2]);
+      if (!c || entry + R.target <= Math.max.apply(null, vals) + 0.6) vals.push(entry + R.target);
+      var lo = Math.max(0, Math.min.apply(null, vals) - 0.05), hi = Math.max.apply(null, vals) + 0.1;
+      var padL = 6, padR = 58, top = 8, bot = 20, X = function (m) { return padL + (m - a) / (z - a) * (w - padL - padR); }, Y = function (v) { return top + (hi - v) / (hi - lo) * (h - top - bot); };
+      var st = [0.1, 0.25, 0.5, 1].find(function (s) { return (hi - lo) / s <= 6; }) || 1;
+      g.font = '11px ' + css('--mono');
+      for (var v = Math.ceil(lo / st) * st; v <= hi; v += st) { g.strokeStyle = css('--grid'); g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText('$' + v.toFixed(2), w - padR + 4, Y(v) + 4); }
+      for (var m = Math.ceil(a / 10) * 10; m <= z; m += 10) { g.fillStyle = css('--mute'); g.fillText(pt(m), X(m) - 14, h - 5); }
+      var hl = function (v, col, lab, dash) { if (v < lo || v > hi) return; g.strokeStyle = css(col); g.setLineDash(dash ? [5, 4] : []); g.lineWidth = 1.2; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.setLineDash([]); g.fillStyle = css('--fg'); g.font = '600 10.5px ' + css('--display'); g.fillText(lab, padL + 4, Y(v) - 4); g.font = '11px ' + css('--mono'); };
+      hl(entry, isYou ? '--you' : '--win', (isYou ? 'your avg fill $' : 'Tulip fill $') + entry.toFixed(2), false);
+      hl(entry - R.stop, '--loss', 'rule stop −$0.30', true); hl(entry + R.target, '--win', 'rule target +$2.00', true);
+      if (pts.length) {
+        g.strokeStyle = css('--mute'); g.globalAlpha = 0.5; g.lineWidth = 1; g.beginPath(); pts.forEach(function (o, i) { i ? g.lineTo(X(o[0]), Y(o[2])) : g.moveTo(X(o[0]), Y(o[2])); }); g.stroke(); g.globalAlpha = 1;
+        g.strokeStyle = css('--fg'); g.lineWidth = 2; g.beginPath(); pts.forEach(function (o, i) { i ? g.lineTo(X(o[0]), Y(o[1])) : g.moveTo(X(o[0]), Y(o[1])); }); g.stroke();
+      }
+      fills.forEach(function (f) { var buy = f.side === 'Buy'; g.fillStyle = css('--panel'); g.beginPath(); g.arc(X(f.m), Y(f.px), 7, 0, 7); g.fill(); g.fillStyle = css(buy ? '--you' : (c.pnl > 0 ? '--win' : '--loss')); g.beginPath(); g.arc(X(f.m), Y(f.px), 5, 0, 7); g.fill(); });
+      if (!c && s0) { [[s0.m, s0.entry, '--win'], [s0.exit_min, s0.exit, s0.pnl > 0 ? '--win' : '--loss']].forEach(function (p) { g.fillStyle = css(p[2]); g.beginPath(); g.arc(X(p[0]), Y(p[1]), 5, 0, 7); g.fill(); }); }
+      document.getElementById('rp-opt-n').textContent = c ? (pts.length ? (c.best60 != null ? 'Best bid within 60 min of your buy: ' + (c.best60 >= 0 ? '+$' : '−$') + Math.abs(c.best60).toFixed(2) + ' · worst while you held: ' + (c.worst >= 0 ? '+$' : '−$') + Math.abs(c.worst).toFixed(2) + ' a contract.' : '') :
+        'No quotes were logged for this strike, so only your fills are drawn.') : 'You had no trade this day. Tulip Mania: ' + s0.time_pt + ' PT, ' + s0.chips + ' chips, ' + usd(s0.pnlc) + '.';
+    }
+
+    // ---------- side panel ----------
+    function side() {
+      var c = sel.card, D = DAYS[sel.date], el = document.getElementById('rp-side'), dd = R.daily.filter(function (x) { return x.date === sel.date; })[0], h = '';
+      if (c) {
+        var verdict = c.setup ? '<span class="pos">Tulip Mania would have taken this · ' + c.chips + ' chip' + (c.chips > 1 ? 's' : '') + '</span>' : '<span class="neg">Tulip Mania would have sat this out</span>';
+        h += '<p class="eyebrow">' + c.weekday + ' ' + mmdd(c.date) + ' · trade ' + c.n + ' of the day</p><div class="verdict">' + verdict + '</div>';
+        h += '<p class="note">You bought ' + c.qty + ' ' + (c.kind === 'call' ? 'call' : 'put') + (c.qty > 1 ? 's' : '') + ' ' + c.strike + ' at $' + c.avg_buy.toFixed(2) + ' (' + c.time_pt + ' PT) and ' + (c.expired ? 'let it expire' : 'sold at $' + c.avg_sell.toFixed(2) + ' (' + c.exit_pt + ' PT)') + ' after ' + Math.round(c.held) + ' min: <b class="' + cl(c.pnl) + '">' + usd(c.pnl) + '</b>' +
+          (c.pnl < 0 ? ' — stopped out.' : '.') + '</p>';
+        h += '<p class="eyebrow">The v3.2 rules · ' + (c.rules.length - c.broke.length) + ' kept, ' + c.broke.length + ' broken</p><div class="rules">' + c.rules.map(function (r) {
+          var s = r.ok === true ? '<span class="ok">✓</span>' : r.ok === false ? '<span class="no">✗</span>' : '<span class="na">–</span>';
+          return s + '<span>' + esc(r.label) + '</span><span class="d">' + esc(r.d) + '</span>'; }).join('') + '</div>';
+        if (c.near) h += '<p class="fine pos">' + esc(c.near) + '</p>';
+      } else h += '<p class="eyebrow">' + D.weekday + ' ' + mmdd(sel.date) + '</p><div class="verdict">You had no QQQ trade this day.</div>';
+      if (dd && dd.tulip.length) h += '<div class="tw"><b>Tulip Mania that day</b><br>' + dd.tulip.map(function (s) { return s.time_pt + ' PT · ' + (s.kind === 'call' ? 'call ' : 'put ') + s.strike + ' at $' + s.entry.toFixed(2) + ' → $' + s.exit.toFixed(2) + ' (' + (s.why === 'take profit' ? 'target' : s.why) + ') · ' + s.checks_n + '/3 checks · ' + s.chips + ' chip' + (s.chips > 1 ? 's' : '') + ' · <b class="' + cl(s.pnlc) + '">' + usd(s.pnlc) + '</b>'; }).join('<br>') +
+        '<br><span class="mut">You that day: ' + (dd.n ? usd(dd.you) + ' over ' + dd.n + ' trade' + (dd.n > 1 ? 's' : '') : 'no trades') + '</span></div>';
+      else if (dd && dd.unscored.length) h += '<div class="tw miss">Tulip Mania fired at ' + dd.unscored.map(function (u) { return u.time_pt; }).join(', ') + ' PT, but the option data was incomplete, so its result is unknown.</div>';
+      else h += '<div class="tw miss">No Tulip Mania setup this day: the plan was to sit out.</div>';
+      el.innerHTML = h;
+    }
+    function select(date, card, scroll) {
+      sel.date = date; sel.card = card; hoverM = null;
+      document.getElementById('rp-title').textContent = DAYS[date].weekday + ' ' + mmdd(date) + (card ? ' · ' + card.time_pt + ' PT · ' + (card.kind === 'call' ? 'Call ' : 'Put ') + card.strike + ' · ' + usd(card.pnl) : ' · Tulip Mania setup');
+      document.querySelectorAll('#rp-strip .card').forEach(function (b) { b.setAttribute('aria-current', C[+b.dataset.i] === card ? 'true' : 'false'); });
+      document.querySelectorAll('#rp-daily tr.click').forEach(function (tr) { tr.classList.toggle('sel', tr.dataset.d === date); });
+      drawMain(); drawOpt(); side();
+      if (scroll) document.getElementById('rp-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    dailyTable(); cum(); strip(); hookMain(); select(C[0].date, C[0], false);
+    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (!det.open) return; cum(); strip(); drawMain(); drawOpt(); }, 150); });
+  }
+})();
+</script>
+
+</body></html>

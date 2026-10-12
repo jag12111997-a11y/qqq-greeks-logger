@@ -3564,7 +3564,7 @@
   // The Journal and Performance tabs are iframes, so they are never repainted.
   var _raT = 0;
   function renderAllWidgets(now) {
-    if (TAB === "journal" || TAB === "perf" || TAB === "strategy") return;
+    if (TAB === "journal" || TAB === "perf" || TAB === "strategy" || TAB === "replay") return;
     clearTimeout(_raT);
     _raT = setTimeout(function () {
       var a = document.activeElement;
@@ -6013,7 +6013,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + tab("journal", "Trading Journal") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + "</div>";
+      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + tab("journal", "Trading Journal") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("replay", "Trade Replay") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
@@ -7691,7 +7691,9 @@
       _pipeFooter + '</div>';
 
     app.innerHTML = _header + tabBar() +
-      (TAB === "strategy"
+      (TAB === "replay"
+        ? ('<div class="flow"><iframe src="trade-replay.html" title="Trade Replay" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0c0710"></iframe></div>')
+        : TAB === "strategy"
         ? ('<div class="flow"><iframe src="tulip-mania.html" title="Trading Strategy: Tulip Mania" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0c0710"></iframe></div>')
         : TAB === "perf"
         ? ('<div class="flow"><iframe src="trading-performance.html" title="Trading Performance" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#160a0e"></iframe></div>')
@@ -7959,7 +7961,7 @@
       fetchAll().then(function () {
         var info = applyLive();
         // Repaint without losing scroll or which session you are viewing.
-        if (info.painted && idx === FULL.length - 1 && TAB !== "journal" && TAB !== "perf" && TAB !== "strategy") {
+        if (info.painted && idx === FULL.length - 1 && TAB !== "journal" && TAB !== "perf" && TAB !== "strategy" && TAB !== "replay") {
           // Once the user has positioned the Nasdaq chart, the minute refresh
           // updates its live quote in place instead of destroying the chart.
           if (TAB === "nasdaq" && QQQ_TV && QQQ_VIEW_STATE.userAdjusted) {
