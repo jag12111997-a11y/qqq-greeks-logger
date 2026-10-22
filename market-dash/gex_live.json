@@ -570,18 +570,18 @@
   "contracts_used": 60,
   "dealer_convention": "dealers long call gamma, short put gamma",
   "source": "1-min greeks logger (calls + puts, 0DTE)",
-  "generated_utc": "2026-10-22 20:50:19",
+  "generated_utc": "2026-10-22 23:40:29",
   "wall_state": {
     "date": "2026-10-22",
     "call": 710.0,
     "put": 708.0,
     "call_try": [
       705.0,
-      1
+      2
     ],
     "put_try": [
       705.0,
-      1
+      2
     ]
   }
 }
