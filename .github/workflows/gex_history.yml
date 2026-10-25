@@ -7,6 +7,10 @@ name: GEX History - Rebuild saved days
 #             log (writes market-dash/history/_validation.json). No day files.
 #   build     write the day files (blank days = every day in data/).
 on:
+  # Daily after the PM logger finishes (it runs to 1:30 PM PT). 23:10 UTC =
+  # 4:10 PM PDT / 3:10 PM PST, clear of Market Dash's 22:00 and 22:25 UTC runs.
+  schedule:
+    - cron: '10 23 * * 1-5'
   workflow_dispatch:
     inputs:
       mode:
@@ -50,6 +54,14 @@ jobs:
           MODE: ${{ inputs.mode }}
           DAYS: ${{ inputs.days }}
         run: |
+          # Scheduled run (no inputs): build only the days that have no history
+          # file yet, plus today. The build ends by refreshing the home-run paper
+          # log and the live box's context (gex_history.py -> home_run.write()).
+          if [ -z "$MODE" ]; then
+            MODE=build
+            DAYS=$(for d in $(ls -d data/????-??-?? | xargs -n1 basename); do [ -f "market-dash/history/$d.json" ] || printf '%s ' "$d"; done)
+            [ -z "$DAYS" ] && DAYS=today
+          fi
           if [ "$MODE" = "validate" ]; then
             if [ -z "$DAYS" ]; then DAYS=$(ls -d data/????-??-?? | tail -5 | xargs -n1 basename | tr '\n' ' '); fi
             python gex_history.py --validate $DAYS --publish

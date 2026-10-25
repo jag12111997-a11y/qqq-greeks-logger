@@ -553,6 +553,14 @@ def _alpaca_daily_last_prev(ticker):
             params={"timeframe": "1Day", "limit": 5, "adjustment": "raw"},
             headers=headers, timeout=15)
         if not r.ok:
+            # Free Alpaca accounts default to the SIP feed and are refused on
+            # recent bars. Retry once on the free IEX feed before giving up.
+            r = requests.get(
+                ALPACA_DATA + "/v2/stocks/" + ticker + "/bars",
+                params={"timeframe": "1Day", "limit": 5, "adjustment": "raw",
+                        "feed": "iex"},
+                headers=headers, timeout=15)
+        if not r.ok:
             return None, None
         bars = (r.json() or {}).get("bars") or []
         closes = [float(b["c"]) for b in bars if b.get("c") is not None]
@@ -579,7 +587,19 @@ def pct_change_last_two(ticker):
                 return last, prev, ((last - prev) / prev) * 100.0
         except Exception:
             pass  # fall back to plain daily close below
+    # Same daily-close path that already fills ret_5d / z20 / YTD for the plain
+    # ETFs (webull, then Yahoo with NaN rows dropped). Plain symbols only: webull
+    # misreads index symbols like ^VIX, so those stay on the Yahoo read below.
+    if ticker.isalpha():
+        try:
+            closes = [c for c in _daily_closes(ticker, count=10) if c == c]
+            if len(closes) >= 2 and closes[-2]:
+                return closes[-1], closes[-2], ((closes[-1] - closes[-2]) / closes[-2]) * 100.0
+        except Exception:
+            pass
     data = yf.Ticker(ticker).history(period="5d", interval="1d")
+    if data is not None and not data.empty:
+        data = data.dropna(subset=["Close"])   # Yahoo can append a NaN row for today
     if data is None or data.empty or len(data) < 2:
         return None, None, None
     prev = float(data["Close"].iloc[-2])
@@ -789,6 +809,8 @@ def fetch_sectors():
         try:
             last, prev, pct = pct_change_last_two(ticker)
             if pct is None:
+                continue
+            if pct != pct or last is None or last != last:   # NaN guard
                 continue
             rows.append({
                 "sector": sector,
