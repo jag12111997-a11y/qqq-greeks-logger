@@ -835,6 +835,8 @@
 <body>
 <div class="scan"></div>
 <div class="wrap" id="app"></div>
+<!-- WEBULL LIVE (additive, in-session boost; cron baseline untouched). Fed by webull_live.json. -->
+<div class="wrap" id="webull-live" style="display:none;margin-top:22px"></div>
 
 <!--
   Loaded as a SCRIPT, not fetch().
@@ -8011,6 +8013,56 @@
     }, 20000);
   }
   startLivePrices();
+})();
+</script>
+<script>
+/* WEBULL LIVE panel — additive. Reads webull_live.json (written in-session via the
+   Webull connector). Renders outside #app so the main dashboard render never touches it.
+   If the file is absent or malformed, the panel simply stays hidden. */
+(function () {
+  "use strict";
+  var BASE = (typeof LIVE_DATA_BASE !== "undefined") ? LIVE_DATA_BASE : new URL("./", location.href).href;
+  var box = document.getElementById("webull-live");
+  if (!box) return;
+  function esc(x){return String(x==null?"":x).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+  function col(v){return v>0?"#00e676":v<0?"#ff453a":"#8b8ba6";}
+  function sign(v,dp){return (v>0?"+":"")+Number(v).toFixed(dp==null?2:dp);}
+  fetch(BASE + "webull_live.json?t=" + Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(!d) return;
+    var se=d.sentiment||{}, qv=d.qqq_volume||{}, sec=d.sectors||[], gx=(d.gex_check||{});
+    var wb=gx.webull||{}, lg=gx.logger||{};
+    var sg = se.fear_greed_index!=null ? (se.fear_greed_index<25?"#ff453a":se.fear_greed_index<45?"#ff9100":se.fear_greed_index<55?"#ffd600":"#00e676") : "#8b8ba6";
+    var secTop = sec.slice(0,3).map(function(r){return '<span style="color:'+col(r.pct_change)+'">'+esc(r.ticker)+" "+sign(r.pct_change)+"%</span>";}).join("  ");
+    var secBot = sec.slice(-3).map(function(r){return '<span style="color:'+col(r.pct_change)+'">'+esc(r.ticker)+" "+sign(r.pct_change)+"%</span>";}).join("  ");
+    var ivol = qv.full_tape_volume!=null ? Number(qv.full_tape_volume).toLocaleString("en-US") : "\u00b7";
+    var regimeMatch = (wb.net_gex_band!=null && lg.net_gex!=null) ? ((wb.net_gex_band<0)===(lg.net_gex<0)) : null;
+    box.innerHTML =
+      '<div class="band"><span>Webull live \u00b7 in-session boost</span><i></i></div>' +
+      '<section><details open><summary><h2>WEBULL LIVE</h2></summary>' +
+        '<div style="font-size:10.5px;color:var(--faint);margin:-4px 0 12px">as of ' + esc(d.generated_utc) + ' UTC \u00b7 ' + esc(d.source||"") + '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px">' +
+          /* Fear/Greed */
+          '<div><div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">Fear &amp; Greed</div>' +
+            '<div style="font-size:26px;color:'+sg+'">'+esc(se.fear_greed_index)+' <span style="font-size:13px">'+esc(se.grade)+'</span></div>' +
+            '<div style="font-size:11.5px;color:var(--dim)">week ago '+esc(se.week_ago)+' \u00b7 month ago '+esc(se.month_ago)+'</div></div>' +
+          /* Full-tape volume */
+          '<div><div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">QQQ full-tape volume</div>' +
+            '<div style="font-size:22px;color:var(--txt)">'+ivol+'</div>' +
+            '<div style="font-size:11.5px;color:var(--faint)">'+esc(qv.note||"")+'</div></div>' +
+          /* Sectors */
+          '<div><div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">Sectors (Webull)</div>' +
+            '<div style="font-size:12.5px;margin-top:4px">leaders '+secTop+'</div>' +
+            '<div style="font-size:12.5px">laggards '+secBot+'</div></div>' +
+          /* GEX cross-check */
+          '<div><div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">GEX cross-check</div>' +
+            '<div style="font-size:12.5px;margin-top:4px">Webull ATM band: <span style="color:'+col(wb.net_gex_band)+'">'+(wb.net_gex_band!=null?(wb.net_gex_band<0?"negative":"positive")+" gamma":"\u00b7")+'</span></div>' +
+            '<div style="font-size:12.5px">logger: '+esc(lg.regime||"\u00b7")+'</div>' +
+            '<div style="font-size:11px;color:'+(regimeMatch===null?"var(--faint)":regimeMatch?"var(--up)":"var(--warn)")+'">'+(regimeMatch===null?"":(regimeMatch?"\u2713 signs agree":"\u26a0 signs differ"))+'</div>' +
+            '<div style="font-size:10px;color:var(--faint)">'+esc(wb.note||"")+'</div></div>' +
+        '</div>' +
+      '</details></section>';
+    box.style.display = "";
+  }).catch(function(){ /* leave hidden */ });
 })();
 </script>
 </body>
