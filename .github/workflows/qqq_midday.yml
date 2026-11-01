@@ -1,11 +1,13 @@
 # ============================================================
 # QQQ Greeks Logger — MIDDAY burst
 # ============================================================
-# 12:15-1:30 PM Pacific: one snapshot every 1 minute, window +/-$15
+# 12:15-1:45 PM Pacific: one snapshot every 1 minute, window +/-$15
+# (to 1:45 since Nov 2026: QQQ options now trade after the close until 1:15 PM PT,
+#  and the feed is ~15 min delayed)
 # (same strikes as the morning run, so the chart's profile doesn't shrink).
 #
 # GitHub cron can't fire every minute, so this ONE job starts at
-# 12:15 and loops internally every 60 seconds for 75 minutes.
+# 12:15 and loops internally every 60 seconds for 90 minutes.
 #   19:15 UTC = 12:15 PM PDT (summer). In winter it shifts to
 #   11:15 AM PST until the cron is bumped.
 # Runs to 1:30 on purpose: the free feed is ~15 min delayed, so the
@@ -30,7 +32,7 @@ concurrency:
 jobs:
   log-greeks:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 105
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -56,7 +58,7 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run logger (12:15-1:30 PT, every 1 min, +/-$15)
+      - name: Run logger (12:15-1:45 PT, every 1 min, +/-$15)
         if: steps.guard.outputs.run == 'true'
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
@@ -65,7 +67,7 @@ jobs:
           SESSION: 'pm'
           WINDOW: '15'
           INTERVAL_SECONDS: '60'
-          DURATION_SECONDS: '4500'
+          DURATION_SECONDS: '5400'
         run: python qqq_greeks_logger_alpaca.py
 
       - name: Back up captured CSVs before publishing

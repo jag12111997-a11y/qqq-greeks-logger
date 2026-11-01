@@ -127,8 +127,9 @@ def publish(repo, paths, attempts=5):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--session', choices=['am', 'pm'], required=True)
+    parser.add_argument('--session', choices=['am', 'pm', 'pre'], required=True)
     args = parser.parse_args()
     repo = Path(__file__).resolve().parent
     paths = [str(p.relative_to(repo)) for p in (repo / 'data').glob(f'*/{args.session}/*.csv')]
-    publish(repo, paths + LIVE_PATHS)
+    # the pre-market test run only publishes its own option CSVs, never the live dashboard files
+    publish(repo, paths + ([] if args.session == 'pre' else LIVE_PATHS))

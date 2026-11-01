@@ -61,7 +61,8 @@ import requests
 
 SYMBOL = "QQQ"
 BASE_DIR = "data"                       # top-level folder for organized history
-SESSION = os.environ.get("SESSION", "").lower()   # "am" / "pm" (auto if blank)
+SESSION = os.environ.get("SESSION", "").lower()   # "am" / "pm" / "pre" (auto am/pm if blank)
+PRE = SESSION == "pre"   # pre-market test run (4:30-6:30 AM PT): option CSVs only, no live dashboard files
 DATA_BASE = "https://data.alpaca.markets"
 TRADING_BASE = os.environ.get("ALPACA_TRADING_BASE", "https://paper-api.alpaca.markets")
 
@@ -484,7 +485,7 @@ def output_path(opt_type="call", tag=""):
     et = ZoneInfo("America/New_York")
     now_et = datetime.datetime.now(et)
     date = now_et.date().isoformat()
-    session = SESSION if SESSION in ("am", "pm") else ("am" if now_et.hour < 12 else "pm")
+    session = SESSION if SESSION in ("am", "pm", "pre") else ("am" if now_et.hour < 12 else "pm")
     kind = "calls" if opt_type == "call" else "puts"
     pre = f"qqq_greeks_{tag}_" if tag else "qqq_greeks_"   # tag "1dte" -> its own files
     return os.path.join(BASE_DIR, date, session, f"{pre}{kind}_{date}_{session}.csv")
@@ -1055,7 +1056,7 @@ def push_live_snapshots():
         return False
     try:
         from publish_history import publish, LIVE_PATHS
-        paths = LIVE_PATHS + [output_path(kind) for kind in ("call", "put")]
+        paths = ([] if PRE else LIVE_PATHS) + [p for p in (output_path(kind) for kind in ("call", "put")) if os.path.exists(p)]
         paths += [p for p in (output_path(kind, "1dte") for kind in ("call", "put")) if os.path.exists(p)]
         publish(os.path.dirname(os.path.abspath(__file__)), paths)
         return True
@@ -1105,6 +1106,14 @@ def snapshot_and_write(spot):
         print(f"IV fill skipped (continuing): {e}")
     for t, rows in got.items():
         write_rows(rows, t)
+    if PRE:
+        # Pre-market test: save 0DTE + 1DTE option CSVs only. Never touch the live
+        # dashboard files (GEX, options_latest, auction) before the open.
+        try:
+            log_1dte(spot)
+        except Exception as e:
+            print(f"1DTE skipped (continuing): {e}")
+        return
     try:
         if got.get("call") or got.get("put"):
             live_gex = compute_gex_live(got.get("call", []), got.get("put", []), spot)
@@ -1185,8 +1194,9 @@ def main():
 
     # Fetch candle history at the start of every run (and every few minutes in
     # the loop below). A failed data request leaves the prior file intact and
-    # must not stop options logging.
-    refresh_candles()
+    # must not stop options logging. (Skipped in the pre-market test run.)
+    if not PRE:
+        refresh_candles()
 
     # Single snapshot mode. Calls AND puts (separate files) + live GEX.
     if INTERVAL_SECONDS <= 0 or DURATION_SECONDS <= 0:
@@ -1212,7 +1222,7 @@ def main():
         except Exception as e:
             print(f"Snapshot error (continuing): {e}")
         # Refresh today's candles every few minutes so the next push carries them.
-        if time.monotonic() - last_candles >= CANDLE_REFRESH_SECONDS:
+        if not PRE and time.monotonic() - last_candles >= CANDLE_REFRESH_SECONDS:
             refresh_candles()
             last_candles = time.monotonic()
         # Push the live JSONs mid-run so the dashboard is fresh DURING the window.

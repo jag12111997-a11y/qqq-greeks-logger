@@ -1,0 +1,65 @@
+# ============================================================
+# QQQ Greeks Logger — PRE-MARKET test (added Nov 2026)
+# ============================================================
+# QQQ options now trade pre-market 7:30-9:25 AM ET = 4:30-6:25 AM PT.
+# This job logs 0DTE + next-day (1DTE) option quotes every minute,
+# 4:30-6:30 AM PT, window +/-$15, into data/<date>/pre/ ONLY.
+# It never writes or publishes the live dashboard files (GEX, options_latest,
+# auction), so the card and the morning files are untouched.
+#
+# GitHub cron runs on UTC and can start a few minutes late:
+#   12:30 UTC = 4:30 AM PST (winter). In summer (PDT) it becomes 5:30 AM
+#   until the cron is moved to '30 11 * * 1-5'.
+# Test first: if the data feed has no pre-market option quotes, the files
+# stay empty and this job can be removed.
+# ============================================================
+
+name: QQQ Greeks Logger - Pre-market
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '30 12 * * 1-5'   # 4:30 AM PST
+
+concurrency:
+  group: qqq-premarket
+  cancel-in-progress: false
+
+jobs:
+  log-greeks-pre:
+    runs-on: ubuntu-latest
+    timeout-minutes: 135
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run logger (4:30-6:30 AM PT, every 1 min, +/-$15, pre-market test)
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          SESSION: 'pre'
+          WINDOW: '15'
+          INTERVAL_SECONDS: '60'
+          DURATION_SECONDS: '7200'
+        run: python qqq_greeks_logger_alpaca.py
+
+      - name: Back up captured CSVs before publishing
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: option-history-pre-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/**/pre/*.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Publish captured pre-market CSVs
+        if: always()
+        run: python publish_history.py --session pre
