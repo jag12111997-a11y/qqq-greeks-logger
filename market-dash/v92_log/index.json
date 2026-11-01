@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-01T15:22:02.353Z",
+ "updated_utc": "2026-11-01T18:11:41.649Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -17,6 +17,19 @@
    "usd": 683,
    "worst_dip": 107.6,
    "from": "2026-10-19"
+  },
+  "shadow_v93_vix_bounce": {
+   "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
+   "all": {
+    "usd": 3647.1,
+    "vs_v92": 330.5,
+    "bounce_days": 10
+   },
+   "forward": {
+    "usd": 0,
+    "vs_v92": 0,
+    "bounce_days": 0
+   }
   }
  },
  "days": [
@@ -25,462 +38,660 @@
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 20.66,
+   "bounce_day": true,
+   "shadow_usd": 0
   },
   {
    "date": "2026-07-31",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 17.09,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-03",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.99,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-04",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.86,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-05",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 16.5,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-06",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.81,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-07",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.15,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-10",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.9,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-11",
    "forward": false,
    "n": 2,
    "usd": 31.4,
-   "stops": 1
+   "stops": 1,
+   "vix": 15.46,
+   "bounce_day": false,
+   "shadow_usd": 31.4
   },
   {
    "date": "2026-08-12",
    "forward": false,
    "n": 3,
    "usd": 11.1,
-   "stops": 1
+   "stops": 1,
+   "vix": 15.28,
+   "bounce_day": false,
+   "shadow_usd": 11.1
   },
   {
    "date": "2026-08-13",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.55,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-14",
    "forward": false,
    "n": 1,
    "usd": 39.7,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.63,
+   "bounce_day": false,
+   "shadow_usd": 39.7
   },
   {
    "date": "2026-08-17",
    "forward": false,
    "n": 3,
    "usd": 98.1,
-   "stops": 1
+   "stops": 1,
+   "vix": 14.25,
+   "bounce_day": false,
+   "shadow_usd": 98.1
   },
   {
    "date": "2026-08-18",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.25,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-19",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.84,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-20",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.89,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-21",
    "forward": false,
    "n": 3,
    "usd": 147.1,
-   "stops": 1
+   "stops": 1,
+   "vix": 16.01,
+   "bounce_day": false,
+   "shadow_usd": 147.1
   },
   {
    "date": "2026-08-24",
    "forward": false,
    "n": 5,
    "usd": 360.5,
-   "stops": 1
+   "stops": 1,
+   "vix": 15.13,
+   "bounce_day": false,
+   "shadow_usd": 360.5
   },
   {
    "date": "2026-08-25",
    "forward": false,
    "n": 1,
    "usd": 99.7,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.85,
+   "bounce_day": false,
+   "shadow_usd": 99.7
   },
   {
    "date": "2026-08-26",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.45,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-27",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.21,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-28",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.51,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-08-31",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.43,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-01",
    "forward": false,
    "n": 4,
    "usd": 262.8,
-   "stops": 1
+   "stops": 1,
+   "vix": 14.92,
+   "bounce_day": false,
+   "shadow_usd": 262.8
   },
   {
    "date": "2026-09-02",
    "forward": false,
    "n": 3,
    "usd": -49.9,
-   "stops": 1
+   "stops": 1,
+   "vix": 16.34,
+   "bounce_day": false,
+   "shadow_usd": -49.9
   },
   {
    "date": "2026-09-03",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.2,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-04",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.32,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-08",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.3,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-09",
    "forward": false,
    "n": 3,
    "usd": 237,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.72,
+   "bounce_day": false,
+   "shadow_usd": 237
   },
   {
    "date": "2026-09-10",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 16.46,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-11",
    "forward": false,
    "n": 4,
    "usd": -27.2,
-   "stops": 2
+   "stops": 2,
+   "vix": 17.84,
+   "bounce_day": true,
+   "shadow_usd": -12.5
   },
   {
    "date": "2026-09-14",
    "forward": false,
    "n": 2,
    "usd": 327.4,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.84,
+   "bounce_day": false,
+   "shadow_usd": 327.4
   },
   {
    "date": "2026-09-15",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 17.1,
+   "bounce_day": true,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-16",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 17.2,
+   "bounce_day": true,
+   "shadow_usd": 36.7
   },
   {
    "date": "2026-09-17",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 17.71,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-18",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.44,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-21",
    "forward": false,
    "n": 2,
    "usd": 210.4,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.81,
+   "bounce_day": false,
+   "shadow_usd": 210.4
   },
   {
    "date": "2026-09-22",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.87,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-23",
    "forward": false,
    "n": 1,
    "usd": 94.7,
-   "stops": 0
+   "stops": 0,
+   "vix": 14.87,
+   "bounce_day": false,
+   "shadow_usd": 94.7
   },
   {
    "date": "2026-09-24",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.18,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-09-25",
    "forward": false,
    "n": 1,
    "usd": 92.7,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.67,
+   "bounce_day": false,
+   "shadow_usd": 92.7
   },
   {
    "date": "2026-09-28",
    "forward": false,
    "n": 2,
    "usd": 189.4,
-   "stops": 1
+   "stops": 1,
+   "vix": 14.87,
+   "bounce_day": false,
+   "shadow_usd": 189.4
   },
   {
    "date": "2026-09-29",
    "forward": false,
    "n": 2,
    "usd": -6.6,
-   "stops": 1
+   "stops": 1,
+   "vix": 16.07,
+   "bounce_day": false,
+   "shadow_usd": -6.6
   },
   {
    "date": "2026-09-30",
    "forward": false,
    "n": 2,
    "usd": 33.4,
-   "stops": 0
+   "stops": 0,
+   "vix": 16.04,
+   "bounce_day": false,
+   "shadow_usd": 33.4
   },
   {
    "date": "2026-10-01",
    "forward": false,
    "n": 2,
    "usd": 64.4,
-   "stops": 0
+   "stops": 0,
+   "vix": 16.34,
+   "bounce_day": false,
+   "shadow_usd": 64.4
   },
   {
    "date": "2026-10-02",
    "forward": false,
    "n": 3,
    "usd": -41.9,
-   "stops": 2
+   "stops": 2,
+   "vix": 16.39,
+   "bounce_day": false,
+   "shadow_usd": -41.9
   },
   {
    "date": "2026-10-05",
    "forward": false,
    "n": 2,
    "usd": -73.6,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.31,
+   "bounce_day": false,
+   "shadow_usd": -73.6
   },
   {
    "date": "2026-10-06",
    "forward": false,
    "n": 2,
    "usd": 45.4,
-   "stops": 1
+   "stops": 1,
+   "vix": 15.52,
+   "bounce_day": false,
+   "shadow_usd": 45.4
   },
   {
    "date": "2026-10-07",
    "forward": false,
    "n": 4,
    "usd": 127.8,
-   "stops": 1
+   "stops": 1,
+   "vix": 15.01,
+   "bounce_day": false,
+   "shadow_usd": 127.8
   },
   {
    "date": "2026-10-08",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.08,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-10-09",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.41,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-10-12",
    "forward": false,
    "n": 3,
    "usd": 86.1,
-   "stops": 1
+   "stops": 1,
+   "vix": 14.84,
+   "bounce_day": false,
+   "shadow_usd": 86.1
   },
   {
    "date": "2026-10-13",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.21,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-10-14",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 15.27,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-10-15",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 16.87,
+   "bounce_day": true,
+   "shadow_usd": 44.7
   },
   {
    "date": "2026-10-16",
    "forward": false,
    "n": 1,
    "usd": 273.7,
-   "stops": 0
+   "stops": 0,
+   "vix": 16.46,
+   "bounce_day": false,
+   "shadow_usd": 273.7
   },
   {
    "date": "2026-10-19",
    "forward": false,
    "n": 2,
    "usd": 52.4,
-   "stops": 0
+   "stops": 0,
+   "vix": 19.99,
+   "bounce_day": true,
+   "shadow_usd": 29.7
   },
   {
    "date": "2026-10-20",
    "forward": false,
    "n": 1,
    "usd": 524.7,
-   "stops": 0
+   "stops": 0,
+   "vix": 18.44,
+   "bounce_day": false,
+   "shadow_usd": 524.7
   },
   {
    "date": "2026-10-21",
    "forward": false,
    "n": 1,
    "usd": -53.3,
-   "stops": 1
+   "stops": 1,
+   "vix": 17.31,
+   "bounce_day": true,
+   "shadow_usd": -18.6
   },
   {
    "date": "2026-10-22",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 16.68,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-10-23",
    "forward": false,
    "n": 1,
    "usd": -54.3,
-   "stops": 1
+   "stops": 1,
+   "vix": 19.03,
+   "bounce_day": true,
+   "shadow_usd": -54.3
   },
   {
    "date": "2026-10-26",
    "forward": false,
    "n": 2,
    "usd": 48.4,
-   "stops": 0
+   "stops": 0,
+   "vix": 19.45,
+   "bounce_day": true,
+   "shadow_usd": 326.1
   },
   {
    "date": "2026-10-27",
    "forward": false,
    "n": 1,
    "usd": 123.7,
-   "stops": 0
+   "stops": 0,
+   "vix": 18.39,
+   "bounce_day": false,
+   "shadow_usd": 123.7
   },
   {
    "date": "2026-10-28",
    "forward": false,
    "n": 0,
    "usd": 0,
-   "stops": 0
+   "stops": 0,
+   "vix": 17.52,
+   "bounce_day": false,
+   "shadow_usd": 0
   },
   {
    "date": "2026-10-29",
    "forward": false,
    "n": 1,
    "usd": -55.3,
-   "stops": 1
+   "stops": 1,
+   "vix": 16.91,
+   "bounce_day": false,
+   "shadow_usd": -55.3
   },
   {
    "date": "2026-10-30",
    "forward": false,
    "n": 1,
    "usd": 96.7,
-   "stops": 0
+   "stops": 0,
+   "vix": 17.2,
+   "bounce_day": true,
+   "shadow_usd": 41.4
   }
  ]
 }

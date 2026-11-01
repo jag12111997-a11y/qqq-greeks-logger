@@ -10,12 +10,14 @@
      opt     = {C:{strike:{minute:[mid, iv, bid, ask, delta, secondInMinute]}}, P:{...}}
      va      = {yval, yvah} yesterday's value area (or null)
      complete = true when the morning's data is final (backtest / nightly log); false while live.
+   Shadow test only (paper log, never the card): opts {vb:true, vbStart:60, vbMax:1} adds "VIX bounce calls" —
+     call EMA8 turns after 7:30, 1 per day, on mornings after a red day with VIX >= 16.5 (decided by the caller).
 */
 (function (root) {
   "use strict";
   var DEF = { flush: 1.0, gapx: 2.5, strike: 1.0, SL: 0.50, t_trig: 0.30, t_stop: 0.15, arm: 0.50, hold: 90,
     throttle: 10, gap_maxn: 2, gap_gap: 30, fw_start: 60, LO: 0.80, HI: 1.25, IVMAX: 0.35, END: 146, FEE: 0.013,
-    guard: 1.0, window: 45, day_stops: 2, flip_max: 1, causal: false };
+    guard: 1.0, window: 45, day_stops: 2, flip_max: 1, causal: false, vb: false, vbBlockPuts: false, vbOnly: false, vbStart: 8, vbMax: 99 };
 
   function runDay(D, opts) {
     var C = {}, k;
@@ -132,17 +134,20 @@
         if (!turn(m, side) || m - last[side] < C.throttle) return;
         var sg = side === "C" ? 1 : -1, gapway = sg > 0 ? gapC : gapP, isTrap = zone[side], nr = nearroom(m, side), near = nr[0];
         var isGap = !isTrap && gapway >= C.gapx && near >= C.strike && X.week === sg;
+        var isVB = C.vb && side === "C" && !isTrap && !isGap && m >= C.vbStart && trades.filter(function (t) { return t.kind === "vb"; }).length < C.vbMax;
+        if (C.vb && C.vbBlockPuts && side === "P") return;
+        if (C.vbOnly && !isVB) return;
         var gapArmed = (gapC >= C.gapx && X.week === 1) || (gapP >= C.gapx && X.week === -1);
-        var isFw = !isTrap && !isGap && X.week === -sg && !Object.keys(trapSeen).length && !gapArmed && m >= C.fw_start &&
+        var isFw = !isTrap && !isGap && !isVB && X.week === -sg && !Object.keys(trapSeen).length && !gapArmed && m >= C.fw_start &&
           !trades.some(function (t) { return t.kind !== "fw"; }) && fwValueOk();
-        if (!(isTrap || isGap || isFw)) return;
+        if (!(isTrap || isGap || isFw || isVB)) return;
         last[side] = m;
         if (isGap && (gapn[side] >= C.gap_maxn || m - gaplast[side] < C.gap_gap)) return;
         if (isGap && trapSeen[side === "C" ? "P" : "C"]) { log.push([m, "block", side]); return; }
         if (trades.filter(function (t) { return t.out > m; }).length >= 2) { log.push([m, "busy", side]); return; }
         var K = nearest(side, m); if (K === null) return;
         var r = actq(side, K, m); if (!r[1]) return;
-        var t = { side: side, K: K, kind: isTrap ? "trap" : (isGap ? "gap" : "fw"), m: m, mf: r[0], out: Infinity };
+        var t = { side: side, K: K, kind: isTrap ? "trap" : (isGap ? "gap" : (isVB ? "vb" : "fw")), m: m, mf: r[0], out: Infinity };
         trades.push(t);
         if (isGap) { gapn[side] += 1; gaplast[side] = m; }
         var L = fleg(side, K, r[0], r[1][0]); t.out = L.out;
