@@ -846,6 +846,9 @@
 -->
 <script src="history.js" onerror="window.__histMissing=true"></script>
 <script src="https://unpkg.com/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
+<script src="v92_engine.js"></script>
+<script src="v92_map.js"></script>
+<script src="v92_card.js"></script>
 
 <script>
 (function () {
@@ -7585,9 +7588,32 @@
     }
     return box(head, ctxNote + body + rulesLine, S.stage === "ready" ? "2px solid #fcb103" : null);
   }
-  function secHomeRun() { return '<div class="band"><span>Home run · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + hrHtml() + "</div>"; }
-  function hrPaint() { var el = document.getElementById("hr-box"); if (el) el.innerHTML = hrHtml(); }
+  // ---------- v9.2 GAME PLAN (replaces the Tulip v3.2 box; set USE_V92 = false to bring the old box back) ----------
+  var USE_V92 = typeof V92CARD !== "undefined";
+  var V92_HTML = "", V92_VM = null, V92_ON = false;
+  function v92Tick() {
+    return V92CARD.html({ base: LIVE_DATA_BASE }).then(function (r) {
+      V92_HTML = r.html; V92_VM = r.vm;
+      var el = document.getElementById("hr-box"); if (el) el.innerHTML = V92_HTML;
+    }).catch(function () {});
+  }
+  function v92Start() { if (V92_ON) return; V92_ON = true; v92Tick(); setInterval(function () { if (!document.hidden) v92Tick(); }, 20000); }
+  function v92Banner() {
+    var vm = V92_VM; if (!vm) return "";
+    var tk = (vm.tickets || [])[0], box = function (bg, fg, txt) { return '<div style="background:' + bg + ';color:' + fg + ';border-radius:6px;padding:5px 8px;margin-bottom:6px;font-weight:700">' + esc(txt) + "</div>"; };
+    if (vm.stale) return '<div style="color:#ff6b62;font-size:10px;margin-bottom:4px">v9.2: DATA ' + vm.stale + " MIN OLD, DON'T ACT</div>";
+    if (vm.stage === "sell") return box("#ff453a", "#fff", vm.head);
+    if (vm.stage === "buy") return box("#2fbf6d", "#0a0210", vm.head + (tk ? " · stop " + (tk.stop).toFixed(2) : ""));
+    if (vm.stage === "in") return box("rgba(96,165,250,.18)", "#60a5fa", vm.head);
+    return "";
+  }
+  function secHomeRun() {
+    if (USE_V92) { v92Start(); return '<div class="band"><span>3v3 v9.2 · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + (V92_HTML || '<div style="padding:14px;color:#c8a0d0">Loading v9.2 game plan…</div>') + "</div>"; }
+    return '<div class="band"><span>Home run · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + hrHtml() + "</div>";
+  }
+  function hrPaint() { var el = document.getElementById("hr-box"); if (!el) return; if (USE_V92) { if (V92_HTML) el.innerHTML = V92_HTML; return; } el.innerHTML = hrHtml(); }
   function hrFloatBanner() {
+    if (USE_V92) { v92Start(); return v92Banner(); }
     var S; try { S = hrState(); } catch (eHrF) { return ""; }
     if (S.stage === "live") {
       var t = S.trade, entry = t.entry;

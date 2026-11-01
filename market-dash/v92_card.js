@@ -226,7 +226,8 @@
       '<div class="row"><span>fake-out line: QQQ ' + q2(k.fake) + "</span><span>in trade " + Math.max(0, vm.atM - k.mf) + " min · typical 15–40</span></div>" +
       (ctx ? '<div class="ctx">' + esc(ctx) + "</div>" : "") + "</div>";
   }
-  function render(el, vm) {
+  function render(el, vm) { el.innerHTML = build(vm); }
+  function build(vm) {
     var pill = { buy: ["BUY", "buy"], sell: ["SELL NOW", "sell"], "in": ["IN TRADE", "in"], done: ["DONE", ""], recap: ["RECAP", ""], reentry: ["RE-ENTRY WATCH", ""],
       watch: ["WATCH", ""], prep: ["PREP", ""], waiting: ["OPEN", ""], offday: ["SIT OUT", ""], loading: ["…", ""] }[vm.stage] || ["", ""];
     var h = '<style>' + CSS + '</style><div class="v92' + (vm.stale ? " stale" : "") + '">' +
@@ -242,8 +243,13 @@
     if (vm.reentry) h += '<div class="watch">' + esc(vm.reentry) + "</div>";
     if (vm.closed.length) h += '<div class="closed">Today: ' + vm.closed.map(function (b) { return b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +
       " · total " + usd(vm.dayPnl) + (vm.stops ? " · stops " + vm.stops + "/2" : "") + "</div>";
-    h += '<div class="ctx">v9.2 rules only · signals only, you place every trade · 1 contract · ' + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
-    el.innerHTML = h;
+    h += '<div class="ctx">v9.2 rules only · signals only, you place every trade · 1 contract · ' + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
+    return h;
+  }
+  // For the dashboard: one refresh -> {html, vm}
+  function html(o) {
+    o = o || {}; o.base = o.base || "./";
+    return (o.day ? loadReplay(o) : loadLive(o)).then(function (X) { var vm = model(X); return { html: build(vm), vm: vm }; });
   }
   function mount(el, o) {
     o = o || {}; o.base = o.base || "./";
@@ -255,6 +261,6 @@
     if (!o.day) { var t = setInterval(go, 20000); el._v92stop = function () { clearInterval(t); }; }
     return p;
   }
-  var api = { mount: mount, model: model, loadReplay: loadReplay };
+  var api = { mount: mount, model: model, loadReplay: loadReplay, html: html, build: build };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.V92CARD = api;
 })(this);
