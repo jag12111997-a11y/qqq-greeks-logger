@@ -14,6 +14,9 @@
 #   data/YYYY-MM-DD/am/qqq_greeks_puts_YYYY-MM-DD_am.csv    (morning puts)
 #   data/YYYY-MM-DD/pm/qqq_greeks_calls_YYYY-MM-DD_pm.csv   (midday calls)
 #   data/YYYY-MM-DD/pm/qqq_greeks_puts_YYYY-MM-DD_pm.csv    (midday puts)
+#   data/YYYY-MM-DD/am/qqq_greeks_1dte_calls_YYYY-MM-DD_am.csv  (NEXT-DAY expiry, added Nov 2026)
+#   data/YYYY-MM-DD/am/qqq_greeks_1dte_puts_YYYY-MM-DD_am.csv   (same for pm/; extra column dte = 1)
+#   The 0DTE files above are unchanged; 1DTE always goes to its own "1dte" files.
 #   Each session writes its own dated files into its am/ or pm/
 #   folder, so history stays sorted by date instead of one big file.
 #
@@ -302,7 +305,29 @@ def _et_date(stamp):
         return None
 
 
-def build_snapshot_rows(opt_type="call", spot=None):
+_NEXT_EXPIRY = {}
+
+
+def next_expiry(today):
+    """Next QQQ expiration after `today` (skips weekends/holidays). Cached per day."""
+    if today in _NEXT_EXPIRY:
+        return _NEXT_EXPIRY[today]
+    d = datetime.date.fromisoformat(today)
+    for i in range(1, 8):
+        cand = (d + datetime.timedelta(days=i)).isoformat()
+        try:
+            r = requests.get(f"{TRADING_BASE}/v2/options/contracts", headers=HEADERS, timeout=15,
+                             params={"underlying_symbols": SYMBOL, "expiration_date": cand, "limit": 1})
+            r.raise_for_status()
+            if r.json().get("option_contracts"):
+                _NEXT_EXPIRY[today] = cand
+                return cand
+        except Exception:
+            return None   # try again next minute; never cache a failure
+    return None
+
+
+def build_snapshot_rows(opt_type="call", spot=None, expiry=None):
     """Build rows for ONE option type ("call" or "put").
 
     Calls and puts are fetched and written separately (own CSV each), never
@@ -312,17 +337,18 @@ def build_snapshot_rows(opt_type="call", spot=None):
     # The session's date in New York, not the runner's (UTC) date: after
     # 5 PM PT the UTC date is already tomorrow.
     today = now_utc.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+    exp = expiry or today          # 0DTE by default; 1DTE passes the next expiration
     if spot is None:
         spot = get_spot_price()
     low, high = spot - WINDOW, spot + WINDOW
-    snapshots = get_option_chain(low, high, today, opt_type)
+    snapshots = get_option_chain(low, high, exp, opt_type)
     if not snapshots:
         print(f"{now_utc.strftime('%H:%M:%S')} UTC: no {opt_type} contracts near spot "
               f"{spot:.2f} (market closed or no 0DTE). Skipping.")
         return None
 
-    oi_map = get_open_interest(low, high, today, opt_type)
-    T = time_to_expiry_years(now_utc, today)
+    oi_map = get_open_interest(low, high, exp, opt_type)
+    T = time_to_expiry_years(now_utc, exp)
     r, q = RISK_FREE_RATE, DIVIDEND_YIELD
 
     rows = []
@@ -379,7 +405,7 @@ def build_snapshot_rows(opt_type="call", spot=None):
 
     rows.sort(key=lambda x: x["strike"])
     filled = sum(1 for x in rows if x["delta"] != "")
-    print(f"{now_utc.strftime('%H:%M:%S')} UTC: logged {len(rows)} {opt_type} rows "
+    print(f"{now_utc.strftime('%H:%M:%S')} UTC: logged {len(rows)} {'1DTE ' if expiry else ''}{opt_type} rows "
           f"(spot {spot:.2f}, window +/-{WINDOW:g}, Greeks on {filled}/{len(rows)})")
     return rows
 
@@ -452,7 +478,7 @@ def fill_missing_greeks(call_rows, put_rows, spot):
     return filled
 
 
-def output_path(opt_type="call"):
+def output_path(opt_type="call", tag=""):
     # data/<trading date>/<am|pm>/qqq_greeks_<calls|puts>_<date>_<session>.csv
     # Calls and puts ALWAYS go to separate files — never the same CSV.
     et = ZoneInfo("America/New_York")
@@ -460,19 +486,21 @@ def output_path(opt_type="call"):
     date = now_et.date().isoformat()
     session = SESSION if SESSION in ("am", "pm") else ("am" if now_et.hour < 12 else "pm")
     kind = "calls" if opt_type == "call" else "puts"
-    return os.path.join(BASE_DIR, date, session, f"qqq_greeks_{kind}_{date}_{session}.csv")
+    pre = f"qqq_greeks_{tag}_" if tag else "qqq_greeks_"   # tag "1dte" -> its own files
+    return os.path.join(BASE_DIR, date, session, f"{pre}{kind}_{date}_{session}.csv")
 
 
-def write_rows(new_rows, opt_type="call"):
+def write_rows(new_rows, opt_type="call", tag=""):
     # Each day+session+type has its own file; create with a header, else append.
-    path = output_path(opt_type)
+    path = output_path(opt_type, tag)
+    fields = FIELDNAMES + (["dte"] if tag == "1dte" else [])
     os.makedirs(os.path.dirname(path), exist_ok=True)
     is_new = not os.path.exists(path)
     with open(path, "a", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=FIELDNAMES)
+        w = csv.DictWriter(f, fieldnames=fields)
         if is_new:
             w.writeheader()
-        w.writerows({key: row.get(key, "") for key in FIELDNAMES} for row in new_rows)
+        w.writerows({key: row.get(key, "") for key in fields} for row in new_rows)
 
 
 def compute_gex_live(call_rows, put_rows, spot):
@@ -1028,6 +1056,7 @@ def push_live_snapshots():
     try:
         from publish_history import publish, LIVE_PATHS
         paths = LIVE_PATHS + [output_path(kind) for kind in ("call", "put")]
+        paths += [p for p in (output_path(kind, "1dte") for kind in ("call", "put")) if os.path.exists(p)]
         publish(os.path.dirname(os.path.abspath(__file__)), paths)
         return True
     except Exception as exc:
@@ -1107,7 +1136,35 @@ def snapshot_and_write(spot):
     except Exception as e:
         print(f"auction metrics skipped (continuing): {e}")
 
+    # Next-day contracts (1DTE) — same window, own "1dte" files. Fully isolated:
+    # nothing here can change or stop the 0DTE logging above.
+    try:
+        log_1dte(spot)
+    except Exception as e:
+        print(f"1DTE skipped (continuing): {e}")
+
     push_relay()
+
+
+def log_1dte(spot):
+    today = datetime.datetime.now(ZoneInfo("America/New_York")).date().isoformat()
+    exp = next_expiry(today)
+    if not exp:
+        print("1DTE: next expiration not found this minute (will retry).")
+        return
+    got = {}
+    for t in ("call", "put"):
+        rows = build_snapshot_rows(t, spot=spot, expiry=exp)
+        if rows:
+            for r in rows:
+                r["dte"] = 1
+            got[t] = rows
+    try:
+        fill_missing_greeks(got.get("call"), got.get("put"), spot)
+    except Exception as e:
+        print(f"1DTE IV fill skipped (continuing): {e}")
+    for t, rows in got.items():
+        write_rows(rows, t, "1dte")
 
 
 def refresh_candles():
