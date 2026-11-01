@@ -1,0 +1,33 @@
+{
+ "date": "2026-10-23",
+ "expiry": "2026-10-26",
+ "source": "Webull option bars (read-only), backfilled Nov 1",
+ "bar": "12:45-12:50 PT M5, last-trade close only",
+ "qqq_spot_1250": 704.61,
+ "contracts": {
+  "C704": {
+   "close": 5.29
+  },
+  "C706": {
+   "close": 4.21
+  },
+  "C708": {
+   "close": 3.2
+  },
+  "C710": {
+   "close": 2.46
+  },
+  "P704": {
+   "close": 4.62
+  },
+  "P702": {
+   "close": 3.82
+  },
+  "P700": {
+   "close": 3.14
+  },
+  "P698": {
+   "close": 2.62
+  }
+ }
+}
