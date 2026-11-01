@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3v3 Playbook</title>
+<style>
+:root{color-scheme:dark;
+ --font-anthropic-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+ --font-anthropic-serif:Georgia,"Times New Roman",serif;
+ --color-fg:#f0e9ff;--color-fg-muted:#a99fd6;--color-bg:#0c0710;--color-panel:#140b22;--color-border-line:#2a1a4a;
+ --color-ok:#2fbf6d;--color-warn:#e0ab45;--color-bad:#ec6a62;
+ --cds-chart-status-critical:#ec6a62;--cds-chart-muted:#8a7fb8;--cds-chart-grid:#22163a;--cds-chart-axis:#4a3f7a;--cds-chart-reference:#7a6cff;
+ --cds-chart-series-1:#60a5fa;--cds-chart-series-2:#a78bfa;
+ --cds-surface-popover:#1a0f2e;--cds-border:#2a1a4a;--cds-shadow-popover:0 4px 16px rgba(0,0,0,.5);--cds-text-secondary:#a99fd6;
+ --cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-font-size-heading:17px;--cds-font-size-title:26px;--cds-font-weight-medium:600;
+ --cds-radius:10px;--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:16px;--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:12px;--cds-gap-lg:20px;--cds-dur-slow:.3s}
+html,body{margin:0;background:var(--color-bg);color:var(--color-fg)}
+#dash-root{padding:16px;max-width:1200px;margin:0 auto}
+[hidden]{display:none!important}
+#pb-loading{font:13px var(--font-anthropic-sans);color:var(--color-fg-muted);padding:8px 0}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+/* Small stand-in for the claude.ai dashboard runtime: loads the JSON files in ./data and runs the page's drawings. */
+window.dash=(function(){
+  var D={},draws={},order=[],P={day:"2026-10-30"};
+  var IDS=["acct", "acct_sum", "bars", "budget", "compare", "daily", "day_marks", "days", "highiv", "kpi", "losers", "luck_hist", "mc_hist", "model_trades", "monday", "news_days", "oct30", "opt_series", "paths", "precheck", "regimes", "robust", "roll2w", "rules", "shares", "stress", "two_weeks", "v92_bars", "v92_daily", "v92_kpi", "v92_roll", "v92_stress", "v92_trades", "vs_model", "wf", "you_buckets", "you_trades"];
+  function data(id){return Object.prototype.hasOwnProperty.call(D,id)
+    ?{status:"ok",data:D[id],columns:(D[id]&&D[id].length?Object.keys(D[id][0]):[]),meta:[],refreshing:false,rows:D[id]}
+    :{status:"loading",data:[],columns:[],meta:[],refreshing:false,rows:[]};}
+  function run(name){document.querySelectorAll('[data-draw="'+name+'"]').forEach(function(el){try{draws[name](el);}catch(e){console.error("draw "+name,e);}});}
+  function runAll(){order.forEach(run);}
+  var t;window.addEventListener("resize",function(){clearTimeout(t);t=setTimeout(runAll,150);});
+  document.addEventListener("click",function(e){if(e.target.closest&&e.target.closest(".pb .tabs button"))setTimeout(runAll,0);});
+  Promise.all(IDS.map(function(id){return fetch("data/"+id+".json").then(function(r){return r.json();}).then(function(j){D[id]=j;}).catch(function(){});}))
+    .then(function(){var l=document.getElementById("pb-loading");if(l)l.remove();runAll();});
+  return {data:data,
+    draw:function(name,fn){if(!draws[name])order.push(name);draws[name]=fn;run(name);},
+    params:function(){return Object.assign({},P);},
+    setParams:function(o){Object.assign(P,o||{});runAll();},
+    resetParams:function(){P={day:"2026-10-30"};runAll();},
+    setLink:function(n){try{history.replaceState(null,"","#"+n);}catch(e){}},
+    onData:function(fn){try{fn();}catch(e){}},refresh:function(){},
+    colors:["#60a5fa","#2fbf6d","#e0ab45","#a78bfa","#ec6a62","#22d3ee","#f472b6","#a3e635"]};
+})();
+</script>
+</head>
+<body>
+<div id="dash-root">
+<div id="pb-loading">Loading the Playbook data…</div>
+<meta name="dash-one-writer">
+<style>
+  .pb{font-family:var(--font-anthropic-sans);color:var(--color-fg);display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
+  .pb h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0;text-wrap:balance}
+  .pb h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0;text-wrap:balance}
+  .pb h3{font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium);margin:0}
+  .pb p{margin:0;max-width:72ch;line-height:1.5}
+  .pb .lede{color:var(--color-fg-muted);font-size:var(--cds-font-size-body)}
+  .pb .note{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);line-height:1.45}
+  .pb b{font-weight:600;font-variant-numeric:tabular-nums}
+  .pb .tabs{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs);border-bottom:1px solid var(--color-border-line);padding-bottom:var(--cds-pad-xs)}
+  .pb .tabs button{font:inherit;font-size:var(--cds-font-size-body);background:none;border:1px solid transparent;border-radius:var(--cds-radius);padding:var(--cds-pad-xs) var(--cds-pad-sm);color:var(--color-fg-muted);cursor:pointer}
+  .pb .tabs button[aria-selected="true"]{color:var(--color-fg);background:var(--color-panel);border-color:var(--color-border-line)}
+  .pb .tabs button:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+  .pb section{display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
+  .pb .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10.5rem),1fr));gap:var(--cds-gap-md)}
+  .pb .tile{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md);display:flex;flex-direction:column;gap:var(--cds-gap-xs);min-width:0}
+  .pb .tile .lab{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+  .pb .tile .big{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);font-variant-numeric:tabular-nums;line-height:1.1}
+  .pb .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:var(--cds-gap-md)}
+  .pb .card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);display:flex;flex-direction:column;gap:var(--cds-gap-sm);min-width:0}
+  .pb .chart{position:relative;min-height:220px;width:100%}
+  .pb .chart.tall{min-height:300px}
+  .pb .hb{display:flex;flex-direction:column;gap:6px}
+  .pb .hb .r{display:grid;grid-template-columns:minmax(6rem,38%) 1fr auto;gap:var(--cds-gap-sm);align-items:center;font-size:var(--cds-font-size-caption)}
+  .pb .hb .k{color:var(--color-fg);overflow-wrap:anywhere}
+  .pb .hb .k small{display:block;color:var(--color-fg-muted)}
+  .pb .hb .t{position:relative;height:16px;background:none}
+  .pb .hb .t i{position:absolute;top:0;bottom:0;border-radius:3px}
+  .pb .hb .t s{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--cds-chart-axis)}
+  .pb .hb .v{font-variant-numeric:tabular-nums;text-align:right;min-width:4.5rem}
+  .pb .pos{background:var(--color-ok)} .pb .neg{background:var(--cds-chart-status-critical)}
+  .pb .tbox{overflow:auto;max-height:28rem;border:1px solid var(--color-border-line);border-radius:var(--cds-radius)}
+  .pb table{border-collapse:collapse;width:100%;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+  .pb th{position:sticky;top:0;background:var(--color-panel);text-align:left;font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted);padding:6px 8px;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+  .pb td{padding:6px 8px;border-bottom:1px solid var(--color-border-line);vertical-align:top}
+  .pb td.n,.pb th.n{text-align:right;white-space:nowrap}
+  .pb td.wrap{min-width:12rem}
+  .pb .up{color:var(--color-ok)} .pb .dn{color:var(--color-bad)}
+  .pb .tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);white-space:nowrap;z-index:2}
+  .pb .tip .d{color:var(--cds-text-secondary)}
+  .pb .legend{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+  .pb .legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--sw)}
+  .pb .pill{display:inline-block;font-size:var(--cds-font-size-caption);padding:1px 8px;border-radius:999px;border:1px solid var(--color-border-line);color:var(--color-fg-muted)}
+  .pb [data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+  .pb [data-dash-source-state=empty]{color:transparent}
+  .pb .rules td:first-child{font-weight:var(--cds-font-weight-medium);min-width:9rem}
+  .pb .daypick{font:inherit;font-size:var(--cds-font-size-body);padding:var(--cds-pad-xs) var(--cds-pad-sm);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg);color:var(--color-fg);max-width:100%}
+</style>
+
+<div class="pb">
+  <header style="display:flex;flex-direction:column;gap:var(--cds-gap-xs)">
+    <h1 id="top">3v3 Playbook</h1>
+    <p class="lede">QQQ 0DTE mornings, 6:30–9:00 PT. v9.2 is the locked model. Older tabs keep the v7 history and your own trades.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="v92" aria-selected="true">v9.2 (locked)</button>
+    <button role="tab" data-tab="overview" aria-selected="false">Overview (v7)</button>
+    <button role="tab" data-tab="model" aria-selected="false">The model</button>
+    <button role="tab" data-tab="stress" aria-selected="false">Stress test</button>
+    <button role="tab" data-tab="regimes" aria-selected="false">Regimes</button>
+    <button role="tab" data-tab="you" aria-selected="false">Your trading</button>
+    <button role="tab" data-tab="vs" aria-selected="false">You vs model</button>
+    <button role="tab" data-tab="replay" aria-selected="false">Day replay</button>
+    <button role="tab" data-tab="account" aria-selected="false">Your account</button>
+    <button role="tab" data-tab="precheck" aria-selected="false">Morning check</button>
+    <button role="tab" data-tab="rules" aria-selected="false">Rules &amp; risks</button>
+  </nav>
+
+  <!-- V9.2 LOCKED -->
+  <section id="v92" data-page="v92">
+    <div class="card">
+      <h2 id="v92-top">v9.2 is the locked model</h2>
+      <p>Every number on this tab is in 0.00 per contract: sold minus paid, fees out, 1 contract. Multiply by 100 for dollars. 66 replayed mornings, Jul 20 – Oct 30.</p>
+      <div class="tiles">
+        <div class="tile"><span class="lab">Total</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=total">—</span></div>
+        <div class="tile"><span class="lab">Worst drawdown</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=dd">—</span></div>
+        <div class="tile"><span class="lab">Worst 10-morning stretch</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=worst10">—</span></div>
+        <div class="tile"><span class="lab">Green mornings</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=green">—</span></div>
+        <div class="tile"><span class="lab">Red mornings</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=red">—</span></div>
+        <div class="tile"><span class="lab">No-trade mornings</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=flat">—</span></div>
+        <div class="tile"><span class="lab">Trades</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=n">—</span></div>
+        <div class="tile"><span class="lab">Winning trades</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=win">—</span></div>
+        <div class="tile"><span class="lab">Average win</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=avg_win">—</span></div>
+        <div class="tile"><span class="lab">Average loss</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=avg_loss">—</span></div>
+        <div class="tile"><span class="lab">Profit factor</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=pf">—</span></div>
+        <div class="tile"><span class="lab">Worst single trade</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=worst_trade">—</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="v92-equity">Equity line: v9.2 vs every earlier version vs you</h2>
+      <p class="note">Running total, 1 contract, 0.00 per contract. Hover for each morning.</p>
+      <div class="legend"><span style="--sw:var(--color-ok)">v9.2</span><span style="--sw:var(--cds-chart-series-2,#a78bfa)">v9.1</span><span style="--sw:var(--cds-chart-series-1,#60a5fa)">v8</span><span style="--sw:var(--cds-chart-muted)">v7</span><span style="--sw:var(--color-warn)">You</span></div>
+      <div class="chart tall" data-draw="v92eq" data-source="v92_daily"></div>
+      <div class="tbox"><table><thead><tr><th>Version</th><th class="n">Total</th><th class="n">Worst drawdown</th></tr></thead><tbody>
+        <tr><td>v9.2 (locked)</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=total">—</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=dd">—</td></tr>
+        <tr><td>v9.1 (0.50 stop + re-entry)</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=v91">—</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=v91_dd">—</td></tr>
+        <tr><td>v8</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=v8">—</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=v8_dd">—</td></tr>
+        <tr><td>v7</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=v7">—</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=v7_dd">—</td></tr>
+        <tr><td>You</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=you">—</td><td class="n" data-draw="v92k" data-source="v92_kpi" data-where="metric=you_dd">—</td></tr>
+      </tbody></table></div>
+    </div>
+
+    <div class="card">
+      <h2 id="v92-rules">The rules</h2>
+      <div class="tbox"><table class="rules"><thead><tr><th>Rule</th><th>What it does</th></tr></thead><tbody>
+        <tr><td>Trap</td><td class="wrap">Yesterday's candle is with the trade and QQQ is 1.00+ past yesterday's low (calls) or high (puts). Buy every EMA8 turn back the trade's way.</td></tr>
+        <tr><td>Gap-and-go</td><td class="wrap">Gap of 2.50+, nearest GEX strike 1.00+ away, last week's candle with the trade. Max 2 a day, 30 min apart.</td></tr>
+        <tr><td>Fade the week</td><td class="wrap">EMA8 turn against last week's candle, after 7:30, only if QQQ was inside yesterday's value area at 7:00, no trap zone seen, no gap-and-go armed, and no other trade taken.</td></tr>
+        <tr><td>Stop</td><td class="wrap">0.50 under what you paid.</td></tr>
+        <tr><td>Re-entry</td><td class="wrap">After a stop, buy the next same-side EMA8 turn within 45 min, only if QQQ has not broken the swing it came off by more than 1.00.</td></tr>
+        <tr><td>Fake-out line</td><td class="wrap">Once QQQ breaks that swing by 1.00, no more buys on that side for the rest of the day.</td></tr>
+        <tr><td>Flip</td><td class="wrap">After the fake-out line breaks, buy the other side on the next EMA8 turn. Max 1 a day.</td></tr>
+        <tr><td>Exits</td><td class="wrap">At +0.30 the stop moves to −0.15. At +0.50 the trail arms: sell on the first EMA8 tick against. Time exit at 90 min or 8:56.</td></tr>
+        <tr><td>Limits</td><td class="wrap">1 contract. Max 2 open, trap wins conflicts, 10 min between buys. 2 stops in a day = done.</td></tr>
+      </tbody></table></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>By setup</h3><div class="hb" data-draw="v92bars" data-source="v92_bars" data-group="kind"></div></div>
+      <div class="card"><h3>How trades exit</h3><div class="hb" data-draw="v92bars" data-source="v92_bars" data-group="why"></div></div>
+      <div class="card"><h3>By month</h3><div class="hb" data-draw="v92bars" data-source="v92_bars" data-group="month"></div></div>
+      <div class="card"><h3>Side</h3><div class="hb" data-draw="v92bars" data-source="v92_bars" data-group="side"></div></div>
+    </div>
+
+    <div class="card">
+      <h2 id="v92-stress">Stress tests</h2>
+      <p class="note">Same 66 mornings, each scenario made worse on purpose. Worst 10-morning stretch is the closest thing to your 2-week budget.</p>
+      <div class="tbox"><table><thead><tr><th>Scenario</th><th class="n">Total</th><th class="n">Worst drawdown</th><th class="n">Worst 10 mornings</th><th class="n">Green</th><th class="n">Red</th></tr></thead><tbody data-draw="v92stress" data-source="v92_stress"></tbody></table></div>
+      <h3>20,000 random 21-morning months</h3>
+      <div class="tiles">
+        <div class="tile"><span class="lab">Unlucky month (5th pct)</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=mc_p5">—</span></div>
+        <div class="tile"><span class="lab">Typical month</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=mc_med">—</span></div>
+        <div class="tile"><span class="lab">Lucky month (95th pct)</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=mc_p95">—</span></div>
+        <div class="tile"><span class="lab">Losing months</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=mc_losing">—</span></div>
+        <div class="tile"><span class="lab">Drawdown in a month, 95th pct</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=mc_dd95">—</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="v92-account">Account math: 1.50 every 2 weeks</h2>
+      <p>Your limit is $150 per 2 weeks, which is 1.50 at 1 contract. The worst drawdown inside any 10-morning stretch was <b data-draw="v92k" data-source="v92_kpi" data-where="metric=worst10_dd">—</b>. Stretches that broke 1.50: <b data-draw="v92k" data-source="v92_kpi" data-where="metric=breach">—</b> of <b data-draw="v92k" data-source="v92_kpi" data-where="metric=stretches">—</b>.</p>
+      <p class="note">One stop is 0.50 plus fill, so the 2-stops-a-day cap means one bad morning costs about 1.00–1.20, still inside 1.50. Two max-loss mornings back to back would use most of the budget. At 2 contracts the same mornings would break it.</p>
+      <div class="legend"><span style="--sw:var(--color-ok)">Stretch total</span><span style="--sw:var(--cds-chart-status-critical)">Worst drawdown inside it</span><span style="--sw:var(--cds-chart-muted)">−1.50 limit</span></div>
+      <div class="chart" data-draw="v92roll" data-source="v92_roll"></div>
+    </div>
+
+    <div class="card">
+      <h2 id="v92-monday">Morning check: Monday, Nov 2</h2>
+      <p class="note">Clocks changed Nov 1. The open is still 6:30 PT (9:30 ET).</p>
+      <div class="tbox"><table class="rules"><thead><tr><th>Check</th><th>Monday</th></tr></thead><tbody>
+        <tr><td>Friday's candle</td><td class="wrap">Red: opened 697.02, closed 690.54. High 698.54, low 683.47.</td></tr>
+        <tr><td>Last week's candle</td><td class="wrap">Down: 704.40 → 690.54.</td></tr>
+        <tr><td>Trap</td><td class="wrap">Puts only, once QQQ trades above 699.54 (Friday high + 1.00). No call trap.</td></tr>
+        <tr><td>Gap-and-go</td><td class="wrap">Puts only, if QQQ opens at 688.04 or lower and the nearest GEX level is 1.00+ away.</td></tr>
+        <tr><td>7:00 value read</td><td class="wrap">Friday's value area is 688.70–698.30 (POC 690.50). Inside it at 7:00 → fade-the-week calls are allowed after 7:30. Outside → no fade today.</td></tr>
+        <tr><td>Stops</td><td class="wrap">0.50 stop. One re-entry. Fake-out line breaks → flip once. 2 stops = done.</td></tr>
+      </tbody></table></div>
+    </div>
+
+    <div class="card">
+      <h2 id="v92-log">Every v9.2 trade</h2>
+      <div class="tbox"><table><thead><tr><th>Date</th><th>Setup</th><th>Side</th><th>In (PT)</th><th>Out (PT)</th><th>Exit</th><th class="n">Result</th></tr></thead><tbody data-draw="v92trades" data-source="v92_trades"></tbody></table></div>
+    </div>
+    <p class="note">Facts from replays, not financial advice. The other tabs still show v7 in dollars, kept for history.</p>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section id="overview" data-page="overview" hidden>
+    <p>The model made <b data-draw="kpi" data-source="kpi" data-where="metric=model_total" data-field="value">—</b> at 7/3 contracts on <b data-draw="kpi" data-source="kpi" data-where="metric=model_n" data-field="value">—</b> trades across <b data-draw="kpi" data-source="kpi" data-where="metric=model_days" data-field="value">—</b> replayed mornings. You made <b data-draw="kpi" data-source="kpi" data-where="metric=you_total" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=you_n" data-field="value">—</b> trades. You both trade the same idea, buying the turn after a drop. The model waits for the first candle out of the dip, gives the trade room, and sits out days with no setup.</p>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Model total, 7/3 contracts</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_total" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Model total, 1 contract</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_total1" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Profit factor</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_pf" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Max drawdown, 7/3</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_dd" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Green trading days</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_green" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Your total (mostly 1 contract)</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_total" data-field="value">—</span></div>
+    </div>
+    <div class="card">
+      <h2 id="race">Running total: model at 1 contract vs you</h2>
+      <p class="note">Every morning in the data, Jul 20 – Oct 30. Your trades start Aug 26. Both lines in dollars per contract (you rarely traded more than 1).</p>
+      <div class="legend"><span style="--sw:var(--color-ok)">Model, 1 contract</span><span style="--sw:var(--cds-chart-muted)">You</span></div>
+      <div class="chart tall" data-draw="race" data-source="daily"></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h2>Last two weeks, Oct 19–30</h2>
+        <p class="note">Model <b data-draw="kpi" data-source="kpi" data-where="metric=tw_model1" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=tw_model_n" data-field="value">—</b> trades at 1 contract (<b data-draw="kpi" data-source="kpi" data-where="metric=tw_model_sized" data-field="value">—</b> at 7/3). You <b data-draw="kpi" data-source="kpi" data-where="metric=tw_you" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=tw_you_n" data-field="value">—</b> trades.</p>
+        <div class="legend"><span style="--sw:var(--color-ok)">Model, 1 contract</span><span style="--sw:var(--cds-chart-muted)">You</span></div>
+        <div class="chart" data-draw="twoweeks" data-source="two_weeks"></div>
+      </div>
+      <div class="card">
+        <h2>Same entries, different exits</h2>
+        <p class="note">All your trades that had option quotes, 1 contract each. Only the exit changes.</p>
+        <div class="hb" data-draw="cfbars" data-source="kpi"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODEL -->
+  <section id="model" data-page="model" hidden>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Trades</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_n" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Mornings with a trade</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_days_traded" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Winning trades %</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_win" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Average win, 7/3</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_avg_win" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Average loss, 7/3</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_avg_loss" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Forward test Oct 27–30, 7/3</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=fwd_sized" data-field="value">—</span></div>
+    </div>
+    <div class="card">
+      <h2 id="model-rules">The rules, exactly as replayed</h2>
+      <p class="note">Honest timing: the order goes in at the first quote after the signal bar closes, pays the ask, and sells at the bid.</p>
+      <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Rule</th><th data-field="detail">What it does</th><th data-field="evidence">Evidence</th></tr></thead><tbody data-draw="rules" data-group="model"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="equity">Equity curve, 7/3 contracts</h2>
+      <p class="note">Cumulative dollars by morning. Flat stretches are mornings with no setup.</p>
+      <div class="chart tall" data-draw="equity" data-source="daily"></div>
+    </div>
+    <div class="grid">
+      <div class="card"><h2>How trades exit</h2><p class="note">7/3 contracts. Right column: trades and winners.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="why" data-val="sized"></div></div>
+      <div class="card"><h2>By month</h2><p class="note">7/3 contracts. Forward test = mornings never used in research.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="month" data-val="sized"></div></div>
+      <div class="card"><h2>By setup</h2><p class="note">7/3 contracts.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="kind" data-val="sized"></div></div>
+      <div class="card"><h2>By size</h2><p class="note">7 = clear of levels, 3 = crowded.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="size" data-val="sized"></div></div>
+    </div>
+    <div class="card">
+      <h2 id="model-log">Every model trade</h2>
+      <p class="note">P&amp;L at the model's size and at 1 contract. Exit: q8 = EMA 8 sell, stop, time.</p>
+      <div class="tbox"><table data-source="model_trades" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="kind">Setup</th><th data-field="side">Side</th><th data-field="K" class="n">Strike</th><th data-field="ct" class="n">Size</th><th data-field="tin">In</th><th data-field="a" class="n">Paid</th><th data-field="tout">Out</th><th data-field="px" class="n">Sold</th><th data-field="why">Exit</th><th data-field="usd" class="n">P&amp;L</th><th data-field="usd1" class="n">P&amp;L 1 ct</th></tr></thead><tbody data-draw="mtrades"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- STRESS -->
+  <section id="stress" data-page="stress" hidden>
+    <div class="card">
+      <h2 id="stress-ladder">Stress ladder</h2>
+      <p class="note">Every row reruns the same live engine on all mornings at 7/3 contracts. Missed-signal rows with random runs show the median.</p>
+      <div class="hb" data-draw="stressbars" data-source="stress"></div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Without the best day (Oct 20)</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_no_best1" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Without the best 3 days</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_no_best3" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Without the best 5 days</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_no_best5" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">5c worse fills and no best 5</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_bad5" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Best day as % of total</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=best_day_share" data-field="value">—</span></div>
+    </div>
+    <div class="card">
+      <h2 id="montecarlo">20,000 random months</h2>
+      <p class="note">Each month draws 21 mornings at random from the replay, no-trade mornings included, 7/3 contracts. Losing months: <b data-draw="kpi" data-source="kpi" data-where="metric=mc_losing" data-field="value">—</b>.</p>
+      <div class="chart" data-draw="mc" data-source="mc_hist"></div>
+      <div class="tiles">
+        <div class="tile"><span class="lab">Unlucky month (5th pct)</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=mc_p5" data-field="value">—</span></div>
+        <div class="tile"><span class="lab">Typical month</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=mc_median" data-field="value">—</span></div>
+        <div class="tile"><span class="lab">Lucky month (95th pct)</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=mc_p95" data-field="value">—</span></div>
+        <div class="tile"><span class="lab">Drawdown in a month, 95th pct</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=mc_dd_p95" data-field="value">—</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Stress table</h2>
+      <div class="tbox"><table data-source="stress" data-row-key="scenario"><thead><tr><th data-field="scenario">Scenario</th><th data-field="total" class="n">Total</th><th data-field="pf" class="n">Profit factor</th><th data-field="dd" class="n">Max drawdown</th><th data-field="green" class="n">Green days %</th><th data-field="win" class="n">Win %</th><th data-field="n" class="n">Trades</th><th data-field="worst" class="n">Worst run</th><th data-field="best" class="n">Best run</th></tr></thead><tbody data-draw="stresstbl"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="luck">Is it luck?</h2>
+      <p class="note">300 random runs on the same mornings with the same exits and the same number of trades, 1 contract. Grey: same side as the model, random time. Red: random side and random time. Dashed line: the model.</p>
+      <div class="legend"><span style="--sw:var(--cds-chart-muted)">Same side, random time</span><span style="--sw:var(--cds-chart-status-critical)">Random side and time</span><span style="--sw:var(--color-ok)">Model</span></div>
+      <div class="chart" data-draw="luckh" data-source="luck_hist robust"></div>
+      <div class="tiles">
+        <div class="tile"><span class="lab">Model, 1 contract</span><span class="big" data-draw="rob" data-source="robust" data-where="metric=luck_model" data-field="value">—</span></div>
+        <div class="tile"><span class="lab">Random time, same side (median)</span><span class="big" data-draw="rob" data-source="robust" data-where="metric=luck_same_median" data-field="value">—</span></div>
+        <div class="tile"><span class="lab">Random side and time (median)</span><span class="big" data-draw="rob" data-source="robust" data-where="metric=luck_rand_median" data-field="value">—</span></div>
+        <div class="tile"><span class="lab">Random runs that beat the model</span><span class="big" data-draw="robbeat" data-source="robust">—</span></div>
+      </div>
+      <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Test</th><th data-field="detail">Result</th><th data-field="evidence">What it means</th></tr></thead><tbody data-draw="rules" data-group="robust"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="walkforward">Walk-forward</h2>
+      <p class="note">Settings (trap flush, gap size, strike distance) chosen only on earlier months, then traded on the next month. Research engine, 7/3 contracts; its totals differ from the live engine's.</p>
+      <div class="tbox"><table data-source="wf" data-row-key="test"><thead><tr><th data-field="train">Chosen on</th><th data-field="test">Traded on</th><th data-field="pick">Settings picked</th><th data-field="pick_test" class="n">Picked settings made</th><th data-field="v7_test" class="n">v7 settings made</th><th data-field="test_positive" class="n">Combos positive</th><th data-field="grid" class="n">Combos tested</th></tr></thead><tbody data-draw="wftbl"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- REGIMES -->
+  <section id="regimes" data-page="regimes" hidden>
+    <p>The model sat out <b data-draw="kpi" data-source="kpi" data-where="metric=sat_out" data-field="value">—</b> of <b data-draw="kpi" data-source="kpi" data-where="metric=model_days" data-field="value">—</b> mornings. Each chart below is the model's P&amp;L at 7/3 contracts, split one way. Right column: trades and winners.</p>
+    <div class="grid">
+      <div class="card"><h2 id="works">Where it works</h2><div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Regime</th><th data-field="evidence">Evidence</th></tr></thead><tbody data-draw="rules" data-group="works" data-cols="title,evidence"></tbody></table></div></div>
+      <div class="card"><h2 id="weak">Where it is weak</h2><div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Regime</th><th data-field="evidence">Evidence</th></tr></thead><tbody data-draw="rules" data-group="weak" data-cols="title,evidence"></tbody></table></div></div>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Side</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="side" data-val="sized"></div></div>
+      <div class="card"><h3>With or against the morning trend</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="with_trend" data-val="sized"></div></div>
+      <div class="card"><h3>Day type, 6:30–9:00</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="dtype" data-val="sized"></div></div>
+      <div class="card"><h3>Mornings traded by day type</h3><p class="note">Bar = P&amp;L. Right column: mornings of that type, and the share the model traded.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="day_cover" data-val="sized" data-sub="cover"></div></div>
+      <div class="card"><h3>Yesterday's candle</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="yday" data-val="sized"></div></div>
+      <div class="card"><h3>Last week's candle</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="week" data-val="sized"></div></div>
+      <div class="card"><h3>Opening gap vs trade side</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="gapway" data-val="sized"></div></div>
+      <div class="card"><h3>IV at entry</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="iv" data-val="sized"></div></div>
+      <div class="card"><h3>Entry time</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="time" data-val="sized"></div></div>
+      <div class="card"><h3>Weekday</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="wd" data-val="sized"></div></div>
+      <div class="card"><h3>EMA 8/35/120 at entry</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="stack" data-val="sized"></div></div>
+      <div class="card"><h3>Distance to nearest level</h3><div class="hb" data-draw="bars" data-source="regimes" data-group="level" data-val="sized"></div></div>
+      <div class="card"><h3>Release that morning (8:30 ET = 5:30 PT)</h3><p class="note">CPI, jobs report, PCE, or a Fed decision day.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="news" data-val="sized"></div></div>
+      <div class="card"><h3>Trap zone reached by 8:30</h3><p class="note">1 contract. Right column: mornings.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="zone" data-val="usd1" data-sub="mornings"></div></div>
+    </div>
+    <div class="card">
+      <h2 id="news-days">Release mornings, Jul–Oct</h2>
+      <p class="note">Sources: BLS, BEA and Federal Reserve calendars. Fed decisions land at 11:00 PT, after the window.</p>
+      <div class="tbox"><table data-source="news_days" data-row-key="date"><thead><tr><th data-field="date">Date</th><th data-field="event">Release</th><th data-field="model_n" class="n">Model trades</th><th data-field="model_usd1" class="n">Model, 1 ct</th><th data-field="you_n" class="n">Your trades</th><th data-field="you_usd" class="n">You</th></tr></thead><tbody data-draw="newstbl"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="high-iv">Setups the 35% IV cap skipped</h2>
+      <p class="note">Rerun with no IV cap. <b data-draw="rob" data-source="robust" data-where="metric=iv_extra_n" data-field="value">—</b> extra trades, worth <b data-draw="rob" data-source="robust" data-where="metric=iv_extra_1ct" data-field="value">—</b> at 1 contract (<b data-draw="rob" data-source="robust" data-where="metric=iv_extra_sized" data-field="value">—</b> at 7/3).</p>
+      <div class="tbox"><table data-source="highiv" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="time">In</th><th data-field="kind">Setup</th><th data-field="side">Side</th><th data-field="K" class="n">Strike</th><th data-field="iv" class="n">IV %</th><th data-field="a" class="n">Paid</th><th data-field="px" class="n">Sold</th><th data-field="why">Exit</th><th data-field="usd1" class="n">1 ct</th><th data-field="usd" class="n">7/3</th></tr></thead><tbody data-draw="hivtbl"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- YOU -->
+  <section id="you" data-page="you" hidden>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Your trades</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_n" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Days traded</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_days" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Winning trades %</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_win" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Ended by your stop</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_stop_exits" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Median stop below fill</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_median_stop" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Median hold, minutes</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_median_hold" data-field="value">—</span></div>
+    </div>
+    <div class="card">
+      <h2 id="style">Your style</h2>
+      <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title"></th><th data-field="detail">Description</th><th data-field="evidence">Evidence</th></tr></thead><tbody data-draw="rules" data-group="style"></tbody></table></div>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>QQQ in the 3 min before your buy</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="mv3" data-val="usd"></div></div>
+      <div class="card"><h3>After the previous trade</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="seq" data-val="usd"></div></div>
+      <div class="card"><h3>Stop the day after 2 losses in a row</h3><div class="hb" data-draw="stop2" data-source="kpi"></div></div>
+      <div class="card"><h3>Trades in the day</h3><p class="note">Right column: days, and the share that were green.</p><div class="hb" data-draw="bars" data-source="you_buckets" data-group="daycount" data-val="usd" data-sub="days"></div></div>
+      <div class="card"><h3>Hold time</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="hold" data-val="usd"></div></div>
+      <div class="card"><h3>Stop width below your fill</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="stopw" data-val="usd"></div></div>
+      <div class="card"><h3>Your 0.15 stop in QQQ dollars</h3><p class="note">Option stop divided by delta. QQQ typically moves 0.15–0.28 against you in the 5 minutes after a buy.</p><div class="hb" data-draw="bars" data-source="you_buckets" data-group="stop_qqq" data-val="q" data-sub="q"></div></div>
+      <div class="card"><h3>Distance to nearest level</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="level" data-val="usd"></div></div>
+      <div class="card"><h3>Last closed candle</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="lastbar" data-val="usd"></div></div>
+      <div class="card"><h3>EMA 8/35/120 at your buy</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="stack" data-val="usd"></div></div>
+      <div class="card"><h3>Day type</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="dtype" data-val="usd"></div></div>
+      <div class="card"><h3>Time of day</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="time" data-val="usd"></div></div>
+      <div class="card"><h3>15-minute slices (from 6:45)</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="t15" data-val="usd"></div></div>
+      <div class="card"><h3>Delta bought</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="delta" data-val="usd"></div></div>
+      <div class="card"><h3>IV at your buy</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="iv" data-val="usd"></div></div>
+      <div class="card"><h3>Option price paid</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="band" data-val="usd"></div></div>
+      <div class="card"><h3>Weekday</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="wd" data-val="usd"></div></div>
+      <div class="card"><h3>How trades ended</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="how" data-val="usd"></div></div>
+      <div class="card"><h3>Release that morning</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="news" data-val="usd"></div></div>
+    </div>
+    <div class="card">
+      <h2 id="oct30">Oct 30, trade by trade</h2>
+      <p class="note">13 of 14 trades on the right side. Dollars per contract: what you got vs the same entry with the model's stop and exits.</p>
+      <div class="legend"><span style="--sw:var(--cds-chart-muted)">You</span><span style="--sw:var(--color-ok)">Stop −0.85 + model exits</span></div>
+      <div class="chart" data-draw="oct30chart" data-source="oct30"></div>
+      <div class="tbox"><table data-source="oct30" data-row-key="n"><thead><tr><th data-field="n" class="n">#</th><th data-field="time">Time</th><th data-field="contract">Contract</th><th data-field="inp" class="n">Paid</th><th data-field="outp" class="n">Sold</th><th data-field="you" class="n">You</th><th data-field="peak" class="n">Peak in 60 min</th><th data-field="peak_at">Peak at</th><th data-field="dip" class="n">Dip before peak</th><th data-field="s30" class="n">Stop −0.30</th><th data-field="s50" class="n">Stop −0.50</th><th data-field="s85" class="n">Stop −0.85</th></tr></thead><tbody data-draw="oct30tbl"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="your-log">All your trades</h2>
+      <p class="note">Aug 26 – Oct 30, from Webull. "Wide" = same entry with stop −0.85 and model exits, 1 contract.</p>
+      <div class="tbox"><table data-source="you_trades" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="time">Time</th><th data-field="side">Side</th><th data-field="K" class="n">Strike</th><th data-field="inp" class="n">Paid</th><th data-field="outp" class="n">Sold</th><th data-field="how">Exit</th><th data-field="hold" class="n">Min</th><th data-field="stop" class="n">Stop</th><th data-field="usd" class="n">P&amp;L</th><th data-field="peak60" class="n">Peak</th><th data-field="wide" class="n">Wide</th><th data-field="vs_model">Vs model</th></tr></thead><tbody data-draw="ytrades"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- VS -->
+  <section id="vs" data-page="vs" hidden>
+    <div class="card">
+      <h2 id="paths">Same idea, one candle apart</h2>
+      <p class="note">Median QQQ path around every buy, in dollars in the trade's direction (0 = the buy). The model buys the first candle out of the dip. You buy into it.</p>
+      <div class="legend"><span style="--sw:var(--color-ok)">Model</span><span style="--sw:var(--cds-chart-muted)">You, all buys</span><span style="--sw:var(--cds-chart-status-critical)">You, into a hard push</span><span style="--sw:var(--color-warn)">You, small pullback</span></div>
+      <div class="chart tall" data-draw="paths" data-source="paths"></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h2>At the buy, side by side</h2>
+        <p class="note">Medians unless marked %.</p>
+        <div class="tbox"><table data-source="compare" data-row-key="k"><thead><tr><th data-field="k">Measure</th><th data-field="you" class="n">You</th><th data-field="model" class="n">Model</th></tr></thead><tbody data-draw="cmptbl"></tbody></table></div>
+      </div>
+      <div class="card">
+        <h2>Your trades sorted by the model</h2>
+        <p class="note">1 contract. "Wide" = same entries with stop −0.85 and model exits. "Right" = option rose 0.30+ within 60 min.</p>
+        <div class="tbox"><table data-source="vs_model" data-row-key="k"><thead><tr><th data-field="k">Your trade was</th><th data-field="n" class="n">Trades</th><th data-field="you" class="n">You</th><th data-field="wide" class="n">Wide</th><th data-field="right" class="n">Right %</th></tr></thead><tbody data-draw="vstbl"></tbody></table></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Last candle when buying</h3><p class="note">% of buys.</p><div class="legend"><span style="--sw:var(--cds-chart-muted)">You</span><span style="--sw:var(--color-ok)">Model</span></div><div class="chart" data-draw="shares" data-source="shares" data-group="lastbar"></div></div>
+      <div class="card"><h3>QQQ in the 3 min before buying</h3><p class="note">% of buys.</p><div class="legend"><span style="--sw:var(--cds-chart-muted)">You</span><span style="--sw:var(--color-ok)">Model</span></div><div class="chart" data-draw="shares" data-source="shares" data-group="mv3"></div></div>
+      <div class="card"><h3>Delta bought</h3><p class="note">% of buys.</p><div class="legend"><span style="--sw:var(--cds-chart-muted)">You</span><span style="--sw:var(--color-ok)">Model</span></div><div class="chart" data-draw="shares" data-source="shares" data-group="delta"></div></div>
+    </div>
+  </section>
+
+  <!-- DAY REPLAY -->
+  <section id="replay" data-page="replay" hidden>
+    <div class="card">
+      <h2 id="replay-day">Pick a morning</h2>
+      <p class="note">Every morning where the model or you traded. QQQ 1-minute closes from 6:30 to 9:30 PT with the indicators the model reads, plus every entry and exit.</p>
+      <select class="daypick" id="daypick" data-draw="daypick" data-source="days" aria-label="Morning"></select>
+    </div>
+    <div class="card">
+      <h2 id="losers">The model's 17 losing trades</h2>
+      <p class="note">Click a row to load that morning in the charts below. Best/worst: how far the option got above and below the entry mid before the exit.</p>
+      <div class="tbox"><table class="losers" data-source="losers" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="time">In</th><th data-field="kind">Setup</th><th data-field="side">Side</th><th data-field="a" class="n">Paid</th><th data-field="px" class="n">Sold</th><th data-field="best" class="n">Best</th><th data-field="worst" class="n">Worst</th><th data-field="usd1" class="n">1 ct</th><th data-field="what">What went wrong</th></tr></thead><tbody data-draw="losetbl"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="replay-qqq">QQQ with EMA 8, EMA 35, VWAP and GEX levels</h2>
+      <p class="note">Grey bars: each minute's high–low range. Triangles: model buys (up = call, down = put). Rings: model sells. Dots: your buys. Crosses: your sells. Dashed verticals: 8:30 (model's last entry) and 9:00.</p>
+      <div class="legend">
+        <span style="--sw:var(--color-fg)">QQQ</span>
+        <span class="sw" data-sw="0">EMA 8</span>
+        <span class="sw" data-sw="2">EMA 35</span>
+        <span class="sw" data-sw="1">VWAP</span>
+        <span class="sw" data-sw="3">Call wall</span>
+        <span class="sw" data-sw="4">Put wall</span>
+        <span style="--sw:var(--cds-chart-reference)">Gamma flip</span>
+        <span style="--sw:var(--color-ok)">Model trades</span>
+        <span class="sw" data-sw="5">Your trades</span>
+      </div>
+      <div class="chart tall" id="daychart" data-draw="daychart" data-source="bars day_marks"></div>
+    </div>
+    <div class="card">
+      <h2 id="replay-opt">The option, minute by minute</h2>
+      <p class="note">Pick a trade from this morning. The chart shows that contract for the whole morning: bid–ask band, mid, its own EMA 8, EMA 35 and VWAP (from traded volume), and every buy and sell anyone made in it. For a model trade, the dashed lines are its levels: entry, −0.85 stop, +0.30 lock (stop moves to −0.15) and +0.50 sell line. For your trades, your own stop.</p>
+      <select class="daypick" id="tradepick" data-draw="tradepick" data-source="day_marks" aria-label="Trade"></select>
+      <div class="legend">
+        <span style="--sw:var(--color-fg)">Mid</span>
+        <span style="--sw:var(--cds-chart-grid)">Bid–ask</span>
+        <span class="sw" data-sw="0">EMA 8</span>
+        <span class="sw" data-sw="2">EMA 35</span>
+        <span class="sw" data-sw="1">VWAP</span>
+        <span style="--sw:var(--cds-chart-status-critical)">Stop</span>
+        <span style="--sw:var(--color-warn)">+0.30 lock</span>
+        <span style="--sw:var(--color-ok)">+0.50 sell line / model trades</span>
+        <span class="sw" data-sw="5">Your trades</span>
+      </div>
+      <div class="chart tall" id="optchart" data-draw="optchart" data-source="opt_series day_marks"></div>
+      <h3>IV and delta</h3>
+      <div class="legend"><span class="sw" data-sw="3">IV % (left)</span><span class="sw" data-sw="4">Delta (right)</span></div>
+      <div class="chart" id="ivchart" data-draw="ivchart" data-source="opt_series"></div>
+    </div>
+    <div class="card">
+      <h2 id="replay-list">Entries and exits that morning</h2>
+      <div class="tbox"><table data-source="day_marks" data-row-key="tid,kind"><thead><tr><th data-field="t">Time</th><th data-field="who">Who</th><th data-field="kind">Action</th><th data-field="q" class="n">QQQ</th><th data-field="opt" class="n">Option</th><th data-field="label">Detail</th></tr></thead><tbody data-draw="daymarks"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ACCOUNT -->
+  <section id="account" data-page="account" hidden>
+    <p>With a $600–1,000 account and a limit of $120 lost per two weeks, the model runs at 1 contract per signal. At that size it made <b data-draw="bud" data-source="budget" data-where="id=base" data-field="total">—</b> over 66 mornings. Its worst drop inside any two weeks was <b data-draw="bud" data-source="budget" data-where="id=base" data-field="worst_dip_2wk">—</b>. In the pessimistic case it still made <b data-draw="bud" data-source="budget" data-where="id=pess" data-field="total">—</b>, and <b data-draw="bud" data-source="budget" data-where="id=pess" data-field="p_over120">—</b> of two-week stretches lost more than $120.</p>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Total at 1 contract</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="total">—</span></div>
+      <div class="tile"><span class="lab">Worst single trade</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="worst_trade">—</span></div>
+      <div class="tile"><span class="lab">Worst drop in 2 weeks</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="worst_dip_2wk">—</span></div>
+      <div class="tile"><span class="lab">Max drawdown, % of $600</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="dd_600">—</span></div>
+      <div class="tile"><span class="lab">Max drawdown, % of $1,000</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="dd_1000">—</span></div>
+      <div class="tile"><span class="lab">2 weeks losing over $120 (pessimistic)</span><span class="big" data-draw="bud" data-source="budget" data-where="id=pess" data-field="p_over120">—</span></div>
+    </div>
+    <div class="card">
+      <h2 id="roll2w">Every 2-week stretch at 1 contract</h2>
+      <p class="note">Each bar is the P&amp;L of 10 mornings in a row, labelled by the last morning. The line is the deepest drop inside those 10 mornings. Red dashed line: your −$120 limit.</p>
+      <div class="legend"><span style="--sw:var(--color-ok)">2-week P&amp;L</span><span style="--sw:var(--cds-chart-status-critical)">Deepest drop inside it</span></div>
+      <div class="chart tall" data-draw="roll" data-source="roll2w"></div>
+    </div>
+    <div class="card">
+      <h2 id="acct-curve">Your balance, simulated</h2>
+      <p class="note">Starting at $600 or $1,000, 1 contract per signal, fees taken out, with the −$120 per 2-week breaker on. Pessimistic = 5¢ worse fills on every trade.</p>
+      <div class="legend"><span style="--sw:var(--color-ok)">Replay, start $1,000</span><span class="sw" data-sw="0">Replay, start $600</span><span style="--sw:var(--cds-chart-muted)">Pessimistic, start $1,000</span><span style="--sw:var(--cds-chart-status-critical)">Pessimistic, start $600</span></div>
+      <div class="chart tall" data-draw="acct" data-source="acct"></div>
+      <div class="tbox"><table data-source="acct_sum" data-row-key="id"><thead><tr><th data-field="label">Run</th><th data-field="start" class="n">Start</th><th data-field="end" class="n">End</th><th data-field="low" class="n">Lowest</th><th data-field="ret" class="n">Return %</th><th data-field="trades" class="n">Trades</th><th data-field="breaker_hits" class="n">Breaker hits</th></tr></thead><tbody data-draw="acctsum"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="budget-table">Scenarios at 1 contract</h2>
+      <p class="note">Fees included ($0.65 per contract each way). Random months and random 2-week stretches are drawn from the replayed mornings.</p>
+      <div class="tbox"><table data-source="budget" data-row-key="id"><thead><tr><th data-field="scenario">Scenario</th><th data-field="total" class="n">Total</th><th data-field="trades" class="n">Trades</th><th data-field="worst_trade" class="n">Worst trade</th><th data-field="worst_day" class="n">Worst day</th><th data-field="max_dd" class="n">Max drawdown</th><th data-field="worst_dip_2wk" class="n">Worst 2-wk drop</th><th data-field="p_over120" class="n">2 wks over −$120</th><th data-field="month_median" class="n">Typical month</th><th data-field="month_p5" class="n">Unlucky month</th><th data-field="losing_months" class="n">Losing months</th></tr></thead><tbody data-draw="budtbl"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="budget-rules">Rules for this account</h2>
+      <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Rule</th><th data-field="detail">What to do</th><th data-field="evidence">Why</th></tr></thead><tbody data-draw="rules" data-group="budget"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- MORNING CHECK -->
+  <section id="precheck" data-page="precheck" hidden>
+    <div class="card">
+      <h2 id="monday">Monday, Nov 2</h2>
+      <p class="note">From Friday Oct 30 (live IEX bars) and the week of Oct 26–30. The gap is only known at the open.</p>
+      <div class="tiles">
+        <div class="tile"><span class="lab">Yesterday's candle</span><span class="big" data-draw="mon" data-source="monday" data-row="0" data-field="yday">—</span></div>
+        <div class="tile"><span class="lab">Last week's candle</span><span class="big" data-draw="mon" data-source="monday" data-row="0" data-field="week">—</span></div>
+        <div class="tile"><span class="lab">Friday's high</span><span class="big" data-draw="mon" data-source="monday" data-row="0" data-field="pdh">—</span></div>
+        <div class="tile"><span class="lab">Friday's low</span><span class="big" data-draw="mon" data-source="monday" data-row="0" data-field="pdl">—</span></div>
+        <div class="tile"><span class="lab">Friday's close</span><span class="big" data-draw="mon" data-source="monday" data-row="0" data-field="pdc">—</span></div>
+      </div>
+      <p>Armed: <b data-draw="mon" data-source="monday" data-row="0" data-field="armed">—</b>.</p>
+      <p>Also possible: <b data-draw="mon" data-source="monday" data-row="0" data-field="gapgo">—</b>, with the nearest GEX level at least $1 away.</p>
+      <p class="note">Anything else, such as calls, has no setup on Monday.</p>
+    </div>
+    <div class="card">
+      <h2 id="precheck-how">The 10-second read before 6:30</h2>
+      <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Step</th><th data-field="detail">What to check</th><th data-field="evidence">Why</th></tr></thead><tbody data-draw="rules" data-group="precheck"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="precheck-history">Every morning: what was armed, what fired</h2>
+      <p class="note">"Trap zone" = QQQ reached the trap line before 8:30. P&amp;L at 1 contract.</p>
+      <div class="tbox"><table data-source="precheck" data-row-key="date"><thead><tr><th data-field="date">Date</th><th data-field="yday">Yesterday</th><th data-field="week">Last week</th><th data-field="gap" class="n">Gap</th><th data-field="armed">Armed</th><th data-field="trap_zone_hit">Trap zone</th><th data-field="fired">Fired</th><th data-field="usd1" class="n">Model, 1 ct</th><th data-field="news">Release</th></tr></thead><tbody data-draw="pctbl"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section id="rules" data-page="rules" hidden>
+    <div class="card">
+      <h2 id="checklist">Before every buy</h2>
+      <p class="note">Your checklist, built from your own losses and the model's rules.</p>
+      <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Check</th><th data-field="detail">Rule</th><th data-field="evidence">Why</th></tr></thead><tbody data-draw="rules" data-group="check"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="risks">Open risks</h2>
+      <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Risk</th><th data-field="detail">What it is</th><th data-field="evidence">Status</th></tr></thead><tbody data-draw="rules" data-group="risk"></tbody></table></div>
+    </div>
+    <p class="note">Facts from replays and your own history, not financial advice. Data: QQQ minute bars, logged 0DTE option quotes and GEX levels (personal use), Webull order history. Keep this page private.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  // ---- tabs: only listen and set hidden / aria
+  const show=(id)=>{
+    document.querySelectorAll('.pb section[data-page]').forEach(s=>{s.hidden=s.id!==id;});
+    document.querySelectorAll('.pb .tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===id)));
+  };
+  document.querySelectorAll('.pb .tabs button').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.tab);dash.setLink(b.dataset.tab);}));
+  const h=location.hash.slice(1);
+  if(h){const el=document.getElementById(h);if(el){const sec=el.closest('section[data-page]');if(sec){show(sec.id);requestAnimationFrame(()=>el.scrollIntoView());}}}
+})();
+</script>
+
+<script>
+(function(){
+  const fmtC=d3.format(',.0f');
+  const money=(v)=>v==null||isNaN(v)?'—':(v>0?'+$':v<0?'−$':'$')+fmtC(Math.abs(v));
+  const signed=(v,dp)=>v==null||isNaN(v)?'—':(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(dp);
+  const KFMT={model_pf:(v)=>v.toFixed(2),model_green:(v)=>v+'%',model_win:(v)=>v+'%',mc_losing:(v)=>v+'%',you_win:(v)=>v+'%',best_day_share:(v)=>v+'%',
+    model_n:String,model_days:String,model_days_traded:String,you_n:String,you_days:String,you_stop_exits:String,tw_you_n:String,tw_model_n:String,fwd_n:String,sat_out:String,model_on_your_days_n:String,
+    you_median_stop:(v)=>v.toFixed(2),you_median_hold:(v)=>v.toFixed(1),model_dd:(v)=>'$'+fmtC(v),model_dd1:(v)=>'$'+fmtC(v),mc_dd_p95:(v)=>'$'+fmtC(v),mc_dd_median:(v)=>'$'+fmtC(v)};
+  const kget=()=>{const d=dash.data('kpi');return d.status==='ok'?new Map(d.data.map(r=>[r.metric,Number(r.value)])):null;};
+  window.PB={money,signed,kget};
+  dash.draw('kpi',(el)=>{
+    const m=kget();const key=(el.dataset.where||'').split('=')[1];
+    if(!m||!m.has(key)){el.textContent='—';return;}
+    const v=m.get(key);el.textContent=(KFMT[key]||money)(v);
+  });
+
+  // ---- tooltip helper
+  function tip(box){let t=box.querySelector(':scope > .tip');if(!t){t=document.createElement('div');t.className='tip';t.hidden=true;box.appendChild(t);}return t;}
+  function placeTip(box,t,x,y){t.hidden=false;const bw=box.clientWidth,tw=t.offsetWidth;let left=x+12;if(left+tw>bw)left=Math.max(0,x-tw-12);t.style.left=left+'px';t.style.top=Math.max(0,y-10)+'px';}
+  function css(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||getComputedStyle(document.body).getPropertyValue(name).trim();}
+
+  // ---- horizontal diverging bars (HTML)
+  function hbars(el,rows,{val,label='k',sub,fmt=money}){
+    el.replaceChildren();
+    if(!rows.length){el.textContent='—';return;}
+    const vals=rows.map(r=>Number(r[val])||0);const lo=Math.min(0,...vals),hi=Math.max(0,...vals),span=(hi-lo)||1,z=(0-lo)/span*100;
+    rows.forEach((r,i)=>{
+      const v=vals[i];const row=document.createElement('div');row.className='r';
+      const k=document.createElement('div');k.className='k';k.textContent=r[label];
+      if(sub){const s=document.createElement('small');s.textContent=sub(r);k.appendChild(s);}
+      const t=document.createElement('div');t.className='t';const bar=document.createElement('i');bar.className=v>=0?'pos':'neg';
+      const w=Math.abs(v)/span*100;bar.style.left=(v>=0?z:z-w)+'%';bar.style.width=Math.max(w,0.6)+'%';
+      const ax=document.createElement('s');ax.style.left=z+'%';t.append(bar,ax);
+      const vv=document.createElement('div');vv.className='v';vv.textContent=fmt(v);
+      row.append(k,t,vv);el.appendChild(row);
+    });
+  }
+  window.PB.hbars=hbars;
+  dash.draw('bars',(el)=>{
+    const d=dash.data(el.dataset.source);if(d.status!=='ok'){el.textContent='—';return;}
+    const rows=d.data.filter(r=>r.group===el.dataset.group);const val=el.dataset.val;const mode=el.dataset.sub;
+    let sub=(r)=>`${r.n} trades${r.win!=null?' · '+r.win+'% win':''}`;
+    if(mode==='cover')sub=(r)=>`${r.n} mornings · traded ${r.win}%`;
+    if(mode==='days')sub=(r)=>`${r.n} days · ${r.win}% green`;
+    if(mode==='q')sub=(r)=>`${r.n} trades`;
+    if(mode==='mornings')sub=(r)=>`${r.n} mornings`;
+    hbars(el,rows,{val,sub,fmt:mode==='q'?(v)=>v.toFixed(2)+' QQQ':money});
+  });
+  dash.draw('cfbars',(el)=>{
+    const m=kget();if(!m){el.textContent='—';return;}
+    hbars(el,[{k:'What you got',v:m.get('cf_you')},{k:'Stop −0.30 + model exits',v:m.get('cf_s30')},{k:'Stop −0.50 + model exits',v:m.get('cf_s50')},{k:'Stop −0.85 + model exits',v:m.get('cf_s85')}],{val:'v'});
+  });
+  dash.draw('stop2',(el)=>{
+    const m=kget();if(!m){el.textContent='—';return;}
+    hbars(el,[{k:'What you did',v:m.get('stop2_actual')},{k:'Stop after 2 losses in a row',v:m.get('stop2')}],{val:'v'});
+  });
+  dash.draw('stressbars',(el)=>{
+    const d=dash.data('stress');if(d.status!=='ok'){el.textContent='—';return;}
+    hbars(el,d.data,{val:'total',label:'scenario',sub:(r)=>r.pf!=null?`PF ${Number(r.pf).toFixed(2)} · max drawdown $${fmtC(r.dd)} · ${r.green}% green days`:(r.worst!=null?`worst run ${money(r.worst)} · best ${money(r.best)}`:'')});
+  });
+
+  // ---- tables
+  function fill(tbody,rows,cols,key){
+    tbody.replaceChildren();
+    rows.forEach(r=>{const tr=document.createElement('tr');tr.dataset.key=key(r);
+      cols.forEach(c=>{const td=document.createElement('td');const v=r[c.f];td.textContent=c.fmt?c.fmt(v,r):(v==null?'':String(v));if(c.n)td.className='n';if(c.wrap)td.className='wrap';
+        if(c.color&&v!=null&&!isNaN(v))td.classList.add(v>0?'up':v<0?'dn':'x');tr.appendChild(td);});tbody.appendChild(tr);});
+  }
+  const num2=(v)=>v==null?'':Number(v).toFixed(2);const int=(v)=>v==null?'':String(v);
+  dash.draw('rules',(tb)=>{
+    const d=dash.data('rules');if(d.status!=='ok'){tb.replaceChildren();return;}
+    const cols=(tb.dataset.cols||'title,detail,evidence').split(',').map(f=>({f,wrap:f!=='title'}));
+    fill(tb,d.data.filter(r=>r.group===tb.dataset.group),cols,(r)=>r.id);
+  });
+  dash.draw('mtrades',(tb)=>{
+    const d=dash.data('model_trades');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'date'},{f:'kind'},{f:'side'},{f:'K',n:1},{f:'ct',n:1},{f:'tin'},{f:'a',n:1,fmt:num2},{f:'tout'},{f:'px',n:1,fmt:num2},{f:'why'},{f:'usd',n:1,fmt:money,color:1},{f:'usd1',n:1,fmt:money,color:1}],(r)=>r.id);
+  });
+  dash.draw('ytrades',(tb)=>{
+    const d=dash.data('you_trades');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'date'},{f:'time'},{f:'side'},{f:'K',n:1},{f:'inp',n:1,fmt:num2},{f:'outp',n:1,fmt:num2},{f:'how'},{f:'hold',n:1},{f:'stop',n:1,fmt:num2},{f:'usd',n:1,fmt:(v)=>v==null?'':(v<0?'−$':'+$')+Math.abs(v).toFixed(2),color:1},{f:'peak60',n:1,fmt:(v)=>v==null?'':signed(v,2)},{f:'wide',n:1,fmt:(v)=>v==null?'':money(v),color:1},{f:'vs_model'}],(r)=>r.id);
+  });
+  dash.draw('stresstbl',(tb)=>{
+    const d=dash.data('stress');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'scenario'},{f:'total',n:1,fmt:money,color:1},{f:'pf',n:1,fmt:num2},{f:'dd',n:1,fmt:(v)=>v==null?'':'$'+fmtC(v)},{f:'green',n:1,fmt:int},{f:'win',n:1,fmt:int},{f:'n',n:1,fmt:int},{f:'worst',n:1,fmt:(v)=>v==null?'':money(v)},{f:'best',n:1,fmt:(v)=>v==null?'':money(v)}],(r)=>r.scenario);
+  });
+  dash.draw('oct30tbl',(tb)=>{
+    const d=dash.data('oct30');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'n',n:1},{f:'time'},{f:'contract'},{f:'inp',n:1,fmt:num2},{f:'outp',n:1,fmt:num2},{f:'you',n:1,fmt:money,color:1},{f:'peak',n:1,fmt:money},{f:'peak_at'},{f:'dip',n:1,fmt:money},{f:'s30',n:1,fmt:money,color:1},{f:'s50',n:1,fmt:money,color:1},{f:'s85',n:1,fmt:money,color:1}],(r)=>String(r.n));
+  });
+  dash.draw('cmptbl',(tb)=>{
+    const d=dash.data('compare');if(d.status!=='ok'){tb.replaceChildren();return;}
+    const f=(v,r)=>/%/.test(r.k)?v+'%':(/Minutes/.test(r.k)?Number(v).toFixed(1):signed(Number(v),2));
+    fill(tb,d.data,[{f:'k'},{f:'you',n:1,fmt:f},{f:'model',n:1,fmt:f}],(r)=>r.k);
+  });
+  dash.draw('vstbl',(tb)=>{
+    const d=dash.data('vs_model');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'k'},{f:'n',n:1},{f:'you',n:1,fmt:money,color:1},{f:'wide',n:1,fmt:money,color:1},{f:'right',n:1,fmt:(v)=>v+'%'}],(r)=>r.k);
+  });
+
+  // ---- line chart (svg)
+  function lines(el,rows,{x,series,xType='date',yFmt=money,xLabel,zeroLine=true,vline=null}){
+    el.replaceChildren();if(!rows.length){el.textContent='—';return;}
+    const W=Math.max(280,el.clientWidth||600),H=el.classList.contains('tall')?300:220;
+    const parse=d3.utcParse('%Y-%m-%d');const X=rows.map(r=>xType==='date'?parse(r[x]):Number(r[x]));
+    const allY=[];series.forEach(s=>rows.forEach(r=>{const v=r[s.key];if(v!=null&&!isNaN(v))allY.push(Number(v));}));
+    const yd=d3.extent(allY.concat(zeroLine?[0]:[]));
+    const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img');
+    const y=d3.scaleLinear(yd,[H-24,8]).nice();
+    // measure widest y tick
+    const ticks=y.ticks(5);const probe=svg.append('text').attr('font-size',11);let mw=0;ticks.forEach(t=>{probe.text(yFmt(t));mw=Math.max(mw,probe.node().getComputedTextLength());});probe.remove();
+    const ml=mw+10,mr=12;
+    const xs=xType==='date'?d3.scaleUtc(d3.extent(X),[ml,W-mr]):d3.scaleLinear(d3.extent(X),[ml,W-mr]);
+    const g=svg.append('g');
+    g.selectAll('line.gr').data(ticks).join('line').attr('x1',ml).attr('x2',W-mr).attr('y1',d=>y(d)).attr('y2',d=>y(d)).attr('stroke','var(--cds-chart-grid)');
+    g.selectAll('text.yt').data(ticks).join('text').attr('x',ml-6).attr('y',d=>y(d)+4).attr('text-anchor','end').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(d=>yFmt(d));
+    if(zeroLine)g.append('line').attr('x1',ml).attr('x2',W-mr).attr('y1',y(0)).attr('y2',y(0)).attr('stroke','var(--cds-chart-axis)');
+    if(vline!=null)g.append('line').attr('x1',xs(vline)).attr('x2',xs(vline)).attr('y1',8).attr('y2',H-24).attr('stroke','var(--cds-chart-reference)').attr('stroke-dasharray','4 3');
+    const nT=Math.max(2,Math.floor((W-ml-mr)/90));const xt=xs.ticks(nT);
+    g.selectAll('text.xt').data(xt).join('text').attr('x',d=>xs(d)).attr('y',H-6).attr('text-anchor','middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(d=>xType==='date'?d3.utcFormat('%b %-d')(d):(xLabel?xLabel(d):d));
+    series.forEach(s=>{
+      const pts=rows.map((r,i)=>[xs(X[i]),r[s.key]==null||isNaN(r[s.key])?null:y(Number(r[s.key]))]);
+      svg.append('path').attr('d',d3.line().defined(p=>p[1]!=null)(pts)).attr('fill','none').attr('stroke',s.color).attr('stroke-width',s.w||2).attr('stroke-linecap','round').attr('stroke-linejoin','round');
+    });
+    const t=tip(el.parentElement.classList.contains('card')?el:el);el.style.position='relative';
+    const dot=svg.append('g');const rule=svg.append('line').attr('y1',8).attr('y2',H-24).attr('stroke','var(--cds-chart-reference)').attr('opacity',0);
+    svg.append('rect').attr('x',ml).attr('y',0).attr('width',W-ml-mr).attr('height',H).attr('fill','transparent').on('mousemove',(ev)=>{
+      const [mx]=d3.pointer(ev);const xv=xs.invert(mx);const i=d3.bisectCenter(X.map(Number),Number(xv));const r=rows[i];const px=xs(X[i]);
+      rule.attr('x1',px).attr('x2',px).attr('opacity',1);dot.selectAll('*').remove();
+      t.replaceChildren();const dd=document.createElement('div');dd.className='d';dd.textContent=xType==='date'?d3.utcFormat('%a %b %-d')(X[i]):(xLabel?xLabel(X[i]):X[i]);t.appendChild(dd);
+      series.forEach(s=>{const v=r[s.key];if(v==null||isNaN(v))return;dot.append('circle').attr('cx',px).attr('cy',y(Number(v))).attr('r',3.5).attr('fill',s.color);
+        const l=document.createElement('div');l.textContent=`${s.label}: ${yFmt(Number(v))}`;t.appendChild(l);});
+      const sc=el.clientWidth/W;placeTip(el,t,px*sc,ev.offsetY);
+    }).on('mouseleave',()=>{t.hidden=true;rule.attr('opacity',0);dot.selectAll('*').remove();});
+  }
+  const OK='var(--color-ok)',MUT='var(--cds-chart-muted)',BAD='var(--cds-chart-status-critical)',WARN='var(--color-warn)';
+  window.PB.lines=lines;window.PB.fill=fill;
+  dash.draw('race',(el)=>{const d=dash.data('daily');if(d.status!=='ok'){el.replaceChildren();return;}
+    lines(el,d.data,{x:'date',series:[{key:'model1_cum',label:'Model, 1 ct',color:OK},{key:'you_cum',label:'You',color:MUT}]});});
+  dash.draw('equity',(el)=>{const d=dash.data('daily');if(d.status!=='ok'){el.replaceChildren();return;}
+    lines(el,d.data,{x:'date',series:[{key:'model_sized_cum',label:'Model, 7/3',color:OK}]});});
+  dash.draw('paths',(el)=>{const d=dash.data('paths');if(d.status!=='ok'){el.replaceChildren();return;}
+    lines(el,d.data,{x:'min',xType:'num',yFmt:(v)=>signed(v,2),xLabel:(m)=>(m>0?'+':'')+m+' min',vline:0,
+      series:[{key:'model',label:'Model',color:OK,w:2.5},{key:'you',label:'You, all',color:MUT,w:2.5},{key:'you_push',label:'You, into a hard push',color:BAD,w:1.5},{key:'you_pull',label:'You, small pullback',color:WARN,w:1.5}]});});
+
+  // ---- grouped vertical bars
+  function gbars(el,rows,{x,series,yFmt=money,xFmt=(v)=>v}){
+    el.replaceChildren();if(!rows.length){el.textContent='—';return;}
+    const W=Math.max(280,el.clientWidth||600),H=220;
+    const allY=[0];rows.forEach(r=>series.forEach(s=>allY.push(Number(r[s.key])||0)));
+    const y=d3.scaleLinear(d3.extent(allY),[H-34,10]).nice();
+    const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img');
+    const ticks=y.ticks(4);const probe=svg.append('text').attr('font-size',11);let mw=0;ticks.forEach(t=>{probe.text(yFmt(t));mw=Math.max(mw,probe.node().getComputedTextLength());});probe.remove();
+    const ml=mw+10,mr=8;const xb=d3.scaleBand(rows.map(r=>String(r[x])),[ml,W-mr]).padding(0.25);const xi=d3.scaleBand(series.map(s=>s.key),[0,xb.bandwidth()]).padding(0.1);
+    svg.selectAll('line.gr').data(ticks).join('line').attr('x1',ml).attr('x2',W-mr).attr('y1',d=>y(d)).attr('y2',d=>y(d)).attr('stroke','var(--cds-chart-grid)');
+    svg.selectAll('text.yt').data(ticks).join('text').attr('x',ml-6).attr('y',d=>y(d)+4).attr('text-anchor','end').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(d=>yFmt(d));
+    svg.append('line').attr('x1',ml).attr('x2',W-mr).attr('y1',y(0)).attr('y2',y(0)).attr('stroke','var(--cds-chart-axis)');
+    const t=tip(el);
+    rows.forEach(r=>{series.forEach(s=>{const v=Number(r[s.key])||0;const bw=Math.min(32,xi.bandwidth());const bx=xb(String(r[x]))+xi(s.key)+(xi.bandwidth()-bw)/2;
+      svg.append('rect').attr('x',bx).attr('width',bw).attr('y',Math.min(y(v),y(0))).attr('height',Math.max(1,Math.abs(y(v)-y(0)))).attr('rx',2).attr('fill',s.color)
+        .on('mousemove',(ev)=>{t.replaceChildren();const a=document.createElement('div');a.className='d';a.textContent=xFmt(r[x]);t.appendChild(a);series.forEach(q=>{const l=document.createElement('div');l.textContent=`${q.label}: ${yFmt(Number(r[q.key])||0)}`;t.appendChild(l);});const sc=el.clientWidth/W;placeTip(el,t,(bx+bw)*sc,ev.offsetY);})
+        .on('mouseleave',()=>{t.hidden=true;});});});
+    const step=Math.ceil(rows.length/Math.max(1,Math.floor((W-ml)/60)));
+    svg.selectAll('text.xt').data(rows.filter((r,i)=>i%step===0)).join('text').attr('x',r=>xb(String(r[x]))+xb.bandwidth()/2).attr('y',H-14).attr('text-anchor','middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(r=>xFmt(r[x]));
+  }
+  dash.draw('twoweeks',(el)=>{const d=dash.data('two_weeks');if(d.status!=='ok'){el.replaceChildren();return;}
+    gbars(el,d.data,{x:'date',xFmt:(v)=>d3.utcFormat('%b %-d')(d3.utcParse('%Y-%m-%d')(v)),series:[{key:'model1',label:'Model, 1 ct',color:OK},{key:'you',label:'You',color:MUT}]});});
+  dash.draw('oct30chart',(el)=>{const d=dash.data('oct30');if(d.status!=='ok'){el.replaceChildren();return;}
+    gbars(el,d.data,{x:'n',xFmt:(v)=>'#'+v,series:[{key:'you',label:'You',color:MUT},{key:'s85',label:'Stop −0.85 + model exits',color:OK}]});});
+  dash.draw('shares',(el)=>{const d=dash.data('shares');if(d.status!=='ok'){el.replaceChildren();return;}
+    gbars(el,d.data.filter(r=>r.group===el.dataset.group),{x:'k',yFmt:(v)=>v+'%',series:[{key:'you',label:'You',color:MUT},{key:'model',label:'Model',color:OK}]});});
+
+  // ---- histogram
+  dash.draw('mc',(el)=>{const d=dash.data('mc_hist');el.replaceChildren();if(d.status!=='ok')return;
+    const rows=d.data;const W=Math.max(280,el.clientWidth||600),H=220;
+    const xs=d3.scaleLinear([d3.min(rows,r=>r.lo),d3.max(rows,r=>r.hi)],[44,W-10]);const y=d3.scaleLinear([0,d3.max(rows,r=>r.count)],[H-26,10]).nice();
+    const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img');
+    svg.selectAll('line.gr').data(y.ticks(4)).join('line').attr('x1',44).attr('x2',W-10).attr('y1',v=>y(v)).attr('y2',v=>y(v)).attr('stroke','var(--cds-chart-grid)');
+    svg.selectAll('text.yt').data(y.ticks(4)).join('text').attr('x',38).attr('y',v=>y(v)+4).attr('text-anchor','end').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(d3.format(','));
+    const t=tip(el);
+    svg.selectAll('rect').data(rows).join('rect').attr('x',r=>xs(r.lo)+0.5).attr('width',r=>Math.max(1,xs(r.hi)-xs(r.lo)-1)).attr('y',r=>y(r.count)).attr('height',r=>y(0)-y(r.count)).attr('rx',2)
+      .attr('fill',r=>r.hi<=0?BAD:OK).on('mousemove',(ev,r)=>{t.replaceChildren();const a=document.createElement('div');a.className='d';a.textContent=`${money(r.lo)} to ${money(r.hi)}`;const b=document.createElement('div');b.textContent=`${d3.format(',')(r.count)} of 20,000 months`;t.append(a,b);placeTip(el,t,xs(r.hi)*el.clientWidth/W,ev.offsetY);}).on('mouseleave',()=>{t.hidden=true;});
+    svg.append('line').attr('x1',xs(0)).attr('x2',xs(0)).attr('y1',10).attr('y2',H-26).attr('stroke','var(--cds-chart-reference)').attr('stroke-dasharray','4 3');
+    const xt=xs.ticks(Math.max(2,Math.floor(W/110)));svg.selectAll('text.xt').data(xt).join('text').attr('x',v=>xs(v)).attr('y',H-8).attr('text-anchor','middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(money);
+  });
+})();
+</script>
+
+<script>
+(function(){
+  // legend swatches that follow the series colors (style only)
+  document.querySelectorAll('.pb .legend .sw').forEach(s=>{const i=Number(s.dataset.sw);if(dash.colors&&dash.colors[i])s.style.setProperty('--sw',dash.colors[i]);});
+  const {money}=window.PB;const fmtC=d3.format(',.0f');
+  const C=(i)=>(dash.colors&&dash.colors[i])||'var(--color-fg-muted)';
+  const tlab=(m)=>{const t=390+Math.round(m);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');};
+  const pickDay=(daysRows)=>{const p=dash.params().day;if(p)return p;return daysRows&&daysRows.length?daysRows[daysRows.length-1].date:null;};
+  window.PB.pickDay=pickDay;
+  function tip(box){let t=box.querySelector(':scope > .tip');if(!t){t=document.createElement('div');t.className='tip';t.hidden=true;box.appendChild(t);}return t;}
+  function placeTip(box,t,x,y){t.hidden=false;const bw=box.clientWidth,tw=t.offsetWidth;let left=x+12;if(left+tw>bw)left=Math.max(0,x-tw-12);t.style.left=left+'px';t.style.top=Math.max(0,y-10)+'px';}
+  function yAxis(svg,y,ticks,fmt){const probe=svg.append('text').attr('font-size',11);let mw=0;ticks.forEach(t=>{probe.text(fmt(t));mw=Math.max(mw,probe.node().getComputedTextLength());});probe.remove();return mw+10;}
+
+  dash.draw('daypick',(sel)=>{
+    const d=dash.data('days');
+    const rows=d.status==='ok'?d.data:[];
+    sel.replaceChildren(...rows.map(r=>new Option(r.label,r.date)));
+    const cur=pickDay(rows);if(cur)sel.value=cur;
+    sel.onchange=()=>dash.setParams({day:sel.value});
+  });
+
+  dash.draw('daychart',(el)=>{
+    el.replaceChildren();el.style.position='relative';
+    const b=dash.data('bars'),mk=dash.data('day_marks');if(b.status!=='ok')return;
+    const all=b.data;const day=pickDay(null)||all[all.length-1].date;
+    const rows=all.filter(r=>r.date===day);const marks=mk.status==='ok'?mk.data.filter(r=>r.date===day&&r.q!=null):[];
+    if(!rows.length)return;
+    const W=Math.max(300,el.clientWidth||700),H=340,mb=22,mt=8;
+    const pv=[];rows.forEach(r=>['c','h','l','e8','vw','e35'].forEach(k=>{if(r[k]!=null)pv.push(r[k]);}));
+    let lo=d3.min(pv),hi=d3.max(pv);const pad=(hi-lo)*0.06||0.5;lo-=pad;hi+=pad;
+    const inR=(v)=>v!=null&&v>=lo-0.6&&v<=hi+0.6;
+    rows.forEach(r=>['cw','pw','gf'].forEach(k=>{if(inR(r[k])){lo=Math.min(lo,r[k]-0.1);hi=Math.max(hi,r[k]+0.1);}}));
+    const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','QQQ one-minute chart with indicators for '+day);
+    const y=d3.scaleLinear([lo,hi],[H-mb,mt]).nice();const ticks=y.ticks(6);const ml=yAxis(svg,y,ticks,(v)=>v.toFixed(2)),mr=10;
+    const maxm=d3.max(rows,r=>r.m);const x=d3.scaleLinear([0,Math.max(150,maxm)],[ml,W-mr]);
+    svg.selectAll('line.gr').data(ticks).join('line').attr('x1',ml).attr('x2',W-mr).attr('y1',v=>y(v)).attr('y2',v=>y(v)).attr('stroke','var(--cds-chart-grid)');
+    svg.selectAll('text.yt').data(ticks).join('text').attr('x',ml-6).attr('y',v=>y(v)+4).attr('text-anchor','end').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(v=>v.toFixed(2));
+    const xt=[0,30,60,90,120,150,180].filter(v=>v<=x.domain()[1]);
+    svg.selectAll('text.xt').data(xt).join('text').attr('x',v=>x(v)).attr('y',H-6).attr('text-anchor','middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(tlab);
+    [120,150].forEach(v=>{if(v<=x.domain()[1])svg.append('line').attr('x1',x(v)).attr('x2',x(v)).attr('y1',mt).attr('y2',H-mb).attr('stroke','var(--cds-chart-reference)').attr('stroke-dasharray','4 3');});
+    const line=(k,col,w,dash_)=>{const p=svg.append('path').attr('d',d3.line().defined(r=>k==='cw'||k==='pw'||k==='gf'?inR(r[k]):r[k]!=null).x(r=>x(r.m)).y(r=>y(r[k]))(rows)).attr('fill','none').attr('stroke',col).attr('stroke-width',w).attr('stroke-linecap','round').attr('stroke-linejoin','round');if(dash_)p.attr('stroke-dasharray',dash_);};
+    svg.append('g').selectAll('line').data(rows.filter(r=>r.h!=null&&r.l!=null)).join('line').attr('x1',r=>x(r.m)).attr('x2',r=>x(r.m)).attr('y1',r=>y(r.h)).attr('y2',r=>y(r.l)).attr('stroke','var(--cds-chart-muted)').attr('stroke-width',Math.max(1,(W-ml-mr)/200)).attr('opacity',0.55);
+    line('cw',C(3),1.2,'2 3');line('pw',C(4),1.2,'2 3');line('gf','var(--cds-chart-reference)',1.2,'6 4');
+    line('e35',C(2),1.3);line('vw',C(1),1.6,'5 3');line('c','var(--color-fg)',1.6);line('e8',C(0),2.2);
+    const g=svg.append('g');
+    marks.forEach(mk_=>{
+      const cx=x(mk_.m),cy=y(mk_.q);const isM=mk_.who==='model';const col=isM?'var(--color-ok)':C(5);
+      if(isM&&mk_.kind==='buy'){g.append('path').attr('d',d3.symbol(d3.symbolTriangle,isM?110:60)()).attr('transform',`translate(${cx},${cy+(mk_.side==='C'?10:-10)}) rotate(${mk_.side==='C'?0:180})`).attr('fill',col).attr('stroke','var(--color-bg)').attr('stroke-width',1);}
+      else if(isM){g.append('circle').attr('cx',cx).attr('cy',cy).attr('r',6).attr('fill','none').attr('stroke',col).attr('stroke-width',2);}
+      else if(mk_.kind==='buy'){g.append('circle').attr('cx',cx).attr('cy',cy).attr('r',3.6).attr('fill',col).attr('stroke','var(--color-bg)').attr('stroke-width',0.8);}
+      else{g.append('path').attr('d',d3.symbol(d3.symbolCross,40)()).attr('transform',`translate(${cx},${cy}) rotate(45)`).attr('fill',col);}
+    });
+    const t=tip(el);const rule=svg.append('line').attr('y1',mt).attr('y2',H-mb).attr('stroke','var(--cds-chart-reference)').attr('opacity',0);
+    const ms=rows.map(r=>r.m);
+    svg.append('rect').attr('x',ml).attr('y',0).attr('width',W-ml-mr).attr('height',H).attr('fill','transparent').on('mousemove',(ev)=>{
+      const [px]=d3.pointer(ev);const i=d3.bisectCenter(ms,x.invert(px));const r=rows[i];rule.attr('x1',x(r.m)).attr('x2',x(r.m)).attr('opacity',1);
+      t.replaceChildren();const head=document.createElement('div');head.className='d';head.textContent=tlab(r.m);t.appendChild(head);
+      [['QQQ',r.c],['EMA 8',r.e8],['EMA 35',r.e35],['VWAP',r.vw],['Call wall',r.cw],['Put wall',r.pw],['Gamma flip',r.gf]].forEach(([k,v])=>{if(v==null)return;const l=document.createElement('div');l.textContent=`${k}: ${v.toFixed(2)}`;t.appendChild(l);});
+      marks.filter(q=>Math.abs(q.m-r.m)<=1).forEach(q=>{const l=document.createElement('div');l.textContent=q.label;t.appendChild(l);});
+      placeTip(el,t,x(r.m)*el.clientWidth/W,ev.offsetY);
+    }).on('mouseleave',()=>{t.hidden=true;rule.attr('opacity',0);});
+  });
+
+  const selTrade=(dayMarks)=>{const buys=dayMarks.filter(r=>r.kind==='buy').sort((x,y)=>x.m-y.m);if(!buys.length)return null;
+    const p=dash.params().trade;const hit=buys.find(r=>r.tid===p);if(hit)return hit;return buys.find(r=>r.who==='model')||buys[0];};
+  window.PB.selTrade=selTrade;
+  dash.draw('tradepick',(sel)=>{
+    const mk=dash.data('day_marks');const day=pickDay(null);const rows=mk.status==='ok'?mk.data.filter(r=>r.date===day):[];
+    const buys=rows.filter(r=>r.kind==='buy').sort((x,y)=>x.m-y.m);
+    sel.replaceChildren(...buys.map(r=>new Option(`${r.t} · ${r.label}`,r.tid)));
+    const s=selTrade(rows);if(s)sel.value=s.tid;sel.onchange=()=>dash.setParams({trade:sel.value});
+  });
+  function optCtx(){
+    const o=dash.data('opt_series'),mk=dash.data('day_marks');if(o.status!=='ok'||mk.status!=='ok')return null;
+    const day=pickDay(null);const dm=mk.data.filter(r=>r.date===day);const s=selTrade(dm);if(!s)return {none:true};
+    const rows=o.data.filter(r=>r.ck===s.ck).sort((x,y)=>x.m-y.m);const onK=dm.filter(r=>r.ck===s.ck);const exit=dm.find(r=>r.tid===s.tid&&r.kind==='sell');
+    return {s,rows,onK,exit};
+  }
+  dash.draw('optchart',(el)=>{
+    el.replaceChildren();el.style.position='relative';const X=optCtx();if(!X)return;
+    const W=Math.max(300,el.clientWidth||700),H=340,mb=22,mt=8;
+    const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Option chart with indicators');
+    if(X.none||!X.rows.length){svg.append('text').attr('x',W/2).attr('y',H/2).attr('text-anchor','middle').attr('font-size',12).attr('fill','var(--color-fg-muted)').text('No option quotes logged for this trade.');return;}
+    const {s,rows,onK,exit}=X;
+    const lv=[];if(s.who==='model'){['entry','stop','lock_at','lock_stop','arm'].forEach(k=>{if(s[k]!=null)lv.push(s[k]);});}else if(s.stop!=null)lv.push(s.stop);
+    const vals=[];rows.forEach(r=>{vals.push(r.bid,r.ask,r.e8,r.e35);if(r.vw!=null)vals.push(r.vw);});lv.forEach(v=>vals.push(v));onK.forEach(q=>{if(q.opt!=null)vals.push(q.opt);});
+    const y=d3.scaleLinear(d3.extent(vals),[H-mb,mt]).nice();const ticks=y.ticks(6);const ml=yAxis(svg,y,ticks,(v)=>v.toFixed(2));
+    const probe=svg.append('text').attr('font-size',10).text('lock stop 0.00');const mr=Math.min(90,probe.node().getComputedTextLength()+8);probe.remove();
+    const x=d3.scaleLinear([d3.min(rows,r=>r.m),d3.max(rows,r=>r.m)],[ml,W-mr]);
+    svg.selectAll('line.gr').data(ticks).join('line').attr('x1',ml).attr('x2',W-mr).attr('y1',v=>y(v)).attr('y2',v=>y(v)).attr('stroke','var(--cds-chart-grid)');
+    svg.selectAll('text.yt').data(ticks).join('text').attr('x',ml-6).attr('y',v=>y(v)+4).attr('text-anchor','end').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(v=>v.toFixed(2));
+    const xt=[0,15,30,45,60,75,90,105,120,135,150,165,180].filter(v=>v>=x.domain()[0]&&v<=x.domain()[1]&&(W>520||v%30===0));
+    svg.selectAll('text.xt').data(xt).join('text').attr('x',v=>x(v)).attr('y',H-6).attr('text-anchor','middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(tlab);
+    [120,150].forEach(v=>{if(v>=x.domain()[0]&&v<=x.domain()[1])svg.append('line').attr('x1',x(v)).attr('x2',x(v)).attr('y1',mt).attr('y2',H-mb).attr('stroke','var(--cds-chart-reference)').attr('stroke-dasharray','4 3');});
+    svg.append('path').attr('d',d3.area().x(r=>x(r.m)).y0(r=>y(r.bid)).y1(r=>y(r.ask))(rows)).attr('fill','var(--cds-chart-grid)').attr('opacity',0.9);
+    const ln=(k,col,w,da)=>{const p=svg.append('path').attr('d',d3.line().defined(r=>r[k]!=null).x(r=>x(r.m)).y(r=>y(r[k]))(rows)).attr('fill','none').attr('stroke',col).attr('stroke-width',w).attr('stroke-linecap','round').attr('stroke-linejoin','round');if(da)p.attr('stroke-dasharray',da);};
+    ln('e35',C(2),1.3);ln('vw',C(1),1.6,'5 3');ln('mid','var(--color-fg)',1.6);ln('e8',C(0),2.2);
+    const m0=s.m,m1=exit?exit.m:x.domain()[1];
+    const lvl=(v,col,da,txt)=>{if(v==null)return;const x0=x(Math.max(x.domain()[0],m0)),x1=x(Math.min(x.domain()[1],m1));svg.append('line').attr('x1',x0).attr('x2',x1).attr('y1',y(v)).attr('y2',y(v)).attr('stroke',col).attr('stroke-width',1.4).attr('stroke-dasharray',da);
+      svg.append('text').attr('x',Math.min(x1+4,W-mr+4)).attr('y',y(v)+3).attr('font-size',10).attr('fill',col).text(`${txt} ${v.toFixed(2)}`);};
+    if(s.who==='model'){lvl(s.arm,'var(--color-ok)','6 3','sell line');lvl(s.lock_at,'var(--color-warn)','6 3','lock at');lvl(s.entry,'var(--color-fg-muted)','2 3','entry');lvl(s.lock_stop,'var(--cds-chart-status-critical)','2 3','lock stop');lvl(s.stop,'var(--cds-chart-status-critical)','6 3','stop');}
+    else lvl(s.stop,'var(--cds-chart-status-critical)','6 3','your stop');
+    onK.forEach(q=>{if(q.opt==null)return;const isM=q.who==='model',sel_=q.tid===s.tid;const col=isM?'var(--color-ok)':C(5);const cx=x(Math.max(x.domain()[0],Math.min(x.domain()[1],q.m))),cy=y(q.opt);const z=sel_?1.5:1;
+      if(q.kind==='buy')svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',(isM?5:3.6)*z).attr('fill',col).attr('stroke','var(--color-bg)').attr('stroke-width',1);
+      else svg.append('path').attr('d',d3.symbol(d3.symbolCross,(isM?70:40)*z)()).attr('transform',`translate(${cx},${cy}) rotate(45)`).attr('fill',col);});
+    const t=tip(el);const rule=svg.append('line').attr('y1',mt).attr('y2',H-mb).attr('stroke','var(--cds-chart-reference)').attr('opacity',0);const ms=rows.map(r=>r.m);
+    svg.append('rect').attr('x',ml).attr('y',0).attr('width',W-ml-mr).attr('height',H).attr('fill','transparent').on('mousemove',(ev)=>{
+      const [px]=d3.pointer(ev);const r=rows[d3.bisectCenter(ms,x.invert(px))];rule.attr('x1',x(r.m)).attr('x2',x(r.m)).attr('opacity',1);
+      t.replaceChildren();const hd=document.createElement('div');hd.className='d';hd.textContent=tlab(r.m)+' · '+s.ck.split('|').slice(1).reverse().join('');t.appendChild(hd);
+      [['Bid / ask',`${r.bid.toFixed(2)} / ${r.ask.toFixed(2)}`],['Mid',r.mid.toFixed(2)],['EMA 8',r.e8.toFixed(2)],['EMA 35',r.e35.toFixed(2)],['VWAP',r.vw==null?null:r.vw.toFixed(2)],['IV',r.iv==null?null:r.iv+'%'],['Delta',r.delta==null?null:r.delta.toFixed(2)]].forEach(([k,v])=>{if(v==null)return;const l=document.createElement('div');l.textContent=`${k}: ${v}`;t.appendChild(l);});
+      onK.filter(q=>Math.abs(q.m-r.m)<=1).forEach(q=>{const l=document.createElement('div');l.textContent=q.label;t.appendChild(l);});
+      placeTip(el,t,x(r.m)*el.clientWidth/W,ev.offsetY);
+    }).on('mouseleave',()=>{t.hidden=true;rule.attr('opacity',0);});
+  });
+  dash.draw('ivchart',(el)=>{
+    el.replaceChildren();el.style.position='relative';const X=optCtx();if(!X||X.none)return;const rows=X.rows.filter(r=>r.iv!=null||r.delta!=null);if(!rows.length)return;
+    const W=Math.max(300,el.clientWidth||700),H=170,mb=22,mt=8;
+    const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','IV and delta');
+    const ivs=rows.filter(r=>r.iv!=null).map(r=>r.iv),des=rows.filter(r=>r.delta!=null).map(r=>r.delta);
+    const y=d3.scaleLinear(ivs.length?d3.extent(ivs):[0,1],[H-mb,mt]).nice(),y2=d3.scaleLinear(des.length?d3.extent(des):[0,1],[H-mb,mt]).nice();
+    const t1=y.ticks(4),t2=y2.ticks(4);const ml=yAxis(svg,y,t1,(v)=>v+'%');const probe=svg.append('text').attr('font-size',11);let mw=0;t2.forEach(v=>{probe.text(v.toFixed(2));mw=Math.max(mw,probe.node().getComputedTextLength());});probe.remove();const mr=mw+10;
+    const x=d3.scaleLinear([d3.min(X.rows,r=>r.m),d3.max(X.rows,r=>r.m)],[ml,W-mr]);
+    svg.selectAll('line.gr').data(t1).join('line').attr('x1',ml).attr('x2',W-mr).attr('y1',v=>y(v)).attr('y2',v=>y(v)).attr('stroke','var(--cds-chart-grid)');
+    svg.selectAll('text.yt').data(t1).join('text').attr('x',ml-6).attr('y',v=>y(v)+4).attr('text-anchor','end').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(v=>v+'%');
+    svg.selectAll('text.y2').data(t2).join('text').attr('x',W-mr+6).attr('y',v=>y2(v)+4).attr('text-anchor','start').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(v=>v.toFixed(2));
+    const xt=[0,30,60,90,120,150,180].filter(v=>v>=x.domain()[0]&&v<=x.domain()[1]);
+    svg.selectAll('text.xt').data(xt).join('text').attr('x',v=>x(v)).attr('y',H-6).attr('text-anchor','middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(tlab);
+    svg.append('path').attr('d',d3.line().defined(r=>r.iv!=null).x(r=>x(r.m)).y(r=>y(r.iv))(rows)).attr('fill','none').attr('stroke',C(3)).attr('stroke-width',2).attr('stroke-linejoin','round');
+    svg.append('path').attr('d',d3.line().defined(r=>r.delta!=null).x(r=>x(r.m)).y(r=>y2(r.delta))(rows)).attr('fill','none').attr('stroke',C(4)).attr('stroke-width',2).attr('stroke-linejoin','round');
+    const s=X.s;const ex=X.exit;[s.m,ex?ex.m:null].forEach(v=>{if(v!=null&&v>=x.domain()[0]&&v<=x.domain()[1])svg.append('line').attr('x1',x(v)).attr('x2',x(v)).attr('y1',mt).attr('y2',H-mb).attr('stroke',s.who==='model'?'var(--color-ok)':C(5)).attr('stroke-dasharray','3 3');});
+    const t=tip(el);const ms=rows.map(r=>r.m);
+    svg.append('rect').attr('x',ml).attr('y',0).attr('width',W-ml-mr).attr('height',H).attr('fill','transparent').on('mousemove',(ev)=>{const [px]=d3.pointer(ev);const r=rows[d3.bisectCenter(ms,x.invert(px))];
+      t.replaceChildren();const hd=document.createElement('div');hd.className='d';hd.textContent=tlab(r.m);t.appendChild(hd);const a=document.createElement('div');a.textContent=`IV: ${r.iv==null?'—':r.iv+'%'}`;const b=document.createElement('div');b.textContent=`Delta: ${r.delta==null?'—':r.delta.toFixed(2)}`;t.append(a,b);placeTip(el,t,x(r.m)*el.clientWidth/W,ev.offsetY);}).on('mouseleave',()=>{t.hidden=true;});
+  });
+
+  dash.draw('daymarks',(tb)=>{
+    tb.replaceChildren();const mk=dash.data('day_marks');if(mk.status!=='ok')return;
+    const day=pickDay(null);
+    mk.data.filter(r=>r.date===day).sort((a,b)=>a.m-b.m).forEach(r=>{const tr=document.createElement('tr');tr.dataset.key=encodeURIComponent(r.tid)+','+encodeURIComponent(r.kind);
+      [[r.t],[r.who],[r.kind],[r.q==null?'':r.q.toFixed(2),1],[r.opt==null?'':r.opt.toFixed(2),1],[r.label]].forEach(([v,n])=>{const td=document.createElement('td');td.textContent=v;if(n)td.className='n';tr.appendChild(td);});tb.appendChild(tr);});
+  });
+
+  // account
+  const BF={dd_600:(v)=>v+'%',dd_1000:(v)=>v+'%',p_over120:(v)=>v+'%',losing_months:(v)=>v+'%',trades:String};
+  dash.draw('bud',(el)=>{
+    const d=dash.data('budget');if(d.status!=='ok'){el.textContent='—';return;}
+    const id=(el.dataset.where||'').split('=')[1];const r=d.data.find(q=>q.id===id);const f=el.dataset.field;
+    if(!r||r[f]==null){el.textContent='—';return;}el.textContent=(BF[f]||money)(Number(r[f]));
+  });
+  dash.draw('budtbl',(tb)=>{
+    tb.replaceChildren();const d=dash.data('budget');if(d.status!=='ok')return;
+    const cols=['scenario','total','trades','worst_trade','worst_day','max_dd','worst_dip_2wk','p_over120','month_median','month_p5','losing_months'];
+    d.data.forEach(r=>{const tr=document.createElement('tr');tr.dataset.key=r.id;cols.forEach(c=>{const td=document.createElement('td');const v=r[c];
+      td.textContent=c==='scenario'?v:(c==='max_dd'||c==='worst_dip_2wk'?'$'+fmtC(v):(BF[c]||money)(Number(v)));if(c!=='scenario')td.className='n';tr.appendChild(td);});tb.appendChild(tr);});
+  });
+  dash.draw('roll',(el)=>{
+    el.replaceChildren();el.style.position='relative';const d=dash.data('roll2w');if(d.status!=='ok')return;
+    const rows=d.data;const W=Math.max(300,el.clientWidth||700),H=300,mb=24,mt=10;const LIMIT=-120;
+    const vals=[0,LIMIT];rows.forEach(r=>{vals.push(r.sum,-r.dip);});
+    const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Rolling 2-week P&L at 1 contract');
+    const y=d3.scaleLinear(d3.extent(vals),[H-mb,mt]).nice();const ticks=y.ticks(6);const ml=yAxis(svg,y,ticks,money),mr=10;
+    const x=d3.scaleBand(rows.map(r=>r.end),[ml,W-mr]).padding(0.2);
+    svg.selectAll('line.gr').data(ticks).join('line').attr('x1',ml).attr('x2',W-mr).attr('y1',v=>y(v)).attr('y2',v=>y(v)).attr('stroke','var(--cds-chart-grid)');
+    svg.selectAll('text.yt').data(ticks).join('text').attr('x',ml-6).attr('y',v=>y(v)+4).attr('text-anchor','end').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(money);
+    svg.append('line').attr('x1',ml).attr('x2',W-mr).attr('y1',y(0)).attr('y2',y(0)).attr('stroke','var(--cds-chart-axis)');
+    svg.append('line').attr('x1',ml).attr('x2',W-mr).attr('y1',y(LIMIT)).attr('y2',y(LIMIT)).attr('stroke','var(--cds-chart-status-critical)').attr('stroke-dasharray','5 4');
+    const t=tip(el);const pf=d3.utcParse('%Y-%m-%d'),df=d3.utcFormat('%b %-d');
+    svg.selectAll('rect.b').data(rows).join('rect').attr('x',r=>x(r.end)).attr('width',x.bandwidth()).attr('y',r=>Math.min(y(r.sum),y(0))).attr('height',r=>Math.max(1,Math.abs(y(r.sum)-y(0)))).attr('rx',2).attr('fill',r=>r.sum>=0?'var(--color-ok)':'var(--cds-chart-status-critical)')
+      .on('mousemove',(ev,r)=>{t.replaceChildren();const a=document.createElement('div');a.className='d';a.textContent=`${df(pf(r.start))} – ${df(pf(r.end))}`;const b1=document.createElement('div');b1.textContent=`P&L: ${money(r.sum)}`;const b2=document.createElement('div');b2.textContent=`Deepest drop inside: $${fmtC(r.dip)}`;t.append(a,b1,b2);placeTip(el,t,(x(r.end)+x.bandwidth())*el.clientWidth/W,ev.offsetY);}).on('mouseleave',()=>{t.hidden=true;});
+    svg.append('path').attr('d',d3.line().x(r=>x(r.end)+x.bandwidth()/2).y(r=>y(-r.dip))(rows)).attr('fill','none').attr('stroke','var(--cds-chart-status-critical)').attr('stroke-width',2).attr('stroke-linejoin','round').attr('pointer-events','none');
+    const step=Math.ceil(rows.length/Math.max(2,Math.floor((W-ml)/70)));
+    svg.selectAll('text.xt').data(rows.filter((r,i)=>i%step===0)).join('text').attr('x',r=>x(r.end)+x.bandwidth()/2).attr('y',H-6).attr('text-anchor','middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(r=>df(pf(r.end)));
+  });
+})();
+</script>
+
+<script>
+(function(){
+  const {money,lines,fill,signed}=window.PB;const fmtC=d3.format(',.0f');
+  const usd=(v)=>v==null?'':'$'+fmtC(v);
+  // losers: click a row to load that morning
+  document.querySelectorAll('.pb table.losers').forEach(tbl=>tbl.addEventListener('click',(ev)=>{
+    const tr=ev.target.closest('tr[data-key]');if(!tr)return;const day=decodeURIComponent(tr.dataset.key).slice(0,10);
+    dash.setParams({day});document.querySelectorAll('#daychart').forEach(el=>el.scrollIntoView({behavior:'smooth',block:'start'}));
+  }));
+  dash.draw('acct',(el)=>{const d=dash.data('acct');if(d.status!=='ok'){el.replaceChildren();return;}
+    const c0=(dash.colors&&dash.colors[0])||'var(--color-fg)';
+    lines(el,d.data,{x:'date',zeroLine:false,yFmt:(v)=>'$'+fmtC(v),series:[{key:'base1000',label:'Replay, $1,000',color:'var(--color-ok)'},{key:'base600',label:'Replay, $600',color:c0},{key:'pess1000',label:'Pessimistic, $1,000',color:'var(--cds-chart-muted)'},{key:'pess600',label:'Pessimistic, $600',color:'var(--cds-chart-status-critical)'}]});});
+  dash.draw('acctsum',(tb)=>{const d=dash.data('acct_sum');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'label'},{f:'start',n:1,fmt:usd},{f:'end',n:1,fmt:usd},{f:'low',n:1,fmt:usd},{f:'ret',n:1,fmt:(v)=>(v>0?'+':'')+v+'%'},{f:'trades',n:1},{f:'breaker_hits',n:1}],(r)=>r.id);});
+  const MONF={pdh:(v)=>Number(v).toFixed(2),pdl:(v)=>Number(v).toFixed(2),pdc:(v)=>Number(v).toFixed(2)};
+  dash.draw('mon',(el)=>{const d=dash.data('monday');if(d.status!=='ok'||!d.data.length){el.textContent='—';return;}
+    const f=el.dataset.field;const v=d.data[0][f];el.textContent=v==null?'—':(MONF[f]?MONF[f](v):String(v));});
+  dash.draw('pctbl',(tb)=>{const d=dash.data('precheck');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'date'},{f:'yday'},{f:'week'},{f:'gap',n:1,fmt:(v)=>signed(Number(v),2)},{f:'armed',wrap:1},{f:'trap_zone_hit'},{f:'fired'},{f:'usd1',n:1,fmt:money,color:1},{f:'news'}],(r)=>r.date);});
+  dash.draw('losetbl',(tb)=>{const d=dash.data('losers');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'date'},{f:'time'},{f:'kind'},{f:'side'},{f:'a',n:1,fmt:(v)=>Number(v).toFixed(2)},{f:'px',n:1,fmt:(v)=>Number(v).toFixed(2)},{f:'best',n:1,fmt:(v)=>signed(Number(v),2)},{f:'worst',n:1,fmt:(v)=>signed(Number(v),2)},{f:'usd1',n:1,fmt:money,color:1},{f:'what',wrap:1}],(r)=>r.id);
+    tb.querySelectorAll('tr').forEach(tr=>{tr.style.cursor='pointer';tr.tabIndex=0;tr.onkeydown=(e)=>{if(e.key==='Enter')tr.click();};});});
+  const RF={luck_same_beat:String,luck_rand_beat:String,iv_extra_n:String};
+  dash.draw('rob',(el)=>{const d=dash.data('robust');if(d.status!=='ok'){el.textContent='—';return;}
+    const k=(el.dataset.where||'').split('=')[1];const r=d.data.find(q=>q.metric===k);el.textContent=r?(RF[k]||money)(Number(r.value)):'—';});
+  dash.draw('robbeat',(el)=>{const d=dash.data('robust');if(d.status!=='ok'){el.textContent='—';return;}
+    const g=(k)=>{const r=d.data.find(q=>q.metric===k);return r?Number(r.value):0;};el.textContent=`${g('luck_same_beat')+g('luck_rand_beat')} of 600`;});
+  dash.draw('luckh',(el)=>{el.replaceChildren();el.style.position='relative';const d=dash.data('luck_hist'),r=dash.data('robust');if(d.status!=='ok')return;
+    const rows=d.data;const model=r.status==='ok'?Number((r.data.find(q=>q.metric==='luck_model')||{}).value):null;
+    const W=Math.max(300,el.clientWidth||700),H=220,mb=24,mt=10;
+    const x=d3.scaleLinear([d3.min(rows,q=>q.lo),d3.max(rows,q=>q.hi)],[44,W-10]);const y=d3.scaleLinear([0,d3.max(rows,q=>Math.max(q.same,q.rand))],[H-mb,mt]).nice();
+    const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Random-entry results vs the model');
+    svg.selectAll('line.gr').data(y.ticks(4)).join('line').attr('x1',44).attr('x2',W-10).attr('y1',v=>y(v)).attr('y2',v=>y(v)).attr('stroke','var(--cds-chart-grid)');
+    svg.selectAll('text.yt').data(y.ticks(4)).join('text').attr('x',38).attr('y',v=>y(v)+4).attr('text-anchor','end').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(d3.format(','));
+    const bw=(q)=>Math.max(1,(x(q.hi)-x(q.lo))/2-1);
+    svg.selectAll('rect.s').data(rows).join('rect').attr('x',q=>x(q.lo)).attr('width',bw).attr('y',q=>y(q.same)).attr('height',q=>y(0)-y(q.same)).attr('fill','var(--cds-chart-muted)').attr('rx',1);
+    svg.selectAll('rect.r').data(rows).join('rect').attr('x',q=>x(q.lo)+bw(q)+1).attr('width',bw).attr('y',q=>y(q.rand)).attr('height',q=>y(0)-y(q.rand)).attr('fill','var(--cds-chart-status-critical)').attr('rx',1);
+    if(model!=null){svg.append('line').attr('x1',x(model)).attr('x2',x(model)).attr('y1',mt).attr('y2',H-mb).attr('stroke','var(--color-ok)').attr('stroke-width',2).attr('stroke-dasharray','5 3');
+      const tx=svg.append('text').attr('y',mt+12).attr('font-size',11).attr('fill','var(--color-ok)').text('Model '+money(model));const tw=tx.node().getComputedTextLength();tx.attr('x',Math.min(x(model)+6,W-10-tw)>x(model)?x(model)+6:x(model)-tw-6);}
+    const xt=x.ticks(Math.max(2,Math.floor(W/110)));svg.selectAll('text.xt').data(xt).join('text').attr('x',v=>x(v)).attr('y',H-6).attr('text-anchor','middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(money);
+  });
+  dash.draw('wftbl',(tb)=>{const d=dash.data('wf');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'train'},{f:'test'},{f:'pick'},{f:'pick_test',n:1,fmt:money,color:1},{f:'v7_test',n:1,fmt:money,color:1},{f:'test_positive',n:1},{f:'grid',n:1}],(r)=>r.test);});
+  dash.draw('newstbl',(tb)=>{const d=dash.data('news_days');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'date'},{f:'event'},{f:'model_n',n:1},{f:'model_usd1',n:1,fmt:money,color:1},{f:'you_n',n:1},{f:'you_usd',n:1,fmt:money,color:1}],(r)=>r.date);});
+  dash.draw('hivtbl',(tb)=>{const d=dash.data('highiv');if(d.status!=='ok'){tb.replaceChildren();return;}
+    fill(tb,d.data,[{f:'date'},{f:'time'},{f:'kind'},{f:'side'},{f:'K',n:1},{f:'iv',n:1},{f:'a',n:1,fmt:(v)=>Number(v).toFixed(2)},{f:'px',n:1,fmt:(v)=>Number(v).toFixed(2)},{f:'why'},{f:'usd1',n:1,fmt:money,color:1},{f:'usd',n:1,fmt:money,color:1}],(r)=>r.id);});
+})();
+</script>
+
+<script>
+(function(){
+  const s2=(v)=>v==null||isNaN(v)?'—':(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
+  const p2=(v)=>v==null||isNaN(v)?'—':Number(v).toFixed(2);
+  const INT=new Set(['green','red','flat','mornings','n','stops','flips','reentries','breach','stretches']);
+  const POS=new Set(['dd','v91_dd','v8_dd','v7_dd','you_dd','pf','mc_dd95','worst10_dd']);
+  dash.draw('v92k',(el)=>{const d=dash.data('v92_kpi');const key=(el.dataset.where||'').split('=')[1];
+    if(d.status!=='ok'){el.textContent='—';return;}const r=d.data.find(x=>x.metric===key);if(!r){el.textContent='—';return;}
+    const v=Number(r.value);el.textContent=INT.has(key)?String(v):key==='win'||key==='mc_losing'?v+'%':POS.has(key)?p2(v):s2(v);});
+  const OK='var(--color-ok)',MUT='var(--cds-chart-muted)',BAD='var(--cds-chart-status-critical)',WARN='var(--color-warn)';
+  dash.draw('v92eq',(el)=>{const d=dash.data('v92_daily');if(d.status!=='ok'){el.replaceChildren();return;}
+    PB.lines(el,d.data,{x:'date',yFmt:s2,series:[{key:'you_cum',label:'You',color:WARN,w:1.6},{key:'v7_cum',label:'v7',color:MUT,w:1.4},{key:'v8_cum',label:'v8',color:'var(--cds-chart-series-1,#60a5fa)',w:1.4},{key:'v91_cum',label:'v9.1',color:'var(--cds-chart-series-2,#a78bfa)',w:1.6},{key:'v92_cum',label:'v9.2',color:OK,w:2.6}]});});
+  dash.draw('v92bars',(el)=>{const d=dash.data('v92_bars');if(d.status!=='ok'){el.textContent='—';return;}
+    PB.hbars(el,d.data.filter(r=>r.group===el.dataset.group),{val:'v',sub:(r)=>`${r.n} trades · ${r.wins} won`,fmt:s2});});
+  dash.draw('v92stress',(tb)=>{const d=dash.data('v92_stress');if(d.status!=='ok'){tb.replaceChildren();return;}
+    PB.fill(tb,d.data,[{f:'scenario'},{f:'total',n:1,fmt:s2,color:1},{f:'dd',n:1,fmt:p2},{f:'worst10',n:1,fmt:s2,color:1},{f:'green',n:1},{f:'red',n:1}],(r)=>r.scenario);});
+  dash.draw('v92roll',(el)=>{const d=dash.data('v92_roll');if(d.status!=='ok'){el.replaceChildren();return;}
+    PB.lines(el,d.data,{x:'end',yFmt:s2,series:[{key:'lim',label:'Limit',color:MUT,w:1},{key:'neg_dd',label:'Worst drawdown inside',color:BAD,w:1.6},{key:'total',label:'10-morning total',color:OK,w:2.2}]});});
+  dash.draw('v92trades',(tb)=>{const d=dash.data('v92_trades');if(d.status!=='ok'){tb.replaceChildren();return;}
+    PB.fill(tb,d.data,[{f:'date'},{f:'kind'},{f:'side'},{f:'tin'},{f:'tout'},{f:'why'},{f:'res',n:1,fmt:s2,color:1}],(r)=>r.id);});
+})();
+</script>
+
+</div>
+</body>
+</html>
