@@ -123,7 +123,7 @@ window.dash=(function(){
   <section id="v92" data-page="v92">
     <div class="card">
       <h2 id="v92-top">v9.2 is the locked model</h2>
-      <p>Every number on this tab is in 0.00 per contract: sold minus paid, fees out, 1 contract. Multiply by 100 for dollars. 66 replayed mornings, Jul 20 – Oct 30.</p>
+      <p>P&amp;L is in dollars at 1 contract, fees out. Option prices and moves (the 0.50 stop, +0.30, +0.50) are in 0.00. 66 replayed mornings, Jul 20 – Oct 30.</p>
       <div class="tiles">
         <div class="tile"><span class="lab">Total</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=total">—</span></div>
         <div class="tile"><span class="lab">Worst drawdown</span><span class="big" data-draw="v92k" data-source="v92_kpi" data-where="metric=dd">—</span></div>
@@ -142,7 +142,7 @@ window.dash=(function(){
 
     <div class="card">
       <h2 id="v92-equity">Equity line: v9.2 vs every earlier version vs you</h2>
-      <p class="note">Running total, 1 contract, 0.00 per contract. Hover for each morning.</p>
+      <p class="note">Running total in dollars, 1 contract. Hover for each morning.</p>
       <div class="legend"><span style="--sw:var(--color-ok)">v9.2</span><span style="--sw:var(--cds-chart-series-2,#a78bfa)">v9.1</span><span style="--sw:var(--cds-chart-series-1,#60a5fa)">v8</span><span style="--sw:var(--cds-chart-muted)">v7</span><span style="--sw:var(--color-warn)">You</span></div>
       <div class="chart tall" data-draw="v92eq" data-source="v92_daily"></div>
       <div class="tbox"><table><thead><tr><th>Version</th><th class="n">Total</th><th class="n">Worst drawdown</th></tr></thead><tbody>
@@ -191,10 +191,10 @@ window.dash=(function(){
     </div>
 
     <div class="card">
-      <h2 id="v92-account">Account math: 1.50 every 2 weeks</h2>
-      <p>Your limit is $150 per 2 weeks, which is 1.50 at 1 contract. The worst drawdown inside any 10-morning stretch was <b data-draw="v92k" data-source="v92_kpi" data-where="metric=worst10_dd">—</b>. Stretches that broke 1.50: <b data-draw="v92k" data-source="v92_kpi" data-where="metric=breach">—</b> of <b data-draw="v92k" data-source="v92_kpi" data-where="metric=stretches">—</b>.</p>
-      <p class="note">One stop is 0.50 plus fill, so the 2-stops-a-day cap means one bad morning costs about 1.00–1.20, still inside 1.50. Two max-loss mornings back to back would use most of the budget. At 2 contracts the same mornings would break it.</p>
-      <div class="legend"><span style="--sw:var(--color-ok)">Stretch total</span><span style="--sw:var(--cds-chart-status-critical)">Worst drawdown inside it</span><span style="--sw:var(--cds-chart-muted)">−1.50 limit</span></div>
+      <h2 id="v92-account">Account math: $150 every 2 weeks</h2>
+      <p>Your limit is $150 per 2 weeks at 1 contract. The worst drawdown inside any 10-morning stretch was <b data-draw="v92k" data-source="v92_kpi" data-where="metric=worst10_dd">—</b>. Stretches that broke $150: <b data-draw="v92k" data-source="v92_kpi" data-where="metric=breach">—</b> of <b data-draw="v92k" data-source="v92_kpi" data-where="metric=stretches">—</b>.</p>
+      <p class="note">One stop is 0.50 on the option (about $50 plus the fill), so the 2-stops-a-day cap means one bad morning costs about $100–120, still inside $150. Two max-loss mornings back to back would use most of the budget. At 2 contracts the same mornings would break it.</p>
+      <div class="legend"><span style="--sw:var(--color-ok)">Stretch total</span><span style="--sw:var(--cds-chart-status-critical)">Worst drawdown inside it</span><span style="--sw:var(--cds-chart-muted)">−$150 limit</span></div>
       <div class="chart" data-draw="v92roll" data-source="v92_roll"></div>
     </div>
 
@@ -1003,13 +1003,13 @@ window.dash=(function(){
 
 <script>
 (function(){
-  const s2=(v)=>v==null||isNaN(v)?'—':(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
-  const p2=(v)=>v==null||isNaN(v)?'—':Number(v).toFixed(2);
+  const s2=(v)=>v==null||isNaN(v)?'—':(v>0?'+$':v<0?'−$':'$')+d3.format(',.0f')(Math.abs(v));
+  const p2=(v)=>v==null||isNaN(v)?'—':'$'+d3.format(',.0f')(Math.abs(v));
   const INT=new Set(['green','red','flat','mornings','n','stops','flips','reentries','breach','stretches']);
-  const POS=new Set(['dd','v91_dd','v8_dd','v7_dd','you_dd','pf','mc_dd95','worst10_dd']);
+  const POS=new Set(['dd','v91_dd','v8_dd','v7_dd','you_dd','mc_dd95','worst10_dd']);
   dash.draw('v92k',(el)=>{const d=dash.data('v92_kpi');const key=(el.dataset.where||'').split('=')[1];
     if(d.status!=='ok'){el.textContent='—';return;}const r=d.data.find(x=>x.metric===key);if(!r){el.textContent='—';return;}
-    const v=Number(r.value);el.textContent=INT.has(key)?String(v):key==='win'||key==='mc_losing'?v+'%':POS.has(key)?p2(v):s2(v);});
+    const v=Number(r.value);el.textContent=INT.has(key)?String(v):key==='win'||key==='mc_losing'?v+'%':key==='pf'?v.toFixed(2):POS.has(key)?p2(v):s2(v);});
   const OK='var(--color-ok)',MUT='var(--cds-chart-muted)',BAD='var(--cds-chart-status-critical)',WARN='var(--color-warn)';
   dash.draw('v92eq',(el)=>{const d=dash.data('v92_daily');if(d.status!=='ok'){el.replaceChildren();return;}
     PB.lines(el,d.data,{x:'date',yFmt:s2,series:[{key:'you_cum',label:'You',color:WARN,w:1.6},{key:'v7_cum',label:'v7',color:MUT,w:1.4},{key:'v8_cum',label:'v8',color:'var(--cds-chart-series-1,#60a5fa)',w:1.4},{key:'v91_cum',label:'v9.1',color:'var(--cds-chart-series-2,#a78bfa)',w:1.6},{key:'v92_cum',label:'v9.2',color:OK,w:2.6}]});});
