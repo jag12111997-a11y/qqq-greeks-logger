@@ -21,7 +21,7 @@ name: QQQ Greeks Logger - Midday
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: '45 19 * * 1-5'   # ~12:45 PM PDT / 11:45 AM PST — BACKUP, guarded below
+    - cron: '45 20 * * 1-5'   # ~12:45 PM PDT / 11:45 AM PST — BACKUP, guarded below
 
 concurrency:
   group: qqq-midday
