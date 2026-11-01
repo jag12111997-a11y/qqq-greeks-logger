@@ -7432,8 +7432,8 @@
       S.stage = m < 3 ? "early" : "stale"; S.age = Math.round(Math.max(hrAgeMin(gi && gi.updated_utc), hrAgeMin(au && au.generated_utc))); return S;
     }
     if (!fresh) { S.stage = m < 0 ? "early" : "closed"; return S; }
-    // Today's 1-minute bars, filling any minute IEX skipped with the last close.
-    var open = Date.parse(et.date + "T13:30:00Z") / 1000, raw = {}, candles = [];
+    // Today's 1-minute bars, filling any minute IEX skipped with the last close. 9:30 New York time, DST-safe.
+    var open = gxSessionStart(et.date), raw = {}, candles = [];
     (au.candles || []).forEach(function (c) { var k = Math.floor((c.time - open) / 60); if (k >= 0 && k < 390) raw[k] = c; });
     var maxK = Math.max.apply(null, Object.keys(raw).map(Number).concat([-1])), lastC = null;
     for (var k = 0; k <= maxK; k++) {
