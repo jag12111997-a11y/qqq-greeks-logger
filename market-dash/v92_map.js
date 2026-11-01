@@ -61,7 +61,10 @@
       var c = bars[m];
       if (c) { e = a * c.close + (1 - a) * e; st.push([c.close, c.high, c.low, e]); lastC = c.close; }
       else if (lastC !== null) { e = a * lastC + (1 - a) * e; st.push([lastC, lastC, lastC, e]); }   // a minute the feed skipped
-      else st.push(null);
+      else {   // the feed skipped the first minute(s): hold the first bar's open so the morning still runs (no crash)
+        var f0 = null; for (var jj = m + 1; jj <= maxM; jj++) if (bars[jj]) { f0 = bars[jj].open; break; }
+        if (f0 === null) st.push(null); else { e = a * f0 + (1 - a) * e; st.push([f0, f0, f0, e]); lastC = f0; }
+      }
     }
     var pts = [], P = {};
     (today.points || []).forEach(function (p) { var k = Math.floor((p.time - t0) / 60); if (k >= 0) P[k] = p; });

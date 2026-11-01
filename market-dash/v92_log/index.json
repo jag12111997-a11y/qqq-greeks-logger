@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-01T18:11:41.649Z",
+ "updated_utc": "2026-11-01T18:37:56.004Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -21,8 +21,8 @@
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
    "all": {
-    "usd": 3647.1,
-    "vs_v92": 330.5,
+    "usd": 3584.8,
+    "vs_v92": 268.2,
     "bounce_days": 10
    },
    "forward": {
@@ -691,7 +691,7 @@
    "stops": 0,
    "vix": 17.2,
    "bounce_day": true,
-   "shadow_usd": 41.4
+   "shadow_usd": -20.9
   }
  ]
 }

@@ -189,7 +189,8 @@
       }
       if (L.why === "stop") {
         stops++;
-        if (e.kind !== "flip" && e.kind.indexOf("re-") !== 0 && (brk === null || brk > L.out + C.window) && stops < C.day_stops) {
+        // re-entry only uses what is already known: blocked if the fake-out line broke before the stop; a later break is caught by the scan below
+        if (e.kind !== "flip" && e.kind.indexOf("re-") !== 0 && (brk === null || brk > L.out) && stops < C.day_stops) {
           for (j = L.out + 1; j <= Math.min(L.out + C.window, 120); j++) {
             var sr = S(j);
             if (!sr || !S(j - 2)) continue;
