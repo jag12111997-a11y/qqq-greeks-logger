@@ -80,10 +80,10 @@
   // ---------------- data for one refresh ----------------
   function loadReplay(o) {
     var day = o.day, p = o.at.split(":").map(Number), atM = (p[0] < 6 ? p[0] + 12 : p[0]) * 60 + p[1] - 390;
-    return Promise.all([history(o.base, day), getJSON(o.base + "history/" + day + ".json"), csvQuotes(o.base, day)]).then(function (r) {
+    return Promise.all([history(o.base, day), getJSON(o.base + "history/" + day + ".json"), csvQuotes(o.base, day), getJSON(o.base + "v92_log/index.json?t=" + Math.floor(Date.now() / 600000))]).then(function (r) {
       var t0 = V92MAP.open930(day), cut = t0 + atM * 60;
       var today = r[1] || { candles: [], points: [] };
-      return { day: day, atM: atM, hist: r[0], replay: true, stale: null,
+      return { day: day, atM: atM, hist: r[0], replay: true, stale: null, log: r[3],
         today: { date: day, complete: false,
           candles: (today.candles || []).filter(function (c) { return c.time + 60 <= cut; }),
           points: (today.points || []).filter(function (x) { return x.time <= cut + 10; }),
@@ -94,7 +94,7 @@
   function loadLive(o) {
     var now = Date.now(), nd = nyDate(now), day = nd.date, t0 = V92MAP.open930(day), atM = Math.floor((now / 1000 - t0) / 60);
     return Promise.all([history(o.base, day), live(o.base, "auction_live.json"), live(o.base, "gex_intraday.json"), live(o.base, "options_latest.json"),
-      live(o.base, "gex_live.json"), atM >= 0 ? csvQuotes(o.base, day) : Promise.resolve([])]).then(function (r) {
+      live(o.base, "gex_live.json"), atM >= 0 ? csvQuotes(o.base, day) : Promise.resolve([]), getJSON(o.base + "v92_log/index.json?t=" + Math.floor(Date.now() / 600000))]).then(function (r) {
       var au = r[1], gi = r[2], ol = r[3], gl = r[4];
       var Q = {};
       try { Q = JSON.parse(localStorage.getItem(QKEY(day)) || "{}"); } catch (e) { Q = {}; }
@@ -108,7 +108,7 @@
       try { localStorage.setItem(QKEY(day), JSON.stringify(Q)); } catch (e) {}
       var fresh = au && au.session_date === day;
       var stale = atM >= 0 && atM < 150 ? Math.max(ageMin(au && au.generated_utc), ageMin(ol && ol.generated_utc)) : null;
-      return { day: day, wd: nd.wd, atM: atM, hist: r[0], replay: false, stale: stale, gexRegime: gl && gl.regime,
+      return { day: day, wd: nd.wd, atM: atM, hist: r[0], replay: false, stale: stale, gexRegime: gl && gl.regime, log: r[6],
         today: { date: day, complete: false, candles: fresh ? (au.candles || []) : [], points: (gi && gi.session_date === day) ? (gi.points || []) : [],
           quotes: Object.keys(Q).map(function (k) { return Q[k]; }) } };
     });
@@ -118,6 +118,11 @@
   function model(X) {
     var day = X.day, atM = X.atM, wd = X.wd || new Date(day + "T12:00:00Z").toUTCString().slice(0, 3);
     var vm = { day: day, atM: atM, release: RELEASES[day], early: EARLY[day], lines: [], tickets: [], closed: [], replay: X.replay };
+    if (X.log && X.log.days) {
+      var past = X.log.days.filter(function (r) { return r.date < day; }).slice(-10), eq = 0, pk = 0, dd = 0;
+      past.forEach(function (r) { eq += r.usd; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
+      if (past.length) vm.meter = { n: past.length, usd: eq, dip: dd, fwd: X.log.totals && X.log.totals.forward };
+    }
     if (HOLIDAYS[day] || wd === "Sat" || wd === "Sun") { vm.stage = "offday"; vm.head = HOLIDAYS[day] || "Weekend: no trading."; return vm; }
     if (Object.keys(X.hist).length < 12) { vm.stage = "loading"; vm.head = "Loading history…"; return vm; }
     var D = V92MAP.buildDay(X.hist, X.today), c = D.ctx;
@@ -243,6 +248,8 @@
     if (vm.reentry) h += '<div class="watch">' + esc(vm.reentry) + "</div>";
     if (vm.closed.length) h += '<div class="closed">Today: ' + vm.closed.map(function (b) { return b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +
       " · total " + usd(vm.dayPnl) + (vm.stops ? " · stops " + vm.stops + "/2" : "") + "</div>";
+    if (vm.meter) h += '<div class="closed">Last ' + vm.meter.n + ' mornings (paper log): <span class="' + (vm.meter.usd >= 0 ? "up" : "dn") + '">' + usd(vm.meter.usd) + '</span> · worst dip ' + usd(-vm.meter.dip).replace("−", "") + ' of your $150 limit' +
+      (vm.meter.fwd && vm.meter.fwd.mornings ? ' · forward test since Nov 2: ' + usd(vm.meter.fwd.usd) + ' on ' + vm.meter.fwd.mornings + ' mornings' : '') + '</div>';
     h += '<div class="ctx">v9.2 rules only · signals only, you place every trade · 1 contract · ' + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
     return h;
   }

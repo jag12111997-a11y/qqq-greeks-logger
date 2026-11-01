@@ -68,3 +68,12 @@ jobs:
           else
             python gex_history.py ${DAYS:+--days $DAYS} --publish
           fi
+
+      # v9.2 paper log: the SAME engine + morning map as the live Game Plan card, run on the day's final bars
+      # and logger quotes. Writes market-dash/v92_log/<day>.json + index.json (the card's 10-morning meter).
+      - name: v9.2 paper log
+        if: always()
+        run: |
+          node market-dash/v92_paper_log.js > /tmp/v92_written.txt || true
+          cat /tmp/v92_written.txt
+          python -c "from pathlib import Path; from publish_history import publish; p=[l.strip() for l in open('/tmp/v92_written.txt') if l.strip()]; print('published' if p and publish(Path('.').resolve(), p) else 'nothing new')"

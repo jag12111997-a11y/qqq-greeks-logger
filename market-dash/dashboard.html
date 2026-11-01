@@ -7265,7 +7265,7 @@
 
   function floatOpen() {
     if (FLOAT.win && !FLOAT.win.closed) { try { FLOAT.win.focus(); } catch (eF) {} return; }
-    window.documentPictureInPicture.requestWindow({ width: 380, height: 330 }).then(function (w) {
+    window.documentPictureInPicture.requestWindow({ width: 380, height: 380 }).then(function (w) {
       FLOAT.win = w;
       var d = w.document;
       d.title = "QQQ GEX";
@@ -7273,7 +7273,7 @@
       d.addEventListener("click", function (ev) {
         if (!ev.target.closest || !ev.target.closest("[data-fmore]")) return;
         FLOAT.more = !FLOAT.more;
-        try { w.resizeTo(w.outerWidth, FLOAT.more ? 540 : 330); } catch (eSize) {}
+        try { w.resizeTo(w.outerWidth, FLOAT.more ? 590 : 380); } catch (eSize) {}
         floatPaint();
       });
       var box = d.createElement("div"); box.id = "float-box"; d.body.appendChild(box);
@@ -7602,10 +7602,15 @@
     var vm = V92_VM; if (!vm) return "";
     var tk = (vm.tickets || [])[0], box = function (bg, fg, txt) { return '<div style="background:' + bg + ';color:' + fg + ';border-radius:6px;padding:5px 8px;margin-bottom:6px;font-weight:700">' + esc(txt) + "</div>"; };
     if (vm.stale) return '<div style="color:#ff6b62;font-size:10px;margin-bottom:4px">v9.2: DATA ' + vm.stale + " MIN OLD, DON'T ACT</div>";
-    if (vm.stage === "sell") return box("#ff453a", "#fff", vm.head);
-    if (vm.stage === "buy") return box("#2fbf6d", "#0a0210", vm.head + (tk ? " · stop " + (tk.stop).toFixed(2) : ""));
-    if (vm.stage === "in") return box("rgba(96,165,250,.18)", "#60a5fa", vm.head);
-    return "";
+    var nums = tk && tk.state !== "sell" ? '<div style="font-weight:400;font-size:10px;margin-top:2px">stop ' + (tk.moved ? tk.moveTo : tk.stop).toFixed(2) + " · at " + tk.move.toFixed(2) + " stop → " + tk.moveTo.toFixed(2) +
+      " · at " + tk.arm.toFixed(2) + " trail" + (tk.trail ? " ARMED" : "") + " · fake-out QQQ " + tk.fake.toFixed(2) + "</div>" : "";
+    if (vm.stage === "sell") return box("#ff453a", "#fff", vm.head + " · sell by hand at the bid");
+    if (vm.stage === "buy") return box("#2fbf6d", "#0a0210", vm.head).replace("</div>", nums + "</div>");
+    if (vm.stage === "in") return box("rgba(96,165,250,.18)", "#60a5fa", vm.head).replace("</div>", nums + "</div>");
+    // otherwise one quiet v9.2 line, so the float always shows the game plan
+    return '<div style="border:1px solid #3b0e33;border-radius:6px;padding:4px 8px;margin-bottom:6px;color:#c8a0d0"><b style="color:#ff2be0">v9.2</b> · ' + esc(vm.head) +
+      (vm.watch && vm.stage !== "recap" && vm.stage !== "offday" ? '<div style="color:#9a7a9a;font-size:10px">' + esc(vm.watch) + "</div>" : "") +
+      (vm.reentry ? '<div style="color:#fcb103;font-size:10px">' + esc(vm.reentry) + "</div>" : "") + "</div>";
   }
   function secHomeRun() {
     if (USE_V92) { v92Start(); return '<div class="band"><span>3v3 v9.2 · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + (V92_HTML || '<div style="padding:14px;color:#c8a0d0">Loading v9.2 game plan…</div>') + "</div>"; }

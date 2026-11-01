@@ -1,0 +1,55 @@
+{
+ "date": "2026-09-14",
+ "forward": false,
+ "engine": "v9.2 (market-dash/v92_engine.js)",
+ "units": "P&L in dollars at 1 contract, fees out; prices in 0.00",
+ "map": {
+  "yesterday": "green",
+  "last_week": "down",
+  "yday_high": 717.63,
+  "yday_low": 713.63,
+  "yday_close": 714.85,
+  "trap": "calls below 712.63",
+  "gap": -11.99,
+  "gap_and_go_armed": "puts",
+  "value_area": [
+   714.9,
+   716.6
+  ],
+  "fade_week_value_ok": false,
+  "trap_zone_reached": "6:38"
+ },
+ "trades": [
+  {
+   "side": "call",
+   "setup": "trap",
+   "signal": "7:32",
+   "filled": "7:33",
+   "strike": 707,
+   "paid": 0.87,
+   "exit": "8:44",
+   "sold": 3.76,
+   "why": "time exit",
+   "usd": 287.7,
+   "fakeout_line": 704.08,
+   "iv": 0.2012
+  },
+  {
+   "side": "call",
+   "setup": "trap",
+   "signal": "7:42",
+   "filled": "7:43",
+   "strike": 706,
+   "paid": 1.01,
+   "exit": "8:12",
+   "sold": 1.42,
+   "why": "trail",
+   "usd": 39.7,
+   "fakeout_line": 703.59,
+   "iv": 0.2034
+  }
+ ],
+ "usd": 327.4,
+ "stops": 0,
+ "generated_utc": "2026-11-01T15:21:58.519Z"
+}

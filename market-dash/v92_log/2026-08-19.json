@@ -1,0 +1,26 @@
+{
+ "date": "2026-08-19",
+ "forward": false,
+ "engine": "v9.2 (market-dash/v92_engine.js)",
+ "units": "P&L in dollars at 1 contract, fees out; prices in 0.00",
+ "map": {
+  "yesterday": "red",
+  "last_week": "up",
+  "yday_high": 722.13,
+  "yday_low": 715.92,
+  "yday_close": 717.62,
+  "trap": "puts above 723.13",
+  "gap": 2.24,
+  "gap_and_go_armed": "off",
+  "value_area": [
+   717.2,
+   719.3
+  ],
+  "fade_week_value_ok": false,
+  "trap_zone_reached": null
+ },
+ "trades": [],
+ "usd": 0,
+ "stops": 0,
+ "generated_utc": "2026-11-01T15:21:57.178Z"
+}
