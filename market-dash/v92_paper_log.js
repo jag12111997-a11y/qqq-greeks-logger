@@ -101,6 +101,14 @@ for (const day of want) {
   doc.shadow_v93_vix_bounce = { rule: `yesterday red + VIX close >= ${VB.th} -> also buy call EMA8 turns after 7:30, 1 per day`,
     vix_yesterday: vix, bounce_day: vbDay, trades: tr2, usd: Math.round(tr2.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100,
     bounce_usd: Math.round(tr2.filter(t => t.setup.indexOf("vb") >= 0).reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100 };
+  // shadow 2: the "combo" milestone candidate = v9.2 + 3-tick trail + VIX bounce calls. Not on the card's signals.
+  const o3 = { causal: true, trailMode: "three" }; if (vbDay) { o3.vb = true; o3.vbStart = VB.vbStart; o3.vbMax = VB.vbMax; }
+  const R3 = V92.runDay(D, o3);
+  const tr3 = R3.trades.filter(t => t.why !== "none").map(t => ({ side: t.side === "C" ? "call" : "put", setup: t.kind, signal: clock(t.m), filled: clock(t.mf), strike: t.K,
+    paid: +t.ask.toFixed(2), exit: clock(t.out), sold: t.px == null ? null : +t.px.toFixed(2), why: { stop: "stop", q8: "trail (3 ticks)", time: "time exit" }[t.why] || t.why,
+    usd: t.res == null ? null : Math.round(t.res * 10000) / 100 }));
+  doc.shadow_combo = { rule: "v9.2 + sell after 3 EMA8 ticks against (not 1) + VIX bounce calls", trades: tr3,
+    usd: Math.round(tr3.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100 };
   const f = path.join(OUT, day + ".json");
   fs.writeFileSync(f, JSON.stringify(doc, null, 1));
   written.push(path.relative(ROOT, f));
@@ -108,7 +116,8 @@ for (const day of want) {
 // index: every logged morning + totals
 const rows = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).sort().map(f => readJSON(path.join(OUT, f))).filter(Boolean)
   .map(d => { const sh = d.shadow_v93_vix_bounce || {}; return { date: d.date, forward: d.forward, n: d.trades.length, usd: d.usd, stops: d.stops,
-    vix: sh.vix_yesterday == null ? null : sh.vix_yesterday, bounce_day: !!sh.bounce_day, shadow_usd: sh.usd == null ? d.usd : sh.usd }; });
+    vix: sh.vix_yesterday == null ? null : sh.vix_yesterday, bounce_day: !!sh.bounce_day, shadow_usd: sh.usd == null ? d.usd : sh.usd,
+    combo_usd: d.shadow_combo ? d.shadow_combo.usd : null }; });
 const sum = a => Math.round(a.reduce((s, r) => s + r.usd, 0) * 100) / 100;
 const fw = rows.filter(r => r.forward), last10 = rows.slice(-10);
 let eq = 0, pk = 0, dd = 0; last10.forEach(r => { eq += r.usd; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
@@ -118,7 +127,11 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
     last10: { usd: sum(last10), worst_dip: Math.round(dd * 100) / 100, from: last10.length ? last10[0].date : null },
     shadow_v93_vix_bounce: { note: "v9.2 + VIX bounce calls (paper only, not on the card)",
       all: { usd: sum(rows.map(r => ({ usd: r.shadow_usd }))), vs_v92: Math.round((sum(rows.map(r => ({ usd: r.shadow_usd }))) - sum(rows)) * 100) / 100, bounce_days: rows.filter(r => r.bounce_day).length },
-      forward: { usd: sum(fw.map(r => ({ usd: r.shadow_usd }))), vs_v92: Math.round((sum(fw.map(r => ({ usd: r.shadow_usd }))) - sum(fw)) * 100) / 100, bounce_days: fw.filter(r => r.bounce_day).length } } },
+      forward: { usd: sum(fw.map(r => ({ usd: r.shadow_usd }))), vs_v92: Math.round((sum(fw.map(r => ({ usd: r.shadow_usd }))) - sum(fw)) * 100) / 100, bounce_days: fw.filter(r => r.bounce_day).length } },
+    shadow_combo: { note: "v9.2 + 3-tick trail + VIX bounce calls (paper only; the card's signals stay v9.2)",
+      all: { usd: sum(rows.map(r => ({ usd: r.combo_usd == null ? r.usd : r.combo_usd }))) },
+      forward: { usd: sum(fw.map(r => ({ usd: r.combo_usd == null ? r.usd : r.combo_usd }))), mornings: fw.length },
+      last10: { usd: sum(last10.map(r => ({ usd: r.combo_usd == null ? r.usd : r.combo_usd }))) } } },
   days: rows }, null, 1));
 written.push(path.relative(ROOT, path.join(OUT, "index.json")));
 written.forEach(p => console.log(p));

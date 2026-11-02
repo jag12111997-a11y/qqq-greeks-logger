@@ -22,7 +22,7 @@
  "trades": [],
  "usd": 0,
  "stops": 0,
- "generated_utc": "2026-11-01T18:37:51.819Z",
+ "generated_utc": "2026-11-02T09:38:00.731Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 17.71,
@@ -30,5 +30,10 @@
   "trades": [],
   "usd": 0,
   "bounce_usd": 0
+ },
+ "shadow_combo": {
+  "rule": "v9.2 + sell after 3 EMA8 ticks against (not 1) + VIX bounce calls",
+  "trades": [],
+  "usd": 0
  }
 }

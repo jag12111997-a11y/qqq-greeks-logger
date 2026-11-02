@@ -10,14 +10,15 @@
      opt     = {C:{strike:{minute:[mid, iv, bid, ask, delta, secondInMinute]}}, P:{...}}
      va      = {yval, yvah} yesterday's value area (or null)
      complete = true when the morning's data is final (backtest / nightly log); false while live.
-   Shadow test only (paper log, never the card): opts {vb:true, vbStart:60, vbMax:1} adds "VIX bounce calls" —
+   Shadow tests only (paper log, never the card): opts {trailMode: "three"} = sell after 3 EMA8 ticks against in a row;
+   opts {vb:true, vbStart:60, vbMax:1} adds "VIX bounce calls" —
      call EMA8 turns after 7:30, 1 per day, on mornings after a red day with VIX >= 16.5 (decided by the caller).
 */
 (function (root) {
   "use strict";
   var DEF = { flush: 1.0, gapx: 2.5, strike: 1.0, SL: 0.50, t_trig: 0.30, t_stop: 0.15, arm: 0.50, hold: 90,
     throttle: 10, gap_maxn: 2, gap_gap: 30, fw_start: 60, LO: 0.80, HI: 1.25, IVMAX: 0.35, END: 146, FEE: 0.013,
-    guard: 1.0, window: 45, day_stops: 2, flip_max: 1, causal: false, vb: false, vbBlockPuts: false, vbOnly: false, vbStart: 8, vbMax: 99 };
+    guard: 1.0, window: 45, day_stops: 2, flip_max: 1, causal: false, vb: false, vbBlockPuts: false, vbOnly: false, vbStart: 8, vbMax: 99, trailMode: "tick" };
 
   function runDay(D, opts) {
     var C = {}, k;
@@ -93,8 +94,12 @@
         hw = Math.max(hw, up);
         if (c <= stop) return sell(j, "stop");
         if (hw >= C.arm) {
+          // trail: "tick" = sell on the first EMA8 tick against (v9.2) · "three" = 3 EMA8 ticks against in a row (shadow test)
           var x_ = e8(j), y_ = e8(j - 1);
-          if (x_ !== null && y_ !== null && sg * (x_ - y_) < 0) return sell(j, "q8");
+          if (C.trailMode === "three") {
+            var z_ = e8(j - 2), w_ = e8(j - 3);
+            if (x_ !== null && y_ !== null && z_ !== null && w_ !== null && sg * (x_ - y_) < 0 && sg * (y_ - z_) < 0 && sg * (z_ - w_) < 0) return sell(j, "q8");
+          } else if (x_ !== null && y_ !== null && sg * (x_ - y_) < 0) return sell(j, "q8");
         }
         if (!armed && up >= C.t_trig) { armed = true; stop = aMid - C.t_stop; ev.push([j, "move_stop", stop]); }
         if (hw >= C.arm && ev.every(function (e) { return e[1] !== "trail_armed"; })) ev.push([j, "trail_armed", aMid + C.arm]);

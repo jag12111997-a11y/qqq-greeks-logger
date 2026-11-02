@@ -133,7 +133,9 @@
     if (X.log && X.log.days) {
       var past = X.log.days.filter(function (r) { return r.date < day; }).slice(-10), eq = 0, pk = 0, dd = 0;
       past.forEach(function (r) { eq += r.usd; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
-      if (past.length) vm.meter = { n: past.length, usd: eq, dip: dd, fwd: X.log.totals && X.log.totals.forward };
+      var combo = past.reduce(function (a, r) { return a + (r.combo_usd == null ? r.usd : r.combo_usd); }, 0);
+      if (past.length) vm.meter = { n: past.length, usd: eq, dip: dd, fwd: X.log.totals && X.log.totals.forward, combo: combo,
+        comboAll: X.log.totals && X.log.totals.shadow_combo && X.log.totals.shadow_combo.all, comboFwd: X.log.totals && X.log.totals.shadow_combo && X.log.totals.shadow_combo.forward };
     }
     if (HOLIDAYS[day] || wd === "Sat" || wd === "Sun") { vm.stage = "offday"; vm.head = HOLIDAYS[day] || "Weekend: no trading."; return vm; }
     if (Object.keys(X.hist).length < 12) { vm.stage = "loading"; vm.head = "Loading history…"; return vm; }
@@ -295,7 +297,9 @@
     if (vm.closed.length) h += '<div class="closed">Today: ' + vm.closed.map(function (b) { return b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +
       " · total " + usd(vm.dayPnl) + (vm.stops ? " · stops " + vm.stops + "/2" : "") + "</div>";
     if (vm.meter) h += '<div class="closed">Last ' + vm.meter.n + ' mornings (paper log): <span class="' + (vm.meter.usd >= 0 ? "up" : "dn") + '">' + usd(vm.meter.usd) + '</span> · worst dip ' + usd(-vm.meter.dip).replace("−", "") + ' of your $150 limit' +
-      (vm.meter.fwd && vm.meter.fwd.mornings ? ' · forward test since Nov 2: ' + usd(vm.meter.fwd.usd) + ' on ' + vm.meter.fwd.mornings + ' mornings' : '') + '</div>';
+      (vm.meter.fwd && vm.meter.fwd.mornings ? ' · forward test since Nov 2: ' + usd(vm.meter.fwd.usd) + ' on ' + vm.meter.fwd.mornings + ' mornings' : '') + '</div>' +
+      (vm.meter.comboAll ? '<div class="closed">Combo shadow (3-tick trail + VIX bounce, paper only): last ' + vm.meter.n + ' <span class="' + (vm.meter.combo >= 0 ? "up" : "dn") + '">' + usd(vm.meter.combo) + '</span> · all ' + usd(vm.meter.comboAll.usd) +
+        (vm.meter.comboFwd && vm.meter.comboFwd.mornings ? ' · since Nov 2: ' + usd(vm.meter.comboFwd.usd) : '') + ' · signals above stay v9.2</div>' : '');
     h += '<div class="ctx">v9.2 rules only · signals only, you place every trade · 1 contract · ' + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
     return h;
   }

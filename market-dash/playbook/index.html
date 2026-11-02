@@ -202,6 +202,7 @@ window.dash=(function(){
       <h2 id="v92-after">After the lock: what we tested on Nov 1</h2>
       <p class="note">Rules unchanged. Same engine as the dashboard card and the nightly paper log. P&amp;L in dollars at 1 contract; option and QQQ moves in 0.00.</p>
       <div class="tbox"><table class="rules"><thead><tr><th>Topic</th><th>What we found</th></tr></thead><tbody>
+        <tr><td>🏁 Milestone: the combo</td><td class="wrap">v9.2 + sell after 3 EMA8 ticks against (not 1) + VIX bounce calls: +$4,175 on the 66 mornings (realistic fills +$3,710), worst drawdown $119, better than v9.2 in every stress test. Not live yet: scored next to v9.2 in the nightly paper log from Nov 2, shown on the card as “Combo shadow”.</td></tr>
         <tr><td>Live stress test</td><td class="wrap">Replayed every minute the way the card sees it (9,438 checks): no signal ever vanished. Realistic fills (2 min late, 0.05 worse) +$2,990, worst drawdown $148. Every setting moved up to ±20% at once: median +$2,831, never negative. 10,000 shuffles: about 3–5% chance of a losing 2 weeks, under 1% of losing $150+.</td></tr>
         <tr><td>Contract</td><td class="wrap">Nearest the money, mid 0.80–1.25, IV ≤ 35% is the sweet spot. Cheaper (0.64–1.00) −$476; pricier (0.96–1.50) −$1,533.</td></tr>
         <tr><td>More contracts</td><td class="wrap">Each contract earns the same, so drawdowns grow with size. Adding a contract at +0.30 only wins if you click the same minute; 1–2 min late, 2 from the start is as good or better. Budget fits 1 contract.</td></tr>
