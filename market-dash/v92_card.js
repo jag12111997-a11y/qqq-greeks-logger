@@ -77,6 +77,18 @@
     });
   }
 
+  // Yesterday's VIX close from the dashboard's own market snapshot (taken after that session closed). Observation only.
+  function ptMin(f) { var h = Number(f.slice(11, 13)), m = Number(f.slice(14, 16)); return ((h % 12) + (f.slice(17, 19) === "PM" ? 12 : 0)) * 60 + m; }
+  function vixYday(base, hist) {
+    var ds = Object.keys(hist || {}).sort(), d = ds[ds.length - 1];
+    if (!d) return Promise.resolve(null);
+    return getJSON(base + "data/" + d + "/pm/market_dash_" + d + "_pm.json").then(function (j) {
+      var v = j && j.markets && j.markets.VIX, f = j && j.fetched_pt;
+      return v && f && f.slice(0, 10) === d && ptMin(f) >= 13 * 60 + 30 && v.last > 0 ? Number(v.last) : null;
+    }).catch(function () { return null; });
+  }
+  function withVix(base, X) { return vixYday(base, X.hist).then(function (v) { X.vix = v; return X; }); }
+
   // ---------------- data for one refresh ----------------
   function loadReplay(o) {
     var day = o.day, p = o.at.split(":").map(Number), atM = (p[0] < 6 ? p[0] + 12 : p[0]) * 60 + p[1] - 390;
@@ -88,7 +100,7 @@
           candles: (today.candles || []).filter(function (c) { return c.time + 60 <= cut; }),
           points: (today.points || []).filter(function (x) { return x.time <= cut + 10; }),
           quotes: (r[2] || []).filter(function (q) { return q.t <= cut + 10; }) } };
-    });
+    }).then(function (X) { return withVix(o.base, X); });
   }
   var QKEY = function (d) { return "v92q-" + d; };
   function loadLive(o) {
@@ -111,7 +123,7 @@
       return { day: day, wd: nd.wd, atM: atM, hist: r[0], replay: false, stale: stale, gexRegime: gl && gl.regime, log: r[6],
         today: { date: day, complete: false, candles: fresh ? (au.candles || []) : [], points: (gi && gi.session_date === day) ? (gi.points || []) : [],
           quotes: Object.keys(Q).map(function (k) { return Q[k]; }) } };
-    });
+    }).then(function (X) { return withVix(o.base, X); });
   }
 
   // ---------------- what the card says ----------------
@@ -132,6 +144,10 @@
     var weekSide = c.week > 0 ? "C" : "P", fwSide = c.week > 0 ? "P" : "C";
     var name = function (s) { return s === "C" ? "calls" : "puts"; };
     vm.map = { yday: c.day > 0 ? "green" : "red", week: c.week > 0 ? "up" : "down", trapSide: sideDay, trapLine: trapLine, fwSide: fwSide, va: D.va };
+    if (X.vix != null) {
+      vm.vix = X.vix;
+      if (c.day < 0 && X.vix >= 16.5) vm.vixNote = "VIX " + p2(X.vix) + " after a red day: in the backtest QQQ was up by 9:00 on 9 of 12 such mornings (bounce). Observation, not a rule.";
+    }
     var R = null, hasBars = D.st.length > 0 && D.st[0];
     if (hasBars) { try { R = V92.runDay(D, { causal: true }); } catch (e) { R = null; vm.err = String(e); } }
     var lastBar = D.st.length - 1, close = hasBars ? D.st[lastBar][0] : null;
@@ -171,6 +187,7 @@
         base.bid = lq ? lq[2] : null; base.pnl = lq ? (lq[2] - t.ask) * 100 : null;
         base.curStop = t.stop; base.trail = t.hw >= 0.50; base.moved = t.ev && t.ev.some(function (e) { return e[1] === "move_stop"; });
         base.state = t.why === "sell_now" ? "sell" : (atM - t.mf <= 5 ? "buy" : "in");
+        base.qchk = qqqCheck(D, t, atM);
         base.why = t.why === "sell_now" ? "trail: EMA8 turned against you" : null;
         vm.tickets.push(base);
       } else {
@@ -200,6 +217,33 @@
     return vm;
   }
 
+  // ---- QQQ check: how the underlying is moving since the buy vs the backtest's usual paths (observation only) ----
+  var WIN = [[0, 0], [1, 0.05], [2, 0.02], [3, 0.19], [5, 0.45], [10, 0.51], [15, 0.86], [20, 1.12], [30, 1.54], [45, 1.98], [60, 2.07]];
+  var LOSE = [[0, 0], [1, -0.12], [2, -0.22], [3, -0.31], [5, -0.48], [10, -0.66], [15, -0.72]];
+  function interp(tab, x) {
+    if (x >= tab[tab.length - 1][0]) return tab[tab.length - 1][1];
+    for (var i = 1; i < tab.length; i++) if (x <= tab[i][0]) { var a = tab[i - 1], b = tab[i]; return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]); }
+    return 0;
+  }
+  function qqqCheck(D, t, atM) {
+    var st = D.st, sg = t.side === "C" ? 1 : -1, s0 = st[t.mf];
+    if (!s0) return null;
+    var q0 = s0[0], now = Math.min(atM, st.length - 1), fav = 0, adv = 0, fa = null, ad = null, a1 = null;
+    while (now > t.mf && !st[now]) now--;
+    for (var j = t.mf + 1; j <= now; j++) {
+      var s = st[j]; if (!s) continue;
+      fav = Math.max(fav, sg * ((sg > 0 ? s[1] : s[2]) - q0)); adv = Math.min(adv, sg * ((sg > 0 ? s[2] : s[1]) - q0));
+      if (fa === null && fav >= 0.5) fa = j - t.mf; if (ad === null && adv <= -0.5) ad = j - t.mf; if (a1 === null && adv <= -1.0) a1 = j - t.mf;
+    }
+    var mins = Math.max(0, now - t.mf), mv = st[now] ? sg * (st[now][0] - q0) : 0;
+    var shape = a1 !== null && (fa === null || a1 < fa) ? "wrong shape so far (−1.00 before +0.50)" :
+      fa !== null && (ad === null || fa < ad) ? (fa <= 10 ? "straight go" : "slow start") :
+      fa !== null && ad !== null ? "dip then go" : (ad !== null ? "dipping (−0.50 seen)" : "still forming");
+    var txt = "QQQ " + (mv >= 0 ? "+" : "") + p2(mv) + " since the buy (" + mins + " min) · winners were usually " + (interp(WIN, mins) >= 0 ? "+" : "") + p2(interp(WIN, mins)) + " by now";
+    if (mins <= 15) txt += ", stopped trades " + p2(interp(LOSE, mins));
+    return { txt: txt, shape: shape, ref: "normal win ≈ QQQ +2 · stop ≈ QQQ −1 · observation, not a rule" };
+  }
+
   // ---------------- drawing ----------------
   var CSS = ".v92{font-family:ui-monospace,Menlo,monospace;color:#f0e9ff;background:#0c0710;border:1px solid #2a1a4a;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}" +
     ".v92 .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.v92 .lab{color:#b0408f;font-size:11px;letter-spacing:2px}.v92 .sp{flex:1}" +
@@ -213,7 +257,7 @@
     ".v92 .tk .big{font-size:20px;font-weight:800}.v92 .tk.sell .big{color:#ff6b6b}.v92 .tk.buy .big{color:#2fbf6d}" +
     ".v92 .row{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:#d7cfff}.v92 .row span{white-space:nowrap}.v92 .ctx{color:#8a7fb8;font-size:11px}" +
     ".v92 .closed{font-size:12px;color:#a99fd6}.v92 .up{color:#2fbf6d}.v92 .dn{color:#ff6b6b}" +
-    ".v92.stale{filter:grayscale(1);opacity:.7}.v92 .warn{color:#e0ab45;font-size:12px}";
+    ".v92.stale{filter:grayscale(1);opacity:.7}.v92 .warn{color:#e0ab45;font-size:12px}.v92 .qchk{color:#a99fd6}";
   function ivTag(iv) { if (iv == null) return null; return "IV " + iv.toFixed(2) + (iv < 0.20 ? " (low)" : iv > 0.23 ? " (high)" : " (mid)"); }
   function ticketHtml(k, vm) {
     var ctx = [ivTag(k.iv), vm.gexRegime ? (/NEG/.test(vm.gexRegime) ? "GEX negative (moves accelerate)" : "GEX positive (pinning)") : null, vm.release ? vm.release + " morning (weaker in the backtest)" : null]
@@ -229,6 +273,7 @@
       (k.state === "in" ? "<span>bid " + q2(k.bid) + "</span>" : "") + "</div>" +
       '<div class="row"><span>stop ' + q2(k.moved ? k.moveTo : k.stop) + (k.moved ? " (moved up)" : "") + "</span><span>at " + q2(k.move) + " → stop " + q2(k.moveTo) + "</span><span>at " + q2(k.arm) + " → trail on EMA8" + (k.trail ? " · ARMED" : "") + "</span><span>out by " + clock(k.timeOut) + "</span></div>" +
       '<div class="row"><span>fake-out line: QQQ ' + q2(k.fake) + "</span><span>in trade " + Math.max(0, vm.atM - k.mf) + " min · typical 15–40</span></div>" +
+      (k.qchk ? '<div class="row qchk"><span>' + esc(k.qchk.txt) + "</span><span>shape: " + esc(k.qchk.shape) + '</span></div><div class="ctx">' + esc(k.qchk.ref) + "</div>" : "") +
       (ctx ? '<div class="ctx">' + esc(ctx) + "</div>" : "") + "</div>";
   }
   function render(el, vm) { el.innerHTML = build(vm); }
@@ -241,7 +286,8 @@
       '<div class="head">' + esc(vm.head) + "</div>";
     if (vm.stale) h += '<div class="warn">Data is ' + vm.stale + " min old: don't act until it refreshes.</div>";
     if (vm.early) h += '<div class="sub">' + esc(vm.early) + " (the 6:30–9:00 window is unaffected)</div>";
-    if (vm.map) h += '<div class="sub">Yesterday ' + vm.map.yday + " · last week " + vm.map.week + " · value area " + p2(vm.map.va.yval) + "–" + p2(vm.map.va.yvah) + "</div>";
+    if (vm.map) h += '<div class="sub">Yesterday ' + vm.map.yday + " · last week " + vm.map.week + " · value area " + p2(vm.map.va.yval) + "–" + p2(vm.map.va.yvah) + (vm.vix != null ? " · VIX yesterday " + p2(vm.vix) : "") + "</div>";
+    if (vm.vixNote) h += '<div class="sub">' + esc(vm.vixNote) + "</div>";
     if (vm.lines.length) h += '<div class="lines">' + vm.lines.map(function (l) { return "<b>" + esc(l[0]) + "</b><span>" + esc(l[1]) + "</span>"; }).join("") + "</div>";
     if (vm.watch && vm.stage !== "recap") h += '<div class="watch">' + esc(vm.watch) + "</div>";
     vm.tickets.slice().sort(function (a, b) { return b.mf - a.mf; }).forEach(function (k) { h += ticketHtml(k, vm); });
