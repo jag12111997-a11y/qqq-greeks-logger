@@ -37,7 +37,7 @@
  ],
  "usd": 39.7,
  "stops": 0,
- "generated_utc": "2026-11-02T09:37:58.385Z",
+ "generated_utc": "2026-11-02T21:50:50.087Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 14.63,
@@ -72,9 +72,12 @@
     "exit": "8:45",
     "sold": 2.55,
     "why": "time exit",
-    "usd": 122.7
+    "usd": 122.7,
+    "ribbon5": true
    }
   ],
-  "usd": 122.7
+  "usd": 122.7,
+  "ribbon_rule": "watch only: 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees with the trade, else 1",
+  "ribbon_x3_usd": 368.1
  }
 }

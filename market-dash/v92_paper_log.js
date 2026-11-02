@@ -37,6 +37,18 @@ function vixClose(session, next) {
   return Number(Object.keys(c).sort((x, y) => c[y] - c[x])[0]);
 }
 
+// EMA 5/8/13/21 on 5-min bars aligned to 6:30, live value at each minute (forming bar = current close). Seeded with yesterday's session.
+function ribbon5(yc, st) {
+  const ys = (yc || []).slice(0, 390).map(c => c.close), ts = st.map(x => x ? x[0] : null), f = ts.find(x => x !== null);
+  const cl = ys.concat(ts.map(x => x === null ? f : x)), N = [5, 8, 13, 21], e = N.map(() => null), out = [];
+  for (let i = 0; i < cl.length; i++) {
+    const rel = i - ys.length, mi = rel >= 0 ? rel : i, done = (mi + 1) % 5 === 0;
+    const v = N.map((n, j) => { const a = 2 / (n + 1); return e[j] === null ? cl[i] : a * cl[i] + (1 - a) * e[j]; });
+    if (done) v.forEach((x, j) => { e[j] = x; });
+    if (rel >= 0) out.push(v);
+  }
+  return out;
+}
 function readJSON(p) { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { return null; } }
 function csv(f) {
   if (!fs.existsSync(f)) return null;
@@ -107,8 +119,14 @@ for (const day of want) {
   const tr3 = R3.trades.filter(t => t.why !== "none").map(t => ({ side: t.side === "C" ? "call" : "put", setup: t.kind, signal: clock(t.m), filled: clock(t.mf), strike: t.K,
     paid: +t.ask.toFixed(2), exit: clock(t.out), sold: t.px == null ? null : +t.px.toFixed(2), why: { stop: "stop", q8: "trail (3 ticks)", time: "time exit" }[t.why] || t.why,
     usd: t.res == null ? null : Math.round(t.res * 10000) / 100 }));
+  // ribbon watch (paper only): EMA 5/8/13/21 on the 5-min chart lined up WITH the trade at the signal = "high confidence"
+  const rib = ribbon5(hist[prev[prev.length - 1]], D.st), r3 = R3.trades.filter(t => t.why !== "none");
+  tr3.forEach((t, i) => { const m = r3[i].m, v = rib[m], sg = r3[i].side === "C" ? 1 : -1;
+    t.ribbon5 = !!(v && sg * (v[0] - v[1]) > 0 && sg * (v[1] - v[2]) > 0 && sg * (v[2] - v[3]) > 0); });
   doc.shadow_combo = { rule: "v9.2 + sell after 3 EMA8 ticks against (not 1) + VIX bounce calls", trades: tr3,
-    usd: Math.round(tr3.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100 };
+    usd: Math.round(tr3.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100,
+    ribbon_rule: "watch only: 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees with the trade, else 1",
+    ribbon_x3_usd: Math.round(tr3.reduce((s, t) => s + (t.usd || 0) * (t.ribbon5 ? 3 : 1), 0) * 100) / 100 };
   const f = path.join(OUT, day + ".json");
   fs.writeFileSync(f, JSON.stringify(doc, null, 1));
   written.push(path.relative(ROOT, f));
@@ -117,7 +135,8 @@ for (const day of want) {
 const rows = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).sort().map(f => readJSON(path.join(OUT, f))).filter(Boolean)
   .map(d => { const sh = d.shadow_v93_vix_bounce || {}; return { date: d.date, forward: d.forward, n: d.trades.length, usd: d.usd, stops: d.stops,
     vix: sh.vix_yesterday == null ? null : sh.vix_yesterday, bounce_day: !!sh.bounce_day, shadow_usd: sh.usd == null ? d.usd : sh.usd,
-    combo_usd: d.shadow_combo ? d.shadow_combo.usd : null }; });
+    combo_usd: d.shadow_combo ? d.shadow_combo.usd : null, ribbon_x3_usd: d.shadow_combo && d.shadow_combo.ribbon_x3_usd != null ? d.shadow_combo.ribbon_x3_usd : null,
+    ribbon_trades: d.shadow_combo ? d.shadow_combo.trades.filter(t => t.ribbon5).length : 0 }; });
 const sum = a => Math.round(a.reduce((s, r) => s + r.usd, 0) * 100) / 100;
 const fw = rows.filter(r => r.forward), last10 = rows.slice(-10);
 let eq = 0, pk = 0, dd = 0; last10.forEach(r => { eq += r.usd; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
@@ -131,7 +150,10 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
     shadow_combo: { note: "v9.2 + 3-tick trail + VIX bounce calls (paper only; the card's signals stay v9.2)",
       all: { usd: sum(rows.map(r => ({ usd: r.combo_usd == null ? r.usd : r.combo_usd }))) },
       forward: { usd: sum(fw.map(r => ({ usd: r.combo_usd == null ? r.usd : r.combo_usd }))), mornings: fw.length },
-      last10: { usd: sum(last10.map(r => ({ usd: r.combo_usd == null ? r.usd : r.combo_usd }))) } } },
+      last10: { usd: sum(last10.map(r => ({ usd: r.combo_usd == null ? r.usd : r.combo_usd }))) },
+      ribbon_watch: { note: "combo with 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees, else 1 (paper only)",
+        all: { usd: sum(rows.map(r => ({ usd: r.ribbon_x3_usd == null ? 0 : r.ribbon_x3_usd }))), ribbon_trades: rows.reduce((s, r) => s + r.ribbon_trades, 0) },
+        forward: { usd: sum(fw.map(r => ({ usd: r.ribbon_x3_usd == null ? 0 : r.ribbon_x3_usd }))), ribbon_trades: fw.reduce((s, r) => s + r.ribbon_trades, 0) } } } },
   days: rows }, null, 1));
 written.push(path.relative(ROOT, path.join(OUT, "index.json")));
 written.forEach(p => console.log(p));
