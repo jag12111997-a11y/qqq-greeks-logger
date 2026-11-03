@@ -1,57 +1,57 @@
 {
- "updated_utc": "2026-11-02T21:50:56.928Z",
+ "updated_utc": "2026-11-03T03:56:00.242Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 66,
+   "mornings": 67,
    "usd": 3316.6
   },
   "forward": {
-   "mornings": 0,
+   "mornings": 1,
    "usd": 0,
    "green": 0,
    "red": 0
   },
   "last10": {
-   "usd": 683,
+   "usd": 630.6,
    "worst_dip": 107.6,
-   "from": "2026-10-19"
+   "from": "2026-10-20"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
    "all": {
-    "usd": 3584.8,
-    "vs_v92": 268.2,
-    "bounce_days": 10
+    "usd": 3593.2,
+    "vs_v92": 276.6,
+    "bounce_days": 11
    },
    "forward": {
-    "usd": 0,
-    "vs_v92": 0,
-    "bounce_days": 0
+    "usd": 8.4,
+    "vs_v92": 8.4,
+    "bounce_days": 1
    }
   },
   "shadow_combo": {
    "note": "v9.2 + 3-tick trail + VIX bounce calls (paper only; the card's signals stay v9.2)",
    "all": {
-    "usd": 4174.8
+    "usd": 4149.2
    },
    "forward": {
-    "usd": 0,
-    "mornings": 0
+    "usd": -25.6,
+    "mornings": 1
    },
    "last10": {
-    "usd": 944.1
+    "usd": 775.8
    },
    "ribbon_watch": {
     "note": "combo with 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees, else 1 (paper only)",
     "all": {
-     "usd": 7087,
-     "ribbon_trades": 23
+     "usd": 6956.8,
+     "ribbon_trades": 24
     },
     "forward": {
-     "usd": 0,
-     "ribbon_trades": 0
+     "usd": -130.2,
+     "ribbon_trades": 1
     }
    }
   }
@@ -913,6 +913,19 @@
    "shadow_usd": -20.9,
    "combo_usd": -39.9,
    "ribbon_x3_usd": 115.5,
+   "ribbon_trades": 1
+  },
+  {
+   "date": "2026-11-02",
+   "forward": true,
+   "n": 0,
+   "usd": 0,
+   "stops": 0,
+   "vix": 19.42,
+   "bounce_day": true,
+   "shadow_usd": 8.4,
+   "combo_usd": -25.6,
+   "ribbon_x3_usd": -130.2,
    "ribbon_trades": 1
   }
  ]
