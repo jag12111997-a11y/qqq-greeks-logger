@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-03T03:56:00.242Z",
+ "updated_utc": "2026-11-03T07:22:59.515Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -54,6 +54,23 @@
      "ribbon_trades": 1
     }
    }
+  },
+  "shadow_v95": {
+   "note": "v9.5 candidate (paper only): combo + failed poke B + 3x on A trades by your lines. Promote over the combo only if, after 10 forward mornings, it made more, drawdown no bigger, zero glitches.",
+   "all": {
+    "usd_1ct": 4525.2,
+    "usd_sized": 11771.6,
+    "off_mornings": 0
+   },
+   "forward": {
+    "usd_1ct": 114.1,
+    "usd_sized": 9.5,
+    "mornings": 1
+   },
+   "last10": {
+    "usd_1ct": 889.3,
+    "usd_sized": 2918.7
+   }
   }
  },
  "days": [
@@ -68,7 +85,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-07-31",
@@ -81,7 +100,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-03",
@@ -94,7 +115,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-04",
@@ -107,7 +130,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-05",
@@ -120,7 +145,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-06",
@@ -133,7 +160,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-07",
@@ -146,7 +175,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-10",
@@ -159,7 +190,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-11",
@@ -172,7 +205,9 @@
    "shadow_usd": 31.4,
    "combo_usd": 25.4,
    "ribbon_x3_usd": 25.4,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 25.4,
+   "v95_sized_usd": -87.2
   },
   {
    "date": "2026-08-12",
@@ -185,7 +220,9 @@
    "shadow_usd": 11.1,
    "combo_usd": 11.1,
    "ribbon_x3_usd": 11.1,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 11.1,
+   "v95_sized_usd": -24.1
   },
   {
    "date": "2026-08-13",
@@ -198,7 +235,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-14",
@@ -211,7 +250,9 @@
    "shadow_usd": 39.7,
    "combo_usd": 122.7,
    "ribbon_x3_usd": 368.1,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": 122.7,
+   "v95_sized_usd": 368.1
   },
   {
    "date": "2026-08-17",
@@ -224,7 +265,9 @@
    "shadow_usd": 98.1,
    "combo_usd": 134.1,
    "ribbon_x3_usd": 166.9,
-   "ribbon_trades": 2
+   "ribbon_trades": 2,
+   "v95_usd": 170.8,
+   "v95_sized_usd": 439
   },
   {
    "date": "2026-08-18",
@@ -237,7 +280,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-19",
@@ -250,7 +295,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-20",
@@ -263,7 +310,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-21",
@@ -276,7 +325,9 @@
    "shadow_usd": 147.1,
    "combo_usd": 138.1,
    "ribbon_x3_usd": 332.9,
-   "ribbon_trades": 2
+   "ribbon_trades": 2,
+   "v95_usd": 138.1,
+   "v95_sized_usd": 441.5
   },
   {
    "date": "2026-08-24",
@@ -289,7 +340,9 @@
    "shadow_usd": 360.5,
    "combo_usd": 362.5,
    "ribbon_x3_usd": 362.5,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 362.5,
+   "v95_sized_usd": 570.7
   },
   {
    "date": "2026-08-25",
@@ -302,7 +355,9 @@
    "shadow_usd": 99.7,
    "combo_usd": 164.7,
    "ribbon_x3_usd": 164.7,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 164.7,
+   "v95_sized_usd": 164.7
   },
   {
    "date": "2026-08-26",
@@ -315,7 +370,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-27",
@@ -328,7 +385,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-28",
@@ -341,7 +400,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-08-31",
@@ -354,7 +415,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-01",
@@ -367,7 +430,9 @@
    "shadow_usd": 262.8,
    "combo_usd": 262.8,
    "ribbon_x3_usd": 262.8,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 262.8,
+   "v95_sized_usd": 677.6
   },
   {
    "date": "2026-09-02",
@@ -380,7 +445,9 @@
    "shadow_usd": -49.9,
    "combo_usd": -64.9,
    "ribbon_x3_usd": -64.9,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": -64.9,
+   "v95_sized_usd": -64.9
   },
   {
    "date": "2026-09-03",
@@ -393,7 +460,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-04",
@@ -406,7 +475,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-08",
@@ -419,7 +490,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 128.7,
+   "v95_sized_usd": 128.7
   },
   {
    "date": "2026-09-09",
@@ -432,7 +505,9 @@
    "shadow_usd": 237,
    "combo_usd": 176.1,
    "ribbon_x3_usd": 288.9,
-   "ribbon_trades": 2
+   "ribbon_trades": 2,
+   "v95_usd": 176.1,
+   "v95_sized_usd": 528.3
   },
   {
    "date": "2026-09-10",
@@ -445,7 +520,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-11",
@@ -458,7 +535,9 @@
    "shadow_usd": -12.5,
    "combo_usd": -56.6,
    "ribbon_x3_usd": -56.6,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": -56.6,
+   "v95_sized_usd": -56.6
   },
   {
    "date": "2026-09-14",
@@ -471,7 +550,9 @@
    "shadow_usd": 327.4,
    "combo_usd": 656.4,
    "ribbon_x3_usd": 656.4,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 656.4,
+   "v95_sized_usd": 1969.2
   },
   {
    "date": "2026-09-15",
@@ -484,7 +565,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-16",
@@ -497,7 +580,9 @@
    "shadow_usd": 36.7,
    "combo_usd": 48.7,
    "ribbon_x3_usd": 146.1,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": 48.7,
+   "v95_sized_usd": 146.1
   },
   {
    "date": "2026-09-17",
@@ -510,7 +595,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-18",
@@ -523,7 +610,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-21",
@@ -536,7 +625,9 @@
    "shadow_usd": 210.4,
    "combo_usd": 201.4,
    "ribbon_x3_usd": 604.2,
-   "ribbon_trades": 2
+   "ribbon_trades": 2,
+   "v95_usd": 201.4,
+   "v95_sized_usd": 604.2
   },
   {
    "date": "2026-09-22",
@@ -549,7 +640,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-23",
@@ -562,7 +655,9 @@
    "shadow_usd": 94.7,
    "combo_usd": 92.7,
    "ribbon_x3_usd": 92.7,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 92.7,
+   "v95_sized_usd": 278.1
   },
   {
    "date": "2026-09-24",
@@ -575,7 +670,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-09-25",
@@ -588,7 +685,9 @@
    "shadow_usd": 92.7,
    "combo_usd": 164.7,
    "ribbon_x3_usd": 164.7,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 231.4,
+   "v95_sized_usd": 231.4
   },
   {
    "date": "2026-09-28",
@@ -601,7 +700,9 @@
    "shadow_usd": 189.4,
    "combo_usd": 202.4,
    "ribbon_x3_usd": 713.8,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": 202.4,
+   "v95_sized_usd": 607.2
   },
   {
    "date": "2026-09-29",
@@ -614,7 +715,9 @@
    "shadow_usd": -6.6,
    "combo_usd": -19.6,
    "ribbon_x3_usd": -19.6,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": -19.6,
+   "v95_sized_usd": -19.6
   },
   {
    "date": "2026-09-30",
@@ -627,7 +730,9 @@
    "shadow_usd": 33.4,
    "combo_usd": 27.4,
    "ribbon_x3_usd": 82.2,
-   "ribbon_trades": 2
+   "ribbon_trades": 2,
+   "v95_usd": 27.4,
+   "v95_sized_usd": 82.2
   },
   {
    "date": "2026-10-01",
@@ -640,7 +745,9 @@
    "shadow_usd": 64.4,
    "combo_usd": 4.4,
    "ribbon_x3_usd": 4.4,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 34.8,
+   "v95_sized_usd": 212.2
   },
   {
    "date": "2026-10-02",
@@ -653,7 +760,9 @@
    "shadow_usd": -41.9,
    "combo_usd": -44.9,
    "ribbon_x3_usd": -28.1,
-   "ribbon_trades": 2
+   "ribbon_trades": 2,
+   "v95_usd": -44.9,
+   "v95_sized_usd": -28.1
   },
   {
    "date": "2026-10-05",
@@ -666,7 +775,9 @@
    "shadow_usd": -73.6,
    "combo_usd": -73.6,
    "ribbon_x3_usd": -73.6,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": -73.6,
+   "v95_sized_usd": -73.6
   },
   {
    "date": "2026-10-06",
@@ -679,7 +790,9 @@
    "shadow_usd": 45.4,
    "combo_usd": 33.4,
    "ribbon_x3_usd": 100.2,
-   "ribbon_trades": 2
+   "ribbon_trades": 2,
+   "v95_usd": 33.4,
+   "v95_sized_usd": 100.2
   },
   {
    "date": "2026-10-07",
@@ -692,7 +805,9 @@
    "shadow_usd": 127.8,
    "combo_usd": 116.8,
    "ribbon_x3_usd": 116.8,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 116.8,
+   "v95_sized_usd": 117.6
   },
   {
    "date": "2026-10-08",
@@ -705,7 +820,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-10-09",
@@ -718,7 +835,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-10-12",
@@ -731,7 +850,9 @@
    "shadow_usd": 86.1,
    "combo_usd": 86.1,
    "ribbon_x3_usd": 86.1,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 86.1,
+   "v95_sized_usd": 86.1
   },
   {
    "date": "2026-10-13",
@@ -744,7 +865,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-10-14",
@@ -757,7 +880,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-10-15",
@@ -770,7 +895,9 @@
    "shadow_usd": 44.7,
    "combo_usd": 174.7,
    "ribbon_x3_usd": 174.7,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 174.7,
+   "v95_sized_usd": 174.7
   },
   {
    "date": "2026-10-16",
@@ -783,7 +910,9 @@
    "shadow_usd": 273.7,
    "combo_usd": 283.7,
    "ribbon_x3_usd": 283.7,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 283.7,
+   "v95_sized_usd": 851.1
   },
   {
    "date": "2026-10-19",
@@ -796,7 +925,9 @@
    "shadow_usd": 29.7,
    "combo_usd": 142.7,
    "ribbon_x3_usd": 428.1,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": 142.7,
+   "v95_sized_usd": 428.1
   },
   {
    "date": "2026-10-20",
@@ -809,7 +940,9 @@
    "shadow_usd": 524.7,
    "combo_usd": 533.7,
    "ribbon_x3_usd": 533.7,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 533.7,
+   "v95_sized_usd": 1601.1
   },
   {
    "date": "2026-10-21",
@@ -822,7 +955,9 @@
    "shadow_usd": -18.6,
    "combo_usd": -20.6,
    "ribbon_x3_usd": 44.8,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": 81.8,
+   "v95_sized_usd": 348.6
   },
   {
    "date": "2026-10-22",
@@ -835,7 +970,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-10-23",
@@ -848,7 +985,9 @@
    "shadow_usd": -54.3,
    "combo_usd": -54.3,
    "ribbon_x3_usd": -162.9,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": -54.3,
+   "v95_sized_usd": -162.9
   },
   {
    "date": "2026-10-26",
@@ -861,7 +1000,9 @@
    "shadow_usd": 326.1,
    "combo_usd": 314.1,
    "ribbon_x3_usd": 845.5,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": 185.5,
+   "v95_sized_usd": 691.1
   },
   {
    "date": "2026-10-27",
@@ -874,7 +1015,9 @@
    "shadow_usd": 123.7,
    "combo_usd": 123.7,
    "ribbon_x3_usd": 371.1,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": 123.7,
+   "v95_sized_usd": 371.1
   },
   {
    "date": "2026-10-28",
@@ -887,7 +1030,9 @@
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": 0,
+   "v95_sized_usd": 0
   },
   {
    "date": "2026-10-29",
@@ -900,7 +1045,9 @@
    "shadow_usd": -55.3,
    "combo_usd": -55.3,
    "ribbon_x3_usd": -55.3,
-   "ribbon_trades": 0
+   "ribbon_trades": 0,
+   "v95_usd": -55.3,
+   "v95_sized_usd": -55.3
   },
   {
    "date": "2026-10-30",
@@ -913,7 +1060,9 @@
    "shadow_usd": -20.9,
    "combo_usd": -39.9,
    "ribbon_x3_usd": 115.5,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": -39.9,
+   "v95_sized_usd": 115.5
   },
   {
    "date": "2026-11-02",
@@ -926,7 +1075,9 @@
    "shadow_usd": 8.4,
    "combo_usd": -25.6,
    "ribbon_x3_usd": -130.2,
-   "ribbon_trades": 1
+   "ribbon_trades": 1,
+   "v95_usd": 114.1,
+   "v95_sized_usd": 9.5
   }
  ]
 }

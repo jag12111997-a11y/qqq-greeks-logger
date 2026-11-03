@@ -18,7 +18,10 @@
   "use strict";
   var DEF = { flush: 1.0, gapx: 2.5, strike: 1.0, SL: 0.50, t_trig: 0.30, t_stop: 0.15, arm: 0.50, hold: 90,
     throttle: 10, gap_maxn: 2, gap_gap: 30, fw_start: 60, LO: 0.80, HI: 1.25, IVMAX: 0.35, END: 146, FEE: 0.013,
-    guard: 1.0, window: 45, day_stops: 2, flip_max: 1, causal: false, vb: false, vbBlockPuts: false, vbOnly: false, vbStart: 8, vbMax: 99, trailMode: "tick" };
+    guard: 1.0, window: 45, day_stops: 2, flip_max: 1, causal: false, vb: false, vbBlockPuts: false, vbOnly: false, vbStart: 8, vbMax: 99, trailMode: "tick",
+    // v9.5 candidate (paper log only; all OFF by default = v9.2 unchanged): failed poke as a "B" setup that gives way to v9.2 setups.
+    // Needs D.ind = { m17: line the pullback is rejected at (user's green EMA14), vw: session VWAP } per minute.
+    fp: false, fpVwap: false, fpDay: false, fpStart: 0, fpEnd: 120, fpMax: 1, fpDepth: 0, fpRoom: 0, fpYield: false, fpYieldTo: null, fpFlip: false };
 
   function runDay(D, opts) {
     var C = {}, k;
@@ -127,16 +130,26 @@
       var s30 = S(30), c = s30 ? s30.close : S(0).close;
       return D.va.yval <= c && c <= D.va.yvah;
     }
-    var mEnd = Math.min(121, nb);
+    var mEnd = Math.min(121, nb), fpPoke = {}, fpFail = {}, fpN = { C: 0, P: 0 };
     for (var m = 8; m < mEnd; m++) {
       var s = S(m); if (!s) continue;
       var c = s.close;
       ["C", "P"].forEach(function (side) {
         var sg = side === "C" ? 1 : -1, dayok = X.day === sg, fl = sg > 0 ? X.PDL - c : c - X.PDH, now = dayok && fl >= C.flush;
         zone[side] = now; if (now) { trapSeen[side] = true; if (zoneFirst[side] === null) zoneFirst[side] = m; }
+        if (C.fp) { var past = sg > 0 ? c < X.PDL - C.fpDepth : c > X.PDH + C.fpDepth; if (past) fpPoke[side] = true; else if (fpPoke[side]) fpFail[side] = true; }
       });
       ["C", "P"].forEach(function (side) {
-        if (!turn(m, side) || m - last[side] < C.throttle) return;
+        var trigN = turn(m, side), isFP = false;
+        if (C.fp && fpFail[side] && fpN[side] < C.fpMax && m >= C.fpStart && m <= C.fpEnd && (!C.fpDay || X.day === (side === "C" ? 1 : -1))) {
+          var I = D.ind, sF = S(m), sgF = side === "C" ? 1 : -1, fs = false;
+          if (I && I.m17 && I.m17[m] != null && sF) {
+            fs = sgF < 0 ? (sF.high >= I.m17[m] && sF.close < I.m17[m]) : (sF.low <= I.m17[m] && sF.close > I.m17[m]);
+            if (fs && C.fpVwap) fs = !!(I.vw && I.vw[m] != null && sgF * (I.vw[m] - sF.close) > C.fpRoom);
+          }
+          isFP = fs;
+        }
+        if (!(trigN || isFP) || m - last[side] < C.throttle) return;
         var sg = side === "C" ? 1 : -1, gapway = sg > 0 ? gapC : gapP, isTrap = zone[side], nr = nearroom(m, side), near = nr[0];
         var isGap = !isTrap && gapway >= C.gapx && near >= C.strike && X.week === sg;
         var isVB = C.vb && side === "C" && !isTrap && !isGap && m >= C.vbStart && trades.filter(function (t) { return t.kind === "vb"; }).length < C.vbMax;
@@ -144,15 +157,19 @@
         if (C.vbOnly && !isVB) return;
         var gapArmed = (gapC >= C.gapx && X.week === 1) || (gapP >= C.gapx && X.week === -1);
         var isFw = !isTrap && !isGap && !isVB && X.week === -sg && !Object.keys(trapSeen).length && !gapArmed && m >= C.fw_start &&
-          !trades.some(function (t) { return t.kind !== "fw"; }) && fwValueOk();
-        if (!(isTrap || isGap || isFw || isVB)) return;
-        last[side] = m;
+          !trades.some(function (t) { return t.kind !== "fw" && !(C.fpYield && t.kind === "fp"); }) && fwValueOk();
+        if (isFP && (isTrap || isGap)) isFP = false;
+        if (!trigN) { isTrap = isGap = isFw = isVB = false; }
+        if (!(isTrap || isGap || isFw || isVB || isFP)) return;
+        var pureB = isFP && !(isTrap || isGap || isFw || isVB);
+        if (pureB) fpN[side] += 1;
+        if (!(C.fpYield && pureB)) last[side] = m;
         if (isGap && (gapn[side] >= C.gap_maxn || m - gaplast[side] < C.gap_gap)) return;
         if (isGap && trapSeen[side === "C" ? "P" : "C"]) { log.push([m, "block", side]); return; }
-        if (trades.filter(function (t) { return t.out > m; }).length >= 2) { log.push([m, "busy", side]); return; }
+        if (trades.filter(function (t) { return t.out > m && !(C.fpYield && t.kind === "fp" && !pureB); }).length >= 2) { log.push([m, "busy", side]); return; }
         var K = nearest(side, m); if (K === null) return;
         var r = actq(side, K, m); if (!r[1]) return;
-        var t = { side: side, K: K, kind: isTrap ? "trap" : (isGap ? "gap" : (isVB ? "vb" : "fw")), m: m, mf: r[0], out: Infinity };
+        var t = { side: side, K: K, kind: isTrap ? "trap" : (isGap ? "gap" : (isVB ? "vb" : (isFw ? "fw" : "fp"))), m: m, mf: r[0], out: Infinity };
         trades.push(t);
         if (isGap) { gapn[side] += 1; gaplast[side] = m; }
         var L = fleg(side, K, r[0], r[1][0]); t.out = L.out;
@@ -163,7 +180,7 @@
     var heap = trades.map(function (t, i) { return { m: t.m, n: i, e: { side: t.side, kind: t.kind, m: t.m, src: "model" } }; });
     var cnt = heap.length, stops = 0, flips = 0, blocked = { C: 999, P: 999 }, taken = {}, fin = [];
     function pop() { heap.sort(function (a, b) { return a.m - b.m || a.n - b.n; }); return heap.shift(); }
-    function stopsBy(m) { return C.causal ? fin.filter(function (f) { return f.why === "stop" && f.out <= m; }).length : stops; }
+    function stopsBy(m) { return C.causal ? fin.filter(function (f) { return f.why === "stop" && f.out <= m && !(C.fpYield && f.kind === "fp"); }).length : stops; }
     while (heap.length) {
       var it = pop(), mm = it.m, e = it.e;
       if (stopsBy(mm) >= C.day_stops) break;
@@ -183,8 +200,8 @@
         var sb = S(j); if (sb && sg * (swing - (sg > 0 ? sb.low : sb.high)) > C.guard) { brk = j; break; }
       }
       e.brk = brk;
-      if (brk !== null) {
-        blocked[side] = Math.min(blocked[side], brk);
+      if (brk !== null && !(C.fpYield && e.kind === "fp" && !C.fpFlip)) {
+        if (!(C.fpYield && e.kind === "fp")) blocked[side] = Math.min(blocked[side], brk);
         if ((flips < C.flip_max && (e.kind === "trap" || e.kind === "re-trap")) || (flips < C.flip_max && e.src === "model")) {
           var osd = side === "C" ? "P" : "C", osg = -sg;
           for (j = brk + 1; j <= Math.min(brk + C.window, 120); j++) {
@@ -192,7 +209,7 @@
           }
         }
       }
-      if (L.why === "stop") {
+      if (L.why === "stop" && !(C.fpYield && e.kind === "fp")) {
         stops++;
         // re-entry only uses what is already known: blocked if the fake-out line broke before the stop; a later break is caught by the scan below
         if (e.kind !== "flip" && e.kind.indexOf("re-") !== 0 && (brk === null || brk > L.out) && stops < C.day_stops) {
@@ -205,6 +222,14 @@
         }
       }
     }
+    // B is sold when a v9.2 setup (fpYieldTo) is bought on the other side while B is open
+    if (C.fpYield) fin.forEach(function (e) {
+      if (e.kind !== "fp" || e.px == null) return;
+      var a = fin.filter(function (x) { return x.kind !== "fp" && (!C.fpYieldTo || C.fpYieldTo.indexOf(x.kind.replace("re-", "")) >= 0) && x.side !== e.side && x.mf > e.mf && x.mf < e.out; })
+        .sort(function (u, v) { return u.mf - v.mf; })[0];
+      if (!a) return; var r = nextq(e.side, e.K, a.mf); if (!r[1]) return;
+      e.out = r[0]; e.px = r[1][2]; e.why = "yield"; e.res = e.px - e.ask - C.FEE;
+    });
     return { trades: fin, signals: trades, log: log, gap: o - X.PDC, open: o, zoneFirst: zoneFirst,
       gapArmed: { C: gapC >= C.gapx && X.week === 1, P: gapP >= C.gapx && X.week === -1 }, fwOk: fwValueOk() };
   }

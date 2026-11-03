@@ -22,7 +22,7 @@
  "trades": [],
  "usd": 0,
  "stops": 0,
- "generated_utc": "2026-11-02T21:50:52.403Z",
+ "generated_utc": "2026-11-03T07:22:54.307Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 17.1,
@@ -37,5 +37,11 @@
   "usd": 0,
   "ribbon_rule": "watch only: 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees with the trade, else 1",
   "ribbon_x3_usd": 0
+ },
+ "shadow_v95": {
+  "rule": "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
+  "trades": [],
+  "usd_1ct": 0,
+  "usd_sized": 0
  }
 }

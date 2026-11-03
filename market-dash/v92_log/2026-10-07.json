@@ -79,7 +79,7 @@
  ],
  "usd": 127.8,
  "stops": 1,
- "generated_utc": "2026-11-02T21:50:54.094Z",
+ "generated_utc": "2026-11-03T07:22:56.210Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 15.01,
@@ -196,5 +196,64 @@
   "usd": 116.8,
   "ribbon_rule": "watch only: 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees with the trade, else 1",
   "ribbon_x3_usd": 116.8
+ },
+ "shadow_v95": {
+  "rule": "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
+  "trades": [
+   {
+    "side": "call",
+    "setup": "trap",
+    "signal": "6:50",
+    "filled": "6:51",
+    "strike": 754,
+    "paid": 1.35,
+    "exit": "7:06",
+    "sold": 1.15,
+    "why": "stop",
+    "usd": -21.3,
+    "contracts": 3
+   },
+   {
+    "side": "call",
+    "setup": "trap",
+    "signal": "7:08",
+    "filled": "7:09",
+    "strike": 754,
+    "paid": 1.3,
+    "exit": "7:46",
+    "sold": 1.53,
+    "why": "trail (3 ticks)",
+    "usd": 21.7,
+    "contracts": 3
+   },
+   {
+    "side": "call",
+    "setup": "trap",
+    "signal": "7:55",
+    "filled": "7:56",
+    "strike": 755,
+    "paid": 0.85,
+    "exit": "8:23",
+    "sold": 1.18,
+    "why": "trail (3 ticks)",
+    "usd": 31.7,
+    "contracts": 1
+   },
+   {
+    "side": "call",
+    "setup": "trap",
+    "signal": "8:26",
+    "filled": "8:27",
+    "strike": 755,
+    "paid": 1.24,
+    "exit": "8:45",
+    "sold": 2.1,
+    "why": "time exit",
+    "usd": 84.7,
+    "contracts": 1
+   }
+  ],
+  "usd_1ct": 116.8,
+  "usd_sized": 117.6
  }
 }

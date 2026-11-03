@@ -38,6 +38,23 @@ function vixClose(session, next) {
 }
 
 // EMA 5/8/13/21 on 5-min bars aligned to 6:30, live value at each minute (forming bar = current close). Seeded with yesterday's session.
+// v9.5 candidate (paper only): the user's MAIN QQQ 1m chart lines = "the ribbon":
+// green EMA 8/14/35 · yellow 52/80 · orange 120 · red 250/304/400, seeded on the 3 prior sessions, plus session VWAP.
+// Returns null when anything is missing -> the v9.5 shadow switches off for that morning (never guesses).
+const UL = [8, 14, 35, 52, 80, 120, 250, 304, 400], USTK = [[8, 52, 304], [14, 80, 250], [35, 120, 400]];
+function userLines(hist, st, candles, t0) {
+  try {
+    const ds = Object.keys(hist).sort().slice(-3); if (ds.length < 3) return null;
+    const yc = [].concat(...ds.map(d => hist[d].slice(0, 390).map(c => c.close))), ts = st.map(x => x ? x[0] : null), f = ts.find(x => x !== null);
+    if (f == null) return null;
+    const c = ts.map(x => x === null ? f : x), cl = yc.concat(c), V = { c };
+    UL.forEach(n => { const a = 2 / (n + 1); let e = null; const out = []; cl.forEach((x, i) => { e = e === null ? x : a * x + (1 - a) * e; if (i >= yc.length) out.push(e); }); V[n] = out; });
+    const bars = {}; (candles || []).forEach(k => { const m = Math.floor((k.time - t0) / 60); if (m >= 0 && m < 390) bars[m] = k; });
+    let pv = 0, vv = 0, last = c[0]; V.vw = c.map((x, m) => { const b = bars[m]; if (b && b.volume > 0) { pv += (b.high + b.low + b.close) / 3 * b.volume; vv += b.volume; } if (vv > 0) last = pv / vv; return last; });
+    if (!(vv > 0) || UL.some(n => V[n].some(v => !isFinite(v)))) return null;
+    return V;
+  } catch (e) { return null; }
+}
 function ribbon5(yc, st) {
   const ys = (yc || []).slice(0, 390).map(c => c.close), ts = st.map(x => x ? x[0] : null), f = ts.find(x => x !== null);
   const cl = ys.concat(ts.map(x => x === null ? f : x)), N = [5, 8, 13, 21], e = N.map(() => null), out = [];
@@ -127,6 +144,25 @@ for (const day of want) {
     usd: Math.round(tr3.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100,
     ribbon_rule: "watch only: 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees with the trade, else 1",
     ribbon_x3_usd: Math.round(tr3.reduce((s, t) => s + (t.usd || 0) * (t.ribbon5 ? 3 : 1), 0) * 100) / 100 };
+  // shadow 3: v9.5 CANDIDATE = combo + failed poke "B" (gives way to v9.2 setups, keeps its one flip, never uses A's limits,
+  // max 1/day 7:00-8:30) + 3 contracts on A trades when the user's lines agree. Paper only — the card's signals stay v9.2.
+  const UV = userLines(hist, D.st, H.candles, D.info && D.info.t0);
+  if (!UV) doc.shadow_v95 = { status: "off this morning: the user's lines / VWAP could not be built (missing data)", trades: [], usd_1ct: null, usd_sized: null };
+  else {
+    const o5 = Object.assign({}, o3, { fp: "ma17", fpVwap: true, fpDay: true, fpYield: true, fpYieldTo: ["trap", "gap", "fw"], fpFlip: true, fpStart: 30, fpEnd: 120 });
+    const R5 = V92.runDay(Object.assign({}, D, { ind: { m17: UV[14], vw: UV.vw } }), o5), r5 = R5.trades.filter(t => t.why !== "none");
+    const fan = m => { const o = USTK.map(k => k.every((n, i) => i === 0 || UV[k[i - 1]][m] > UV[n][m]) ? 1 : k.every((n, i) => i === 0 || UV[k[i - 1]][m] < UV[n][m]) ? -1 : 0); return o.every(x => x === 1) ? 1 : o.every(x => x === -1) ? -1 : 0; };
+    const spread = m => { const v = UL.map(n => UV[n][m]); return Math.max(...v) - Math.min(...v); };
+    const x3 = t => { if (t.kind === "fp") return false; const sg = t.side === "C" ? 1 : -1, m = t.m;
+      return t.kind === "trap" ? (fan(m) === -sg && spread(m) >= 5) : sg * (UV[8][m] - UV[304][m]) > 0; };
+    const tr5 = r5.map(t => ({ side: t.side === "C" ? "call" : "put", setup: t.kind === "fp" ? "failed poke (B)" : t.kind, signal: clock(t.m), filled: clock(t.mf), strike: t.K,
+      paid: +t.ask.toFixed(2), exit: clock(t.out), sold: t.px == null ? null : +t.px.toFixed(2),
+      why: { stop: "stop", q8: "trail (3 ticks)", time: "time exit", yield: "gave way to a v9.2 setup" }[t.why] || t.why,
+      usd: t.res == null ? null : Math.round(t.res * 10000) / 100, contracts: x3(t) ? 3 : 1 }));
+    doc.shadow_v95 = { rule: "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
+      trades: tr5, usd_1ct: Math.round(tr5.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100,
+      usd_sized: Math.round(tr5.reduce((s, t) => s + (t.usd || 0) * t.contracts, 0) * 100) / 100 };
+  }
   const f = path.join(OUT, day + ".json");
   fs.writeFileSync(f, JSON.stringify(doc, null, 1));
   written.push(path.relative(ROOT, f));
@@ -136,7 +172,8 @@ const rows = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).
   .map(d => { const sh = d.shadow_v93_vix_bounce || {}; return { date: d.date, forward: d.forward, n: d.trades.length, usd: d.usd, stops: d.stops,
     vix: sh.vix_yesterday == null ? null : sh.vix_yesterday, bounce_day: !!sh.bounce_day, shadow_usd: sh.usd == null ? d.usd : sh.usd,
     combo_usd: d.shadow_combo ? d.shadow_combo.usd : null, ribbon_x3_usd: d.shadow_combo && d.shadow_combo.ribbon_x3_usd != null ? d.shadow_combo.ribbon_x3_usd : null,
-    ribbon_trades: d.shadow_combo ? d.shadow_combo.trades.filter(t => t.ribbon5).length : 0 }; });
+    ribbon_trades: d.shadow_combo ? d.shadow_combo.trades.filter(t => t.ribbon5).length : 0,
+    v95_usd: d.shadow_v95 && d.shadow_v95.usd_1ct != null ? d.shadow_v95.usd_1ct : null, v95_sized_usd: d.shadow_v95 && d.shadow_v95.usd_sized != null ? d.shadow_v95.usd_sized : null }; });
 const sum = a => Math.round(a.reduce((s, r) => s + r.usd, 0) * 100) / 100;
 const fw = rows.filter(r => r.forward), last10 = rows.slice(-10);
 let eq = 0, pk = 0, dd = 0; last10.forEach(r => { eq += r.usd; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
@@ -153,7 +190,11 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
       last10: { usd: sum(last10.map(r => ({ usd: r.combo_usd == null ? r.usd : r.combo_usd }))) },
       ribbon_watch: { note: "combo with 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees, else 1 (paper only)",
         all: { usd: sum(rows.map(r => ({ usd: r.ribbon_x3_usd == null ? 0 : r.ribbon_x3_usd }))), ribbon_trades: rows.reduce((s, r) => s + r.ribbon_trades, 0) },
-        forward: { usd: sum(fw.map(r => ({ usd: r.ribbon_x3_usd == null ? 0 : r.ribbon_x3_usd }))), ribbon_trades: fw.reduce((s, r) => s + r.ribbon_trades, 0) } } } },
+        forward: { usd: sum(fw.map(r => ({ usd: r.ribbon_x3_usd == null ? 0 : r.ribbon_x3_usd }))), ribbon_trades: fw.reduce((s, r) => s + r.ribbon_trades, 0) } } },
+    shadow_v95: { note: "v9.5 candidate (paper only): combo + failed poke B + 3x on A trades by your lines. Promote over the combo only if, after 10 forward mornings, it made more, drawdown no bigger, zero glitches.",
+      all: { usd_1ct: sum(rows.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(rows.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))), off_mornings: rows.filter(r => r.v95_usd == null).length },
+      forward: { usd_1ct: sum(fw.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(fw.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))), mornings: fw.length },
+      last10: { usd_1ct: sum(last10.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(last10.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))) } } },
   days: rows }, null, 1));
 written.push(path.relative(ROOT, path.join(OUT, "index.json")));
 written.forEach(p => console.log(p));
