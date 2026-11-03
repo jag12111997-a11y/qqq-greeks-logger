@@ -7601,19 +7601,19 @@
   function v92Banner() {
     var vm = V92_VM; if (!vm) return "";
     var tk = (vm.tickets || [])[0], box = function (bg, fg, txt) { return '<div style="background:' + bg + ';color:' + fg + ';border-radius:6px;padding:5px 8px;margin-bottom:6px;font-weight:700">' + esc(txt) + "</div>"; };
-    if (vm.stale) return '<div style="color:#ff6b62;font-size:10px;margin-bottom:4px">v9.2: DATA ' + vm.stale + " MIN OLD, DON'T ACT</div>";
+    if (vm.stale) return '<div style="color:#ff6b62;font-size:10px;margin-bottom:4px">v9.5: DATA ' + vm.stale + " MIN OLD, DON'T ACT</div>";
     var nums = tk && tk.state !== "sell" ? '<div style="font-weight:400;font-size:10px;margin-top:2px">stop ' + (tk.moved ? tk.moveTo : tk.stop).toFixed(2) + " · at " + tk.move.toFixed(2) + " stop → " + tk.moveTo.toFixed(2) +
       " · at " + tk.arm.toFixed(2) + " trail" + (tk.trail ? " ARMED" : "") + " · fake-out QQQ " + tk.fake.toFixed(2) + "</div>" : "";
     if (vm.stage === "sell") return box("#ff453a", "#fff", vm.head + " · sell by hand at the bid");
     if (vm.stage === "buy") return box("#2fbf6d", "#0a0210", vm.head).replace("</div>", nums + "</div>");
     if (vm.stage === "in") return box("rgba(96,165,250,.18)", "#60a5fa", vm.head).replace("</div>", nums + "</div>");
     // otherwise one quiet v9.2 line, so the float always shows the game plan
-    return '<div style="border:1px solid #3b0e33;border-radius:6px;padding:4px 8px;margin-bottom:6px;color:#c8a0d0"><b style="color:#ff2be0">v9.2</b> · ' + esc(vm.head) +
+    return '<div style="border:1px solid #3b0e33;border-radius:6px;padding:4px 8px;margin-bottom:6px;color:#c8a0d0"><b style="color:#ff2be0">v9.5</b> · ' + esc(vm.head) +
       (vm.watch && vm.stage !== "recap" && vm.stage !== "offday" ? '<div style="color:#9a7a9a;font-size:10px">' + esc(vm.watch) + "</div>" : "") +
       (vm.reentry ? '<div style="color:#fcb103;font-size:10px">' + esc(vm.reentry) + "</div>" : "") + "</div>";
   }
   function secHomeRun() {
-    if (USE_V92) { v92Start(); return '<div class="band"><span>3v3 v9.2 · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + (V92_HTML || '<div style="padding:14px;color:#c8a0d0">Loading v9.2 game plan…</div>') + "</div>"; }
+    if (USE_V92) { v92Start(); return '<div class="band"><span>3v3 v9.5 · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + (V92_HTML || '<div style="padding:14px;color:#c8a0d0">Loading v9.5 game plan…</div>') + "</div>"; }
     return '<div class="band"><span>Home run · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + hrHtml() + "</div>";
   }
   function hrPaint() { var el = document.getElementById("hr-box"); if (!el) return; if (USE_V92) { if (V92_HTML) el.innerHTML = V92_HTML; return; } el.innerHTML = hrHtml(); }
