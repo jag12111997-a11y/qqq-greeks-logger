@@ -51,7 +51,7 @@
  ],
  "usd": 189.4,
  "stops": 1,
- "generated_utc": "2026-11-04T03:30:02.200Z",
+ "generated_utc": "2026-11-04T04:59:04.104Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 14.87,
@@ -156,5 +156,23 @@
    "daily": 1,
    "weekly": 1
   }
+ },
+ "shadow_options": {
+  "rule": "v9.5 (1 ct) + options: box · Playbook home run · Tulip v3.2 · turn entry · sniper · calls checkpoint. Card's latest side = direction; agreeing signals as fired; signals against it flipped to the card's side (card's ladder); before the card's first buy only the box.",
+  "trades": [
+   {
+    "how": "agree",
+    "from": "turn entry",
+    "side": "call",
+    "signal": "7:16",
+    "strike": "737",
+    "paid": 1.42,
+    "exit": "7:38",
+    "why": "stop",
+    "usd": -61.6
+   }
+  ],
+  "addons_usd": -61.6,
+  "total_usd": 140.8
  }
 }

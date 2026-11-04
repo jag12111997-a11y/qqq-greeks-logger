@@ -11,6 +11,7 @@ const fs = require("fs"), path = require("path");
 const ROOT = process.cwd(), MD = path.join(ROOT, "market-dash"), OUT = path.join(MD, "v92_log");
 global.V92 = require(path.join(MD, "v92_engine.js"));
 global.V92MAP = require(path.join(MD, "v92_map.js"));
+const V95OPT = require(path.join(MD, "v95_options.js"));   // "v9.5 + options" shadow (paper only)
 const FORWARD_FROM = "2026-11-02";     // mornings on or after this date were never seen by the research
 const VB = { th: 16.5, vbStart: 60, vbMax: 1, from: "2026-11-02" };   // v9.3 candidate "VIX bounce calls" (shadow only)
 
@@ -181,6 +182,16 @@ for (const day of want) {
     doc.shadow_v95 = { rule: "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
       trades: tr5, usd_1ct: Math.round(tr5.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100,
       usd_sized: Math.round(tr5.reduce((s, t) => s + (t.usd || 0) * t.contracts, 0) * 100) / 100, htf: HT };
+    // shadow 4: "v9.5 + options" — 6 older strategies add trades in the card's direction (agree = as fired · against = flipped to the
+    // card's side with the card's ladder · before the card's first buy only the box). 1 contract. Paper only.
+    try {
+      const OP = V95OPT.run(D, H, hist, UV, D.info && D.info.t0, r5.map(t => ({ side: t.side, m: t.m, mf: t.mf })), day);
+      const tro = OP.trades.map(t => ({ how: t.how, from: t.src, side: t.side === "C" ? "call" : "put", signal: clock(Math.floor(t.m)), strike: t.K, paid: t.paid == null ? null : +t.paid.toFixed(2),
+        exit: t.out == null ? null : clock(t.out), why: t.why, usd: Math.round(t.usd * 100) / 100, flipped_from: t.flipped_from ? (t.flipped_from === "C" ? "call" : "put") : undefined }));
+      const addUsd = Math.round(tro.reduce((s, t) => s + t.usd, 0) * 100) / 100;
+      doc.shadow_options = { rule: "v9.5 (1 ct) + options: box · Playbook home run · Tulip v3.2 · turn entry · sniper · calls checkpoint. Card's latest side = direction; agreeing signals as fired; signals against it flipped to the card's side (card's ladder); before the card's first buy only the box.",
+        trades: tro, addons_usd: addUsd, total_usd: Math.round((doc.shadow_v95.usd_1ct + addUsd) * 100) / 100 };
+    } catch (e) { doc.shadow_options = { status: "off this morning: " + e.message, trades: [], addons_usd: null, total_usd: null }; }
   }
   const f = path.join(OUT, day + ".json");
   fs.writeFileSync(f, JSON.stringify(doc, null, 1));
@@ -193,7 +204,8 @@ const rows = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).
     combo_usd: d.shadow_combo ? d.shadow_combo.usd : null, ribbon_x3_usd: d.shadow_combo && d.shadow_combo.ribbon_x3_usd != null ? d.shadow_combo.ribbon_x3_usd : null,
     ribbon_trades: d.shadow_combo ? d.shadow_combo.trades.filter(t => t.ribbon5).length : 0,
     htf: d.shadow_v95 && d.shadow_v95.htf ? { daily: d.shadow_v95.htf.daily, weekly: d.shadow_v95.htf.weekly } : null,
-    v95_usd: d.shadow_v95 && d.shadow_v95.usd_1ct != null ? d.shadow_v95.usd_1ct : null, v95_sized_usd: d.shadow_v95 && d.shadow_v95.usd_sized != null ? d.shadow_v95.usd_sized : null }; });
+    v95_usd: d.shadow_v95 && d.shadow_v95.usd_1ct != null ? d.shadow_v95.usd_1ct : null, v95_sized_usd: d.shadow_v95 && d.shadow_v95.usd_sized != null ? d.shadow_v95.usd_sized : null,
+    opt_addons_usd: d.shadow_options && d.shadow_options.addons_usd != null ? d.shadow_options.addons_usd : null, opt_addons_n: d.shadow_options ? d.shadow_options.trades.length : 0 }; });
 const sum = a => Math.round(a.reduce((s, r) => s + r.usd, 0) * 100) / 100;
 const fw = rows.filter(r => r.forward), last10 = rows.slice(-10);
 let eq = 0, pk = 0, dd = 0; last10.forEach(r => { eq += r.usd; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
@@ -214,7 +226,11 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
     shadow_v95: { note: "v9.5 candidate (paper only): combo + failed poke B + 3x on A trades by your lines. Promote over the combo only if, after 10 forward mornings, it made more, drawdown no bigger, zero glitches.",
       all: { usd_1ct: sum(rows.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(rows.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))), off_mornings: rows.filter(r => r.v95_usd == null).length },
       forward: { usd_1ct: sum(fw.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(fw.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))), mornings: fw.length },
-      last10: { usd_1ct: sum(last10.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(last10.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))) } } },
+      last10: { usd_1ct: sum(last10.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(last10.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))) } },
+    shadow_options: { note: "v9.5 + options (paper only, 1 ct): 6 older strategies add trades in the card's direction; signals against it are flipped to the card's side. Keep only if it stays positive.",
+      all: { addons_usd: sum(rows.map(r => ({ usd: r.opt_addons_usd || 0 }))), addons: rows.reduce((s, r) => s + r.opt_addons_n, 0), total_usd: sum(rows.map(r => ({ usd: (r.v95_usd || 0) + (r.opt_addons_usd || 0) }))) },
+      forward: { addons_usd: sum(fw.map(r => ({ usd: r.opt_addons_usd || 0 }))), addons: fw.reduce((s, r) => s + r.opt_addons_n, 0), total_usd: sum(fw.map(r => ({ usd: (r.v95_usd || 0) + (r.opt_addons_usd || 0) }))), mornings: fw.length },
+      last10: { addons_usd: sum(last10.map(r => ({ usd: r.opt_addons_usd || 0 }))), total_usd: sum(last10.map(r => ({ usd: (r.v95_usd || 0) + (r.opt_addons_usd || 0) }))) } } },
   htf_next: htfBefore("9999-12-31"),   // daily/weekly trend for the NEXT morning (the card reads this)
   days: rows }, null, 1));
 written.push(path.relative(ROOT, path.join(OUT, "index.json")));

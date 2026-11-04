@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-04T03:30:08.758Z",
+ "updated_utc": "2026-11-04T04:59:07.864Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -71,6 +71,24 @@
     "usd_1ct": 335.3,
     "usd_sized": 1401.9
    }
+  },
+  "shadow_options": {
+   "note": "v9.5 + options (paper only, 1 ct): 6 older strategies add trades in the card's direction; signals against it are flipped to the card's side. Keep only if it stays positive.",
+   "all": {
+    "addons_usd": 2910,
+    "addons": 55,
+    "total_usd": 7414.9
+   },
+   "forward": {
+    "addons_usd": 0,
+    "addons": 0,
+    "total_usd": 93.8,
+    "mornings": 2
+   },
+   "last10": {
+    "addons_usd": 410.4,
+    "total_usd": 745.7
+   }
   }
  },
  "htf_next": {
@@ -96,7 +114,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-07-31",
@@ -115,7 +135,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-03",
@@ -134,7 +156,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-04",
@@ -153,7 +177,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-05",
@@ -172,7 +198,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-06",
@@ -191,7 +219,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-07",
@@ -210,7 +240,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-10",
@@ -229,7 +261,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-11",
@@ -248,7 +282,9 @@
     "weekly": 1
    },
    "v95_usd": 25.4,
-   "v95_sized_usd": -87.2
+   "v95_sized_usd": -87.2,
+   "opt_addons_usd": 82.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-08-12",
@@ -267,7 +303,9 @@
     "weekly": 1
    },
    "v95_usd": 11.1,
-   "v95_sized_usd": -24.1
+   "v95_sized_usd": -24.1,
+   "opt_addons_usd": 43.2,
+   "opt_addons_n": 3
   },
   {
    "date": "2026-08-13",
@@ -286,7 +324,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-14",
@@ -305,7 +345,9 @@
     "weekly": 1
    },
    "v95_usd": 122.7,
-   "v95_sized_usd": 368.1
+   "v95_sized_usd": 368.1,
+   "opt_addons_usd": 61.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-08-17",
@@ -324,7 +366,9 @@
     "weekly": 1
    },
    "v95_usd": 170.8,
-   "v95_sized_usd": 439
+   "v95_sized_usd": 439,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-18",
@@ -343,7 +387,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-19",
@@ -362,7 +408,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-20",
@@ -381,7 +429,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-21",
@@ -400,7 +450,9 @@
     "weekly": 0
    },
    "v95_usd": 138.1,
-   "v95_sized_usd": 441.5
+   "v95_sized_usd": 441.5,
+   "opt_addons_usd": 418,
+   "opt_addons_n": 5
   },
   {
    "date": "2026-08-24",
@@ -419,7 +471,9 @@
     "weekly": 1
    },
    "v95_usd": 362.5,
-   "v95_sized_usd": 570.7
+   "v95_sized_usd": 570.7,
+   "opt_addons_usd": 232.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-08-25",
@@ -438,7 +492,9 @@
     "weekly": 0
    },
    "v95_usd": 164.7,
-   "v95_sized_usd": 164.7
+   "v95_sized_usd": 164.7,
+   "opt_addons_usd": -33.2,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-08-26",
@@ -457,7 +513,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-27",
@@ -476,7 +534,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-28",
@@ -495,7 +555,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-08-31",
@@ -514,7 +576,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": -1.6,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-09-01",
@@ -533,7 +597,9 @@
     "weekly": 1
    },
    "v95_usd": 262.8,
-   "v95_sized_usd": 677.6
+   "v95_sized_usd": 677.6,
+   "opt_addons_usd": 323.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-09-02",
@@ -552,7 +618,9 @@
     "weekly": 0
    },
    "v95_usd": -64.9,
-   "v95_sized_usd": -64.9
+   "v95_sized_usd": -64.9,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-09-03",
@@ -571,7 +639,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-09-04",
@@ -590,7 +660,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-09-08",
@@ -609,7 +681,9 @@
     "weekly": 1
    },
    "v95_usd": 128.7,
-   "v95_sized_usd": 128.7
+   "v95_sized_usd": 128.7,
+   "opt_addons_usd": 121.4,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-09-09",
@@ -628,7 +702,9 @@
     "weekly": 1
    },
    "v95_usd": 176.1,
-   "v95_sized_usd": 528.3
+   "v95_sized_usd": 528.3,
+   "opt_addons_usd": 136.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-09-10",
@@ -647,7 +723,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 27.4,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-09-11",
@@ -666,7 +744,9 @@
     "weekly": 0
    },
    "v95_usd": -56.6,
-   "v95_sized_usd": -56.6
+   "v95_sized_usd": -56.6,
+   "opt_addons_usd": -125.2,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-09-14",
@@ -685,7 +765,9 @@
     "weekly": 1
    },
    "v95_usd": 656.4,
-   "v95_sized_usd": 1969.2
+   "v95_sized_usd": 1969.2,
+   "opt_addons_usd": 577.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-09-15",
@@ -704,7 +786,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-09-16",
@@ -723,7 +807,9 @@
     "weekly": 0
    },
    "v95_usd": 48.7,
-   "v95_sized_usd": 146.1
+   "v95_sized_usd": 146.1,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-09-17",
@@ -742,7 +828,9 @@
     "weekly": 0
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-09-18",
@@ -761,7 +849,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-09-21",
@@ -780,7 +870,9 @@
     "weekly": 1
    },
    "v95_usd": 201.4,
-   "v95_sized_usd": 604.2
+   "v95_sized_usd": 604.2,
+   "opt_addons_usd": 45.4,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-09-22",
@@ -799,7 +891,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 54.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-09-23",
@@ -818,7 +912,9 @@
     "weekly": 1
    },
    "v95_usd": 92.7,
-   "v95_sized_usd": 278.1
+   "v95_sized_usd": 278.1,
+   "opt_addons_usd": 71.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-09-24",
@@ -837,7 +933,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 27.4,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-09-25",
@@ -856,7 +954,9 @@
     "weekly": 1
    },
    "v95_usd": 231.4,
-   "v95_sized_usd": 231.4
+   "v95_sized_usd": 231.4,
+   "opt_addons_usd": -20.8,
+   "opt_addons_n": 3
   },
   {
    "date": "2026-09-28",
@@ -875,7 +975,9 @@
     "weekly": 1
    },
    "v95_usd": 202.4,
-   "v95_sized_usd": 607.2
+   "v95_sized_usd": 607.2,
+   "opt_addons_usd": -61.6,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-09-29",
@@ -894,7 +996,9 @@
     "weekly": 1
    },
    "v95_usd": -19.6,
-   "v95_sized_usd": -19.6
+   "v95_sized_usd": -19.6,
+   "opt_addons_usd": -0.6,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-09-30",
@@ -913,7 +1017,9 @@
     "weekly": 1
    },
    "v95_usd": 27.4,
-   "v95_sized_usd": 82.2
+   "v95_sized_usd": 82.2,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-01",
@@ -932,7 +1038,9 @@
     "weekly": 1
    },
    "v95_usd": 34.8,
-   "v95_sized_usd": 212.2
+   "v95_sized_usd": 212.2,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-02",
@@ -951,7 +1059,9 @@
     "weekly": 1
    },
    "v95_usd": -44.9,
-   "v95_sized_usd": -28.1
+   "v95_sized_usd": -28.1,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-05",
@@ -970,7 +1080,9 @@
     "weekly": 1
    },
    "v95_usd": -73.6,
-   "v95_sized_usd": -73.6
+   "v95_sized_usd": -73.6,
+   "opt_addons_usd": -23.6,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-10-06",
@@ -989,7 +1101,9 @@
     "weekly": 1
    },
    "v95_usd": 33.4,
-   "v95_sized_usd": 100.2
+   "v95_sized_usd": 100.2,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-07",
@@ -1008,7 +1122,9 @@
     "weekly": 1
    },
    "v95_usd": 116.8,
-   "v95_sized_usd": 117.6
+   "v95_sized_usd": 117.6,
+   "opt_addons_usd": 133.4,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-10-08",
@@ -1027,7 +1143,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": -25.6,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-10-09",
@@ -1046,7 +1164,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-12",
@@ -1065,7 +1185,9 @@
     "weekly": 1
    },
    "v95_usd": 86.1,
-   "v95_sized_usd": 86.1
+   "v95_sized_usd": 86.1,
+   "opt_addons_usd": 59.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-10-13",
@@ -1084,7 +1206,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 26.2,
+   "opt_addons_n": 3
   },
   {
    "date": "2026-10-14",
@@ -1103,7 +1227,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 54.8,
+   "opt_addons_n": 2
   },
   {
    "date": "2026-10-15",
@@ -1122,7 +1248,9 @@
     "weekly": 1
    },
    "v95_usd": 174.7,
-   "v95_sized_usd": 174.7
+   "v95_sized_usd": 174.7,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-16",
@@ -1141,7 +1269,9 @@
     "weekly": 1
    },
    "v95_usd": 283.7,
-   "v95_sized_usd": 851.1
+   "v95_sized_usd": 851.1,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-19",
@@ -1160,7 +1290,9 @@
     "weekly": 0
    },
    "v95_usd": 142.7,
-   "v95_sized_usd": 428.1
+   "v95_sized_usd": 428.1,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-20",
@@ -1179,7 +1311,9 @@
     "weekly": 0
    },
    "v95_usd": 533.7,
-   "v95_sized_usd": 1601.1
+   "v95_sized_usd": 1601.1,
+   "opt_addons_usd": 292.4,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-10-21",
@@ -1198,7 +1332,9 @@
     "weekly": 0
    },
    "v95_usd": 81.8,
-   "v95_sized_usd": 348.6
+   "v95_sized_usd": 348.6,
+   "opt_addons_usd": 63.4,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-10-22",
@@ -1217,7 +1353,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 27.4,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-10-23",
@@ -1236,7 +1374,9 @@
     "weekly": 0
    },
    "v95_usd": -54.3,
-   "v95_sized_usd": -162.9
+   "v95_sized_usd": -162.9,
+   "opt_addons_usd": -22.6,
+   "opt_addons_n": 1
   },
   {
    "date": "2026-10-26",
@@ -1255,7 +1395,9 @@
     "weekly": 0
    },
    "v95_usd": 185.5,
-   "v95_sized_usd": 691.1
+   "v95_sized_usd": 691.1,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-27",
@@ -1274,7 +1416,9 @@
     "weekly": -1
    },
    "v95_usd": 123.7,
-   "v95_sized_usd": 371.1
+   "v95_sized_usd": 371.1,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-28",
@@ -1293,7 +1437,9 @@
     "weekly": 1
    },
    "v95_usd": 0,
-   "v95_sized_usd": 0
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-10-29",
@@ -1312,7 +1458,9 @@
     "weekly": 1
    },
    "v95_usd": -55.3,
-   "v95_sized_usd": -55.3
+   "v95_sized_usd": -55.3,
+   "opt_addons_usd": 342.2,
+   "opt_addons_n": 3
   },
   {
    "date": "2026-10-30",
@@ -1331,7 +1479,9 @@
     "weekly": 0
    },
    "v95_usd": -39.9,
-   "v95_sized_usd": 115.5
+   "v95_sized_usd": 115.5,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-11-02",
@@ -1350,7 +1500,9 @@
     "weekly": -1
    },
    "v95_usd": 114.1,
-   "v95_sized_usd": 114.1
+   "v95_sized_usd": 114.1,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   },
   {
    "date": "2026-11-03",
@@ -1369,7 +1521,9 @@
     "weekly": -1
    },
    "v95_usd": -20.3,
-   "v95_sized_usd": -20.3
+   "v95_sized_usd": -20.3,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0
   }
  ]
 }
