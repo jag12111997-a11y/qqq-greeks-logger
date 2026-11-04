@@ -65,7 +65,7 @@
  ],
  "usd": 98.1,
  "stops": 1,
- "generated_utc": "2026-11-03T07:22:51.835Z",
+ "generated_utc": "2026-11-03T18:18:10.194Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 14.25,
@@ -215,6 +215,11 @@
    }
   ],
   "usd_1ct": 170.8,
-  "usd_sized": 439
+  "usd_sized": 439,
+  "htf": {
+   "through": "2026-08-14",
+   "daily": 1,
+   "weekly": 1
+  }
  }
 }

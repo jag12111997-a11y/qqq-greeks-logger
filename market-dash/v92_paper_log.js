@@ -94,6 +94,23 @@ const clock = m => { const t = 390 + m; return ((Math.floor(t / 60) + 11) % 12 +
 
 const index = readJSON(path.join(MD, "history", "index.json"));
 const days = ((index && index.days) || []).filter(d => fs.existsSync(path.join(MD, "history", d + ".json")));
+// ---- higher time frames (user's MA17 on daily + weekly): trend from closes BEFORE the morning (v9.5 bounce-call sizing) ----
+// daily closes = qqq_candle_history.json daily bars, filled with the 4:00 PM ET close of any saved history day it is missing.
+const CLOSES = (() => { const m = {};
+  const ch = readJSON(path.join(MD, "qqq_candle_history.json"));
+  ((ch && ch.daily) || []).forEach(c => { m[new Date((c.time + 12 * 3600) * 1000).toISOString().slice(0, 10)] = c.close; });
+  days.forEach(d => { if (m[d] != null) return; const j = readJSON(path.join(MD, "history", d + ".json")); if (j && j.candles && j.candles.length >= 390) m[d] = j.candles[389].close; });
+  return Object.keys(m).sort().map(d => ({ d, c: m[d] })); })();
+function htfBefore(day) {   // {daily, weekly}: +1 up / -1 down / 0 mixed — close vs its MA17 and the MA17's slope; null if not enough history
+  const avg = (a, n, i) => i + 1 < n ? null : a.slice(i + 1 - n, i + 1).reduce((x, y) => x + y, 0) / n;
+  const D = CLOSES.filter(x => x.d < day); if (D.length < 30) return null;
+  const C = D.map(x => x.c), i = C.length - 1, m17 = avg(C, 17, i), m17p = avg(C, 17, i - 5);
+  const W = []; D.forEach(x => { const dt = new Date(x.d + "T12:00:00Z"), wk = new Date(dt - ((dt.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10);
+    if (!W.length || W[W.length - 1].w !== wk) W.push({ w: wk, c: x.c }); else W[W.length - 1].c = x.c; });
+  const WC = W.map(x => x.c), wi = WC.length - 1, w17 = avg(WC, 17, wi), w17p = avg(WC, 17, wi - 4);
+  if (m17 == null || m17p == null || w17 == null || w17p == null) return null;
+  return { through: D[D.length - 1].d, daily: C[i] > m17 && m17 > m17p ? 1 : C[i] < m17 && m17 < m17p ? -1 : 0, weekly: WC[wi] > w17 && w17 > w17p ? 1 : WC[wi] < w17 && w17 < w17p ? -1 : 0 };
+}
 let want = process.argv.slice(2);
 if (!want.length) want = days.filter(d => d >= "2026-07-20" && !fs.existsSync(path.join(OUT, d + ".json")));
 fs.mkdirSync(OUT, { recursive: true });
@@ -153,7 +170,9 @@ for (const day of want) {
     const R5 = V92.runDay(Object.assign({}, D, { ind: { m17: UV[14], vw: UV.vw } }), o5), r5 = R5.trades.filter(t => t.why !== "none");
     const fan = m => { const o = USTK.map(k => k.every((n, i) => i === 0 || UV[k[i - 1]][m] > UV[n][m]) ? 1 : k.every((n, i) => i === 0 || UV[k[i - 1]][m] < UV[n][m]) ? -1 : 0); return o.every(x => x === 1) ? 1 : o.every(x => x === -1) ? -1 : 0; };
     const spread = m => { const v = UL.map(n => UV[n][m]); return Math.max(...v) - Math.min(...v); };
+    const HT = htfBefore(day);
     const x3 = t => { if (t.kind === "fp") return false; const sg = t.side === "C" ? 1 : -1, m = t.m;
+      if (t.kind.indexOf("vb") >= 0 && HT && HT.daily === -sg && HT.weekly === -sg) return false;   // bounce call against daily + weekly -> 1x
       return t.kind === "trap" ? (fan(m) === -sg && spread(m) >= 5) : sg * (UV[8][m] - UV[304][m]) > 0; };
     const tr5 = r5.map(t => ({ side: t.side === "C" ? "call" : "put", setup: t.kind === "fp" ? "failed poke (B)" : t.kind, signal: clock(t.m), filled: clock(t.mf), strike: t.K,
       paid: +t.ask.toFixed(2), exit: clock(t.out), sold: t.px == null ? null : +t.px.toFixed(2),
@@ -161,7 +180,7 @@ for (const day of want) {
       usd: t.res == null ? null : Math.round(t.res * 10000) / 100, contracts: x3(t) ? 3 : 1 }));
     doc.shadow_v95 = { rule: "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
       trades: tr5, usd_1ct: Math.round(tr5.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100,
-      usd_sized: Math.round(tr5.reduce((s, t) => s + (t.usd || 0) * t.contracts, 0) * 100) / 100 };
+      usd_sized: Math.round(tr5.reduce((s, t) => s + (t.usd || 0) * t.contracts, 0) * 100) / 100, htf: HT };
   }
   const f = path.join(OUT, day + ".json");
   fs.writeFileSync(f, JSON.stringify(doc, null, 1));
@@ -173,6 +192,7 @@ const rows = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).
     vix: sh.vix_yesterday == null ? null : sh.vix_yesterday, bounce_day: !!sh.bounce_day, shadow_usd: sh.usd == null ? d.usd : sh.usd,
     combo_usd: d.shadow_combo ? d.shadow_combo.usd : null, ribbon_x3_usd: d.shadow_combo && d.shadow_combo.ribbon_x3_usd != null ? d.shadow_combo.ribbon_x3_usd : null,
     ribbon_trades: d.shadow_combo ? d.shadow_combo.trades.filter(t => t.ribbon5).length : 0,
+    htf: d.shadow_v95 && d.shadow_v95.htf ? { daily: d.shadow_v95.htf.daily, weekly: d.shadow_v95.htf.weekly } : null,
     v95_usd: d.shadow_v95 && d.shadow_v95.usd_1ct != null ? d.shadow_v95.usd_1ct : null, v95_sized_usd: d.shadow_v95 && d.shadow_v95.usd_sized != null ? d.shadow_v95.usd_sized : null }; });
 const sum = a => Math.round(a.reduce((s, r) => s + r.usd, 0) * 100) / 100;
 const fw = rows.filter(r => r.forward), last10 = rows.slice(-10);
@@ -195,6 +215,7 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
       all: { usd_1ct: sum(rows.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(rows.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))), off_mornings: rows.filter(r => r.v95_usd == null).length },
       forward: { usd_1ct: sum(fw.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(fw.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))), mornings: fw.length },
       last10: { usd_1ct: sum(last10.map(r => ({ usd: r.v95_usd == null ? 0 : r.v95_usd }))), usd_sized: sum(last10.map(r => ({ usd: r.v95_sized_usd == null ? 0 : r.v95_sized_usd }))) } } },
+  htf_next: htfBefore("9999-12-31"),   // daily/weekly trend for the NEXT morning (the card reads this)
   days: rows }, null, 1));
 written.push(path.relative(ROOT, path.join(OUT, "index.json")));
 written.forEach(p => console.log(p));

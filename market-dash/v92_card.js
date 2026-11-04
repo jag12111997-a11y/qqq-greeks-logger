@@ -143,9 +143,10 @@
       return V;
     } catch (e) { return null; }
   }
-  function sizeFor(UV, t) {   // 3 contracts on A trades when the user's lines agree; B (failed poke) always 1
+  function sizeFor(UV, t, HT) {   // 3 contracts on A trades when the user's lines agree; B (failed poke) always 1
     if (!UV || t.kind === "fp") return 1;
     var sg = t.side === "C" ? 1 : -1, m = t.m;
+    if (t.kind.indexOf("vb") >= 0 && HT && HT.daily === -sg && HT.weekly === -sg) return 1;   // bounce call against daily + weekly trend
     if (t.kind === "trap") {
       var o = USTK.map(function (k) { return k.every(function (n, i) { return i === 0 || UV[k[i - 1]][m] > UV[n][m]; }) ? 1 : k.every(function (n, i) { return i === 0 || UV[k[i - 1]][m] < UV[n][m]; }) ? -1 : 0; });
       var fan = o.every(function (x) { return x === 1; }) ? 1 : o.every(function (x) { return x === -1; }) ? -1 : 0;
@@ -187,6 +188,11 @@
     if (vbDay) { opt.vb = true; opt.vbStart = 60; opt.vbMax = 1; }
     if (UV) { opt.fp = "ma17"; opt.fpVwap = true; opt.fpDay = true; opt.fpYield = true; opt.fpYieldTo = ["trap", "gap", "fw"]; opt.fpFlip = true; opt.fpStart = 30; opt.fpEnd = 120; D.ind = { m17: UV[14], vw: UV.vw }; }
     vm.v95 = hasBars ? !!UV : null; vm.vbDay = vbDay;
+    // daily/weekly trend before this morning: the paper log's row for a replayed day, or its "next morning" read for today
+    var HT = null, lastH = Object.keys(X.hist).sort().slice(-1)[0];
+    if (X.log && X.log.days) { var row = X.log.days.filter(function (r) { return r.date === day; })[0]; if (row && row.htf) HT = row.htf; }
+    if (!HT && X.log && X.log.htf_next && X.log.htf_next.through === lastH) HT = X.log.htf_next;
+    var vbSmall = vbDay && HT && HT.daily === -1 && HT.weekly === -1;
     if (hasBars) { try { R = V92.runDay(D, opt); } catch (e) { R = null; vm.err = String(e); } }
     var lastBar = D.st.length - 1, close = hasBars ? D.st[lastBar][0] : null;
     var vbTxt = vbDay ? "calls after 7:30 (red yesterday · VIX " + p2(X.vix) + ")" : "off";
@@ -195,7 +201,7 @@
     vm.lines.push(["Trap", name(sideDay) + (sideDay === "C" ? " below " : " above ") + p2(trapLine) +
       " (yesterday " + (sideDay === "C" ? "low " + p2(c.PDL) : "high " + p2(c.PDH)) + (sideDay === "C" ? " − 1.00)" : " + 1.00)")]);
     if (!hasBars) {
-      vm.lines.push(["Bounce", vbTxt]);
+      vm.lines.push(["Bounce", vbTxt + (vbSmall ? " · 1× (daily & weekly both down)" : "")]);
       vm.lines.push(["Failed poke", fpTxt]);
       vm.lines.push(["Gap-and-go", name(weekSide) + " if the open is " + (weekSide === "C" ? "≥ " + p2(c.PDC + 2.5) : "≤ " + p2(c.PDC - 2.5)) + " and the nearest GEX level is 1.00+ away"]);
       vm.lines.push(["Fade the week", name(fwSide) + " after 7:30 only if QQQ is inside yesterday's value area (" + p2(D.va.yval) + "–" + p2(D.va.yvah) + ") at 7:00"]);
@@ -211,7 +217,7 @@
     else if (trapSeen) fwTxt = "off (trap zone reached)";
     else fwTxt = R && R.fwOk ? name(fwSide) + " ON after 7:30 (inside value at 7:00)" : "off (outside yesterday's value at 7:00)";
     vm.lines.push(["Fade the week", fwTxt]);
-    vm.lines.push(["Bounce", vbTxt]);
+    vm.lines.push(["Bounce", vbTxt + (vbSmall ? " · 1× (daily & weekly both down)" : "")]);
     vm.lines.push(["Failed poke", UV ? fpTxt : "off (your lines / VWAP missing) · v9.4 signals"]);
     // ---- watch line: one steady sentence + live distance ----
     var zf = R ? R.zoneFirst[sideDay] : null;
@@ -223,7 +229,7 @@
     (R ? R.trades : []).forEach(function (t) {
       if (t.why === "none") return;
       var S = t.side === "C" ? "CALL" : "PUT", kind = { trap: "trap", gap: "gap-and-go", fw: "fade the week", flip: "flip", vb: "VIX bounce call", fp: "failed poke (B)" }[t.kind] || ("re-entry (" + t.kind.slice(3) + ")");
-      var ct = sizeFor(UV, t);
+      var ct = sizeFor(UV, t, HT);
       var base = { S: S, K: t.K, kind: kind + (ct === 3 ? " · your lines agree" : ""), ct: ct, mf: t.mf, ask: t.ask, stop: t.aMid - 0.50, move: t.aMid + 0.30, moveTo: t.aMid - 0.15, arm: t.aMid + 0.50,
         timeOut: Math.min(t.mf + 90, 146), fake: t.fakeout, iv: t.iv, sg: t.side === "C" ? 1 : -1, aMid: t.aMid,
         q0: D.st[t.mf] ? D.st[t.mf][0] : (D.st[t.m] ? D.st[t.m][0] : null), dl: Math.abs(t.delta || 0), qNow: close };
