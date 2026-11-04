@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>html,body{margin:0;background:#0c0710;color:#eadbe6;}</style>
 </head><body>
-<!-- ===== REPLAY MY TRADES (own section, not part of the widget above) ===== -->
+<!-- ===== BOT TRADE REPLAY: every bot trade (card + options), nightly from the paper log + live from the card ===== -->
 <style>
 #rp { --bg:#0c0710; --panel:#140c19; --line:#2a1a2f; --grid:rgba(190,150,200,0.08); --fg:#eadbe6; --mute:#9c879a; --accent:#c2479d;
   --up:#38c793; --down:#f0605c; --vwap:#f2b134; --level:#ffffff; --win:#6ee06a; --loss:#ff6b62; --shake:#f2b134; --you:#3fd3ff;
@@ -85,197 +85,137 @@
 #rp .tw { border:1px dashed var(--win); border-radius:8px; padding:8px 10px; font-size:13px; line-height:1.45; }
 #rp .tw.miss { border-color:var(--mute); }
 </style>
+<style>
+#rp .live { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-size:13px; }
+#rp .live.on { border-color:var(--win); }
+#rp .live .dot { width:9px; height:9px; border-radius:50%; background:var(--mute); display:inline-block; }
+#rp .live.on .dot { background:var(--win); box-shadow:0 0 8px var(--win); }
+#rp .card.open { border-color:var(--you); }
+#rp .tag.live { color:var(--you); border-color:currentColor; }
+#rp .tag.opt { color:var(--accent); border-color:currentColor; }
+</style>
 <div id="rp">
-  <div class="hd"><h2>Trade Replay</h2><span class="sub">Your trades on the chart, checked against the Tulip Mania rules</span></div>
+  <div class="hd"><h2>Trade Replay</h2><span class="sub">Every trade the bot made, on the chart, checked against its own rules · today's trades appear live</span></div>
   <div class="tabs" role="tablist"><button class="tab" role="tab" data-p="chart" aria-selected="true">Chart room</button><button class="tab" role="tab" data-p="sum" aria-selected="false">Summary</button></div>
-  <div class="wrap" id="rp-wrap"><p class="fine" id="rp-load">Loading your trades…</p></div>
+  <div class="wrap" id="rp-wrap"><p class="fine" id="rp-load">Loading the bot's trades…</p></div>
 </div>
+<script src="v92_engine.js"></script>
+<script src="v92_map.js"></script>
+<script src="v95_options.js"></script>
+<script src="v92_card.js"></script>
 <script>
 (function () {
-  var det = document.getElementById('rp'), loaded = false;
-  (function load() {
-    if (loaded) return; loaded = true;
-    var s = document.createElement('script'); s.src = 'my_trades_replay.js?t=' + Date.now();
-    s.onload = function () { try { rpInit(window.REPLAY); } catch (e) { document.getElementById('rp-load').textContent = 'Could not draw the replay: ' + e.message; } };
-    s.onerror = function () { document.getElementById('rp-load').textContent = 'Replay data file (my_trades_replay.js) is missing.'; };
-    document.head.appendChild(s);
-  })();
+  var det = document.getElementById('rp');
+  var s = document.createElement('script'); s.src = 'bot_replay.js?t=' + Date.now();
+  s.onload = function () { try { rpInit(window.BOTREPLAY); } catch (e) { document.getElementById('rp-load').textContent = 'Could not draw the replay: ' + e.message; } };
+  s.onerror = function () { document.getElementById('rp-load').textContent = 'Replay data file (bot_replay.js) is missing.'; };
+  document.head.appendChild(s);
 
   function rpInit(R) {
     var root = det, css = function (n) { return getComputedStyle(root).getPropertyValue(n).trim(); };
-    var usd = function (v) { return (v < 0 ? '−$' : '+$') + Math.round(Math.abs(v)).toLocaleString('en-US'); };
-    var usd0 = function (v) { return v ? usd(v) : '$0'; };
+    var usd = function (v) { v = v || 0; return (v < 0 ? '−$' : '+$') + Math.round(Math.abs(v)).toLocaleString('en-US'); };
     var cl = function (v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : 'mut'; };
     var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
     var pt = function (m) { var t = 390 + Math.floor(m), h = Math.floor(t / 60); return ((h - 1) % 12 + 1) + ':' + String(t % 60).padStart(2, '0'); };
+    var q2 = function (v) { return v == null || !isFinite(v) ? '—' : Number(v).toFixed(2); };
     var mname = function (m) { return new Date(m + '-15T12:00:00Z').toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }); };
     var mmdd = function (d) { return new Date(d + 'T12:00:00Z').toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }); };
-    var C = R.cards, DAYS = R.days;
-    // per-day SMA 4 / 7 on 1-min closes (same as the live box: average of the bars before each minute)
-    Object.keys(DAYS).forEach(function (k) {
-      var cs = DAYS[k].candles.map(function (c) { return c[3]; }), s4 = [], s7 = [];
-      for (var i = 0; i < cs.length; i++) {
-        s4.push(i >= 4 ? (cs[i - 1] + cs[i - 2] + cs[i - 3] + cs[i - 4]) / 4 : null);
-        var a = 0; if (i >= 7) { for (var j = 1; j <= 7; j++) a += cs[i - j]; s7.push(a / 7); } else s7.push(null);
-      }
-      DAYS[k].sma4 = s4; DAYS[k].sma7 = s7;
-    });
-    var tulipAll = R.tulipc, won = C.filter(function (c) { return c.pnl > 0; }).length;
-    var html = '<div class="pane" data-p="chart">';
-    // ---------- chart room: filters, every trade, then the QQQ chart with your contract beside it ----------
+    var LAB = { trap: 'Trap', gap: 'Gap-and-go', fw: 'Fade the week', vb: 'VIX bounce', 'failed poke (B)': 'Failed poke', fp: 'Failed poke', flip: 'Flip',
+      'box scalp': 'Box', 'Playbook home run': 'Playbook', 'Tulip v3.2': 'Tulip', 'turn entry': 'Turn entry', sniper: 'Sniper', 'calls checkpoint': 'Calls checkpoint' };
+    var lab = function (c) { var s = c.setup || ''; if (s.indexOf('re-') === 0) return 'Re-entry (' + (LAB[s.slice(3)] || s.slice(3)) + ')'; return LAB[s] || s; };
+    var WHY = { stop: 'stopped', 'trail (3 ticks)': 'trail', trail: 'trail', 'time exit': 'time exit', time: 'time exit', target: 'target', 'broke box': 'broke the box', crossback: 'back through red 304',
+      'hit 304': 'reached red 304', 'gave way to a v9.2 setup': 'gave way', open: 'open', yield: 'gave way' };
+    var why = function (c) { return WHY[c.why] || c.why || ''; };
+    var C = [], DAYS = R.days, DAILY = [], LIVE = null;
+    function rebuild() {
+      C = R.cards.slice(); DAILY = R.daily.slice();
+      if (LIVE) { LIVE.cards.forEach(function (c) { C.push(c); }); DAILY.push(LIVE.daily); DAYS[LIVE.date] = LIVE.day; }
+      C.forEach(function (c) { c.id = c.date + '|' + c.src + '|' + c.setup + '|' + c.side + '|' + c.strike + '|' + c.m; c.weekday = DAYS[c.date].weekday; c.time_pt = pt(c.m); });
+    }
+    rebuild();
+
+    var html = '<div class="pane" data-p="chart"><div class="live" id="rp-live"><span class="dot"></span><span id="rp-live-t">Checking for a live morning…</span></div>';
     html += '<div class="chips" id="rp-f"></div><div id="rp-strip"></div>' +
       '<div class="desk" id="rp-desk"><section class="panel main"><p class="ttl" id="rp-title"></p><canvas id="rp-main"></canvas>' +
       '<p class="readout" id="rp-main-r">Hover the chart for a minute.</p>' +
-      '<div class="legend"><span><i style="border-color:var(--vwap)"></i>VWAP</span><span><i style="border-color:var(--s4)"></i>SMA 4</span><span><i style="border-color:var(--s7)"></i>SMA 7</span>' +
+      '<div class="legend"><span><i style="border-color:var(--vwap)"></i>VWAP</span><span><i style="border-color:var(--win)"></i>Green 8</span><span><i style="border-color:var(--loss)"></i>Red 304</span>' +
       '<span><i style="border-color:var(--cw)"></i>Call wall</span><span><i style="border-color:var(--pw)"></i>Put wall</span><span><i style="border-color:var(--gf)"></i>Gamma flip</span>' +
-      '<span><i style="border-color:var(--yd);border-top-style:dashed"></i>Yesterday H/L/C</span><span><i style="border-color:var(--level)"></i>Level you bought</span><span>▲ your buy · ▼ your sell · ★ Tulip Mania</span><span>Shaded: 7:35–8:35 window</span></div></section>' +
+      '<span><i style="border-color:var(--yd);border-top-style:dashed"></i>Yesterday H/L/C</span><span><i style="border-color:var(--level);border-top-style:dashed"></i>Trap line</span><span>▲ bot buy · ▼ bot sell · ● other bot trades</span></div></section>' +
       '<aside class="panel"><p class="eyebrow">The contract</p><p class="ttl" id="rp-opt-t"></p><div class="opt"><canvas id="rp-opt"></canvas></div><p class="fine" id="rp-opt-n"></p><div id="rp-side" style="display:flex;flex-direction:column;gap:10px"></div></aside></div>';
-    html += '</div><div class="pane" data-p="sum" hidden>';
-    // ---------- 1. headline ----------
-    var lk = R.leaks.slice().sort(function (a, b) { return a.pnl - b.pnl; })[0];
-    html += '<div class="kpis">' + [
-      ['You · QQQ trades', usd(R.you_qqq), C.length + ' trades · ' + won + ' won' + (R.skipped.length ? ' · ' + usd(R.you_all) + ' with ' + R.skipped.length + ' non-QQQ' : ''), cl(R.you_qqq)],
-      ['Tulip Mania · at chips', usd(R.tulipc), R.daily.reduce(function (n, d) { return n + d.tulip.length; }, 0) + ' trades · ' + usd(R.tulip1) + ' at 1 contract', cl(R.tulipc)],
-      ['The gap', usd(R.tulipc - R.you_qqq), 'what following the plan was worth', 'pos'],
-      ['Matched the rules', R.n_setup + ' of ' + C.length, 'trades that were a Tulip Mania setup', R.n_setup ? '' : 'neg'],
-      ['Biggest leak', lk ? usd(lk.pnl) : '—', lk ? lk.label + ' (' + lk.n + ')' : '', 'neg'],
-    ].map(function (x) { return '<div class="kpi"><small>' + x[0] + '</small><b class="' + (x[3] || '') + '">' + x[1] + '</b><span>' + x[2] + '</span></div>'; }).join('') + '</div>';
-    // ---------- 2. you vs the strategy ----------
-    html += '<div class="grid2"><section class="panel"><p class="eyebrow">What you made vs what Tulip Mania made · tap a day</p><div class="tbl"><table id="rp-daily"></table></div><p class="fine" id="rp-daily-n"></p></section>' +
+    html += '</div><div class="pane" data-p="sum" hidden><div class="kpis" id="rp-kpis"></div>' +
+      '<div class="grid2"><section class="panel"><p class="eyebrow">Every morning · card vs options · tap a day</p><div class="tbl"><table id="rp-daily"></table></div><p class="fine" id="rp-daily-n"></p></section>' +
       '<section class="panel"><p class="eyebrow">Running total</p><canvas id="rp-cum" style="height:240px"></canvas>' +
-      '<div class="legend"><span><i style="border-color:var(--you)"></i>You</span><span><i style="border-color:var(--win)"></i>Tulip Mania at chips</span><span><i style="border-color:var(--shake);border-top-style:dashed"></i>Tulip Mania at 1 contract</span></div>' +
-      '<p class="readout" id="rp-cum-r">Hover the chart for a day.</p></section></div>';
-    // ---------- 3. rule scoreboard ----------
-    html += '<div class="grid2"><section class="panel"><p class="eyebrow">Where it went wrong · your trades vs the v3.2 rules</p><div class="tbl"><table id="rp-rules"></table></div></section>' +
-      '<section class="panel"><p class="eyebrow">Leaks · P&amp;L of the trades that did it</p><div class="ev" id="rp-leaks"></div><p class="note" id="rp-lesson"></p></section></div>';
-    if (R.skipped.length) html += '<p class="fine">Not shown (no QQQ chart): ' + R.skipped.map(function (s) { return mmdd(s.date) + ' ' + esc(s.sym) + ' ' + usd(s.pnl); }).join(' · ') + '. Built from ' + esc(R.source) + ' on ' + esc(R.built) + '.</p>';
-    html += '</div>';
+      '<div class="legend"><span><i style="border-color:var(--win)"></i>Card + options</span><span><i style="border-color:var(--you)"></i>Card (as sized)</span><span><i style="border-color:var(--shake);border-top-style:dashed"></i>Card at 1 contract</span></div>' +
+      '<p class="readout" id="rp-cum-r">Hover the chart for a day.</p></section></div>' +
+      '<div class="grid2"><section class="panel"><p class="eyebrow">Scoreboard · by setup</p><div class="tbl"><table id="rp-rules"></table></div></section>' +
+      '<section class="panel"><p class="eyebrow">How trades ended · P&amp;L by exit</p><div class="ev" id="rp-leaks"></div><p class="note" id="rp-lesson"></p></section></div>' +
+      '<p class="fine" id="rp-built"></p></div>';
     document.getElementById('rp-wrap').innerHTML = html;
     function showPane(p) {
       document.querySelectorAll('#rp .tab').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.p === p ? 'true' : 'false'); });
       document.querySelectorAll('#rp .pane').forEach(function (x) { x.hidden = x.dataset.p !== p; });
-      if (p === 'sum') cum(); else { strip(); drawMain(); drawOpt(); }
+      if (p === 'sum') { summary(); cum(); } else { strip(); if (sel.card) { drawMain(); drawOpt(); } }
     }
     document.querySelectorAll('#rp .tab').forEach(function (b) { b.addEventListener('click', function () { showPane(b.dataset.p); }); });
 
-    // daily table
-    var sel = { date: null, card: null };
-    function dailyTable() {
-      var tY = 0, t1 = 0, tc = 0, mY = 0, m1 = 0, mc = 0, rows = '';
-      var tot = function (lab, a, b, c) { return '<tr class="hl"><td><b>' + lab + '</b></td><td class="n ' + cl(a) + '"><b>' + usd(a) + '</b></td><td></td><td class="mut">at 1 contract ' + usd(b) + '</td><td class="n ' + cl(c) + '"><b>' + usd(c) + '</b></td><td class="n ' + cl(c - a) + '"><b>' + usd0(c - a) + '</b></td></tr>'; };
-      R.daily.forEach(function (d, i) {
-        tY += d.you; t1 += d.tulip1; tc += d.tulipc; mY += d.you; m1 += d.tulip1; mc += d.tulipc;
-        var tl = d.tulip.length ? d.tulip.map(function (s) { return s.time_pt + ' ' + (s.kind === 'call' ? 'call ' : 'put ') + s.strike + ' · ' + s.chips + 'c'; }).join(', ') :
-          (d.unscored.length ? '<span class="mut">setup fired, no complete data</span>' : '<span class="mut">no setup</span>');
-        rows += '<tr class="click' + (sel.date === d.date ? ' sel' : '') + '" tabindex="0" data-d="' + d.date + '"><td>' + d.weekday + ' ' + d.date.slice(5) + '</td><td class="n ' + cl(d.you) + '">' + (d.n ? usd(d.you) : '—') + '</td><td class="n mut">' + (d.n ? d.won + '/' + d.n : '') +
-          '</td><td>' + tl + '</td><td class="n ' + cl(d.tulipc) + '">' + (d.tulip.length ? usd(d.tulipc) : '—') + '</td><td class="n ' + cl(d.tulipc - d.you) + '">' + usd0(d.tulipc - d.you) + '</td></tr>';
-        var nx = R.daily[i + 1];
-        if (!nx || nx.date.slice(0, 7) !== d.date.slice(0, 7)) { rows += tot(mname(d.date.slice(0, 7)), mY, m1, mc); mY = m1 = mc = 0; }
-      });
-      document.getElementById('rp-daily').innerHTML = '<thead><tr><th>Day</th><th class="n">You</th><th class="n">Won</th><th>Tulip Mania</th><th class="n">At chips</th><th class="n">Gap</th></tr></thead><tbody>' + rows +
-        (R.months.length > 1 ? tot('All months', tY, t1, tc) : '') + '</tbody>';
-      document.querySelectorAll('#rp-daily tr.click').forEach(function (tr) {
-        var go = function () { var d = tr.dataset.d, first = C.filter(function (c) { return c.date === d; })[0]; select(d, first || null, true); };
-        tr.addEventListener('click', go); tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
-      });
-    }
-    var uns = R.daily.filter(function (d) { return d.unscored.length; }).map(function (d) { return mmdd(d.date); });
-    document.getElementById('rp-daily-n').textContent = (uns.length ? 'Tulip Mania fired on ' + uns.join(', ') + ' too, but the option data was incomplete, so those results are unknown and not counted. ' : '') +
-      (function () { var b = R.daily.slice().sort(function (x, y) { return (y.tulipc - y.you) - (x.tulipc - x.you); })[0]; return b && b.tulipc - b.you > 0 ? 'Biggest miss: ' + b.weekday + ' ' + mmdd(b.date) + ', Tulip Mania ' + usd(b.tulipc) + ' vs you ' + usd0(b.you) + '.' : ''; })();
-
-    // running total chart
-    function cum() {
-      var cv = document.getElementById('rp-cum'), S = setup(cv), g = S[0], w = S[1], h = S[2], pad = { l: 56, r: 104, t: 12, b: 24 };
-      var a = 0, b = 0, c = 0, Y1 = [0], T1 = [0], TC = [0];
-      R.daily.forEach(function (d) { a += d.you; b += d.tulip1; c += d.tulipc; Y1.push(a); T1.push(b); TC.push(c); });
-      var all = Y1.concat(T1, TC), lo = Math.min.apply(null, all), hi = Math.max.apply(null, all), sp = hi - lo; lo -= sp * 0.08; hi += sp * 0.1;
-      var n = Y1.length, X = function (i) { return pad.l + i / (n - 1) * (w - pad.l - pad.r); }, Y = function (v) { return pad.t + (hi - v) / (hi - lo) * (h - pad.t - pad.b); };
-      var step = [50, 100, 250, 500, 1000].find(function (s) { return (hi - lo) / s <= 6; }) || 1000;
-      g.font = '11px ' + css('--mono'); g.textBaseline = 'middle';
-      for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) { g.strokeStyle = css(v === 0 ? '--mute' : '--grid'); g.beginPath(); g.moveTo(pad.l, Y(v)); g.lineTo(w - pad.r, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText((v < 0 ? '−$' : '$') + Math.abs(v), 4, Y(v)); }
-      g.textBaseline = 'alphabetic';
-      var every = Math.max(1, Math.ceil(R.daily.length * 44 / (w - pad.l - pad.r))); R.daily.forEach(function (d, i) { if (i % every === 0) { g.fillStyle = css('--mute'); g.fillText(d.date.slice(5), X(i + 1) - 14, h - 6); } });
-      [[TC, '--win', [], 'Tulip ' + usd(c)], [T1, '--shake', [5, 4], '1 ct ' + usd(b)], [Y1, '--you', [], 'You ' + usd(a)]].forEach(function (s) {
-        g.strokeStyle = css(s[1]); g.setLineDash(s[2]); g.lineWidth = 2; g.beginPath(); s[0].forEach(function (v, i) { i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)); }); g.stroke(); g.setLineDash([]);
-        g.fillStyle = css('--fg'); g.font = '600 11px ' + css('--mono'); g.fillText(s[3], w - pad.r + 6, Y(s[0][n - 1]) + 4); g.font = '11px ' + css('--mono');
-      });
-      cv.onmousemove = function (e) { var r = cv.getBoundingClientRect(), i = Math.round((e.clientX - r.left - pad.l) / (w - pad.l - pad.r) * (n - 1)); i = Math.max(1, Math.min(n - 1, i)); var d = R.daily[i - 1];
-        document.getElementById('rp-cum-r').textContent = d.weekday + ' ' + mmdd(d.date) + ' · you ' + usd0(d.you) + ' (running ' + usd(Y1[i]) + ') · Tulip ' + usd0(d.tulipc) + ' at chips (running ' + usd(TC[i]) + ')'; };
-    }
-
-    // rules scoreboard
-    var ORDER = ['day', 'time', 'level', 'vwap', 'wall', 'vol', 'turn', 'otm', 'stop', 'target', 'oneloss', 'max2'];
-    document.getElementById('rp-rules').innerHTML = '<thead><tr><th>Rule</th><th class="n">Followed</th><th class="n">Broke</th><th class="n">P&amp;L when broken</th></tr></thead><tbody>' +
-      ORDER.map(function (k) { var r = R.rules[k]; if (!r) return ''; return '<tr><td>' + esc(r.label) + '</td><td class="n">' + r.ok + '</td><td class="n ' + (r.no ? 'neg' : 'mut') + '">' + r.no + '</td><td class="n ' + cl(r.pnl_no) + '">' + (r.no ? usd(r.pnl_no) : '—') + '</td></tr>'; }).join('') + '</tbody>';
-    var mx = Math.max.apply(null, R.leaks.map(function (l) { return Math.abs(l.pnl); }).concat([1]));
-    document.getElementById('rp-leaks').innerHTML = R.leaks.filter(function (l) { return l.n; }).map(function (l) {
-      return '<div class="evrow"><span>' + esc(l.label) + ' <span class="mut">(' + l.n + ')</span></span><div class="bar"><i style="width:' + (100 * Math.abs(l.pnl) / mx).toFixed(1) + '%;background:var(' + (l.pnl < 0 ? '--loss' : '--win') + ')"></i></div><b class="mono ' + cl(l.pnl) + '">' + usd(l.pnl) + '</b></div>'; }).join('');
-    var outW = R.rules.time, noLv = R.rules.level;
-    document.getElementById('rp-lesson').textContent = outW.no + ' of ' + C.length + ' trades were outside 7:35–8:35 and ' + noLv.no + ' had no tested level behind them. ' + (R.n_setup ? R.n_setup + ' of your trades were a Tulip Mania setup' : 'None of your trades was a Tulip Mania setup') + '; ' +
-      'the strategy needed ' + R.daily.reduce(function (n, d) { return n + d.tulip.length; }, 0) + ' trades to make ' + usd(R.tulipc) + '. The fix is mostly waiting, not trading better.';
-
-    // filters + strip
-    var FILT = [['all', 'All'], ['win', 'Wins'], ['loss', 'Losses'], ['outside window', 'Outside window'], ['re', 'Re-try / revenge'], ['held past stop', 'Held past stop'], ['close to a setup', 'Close to a setup'], ['near the setup', 'Near a Tulip trade']];
+    // ---------- filters + strip (newest month first) ----------
+    var FILT = [['all', 'All'], ['win', 'Wins'], ['loss', 'Losses'], ['open', 'Open now'], ['card', 'Card'], ['option', 'Options'], ['Trap', 'Trap'], ['Gap-and-go', 'Gap-and-go'], ['Fade the week', 'Fade the week'],
+      ['VIX bounce', 'VIX bounce'], ['Failed poke', 'Failed poke'], ['flipre', 'Flip / re-entry'], ['Box', 'Box'], ['Playbook', 'Playbook'], ['Tulip', 'Tulip'], ['Turn entry', 'Turn entry'], ['Sniper', 'Sniper'],
+      ['Calls checkpoint', 'Calls checkpoint'], ['flipped', 'Flipped options'], ['stopped', 'Stopped']];
     var filter = 'all';
-    var fOk = function (c) { return filter === 'all' || (filter === 'win' ? c.pnl > 0 : filter === 'loss' ? c.pnl <= 0 : filter === 're' ? (c.tags.indexOf('re-try') >= 0 || c.tags.indexOf('revenge') >= 0) : c.tags.indexOf(filter) >= 0); };
-    document.getElementById('rp-f').innerHTML = FILT.map(function (f) { var n = C.filter(function (c) { var o = filter; filter = f[0]; var r = fOk(c); filter = o; return r; }).length;
-      return '<button class="chip" data-f="' + f[0] + '" aria-pressed="' + (f[0] === filter) + '"' + (n || f[0] === 'all' ? '' : ' hidden') + '>' + f[1] + ' · ' + n + '</button>'; }).join('');
-    document.querySelectorAll('#rp-f .chip').forEach(function (b) { b.addEventListener('click', function () { filter = b.dataset.f; document.querySelectorAll('#rp-f .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); strip(); }); });
-    var TAGC = { 'outside window': 'bad', 'no level': 'bad', 'far from VWAP': 'warn', 're-try': 'warn', 'revenge': 'bad', 'held past stop': 'bad', 'sold early': 'warn', 'near the setup': 'tulip', 'close to a setup': 'tulip', 'tulip setup': 'ok', 'expired': 'bad' };
+    var fOk = function (c, f) { f = f || filter; var L = lab(c); return f === 'all' || (f === 'win' ? c.pnl > 0 && c.why !== 'open' : f === 'loss' ? c.pnl <= 0 && c.why !== 'open' : f === 'open' ? c.why === 'open' : f === 'card' || f === 'option' ? c.src === f :
+      f === 'flipre' ? (L === 'Flip' || L.indexOf('Re-entry') === 0) : f === 'flipped' ? c.how === 'flip' : f === 'stopped' ? c.why === 'stop' : L === f); };
+    function chips() {
+      document.getElementById('rp-f').innerHTML = FILT.map(function (f) { var n = C.filter(function (c) { return fOk(c, f[0]); }).length;
+        return '<button class="chip" data-f="' + f[0] + '" aria-pressed="' + (f[0] === filter) + '"' + (n || f[0] === 'all' ? '' : ' hidden') + '>' + f[1] + ' · ' + n + '</button>'; }).join('');
+      document.querySelectorAll('#rp-f .chip').forEach(function (b) { b.addEventListener('click', function () { filter = b.dataset.f; document.querySelectorAll('#rp-f .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); strip(); }); });
+    }
+    function tagsOf(c) { var t = [];
+      t.push('<span class="tag ' + (c.src === 'option' ? 'opt' : '') + '">' + esc(lab(c)) + '</span>');
+      if (c.src === 'option') t.push('<span class="tag opt">' + (c.how === 'flip' ? 'option · flipped' : c.how === 'agree' ? 'option · with card' : 'option · box first') + '</span>');
+      if (c.ct > 1) t.push('<span class="tag">' + c.ct + '×</span>');
+      t.push('<span class="tag ' + (c.why === 'open' ? 'live' : c.why === 'stop' ? 'bad' : c.pnl > 0 ? 'ok' : 'warn') + '">' + esc(c.why === 'open' ? 'open now' : why(c)) + '</span>');
+      return t.join(''); }
     function strip() {
       var el = document.getElementById('rp-strip'), months = {};
-      R.daily.forEach(function (d) {
-        var mine = C.filter(function (c) { return c.date === d.date && fOk(c); });
-        var L = (months[d.date.slice(0, 7)] = months[d.date.slice(0, 7)] || []);
-        mine.forEach(function (c) { L.push(c); });
-        if (filter === 'all' && !C.some(function (c) { return c.date === d.date; }) && d.tulip.length) L.push({ tulipDay: d });
-      });
-      el.innerHTML = Object.keys(months).sort().map(function (m) {
-        return '<p class="month">' + mname(m) + '</p><div class="strip">' + months[m].map(function (c) {
-          if (c.tulipDay) { var d = c.tulipDay, s0 = d.tulip[0];
-            return '<button class="card tulip" data-d="' + d.date + '"><div class="top"><span>' + d.weekday + ' ' + d.date.slice(5) + ' · no trade</span><span class="pnl pos">' + usd(d.tulipc) + '</span></div><canvas></canvas><div class="tags"><span class="tag ok">missed Tulip setup</span><span class="tag">' + s0.time_pt + ' ' + s0.kind + ' · ' + s0.chips + 'c</span></div></button>'; }
-          var i = C.indexOf(c);
-          return '<button class="card" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><div class="top"><span>' + c.weekday + ' ' + c.date.slice(5) + ' · ' + c.time_pt + ' · ' + (c.kind === 'call' ? 'Call' : 'Put') + (c.qty > 1 ? ' ×' + c.qty : '') + '</span><span class="pnl ' + cl(c.pnl) + '">' + usd(c.pnl) + '</span></div><canvas></canvas><div class="tags">' +
-            c.tags.slice(0, 2).map(function (t) { return '<span class="tag ' + (TAGC[t] || '') + '">' + esc(t) + '</span>'; }).join('') + '<span class="tag">broke ' + c.broke.length + '</span></div></button>';
-        }).join('') + '</div>';
-      }).join('');
-      el.querySelectorAll('.card[data-i]').forEach(function (b) { var c = C[+b.dataset.i]; mini(b.querySelector('canvas'), c); b.addEventListener('click', function () { select(c.date, c, true); }); });
-      el.querySelectorAll('.card[data-d]').forEach(function (b) { var d = R.daily.filter(function (x) { return x.date === b.dataset.d; })[0], s0 = d.tulip[0];
-        mini(b.querySelector('canvas'), { date: d.date, m: s0.m, exit_m: s0.exit_min, pnl: s0.pnlc }); b.addEventListener('click', function () { select(d.date, null, true); }); });
+      C.filter(function (c) { return fOk(c); }).forEach(function (c) { (months[c.date.slice(0, 7)] = months[c.date.slice(0, 7)] || []).push(c); });
+      el.innerHTML = Object.keys(months).sort().reverse().map(function (m) {
+        var L = months[m].slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : a.m - b.m; });
+        return '<p class="month">' + mname(m) + '</p><div class="strip">' + L.map(function (c) { var i = C.indexOf(c);
+          return '<button class="card' + (c.why === 'open' ? ' open' : '') + '" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><div class="top"><span>' + c.weekday + ' ' + c.date.slice(5) + ' · ' + c.time_pt + ' · ' + (c.side === 'call' ? 'Call' : 'Put') + ' ' + c.strike + (c.ct > 1 ? ' ×' + c.ct : '') +
+            '</span><span class="pnl ' + cl(c.pnl) + '">' + usd(c.pnl) + '</span></div><canvas></canvas><div class="tags">' + tagsOf(c) + '</div></button>'; }).join('') + '</div>';
+      }).join('') || '<p class="fine">No trades for this filter.</p>';
+      el.querySelectorAll('.card[data-i]').forEach(function (b) { var c = C[+b.dataset.i]; mini(b.querySelector('canvas'), c); b.addEventListener('click', function () { select(c, true); }); });
     }
-    function setup(cv) {
-      var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
-      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-      var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); return [g, w, h];
-    }
-    function span(c) { var D = DAYS[c.date], n = D.candles.length; return [Math.max(0, Math.floor(c.m) - 30), Math.min(n - 1, Math.ceil(c.exit_m) + 15)]; }
+    function setup(cv) { var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); return [g, w, h]; }
+    var exitOf = function (c) { var D = DAYS[c.date]; return c.exit_m == null ? D.candles.length - 1 : Math.min(c.exit_m, D.candles.length - 1); };
+    function span(c) { var D = DAYS[c.date], n = D.candles.length; return [Math.max(0, Math.floor(c.m) - 30), Math.min(n - 1, Math.ceil(exitOf(c)) + 15)]; }
     function mini(cv, c) {
       var S = setup(cv), g = S[0], w = S[1], h = S[2], D = DAYS[c.date], ab = span(c), a = ab[0], z = ab[1], cs = D.candles.slice(a, z + 1);
+      if (!cs.length) return;
       var lo = Math.min.apply(null, cs.map(function (x) { return x[2]; })), hi = Math.max.apply(null, cs.map(function (x) { return x[1]; })), p = (hi - lo) * 0.08 || 0.1; lo -= p; hi += p;
       var X = function (i) { return 2 + (i - a) / Math.max(1, z - a) * (w - 4); }, Y = function (v) { return h - 2 - (v - lo) / (hi - lo) * (h - 4); };
-      g.fillStyle = css('--grid'); g.fillRect(X(c.m), 0, X(Math.min(z, c.exit_m)) - X(c.m), h);
+      g.fillStyle = css('--grid'); g.fillRect(X(c.m), 0, X(exitOf(c)) - X(c.m), h);
       g.strokeStyle = css('--vwap'); g.lineWidth = 1; g.beginPath(); cs.forEach(function (x, k) { k ? g.lineTo(X(a + k), Y(x[5])) : g.moveTo(X(a + k), Y(x[5])); }); g.stroke();
       g.strokeStyle = css('--fg'); g.lineWidth = 1.5; g.beginPath(); cs.forEach(function (x, k) { k ? g.lineTo(X(a + k), Y(x[3])) : g.moveTo(X(a + k), Y(x[3])); }); g.stroke();
       var ci = Math.min(D.candles.length - 1, Math.floor(c.m)); g.fillStyle = css('--you'); g.beginPath(); g.arc(X(c.m), Y(D.candles[ci][3]), 3.5, 0, 7); g.fill();
-      var xi = Math.min(D.candles.length - 1, Math.floor(c.exit_m)); g.fillStyle = css(c.pnl > 0 ? '--win' : '--loss'); g.beginPath(); g.arc(X(c.exit_m), Y(D.candles[xi][3]), 3.5, 0, 7); g.fill();
+      if (c.why !== 'open') { var xi = exitOf(c); g.fillStyle = css(c.pnl > 0 ? '--win' : '--loss'); g.beginPath(); g.arc(X(xi), Y(D.candles[xi][3]), 3.5, 0, 7); g.fill(); }
     }
 
     // ---------- main chart ----------
-    var hoverM = null;
+    var hoverM = null, sel = { card: null };
+    function trapLine(D) { var mp = D.map || {}; if (mp.yday_low == null) return null; return mp.yesterday === 'green' ? mp.yday_low - 1 : mp.yday_high + 1; }
     function drawMain() {
-      var D = DAYS[sel.date], c = sel.card, cv = document.getElementById('rp-main'), S = setup(cv), g = S[0], w = S[1], h = S[2], n = D.candles.length;
-      var ms = []; if (c) { ms.push(c.m, c.exit_m); if (c.test_m != null) ms.push(c.test_m); }
-      D.strategy.forEach(function (s) { if (!c || Math.abs(s.m - c.m) <= 40) ms.push(s.m, s.exit_min); });
-      var a = Math.max(0, Math.floor(Math.min.apply(null, ms)) - 40), z = Math.min(n - 1, Math.ceil(Math.max.apply(null, ms)) + 20);
+      var c = sel.card; if (!c) return; var D = DAYS[c.date], cv = document.getElementById('rp-main'), S = setup(cv), g = S[0], w = S[1], h = S[2], n = D.candles.length;
+      var a = Math.max(0, Math.floor(c.m) - 40), z = Math.min(n - 1, Math.ceil(exitOf(c)) + 20);
       var padL = 6, padR = 78, top = 8, ph = Math.round(h * 0.74), vTop = ph + 20, vh = h - vTop - 18;
       var vis = D.candles.slice(a, z + 1);
       var lo = Math.min.apply(null, vis.map(function (x) { return x[2]; })), hi = Math.max.apply(null, vis.map(function (x) { return x[1]; }));
-      if (c && c.L) { lo = Math.min(lo, c.L); hi = Math.max(hi, c.L); }
       var pd = (hi - lo) * 0.1 || 0.2; lo -= pd; hi += pd;
       var pw = w - padL - padR, cw = pw / (z - a + 1);
       var X = function (i) { return padL + (i - a + 0.5) * cw; }, Y = function (v) { return top + (hi - v) / (hi - lo) * (ph - top); };
       var inR = function (v) { return v != null && v >= lo && v <= hi; };
-      g.fillStyle = css('--grid'); var w0 = Math.max(a, 65), w1 = Math.min(z, 123); if (w1 >= w0) g.fillRect(X(w0) - cw / 2, top, X(w1) - X(w0) + cw, ph - top);
+      g.fillStyle = css('--grid'); g.fillRect(X(Math.max(a, c.m)) - cw / 2, top, X(Math.min(z, exitOf(c))) - X(Math.max(a, c.m)) + cw, ph - top);
       var step = [0.25, 0.5, 1, 2, 2.5, 5].find(function (s) { return (hi - lo) / s <= 7; }) || 5;
       g.font = '11px ' + css('--mono'); g.textBaseline = 'middle';
       for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) { g.strokeStyle = css('--grid'); g.lineWidth = 1; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText(v.toFixed(2), w - padR + 6, Y(v)); }
@@ -284,20 +224,16 @@
       for (var m = Math.ceil(a / tstep) * tstep; m <= z; m += tstep) { g.fillStyle = css('--mute'); g.fillText(pt(m), X(m) - 14, h - 4); }
       var labels = [], yd = D.yday || {}; g.setLineDash([4, 4]); g.lineWidth = 1;
       [['high', 'Y high'], ['low', 'Y low'], ['close', 'Y close']].forEach(function (p) { if (!inR(yd[p[0]])) return; g.strokeStyle = css('--yd'); g.beginPath(); g.moveTo(padL, Y(yd[p[0]])); g.lineTo(w - padR, Y(yd[p[0]])); g.stroke(); g.fillStyle = css('--yd'); g.fillText(p[1], padL + 4, Y(yd[p[0]]) - 3); });
+      var tl = trapLine(D); if (inR(tl)) { g.strokeStyle = css('--level'); g.globalAlpha = 0.7; g.beginPath(); g.moveTo(padL, Y(tl)); g.lineTo(w - padR, Y(tl)); g.stroke(); g.globalAlpha = 1; labels.push([Y(tl), 'TRAP ' + tl.toFixed(2), '--level']); }
       g.setLineDash([]);
       [['call_wall', '--cw', 'Call wall'], ['put_wall', '--pw', 'Put wall'], ['gamma_flip', '--gf', 'Gamma flip']].forEach(function (q) {
         var s = D.levels[q[0]]; if (!s) return; g.strokeStyle = css(q[1]); g.lineWidth = 1.2; g.globalAlpha = 0.85; g.beginPath(); var on = false, lv = null;
         for (var i = a; i <= z; i++) { var v2 = s[i]; if (!inR(v2)) { on = false; continue; } var y = Y(v2); if (!on || v2 !== lv) { g.moveTo(X(i) - cw / 2, y); on = true; } g.lineTo(X(i) + cw / 2, y); lv = v2; }
         g.stroke(); g.globalAlpha = 1; var last = s[z]; if (inR(last)) labels.push([Y(last), q[2] + ' ' + last.toFixed(0), q[1]]);
       });
-      if (c && c.L) { g.strokeStyle = css('--level'); g.lineWidth = 2.5; g.beginPath(); g.moveTo(padL, Y(c.L)); g.lineTo(w - padR, Y(c.L)); g.stroke(); labels.push([Y(c.L), 'LEVEL ' + c.L.toFixed(2), '--level']); }
-      D.strategy.forEach(function (s) { if (inR(s.L) && !(c && c.L === s.L)) { g.strokeStyle = css('--win'); g.globalAlpha = 0.6; g.setLineDash([6, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(padL, Y(s.L)); g.lineTo(w - padR, Y(s.L)); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; labels.push([Y(s.L), 'Tulip lvl ' + s.L.toFixed(2), '--win']); } });
       g.strokeStyle = css('--vwap'); g.lineWidth = 2; g.beginPath(); for (var i = a; i <= z; i++) { var y = Y(D.candles[i][5]); i === a ? g.moveTo(X(i), y) : g.lineTo(X(i), y); } g.stroke(); labels.push([Y(D.candles[z][5]), 'VWAP', '--vwap']);
-      [['sma4', '--s4'], ['sma7', '--s7']].forEach(function (q) { g.strokeStyle = css(q[1]); g.lineWidth = 1.3; g.beginPath(); var st = false; for (var i = a; i <= z; i++) { var v3 = D[q[0]][i]; if (v3 == null) continue; st ? g.lineTo(X(i), Y(v3)) : g.moveTo(X(i), Y(v3)); st = true; } g.stroke(); });
-      var vmax = Math.max.apply(null, vis.map(function (x) { return x[4]; }));
-      if (c && c.m - 35 >= a) { var vr = c.rules.filter(function (r) { return r.k === 'vol'; })[0]; g.fillStyle = css('--grid'); g.fillRect(X(Math.floor(c.m) - 35) - cw / 2, vTop, 30 * cw, vh);
-        if (vr && vr.ok != null) { g.globalAlpha = 0.35; g.fillStyle = css(vr.ok ? '--win' : '--loss'); g.fillRect(X(Math.floor(c.m) - 5) - cw / 2, vTop, 5 * cw, vh); g.globalAlpha = 1;
-          g.fillStyle = css('--fg'); g.font = '600 11px ' + css('--display'); g.fillText('volume into your buy: ' + vr.d + (vr.ok ? ' ✓ drying up' : ' ✗ rising'), X(Math.floor(c.m) - 35), vTop - 4); g.font = '11px ' + css('--mono'); } }
+      [['g8', '--win', 'Green 8'], ['r304', '--loss', 'Red 304']].forEach(function (q) { var s = D[q[0]]; if (!s) return; g.strokeStyle = css(q[1]); g.lineWidth = 1.4; g.beginPath(); var st = false; for (var i = a; i <= z; i++) { var v3 = s[i]; if (v3 == null || !inR(v3)) { st = false; continue; } st ? g.lineTo(X(i), Y(v3)) : g.moveTo(X(i), Y(v3)); st = true; } g.stroke(); if (inR(s[z])) labels.push([Y(s[z]), q[2], q[1]]); });
+      var vmax = Math.max.apply(null, vis.map(function (x) { return x[4]; })) || 1;
       for (var i2 = a; i2 <= z; i2++) {
         var k = D.candles[i2], col = css(k[3] >= k[0] ? '--up' : '--down'); g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 1;
         g.beginPath(); g.moveTo(X(i2), Y(k[1])); g.lineTo(X(i2), Y(k[2])); g.stroke();
@@ -307,99 +243,224 @@
       g.fillStyle = css('--mute'); g.fillText('Volume', padL + 2, vTop + 10);
       var px = function (m) { var j = Math.max(0, Math.min(n - 1, Math.floor(m))); return D.candles[j][3]; };
       var tri = function (m, up, col, txt, row) {
-        var x = X(Math.floor(m)) + (m % 1) * cw, y = Y(px(m)); g.strokeStyle = css(col); g.setLineDash([3, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(x, top); g.lineTo(x, vTop + vh); g.stroke(); g.setLineDash([]);
+        var x = X(Math.floor(m)), y = Y(px(m)); g.strokeStyle = css(col); g.setLineDash([3, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(x, top); g.lineTo(x, vTop + vh); g.stroke(); g.setLineDash([]);
         g.fillStyle = css('--panel'); g.beginPath(); up ? (g.moveTo(x, y - 9), g.lineTo(x - 8, y + 6), g.lineTo(x + 8, y + 6)) : (g.moveTo(x, y + 9), g.lineTo(x - 8, y - 6), g.lineTo(x + 8, y - 6)); g.closePath(); g.fill();
         g.fillStyle = css(col); g.beginPath(); up ? (g.moveTo(x, y - 7), g.lineTo(x - 6, y + 5), g.lineTo(x + 6, y + 5)) : (g.moveTo(x, y + 7), g.lineTo(x - 6, y - 5), g.lineTo(x + 6, y - 5)); g.closePath(); g.fill();
         g.fillStyle = css('--fg'); g.font = '600 11px ' + css('--display'); var tx = Math.min(x + 6, w - padR - g.measureText(txt).width - 4); g.fillText(txt, Math.max(padL, tx), top + 12 + row * 14); g.font = '11px ' + css('--mono');
       };
-      var row = 0;
-      if (c) {
-        var groups = {}; c.fills.forEach(function (f) { var key = f.side + Math.round(f.m * 4); (groups[key] = groups[key] || []).push(f); });
-        Object.keys(groups).forEach(function (key) { var F = groups[key], f = F[0], q = F.reduce(function (s, x) { return s + x.qty; }, 0);
-          var buy = f.side === 'Buy'; tri(f.m, buy, buy ? '--you' : (c.pnl > 0 ? '--win' : '--loss'), (buy ? 'BUY ' : 'SELL ') + q + ' @ ' + f.px.toFixed(2) + ' · ' + f.pt.slice(0, -3), row % 3); row++; });
-      }
-      D.strategy.forEach(function (s) {
-        if (s.m < a || s.m > z) return; var x = X(s.m), y = Y(px(s.m)); g.fillStyle = css('--win'); g.font = '700 18px ' + css('--display'); g.fillText('★', x - 7, y + 6);
-        g.font = '600 11px ' + css('--display'); var txt = 'TULIP ' + s.kind.toUpperCase() + ' ' + s.strike + ' · ' + s.chips + 'c · ' + usd(s.pnlc); g.fillText(txt, Math.min(x + 10, w - padR - g.measureText(txt).width - 4), y - 10);
-        if (s.exit_min <= z) { g.strokeStyle = css('--win'); g.setLineDash([2, 3]); g.beginPath(); g.moveTo(X(s.exit_min), top); g.lineTo(X(s.exit_min), ph); g.stroke(); g.setLineDash([]); g.fillText(s.why === 'take profit' ? 'TARGET' : 'STOP', X(s.exit_min) + 3, ph - 4); }
-        g.font = '11px ' + css('--mono');
-      });
+      C.forEach(function (o) { if (o === c || o.date !== c.date || o.m < a || o.m > z) return; g.fillStyle = css(o.src === 'option' ? '--accent' : '--you'); g.globalAlpha = 0.8; g.beginPath(); g.arc(X(o.m), Y(px(o.m)), 4, 0, 7); g.fill(); g.globalAlpha = 1; });
+      tri(c.m, true, '--you', 'BUY ' + c.ct + '× ' + (c.side === 'call' ? 'C' : 'P') + c.strike + ' @ ' + q2(c.paid) + ' · ' + pt(c.m), 0);
+      if (c.why !== 'open' && c.exit_m != null && c.exit_m <= z) tri(c.exit_m, false, c.pnl > 0 ? '--win' : '--loss', 'SELL · ' + why(c) + ' · ' + pt(c.exit_m) + ' · ' + usd(c.pnl), 1);
       labels.sort(function (p, q) { return p[0] - q[0]; }); var prevY = -99; g.font = '600 10.5px ' + css('--display');
       labels.forEach(function (L) { var yy = Math.max(L[0], prevY + 12); prevY = yy; g.fillStyle = css('--panel'); g.fillRect(w - padR + 2, yy - 7, padR - 2, 13); g.fillStyle = css(L[2]); g.fillText(L[1], w - padR + 5, yy + 4); });
       if (hoverM != null && hoverM >= a && hoverM <= z) { g.strokeStyle = css('--mute'); g.lineWidth = 1; g.beginPath(); g.moveTo(X(hoverM), top); g.lineTo(X(hoverM), vTop + vh); g.stroke(); }
       cv._map = { a: a, z: z, padL: padL, cw: cw };
     }
-    var mc = null;
-    function hookMain() {
+    (function hookMain() {
       var cv = document.getElementById('rp-main');
-      cv.onmousemove = function (e) { var mp = cv._map; if (!mp) return; var r = cv.getBoundingClientRect(), m = Math.round(mp.a + (e.clientX - r.left - mp.padL) / mp.cw - 0.5); m = Math.max(mp.a, Math.min(mp.z, m));
-        hoverM = m; drawMain(); var D = DAYS[sel.date], k = D.candles[m];
-        document.getElementById('rp-main-r').textContent = pt(m) + ' PT · O ' + k[0].toFixed(2) + ' H ' + k[1].toFixed(2) + ' L ' + k[2].toFixed(2) + ' C ' + k[3].toFixed(2) + ' · VWAP ' + k[5].toFixed(2) + (D.sma4[m] ? ' · SMA4 ' + D.sma4[m].toFixed(2) + ' / SMA7 ' + D.sma7[m].toFixed(2) : '') + ' · vol ' + k[4].toLocaleString('en-US'); };
+      cv.onmousemove = function (e) { var mp = cv._map; if (!mp || !sel.card) return; var r = cv.getBoundingClientRect(), m = Math.round(mp.a + (e.clientX - r.left - mp.padL) / mp.cw - 0.5); m = Math.max(mp.a, Math.min(mp.z, m));
+        hoverM = m; drawMain(); var D = DAYS[sel.card.date], k = D.candles[m];
+        document.getElementById('rp-main-r').textContent = pt(m) + ' PT · O ' + q2(k[0]) + ' H ' + q2(k[1]) + ' L ' + q2(k[2]) + ' C ' + q2(k[3]) + ' · VWAP ' + q2(k[5]) + (D.g8 ? ' · green 8 ' + q2(D.g8[m]) + ' · red 304 ' + q2(D.r304[m]) : '') + ' · vol ' + (k[4] || 0).toLocaleString('en-US'); };
       cv.onmouseleave = function () { hoverM = null; drawMain(); };
+    })();
+
+    // ---------- the bot's rules for each trade ----------
+    var OPTRULE = { 'box scalp': 'Box: buy the floor (calls) / ceiling (puts) of a proven 30-min box · +0.30 target · out on a close 0.25 outside · stop −0.30 · 30 min',
+      'Playbook home run': 'Playbook home run: bounce off a sticky GEX / yesterday level near VWAP · stop −0.30 · trail from +1.20 · 60 min',
+      'Tulip v3.2': 'Tulip: bounce off a sticky GEX / yesterday level near VWAP · stop −0.30 · target +2.00 · 60 min',
+      'turn entry': 'Turn entry: QQQ under red 304, green 8 turning up, option ≥ 15% under its 18 · stop −0.55 · out on the 304 crossback',
+      sniper: 'Sniper: QQQ stretched 1.5–3.0+ under red 304 · green 8 turns up · +0.75 or red 304',
+      'calls checkpoint': 'Calls checkpoint: QQQ under red 304 + green 8 turning up + option 8% over its 11 · out on the 304 crossback' };
+    function rulesOf(c) {
+      var D = DAYS[c.date], mp = D.map || {}, P = c.path || {}, R2 = [], ok = function (v, l, d) { R2.push({ ok: v, label: l, d: d || '' }); };
+      if (c.src === 'card') {
+        var s = c.setup || '', base = s.indexOf('re-') === 0 ? s.slice(3) : s;
+        if (base === 'trap') ok(true, 'Trap: yesterday ' + (mp.yesterday || '?') + ' + QQQ 1.00 past yesterday\'s ' + (mp.yesterday === 'green' ? 'low' : 'high'), (mp.trap || '') + (mp.trap_zone_reached ? ' · zone reached ' + mp.trap_zone_reached : ''));
+        else if (base === 'gap') ok(true, 'Gap-and-go: gap 2.50+ with last week (' + (mp.last_week || '?') + ')', 'gap ' + q2(mp.gap) + ' · armed ' + (mp.gap_and_go_armed || '—'));
+        else if (base === 'fw') ok(mp.fade_week_value_ok !== false, 'Fade the week: inside yesterday\'s value area at 7:00, after 7:30', 'value area ' + (mp.value_area ? mp.value_area.join('–') : '—') + ' · last week ' + (mp.last_week || '?'));
+        else if (base === 'vb') ok(true, 'VIX bounce: red yesterday + VIX ≥ 16.5, call turns after 7:30', 'VIX ' + q2(D.vix) + (D.htf ? ' · daily ' + D.htf.daily + ' / weekly ' + D.htf.weekly : ''));
+        else if (base === 'failed poke (B)' || base === 'fp') ok(true, 'Failed poke: closed past yesterday\'s ' + (mp.yesterday === 'green' ? 'low' : 'high') + ' then back inside, rejected at green 14', 'always 1 contract');
+        else if (base === 'flip') ok(true, 'Flip: the fake-out line broke, so the other side (max 1 a day)', '');
+        if (s.indexOf('re-') === 0) ok(true, 'Re-entry: the next turn after a stop, swing still holding', '');
+        ok(true, 'Bought on a closed bar, next quote', 'signal ' + pt(c.sig != null ? c.sig : c.m) + ' → filled ' + pt(c.m) + ' at ' + q2(c.paid));
+        ok(c.paid >= 0.75 && c.paid <= 1.30 && (P.iv == null || P.iv <= 0.35), 'Contract near the money (0.80–1.25) · IV ≤ 35%', 'paid ' + q2(c.paid) + (P.iv != null ? ' · IV ' + (P.iv * 100).toFixed(0) + '%' : ''));
+        ok(null, 'Size: ' + c.ct + '×', c.ct === 3 ? 'your lines agreed (green 8 vs red 304 / stretched from the reds)' : base === 'vb' && D.htf && D.htf.daily === -1 && D.htf.weekly === -1 ? 'bounce call against daily + weekly → 1×' : '1 contract');
+        ok(P.hit30 != null, '+0.30 → stop moves up to −0.15', P.hit30 != null ? 'reached at ' + pt(P.hit30) : 'never reached · best ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—'));
+        ok(P.hit50 != null, '+0.50 → trail armed (sell after 3 green 8 ticks against)', P.hit50 != null ? 'armed at ' + pt(P.hit50) : 'never armed');
+        ok(c.why === 'open' ? null : c.why !== 'stop', 'Exit: ' + (c.why === 'open' ? 'still open' : why(c)), c.why === 'open' ? 'stop ' + q2((P.aMid || c.paid) - 0.5) : 'out ' + pt(c.exit_m) + (c.sold != null ? ' at ' + q2(c.sold) : '') + ' · ' + usd(c.pnl));
+      } else {
+        ok(true, 'Direction: ' + (c.how === 'agree' ? 'same side as the card' : c.how === 'flip' ? 'flipped to the card\'s side (the ' + (c.flipped_from || '') + ' signal was against it)' : 'box before the card\'s first buy'), '');
+        ok(true, c.how === 'flip' ? 'Flip uses the card\'s ladder: stop −0.50 · +0.30 → −0.15 · +0.50 trail' : (OPTRULE[c.setup] || c.setup), '');
+        ok(null, 'Size: ' + c.ct + '×', c.ct > 1 ? 'top-ranked strategy (box / Playbook)' : '1 contract');
+        ok(true, 'Bought on a closed bar, next quote', 'signal ' + pt(c.sig != null ? c.sig : c.m - 1) + ' → ' + pt(c.m) + ' at ' + q2(c.paid) + (P.iv != null ? ' · IV ' + (P.iv * 100).toFixed(0) + '%' : ''));
+        ok(P.hit30 != null, 'Went +0.30 while held', P.hit30 != null ? 'at ' + pt(P.hit30) : 'best ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—'));
+        ok(c.why === 'open' ? null : c.why !== 'stop' && c.why !== 'broke box', 'Exit: ' + (c.why === 'open' ? 'still open' : why(c)), c.why === 'open' ? '' : 'out ' + pt(c.exit_m) + ' · ' + usd(c.pnl));
+      }
+      if (P.worst != null) R2.push({ ok: null, label: 'Worst while held', d: (P.worst >= 0 ? '+' : '') + q2(P.worst) + ' a contract' });
+      if (P.after != null && c.why !== 'open') R2.push({ ok: null, label: 'After the sale', d: 'the bid reached ' + (P.after >= 0 ? '+' : '') + q2(P.after) + ' vs the buy within 30 min' });
+      return R2;
     }
 
     // ---------- contract chart ----------
     function drawOpt() {
-      var c = sel.card, D = DAYS[sel.date], cv = document.getElementById('rp-opt'), S = setup(cv), g = S[0], w = S[1], h = S[2];
-      var s0 = D.strategy[0], O, entry, tgt, a, z, fills = [], title, isYou = !!c;
-      if (c) { O = c.opt; entry = c.avg_buy; a = Math.floor(c.m) - 10; z = Math.ceil(c.exit_m) + 15; fills = c.fills; title = (c.kind === 'call' ? 'Call ' : 'Put ') + c.strike + ' · your fills'; }
-      else { O = s0.opt; entry = s0.entry; a = s0.m - 10; z = s0.m + 60; title = (s0.kind === 'call' ? 'Call ' : 'Put ') + s0.strike + ' · Tulip Mania'; }
-      document.getElementById('rp-opt-t').textContent = title;
+      var c = sel.card, cv = document.getElementById('rp-opt'), S = setup(cv), g = S[0], w = S[1], h = S[2], P = c.path || {};
+      document.getElementById('rp-opt-t').textContent = (c.side === 'call' ? 'Call ' : 'Put ') + c.strike + ' · ' + c.ct + '× · ' + lab(c);
+      var O = c.opt || [], a = Math.floor(c.m) - 10, z = Math.ceil(c.why === 'open' || c.exit_m == null ? (O.length ? O[O.length - 1][0] : c.m + 10) : c.exit_m) + 15, entry = c.paid, aMid = P.aMid != null ? P.aMid : entry;
       var pts = O.filter(function (o) { return o[0] >= a && o[0] <= z; });
-      var vals = pts.map(function (o) { return o[1]; }).concat(pts.map(function (o) { return o[2]; }), fills.map(function (f) { return f.px; }), [entry - R.stop - 0.1, entry + 0.2]);
-      if (!c || entry + R.target <= Math.max.apply(null, vals) + 0.6) vals.push(entry + R.target);
+      var lines = [];
+      if (c.src === 'card' || c.how === 'flip') lines = [[aMid - 0.50, '--loss', 'stop −0.50', true], [aMid + 0.30, '--shake', '+0.30 → stop up', true], [aMid + 0.50, '--win', '+0.50 → trail', true]];
+      else if (c.setup === 'box scalp') lines = [[aMid - 0.30, '--loss', 'stop −0.30', true], [entry + 0.30, '--win', 'target +0.30', true]];
+      else if (c.setup === 'Tulip v3.2') lines = [[aMid - 0.30, '--loss', 'stop −0.30', true], [entry + 2.00, '--win', 'target +2.00', true]];
+      else if (c.setup === 'Playbook home run') lines = [[aMid - 0.30, '--loss', 'stop −0.30', true], [aMid + 1.20, '--win', 'trail from +1.20', true]];
+      else if (c.setup === 'turn entry') lines = [[aMid - 0.55, '--loss', 'stop −0.55', true]];
+      else if (c.setup === 'sniper') lines = [[entry + 0.75, '--win', 'target +0.75', true]];
+      var sold = c.sold != null ? c.sold : (c.per != null ? entry + (c.per + 2.6) / 100 : null);
+      var vals = pts.map(function (o) { return o[1]; }).concat(pts.map(function (o) { return o[2]; }), [entry], sold != null ? [sold] : [], lines.map(function (l) { return l[0]; }).filter(function (v) { return v <= Math.max(entry + 1.0, (pts.length ? Math.max.apply(null, pts.map(function (o) { return o[1]; })) : entry) + 0.4); }));
       var lo = Math.max(0, Math.min.apply(null, vals) - 0.05), hi = Math.max.apply(null, vals) + 0.1;
-      var padL = 6, padR = 58, top = 8, bot = 20, X = function (m) { return padL + (m - a) / (z - a) * (w - padL - padR); }, Y = function (v) { return top + (hi - v) / (hi - lo) * (h - top - bot); };
+      var padL = 6, padR = 58, top = 8, bot = 20, X = function (m) { return padL + (m - a) / Math.max(1, z - a) * (w - padL - padR); }, Y = function (v) { return top + (hi - v) / (hi - lo) * (h - top - bot); };
       var st = [0.1, 0.25, 0.5, 1].find(function (s) { return (hi - lo) / s <= 6; }) || 1;
       g.font = '11px ' + css('--mono');
-      for (var v = Math.ceil(lo / st) * st; v <= hi; v += st) { g.strokeStyle = css('--grid'); g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText('$' + v.toFixed(2), w - padR + 4, Y(v) + 4); }
+      for (var v = Math.ceil(lo / st) * st; v <= hi; v += st) { g.strokeStyle = css('--grid'); g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText(v.toFixed(2), w - padR + 4, Y(v) + 4); }
       var ts = [5, 10, 15, 20, 30, 60].find(function (k) { return (z - a) / k * 44 <= w - padL - padR; }) || 60;
       for (var m = Math.ceil(a / ts) * ts; m <= z; m += ts) { g.fillStyle = css('--mute'); g.fillText(pt(m), X(m) - 14, h - 5); }
-      var hl = function (v, col, lab, dash, below) { if (v < lo || v > hi) return; g.strokeStyle = css(col); g.setLineDash(dash ? [5, 4] : []); g.lineWidth = 1.2; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.setLineDash([]); g.fillStyle = css('--fg'); g.font = '600 10.5px ' + css('--display'); g.fillText(lab, padL + 4, below ? Y(v) + 12 : Y(v) - 4); g.font = '11px ' + css('--mono'); };
-      hl(entry, isYou ? '--you' : '--win', (isYou ? 'your avg fill $' : 'Tulip fill $') + entry.toFixed(2), false);
-      hl(entry - R.stop, '--loss', 'rule stop −$0.30', true, true); hl(entry + R.target, '--win', 'rule target +$2.00', true);
+      var hl = function (v, col, labx, dash, below) { if (v < lo || v > hi) return; g.strokeStyle = css(col); g.setLineDash(dash ? [5, 4] : []); g.lineWidth = 1.2; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.setLineDash([]); g.fillStyle = css('--fg'); g.font = '600 10.5px ' + css('--display'); g.fillText(labx, padL + 4, below ? Y(v) + 12 : Y(v) - 4); g.font = '11px ' + css('--mono'); };
+      hl(entry, '--you', 'paid ' + entry.toFixed(2), false); lines.forEach(function (l) { hl(l[0], l[1], l[2], l[3], l[0] < entry); });
       if (pts.length) {
         g.strokeStyle = css('--mute'); g.globalAlpha = 0.5; g.lineWidth = 1; g.beginPath(); pts.forEach(function (o, i) { i ? g.lineTo(X(o[0]), Y(o[2])) : g.moveTo(X(o[0]), Y(o[2])); }); g.stroke(); g.globalAlpha = 1;
         g.strokeStyle = css('--fg'); g.lineWidth = 2; g.beginPath(); pts.forEach(function (o, i) { i ? g.lineTo(X(o[0]), Y(o[1])) : g.moveTo(X(o[0]), Y(o[1])); }); g.stroke();
       }
-      fills.forEach(function (f) { var buy = f.side === 'Buy'; g.fillStyle = css('--panel'); g.beginPath(); g.arc(X(f.m), Y(f.px), 7, 0, 7); g.fill(); g.fillStyle = css(buy ? '--you' : (c.pnl > 0 ? '--win' : '--loss')); g.beginPath(); g.arc(X(f.m), Y(f.px), 5, 0, 7); g.fill(); });
-      if (!c && s0) { [[s0.m, s0.entry, '--win'], [s0.exit_min, s0.exit, s0.pnl > 0 ? '--win' : '--loss']].forEach(function (p) { g.fillStyle = css(p[2]); g.beginPath(); g.arc(X(p[0]), Y(p[1]), 5, 0, 7); g.fill(); }); }
-      document.getElementById('rp-opt-n').textContent = c ? (pts.length ? (c.best60 != null ? 'Best bid within 60 min of your buy: ' + (c.best60 >= 0 ? '+$' : '−$') + Math.abs(c.best60).toFixed(2) + ' · worst while you held: ' + (c.worst >= 0 ? '+$' : '−$') + Math.abs(c.worst).toFixed(2) + ' a contract.' : '') :
-        'No quotes were logged for this strike, so only your fills are drawn.') : 'You had no trade this day. Tulip Mania: ' + s0.time_pt + ' PT, ' + s0.chips + ' chips, ' + usd(s0.pnlc) + '.';
+      var dot = function (m, v, col) { g.fillStyle = css('--panel'); g.beginPath(); g.arc(X(m), Y(v), 7, 0, 7); g.fill(); g.fillStyle = css(col); g.beginPath(); g.arc(X(m), Y(v), 5, 0, 7); g.fill(); };
+      dot(c.m, entry, '--you'); if (c.why !== 'open' && sold != null && c.exit_m != null) dot(c.exit_m, sold, c.pnl > 0 ? '--win' : '--loss');
+      document.getElementById('rp-opt-n').textContent = pts.length ? 'Mid (white) and bid (grey) per minute · best bid while held ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—') + ' · worst ' + (P.worst != null ? (P.worst >= 0 ? '+' : '') + q2(P.worst) : '—') + ' a contract.' : 'No quotes were logged for this strike.';
     }
 
     // ---------- side panel ----------
     function side() {
-      var c = sel.card, D = DAYS[sel.date], el = document.getElementById('rp-side'), dd = R.daily.filter(function (x) { return x.date === sel.date; })[0], h = '';
-      if (c) {
-        var verdict = c.setup ? '<span class="pos">Tulip Mania would have taken this · ' + c.chips + ' chip' + (c.chips > 1 ? 's' : '') + '</span>' : '<span class="neg">Tulip Mania would have sat this out</span>';
-        h += '<p class="eyebrow">' + c.weekday + ' ' + mmdd(c.date) + ' · trade ' + c.n + ' of the day</p><div class="verdict">' + verdict + '</div>';
-        h += '<p class="note">You bought ' + c.qty + ' ' + (c.kind === 'call' ? 'call' : 'put') + (c.qty > 1 ? 's' : '') + ' ' + c.strike + ' at $' + c.avg_buy.toFixed(2) + ' (' + c.time_pt + ' PT) and ' + (c.expired ? 'let it expire' : 'sold at $' + c.avg_sell.toFixed(2) + ' (' + c.exit_pt + ' PT)') + ' after ' + Math.round(c.held) + ' min: <b class="' + cl(c.pnl) + '">' + usd(c.pnl) + '</b>' +
-          (c.pnl < 0 ? ' — stopped out.' : '.') + '</p>';
-        h += '<p class="eyebrow">The v3.2 rules · ' + (c.rules.length - c.broke.length) + ' kept, ' + c.broke.length + ' broken</p><div class="rules">' + c.rules.map(function (r) {
-          var s = r.ok === true ? '<span class="ok">✓</span>' : r.ok === false ? '<span class="no">✗</span>' : '<span class="na">–</span>';
-          return s + '<span>' + esc(r.label) + '<span class="d">' + esc(r.d) + '</span></span>'; }).join('') + '</div>';
-        if (c.near) h += '<p class="fine pos">' + esc(c.near) + '</p>';
-      } else h += '<p class="eyebrow">' + D.weekday + ' ' + mmdd(sel.date) + '</p><div class="verdict">You had no QQQ trade this day.</div>';
-      if (dd && dd.tulip.length) h += '<div class="tw"><b>Tulip Mania that day</b><br>' + dd.tulip.map(function (s) { return s.time_pt + ' PT · ' + (s.kind === 'call' ? 'call ' : 'put ') + s.strike + ' at $' + s.entry.toFixed(2) + ' → $' + s.exit.toFixed(2) + ' (' + (s.why === 'take profit' ? 'target' : s.why) + ') · ' + s.checks_n + '/3 checks · ' + s.chips + ' chip' + (s.chips > 1 ? 's' : '') + ' · <b class="' + cl(s.pnlc) + '">' + usd(s.pnlc) + '</b>'; }).join('<br>') +
-        '<br><span class="mut">You that day: ' + (dd.n ? usd(dd.you) + ' over ' + dd.n + ' trade' + (dd.n > 1 ? 's' : '') : 'no trades') + '</span></div>';
-      else if (dd && dd.unscored.length) h += '<div class="tw miss">Tulip Mania fired at ' + dd.unscored.map(function (u) { return u.time_pt; }).join(', ') + ' PT, but the option data was incomplete, so its result is unknown.</div>';
-      else h += '<div class="tw miss">No Tulip Mania setup this day: the plan was to sit out.</div>';
+      var c = sel.card, el = document.getElementById('rp-side'), rs = rulesOf(c), kept = rs.filter(function (r) { return r.ok === true; }).length, broke = rs.filter(function (r) { return r.ok === false; }).length;
+      var dayC = C.filter(function (o) { return o.date === c.date; });
+      var verdict = c.why === 'open' ? '<span class="mut">Open now · ' + usd(c.pnl) + ' so far</span>' : c.pnl > 0 ? '<span class="pos">Won · ' + usd(c.pnl) + '</span>' : '<span class="neg">Lost · ' + usd(c.pnl) + '</span>';
+      var h = '<p class="eyebrow">' + c.weekday + ' ' + mmdd(c.date) + ' · bot trade ' + (dayC.indexOf(c) + 1) + ' of ' + dayC.length + ' that day</p><div class="verdict">' + verdict + '</div>';
+      h += '<p class="note">' + (c.src === 'option' ? 'Option (' + esc(lab(c)) + '): ' : 'Card (' + esc(lab(c)) + '): ') + 'bought ' + c.ct + ' ' + c.side + (c.ct > 1 ? 's' : '') + ' ' + c.strike + ' at ' + q2(c.paid) + ' (' + pt(c.m) + ' PT)' +
+        (c.why === 'open' ? ', still open.' : ' and sold' + (c.sold != null ? ' at ' + q2(c.sold) : '') + ' (' + pt(c.exit_m) + ' PT) · ' + why(c) + ' · <b class="' + cl(c.pnl) + '">' + usd(c.pnl) + '</b>') + '</p>';
+      h += '<p class="eyebrow">The bot\'s rules · ' + kept + ' kept' + (broke ? ', ' + broke + ' missed' : '') + '</p><div class="rules">' + rs.map(function (r) {
+        var s = r.ok === true ? '<span class="ok">✓</span>' : r.ok === false ? '<span class="no">✗</span>' : '<span class="na">–</span>';
+        return s + '<span>' + esc(r.label) + '<span class="d">' + esc(r.d) + '</span></span>'; }).join('') + '</div>';
+      h += '<div class="tw miss"><b>That morning</b><br>' + dayC.map(function (o) { return pt(o.m) + ' · ' + (o.src === 'option' ? 'option ' : '') + esc(lab(o)) + ' · ' + o.side + ' ' + o.strike + (o.ct > 1 ? ' ×' + o.ct : '') + ' · <b class="' + cl(o.pnl) + '">' + (o.why === 'open' ? 'open ' : '') + usd(o.pnl) + '</b>'; }).join('<br>') +
+        '<br><span class="mut">Total ' + usd(dayC.reduce(function (s2, o) { return s2 + o.pnl; }, 0)) + '</span></div>';
       el.innerHTML = h;
     }
-    function select(date, card, scroll) {
-      sel.date = date; sel.card = card; hoverM = null;
+    function select(card, scroll) {
+      sel.card = card; hoverM = null;
       if (document.querySelector('#rp .pane[data-p="chart"]').hidden) showPane('chart');
-      document.getElementById('rp-title').textContent = DAYS[date].weekday + ' ' + mmdd(date) + (card ? ' · ' + card.time_pt + ' PT · ' + (card.kind === 'call' ? 'Call ' : 'Put ') + card.strike + ' · ' + usd(card.pnl) : ' · Tulip Mania setup');
+      document.getElementById('rp-title').textContent = card.weekday + ' ' + mmdd(card.date) + ' · ' + card.time_pt + ' PT · ' + (card.side === 'call' ? 'Call ' : 'Put ') + card.strike + ' · ' + lab(card) + ' · ' + usd(card.pnl);
       document.querySelectorAll('#rp-strip .card').forEach(function (b) { b.setAttribute('aria-current', C[+b.dataset.i] === card ? 'true' : 'false'); });
-      document.querySelectorAll('#rp-daily tr.click').forEach(function (tr) { tr.classList.toggle('sel', tr.dataset.d === date); });
       drawMain(); drawOpt(); side();
       if (scroll) document.getElementById('rp-desk').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    dailyTable(); strip(); hookMain(); select(C[0].date, C[0], false);
-    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (document.querySelector('#rp .pane[data-p="sum"]').hidden) { strip(); drawMain(); drawOpt(); } else cum(); }, 150); });
+
+    // ---------- summary ----------
+    function summary() {
+      var cardT = DAILY.reduce(function (a, d) { return a + d.card; }, 0), optT = DAILY.reduce(function (a, d) { return a + d.opt; }, 0), cardN = DAILY.reduce(function (a, d) { return a + d.cardN; }, 0), optN = DAILY.reduce(function (a, d) { return a + d.optN; }, 0);
+      var closed = C.filter(function (c) { return c.why !== 'open'; }), won = closed.filter(function (c) { return c.pnl > 0; }).length;
+      var eq = 0, pk = 0, dd = 0; DAILY.forEach(function (d) { eq += d.card + d.opt; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
+      var fw = DAILY.filter(function (d) { return d.forward; }), fwT = fw.reduce(function (a, d) { return a + d.card + d.opt; }, 0);
+      document.getElementById('rp-kpis').innerHTML = [
+        ['Card + options', usd(cardT + optT), C.length + ' trades · ' + Math.round(100 * won / Math.max(1, closed.length)) + '% won', cl(cardT + optT)],
+        ['Card (as sized)', usd(cardT), cardN + ' trades · 3× when your lines agree', cl(cardT)],
+        ['Options', usd(optT), optN + ' trades · in the card\'s direction', cl(optT)],
+        ['Worst drawdown', '−$' + Math.round(dd).toLocaleString('en-US'), 'by morning, card + options', 'neg'],
+        ['Since Nov 2 (live)', usd(fwT), fw.length + ' mornings the research never saw', cl(fwT)],
+      ].map(function (x) { return '<div class="kpi"><small>' + x[0] + '</small><b class="' + (x[3] || '') + '">' + x[1] + '</b><span>' + x[2] + '</span></div>'; }).join('');
+      var rows = DAILY.slice().reverse();
+      document.getElementById('rp-daily').innerHTML = '<thead><tr><th>Morning</th><th class="n">Card</th><th class="n">Options</th><th class="n">Total</th><th>Trades</th></tr></thead><tbody>' + rows.map(function (d) {
+        var t = d.card + d.opt; return '<tr class="click" tabindex="0" data-d="' + d.date + '"><td>' + d.weekday + ' ' + mmdd(d.date) + (d.live ? ' · LIVE' : d.forward ? ' · live' : '') + '</td><td class="n ' + cl(d.card) + '">' + (d.cardN ? usd(d.card) : '—') + '</td><td class="n ' + cl(d.opt) + '">' + (d.optN ? usd(d.opt) : '—') +
+          '</td><td class="n ' + cl(t) + '"><b>' + (d.cardN + d.optN ? usd(t) : '—') + '</b></td><td class="mut">' + (d.cardN + d.optN ? d.cardN + ' card · ' + d.optN + ' opt' : 'sat out') + '</td></tr>'; }).join('') + '</tbody>';
+      document.querySelectorAll('#rp-daily tr.click').forEach(function (tr) { var go = function () { var f = C.filter(function (c) { return c.date === tr.dataset.d; })[0]; if (f) select(f, true); }; tr.addEventListener('click', go); tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); }); });
+      document.getElementById('rp-daily-n').textContent = DAILY.filter(function (d) { return !(d.cardN + d.optN); }).length + ' of ' + DAILY.length + ' mornings the bot sat out.';
+      var by = {}; closed.forEach(function (c) { var k = (c.src === 'option' ? 'Option · ' : '') + lab(c).replace(/^Re-entry.*/, 'Re-entry'); (by[k] = by[k] || []).push(c); });
+      document.getElementById('rp-rules').innerHTML = '<thead><tr><th>Setup</th><th class="n">Trades</th><th class="n">Won</th><th class="n">P&amp;L</th><th class="n">Avg</th></tr></thead><tbody>' + Object.keys(by).sort(function (a, b) { return by[b].reduce(function (s, c) { return s + c.pnl; }, 0) - by[a].reduce(function (s, c) { return s + c.pnl; }, 0); }).map(function (k) {
+        var g = by[k], t = g.reduce(function (s, c) { return s + c.pnl; }, 0); return '<tr><td>' + esc(k) + '</td><td class="n">' + g.length + '</td><td class="n">' + Math.round(100 * g.filter(function (c) { return c.pnl > 0; }).length / g.length) + '%</td><td class="n ' + cl(t) + '">' + usd(t) + '</td><td class="n ' + cl(t) + '">' + usd(t / g.length) + '</td></tr>'; }).join('') + '</tbody>';
+      var ex = {}; closed.forEach(function (c) { var k = why(c); (ex[k] = ex[k] || { n: 0, pnl: 0 }); ex[k].n++; ex[k].pnl += c.pnl; });
+      var mx = Math.max.apply(null, Object.keys(ex).map(function (k) { return Math.abs(ex[k].pnl); }).concat([1]));
+      document.getElementById('rp-leaks').innerHTML = Object.keys(ex).sort(function (a, b) { return ex[b].pnl - ex[a].pnl; }).map(function (k) { var e = ex[k];
+        return '<div class="evrow"><span>' + esc(k) + ' · ' + e.n + '</span><div class="bar"><i style="width:' + (100 * Math.abs(e.pnl) / mx).toFixed(1) + '%;background:var(' + (e.pnl >= 0 ? '--win' : '--loss') + ')"></i></div><b class="mono ' + cl(e.pnl) + '">' + usd(e.pnl) + '</b></div>'; }).join('');
+      var st = ex.stopped; document.getElementById('rp-lesson').textContent = st ? 'Stops: ' + st.n + ' trades, ' + usd(st.pnl) + ' — the cost of being wrong. Everything above them is what the exits kept.' : '';
+      document.getElementById('rp-built').textContent = 'Built from the nightly paper log (' + R.built.slice(0, 16).replace('T', ' ') + ' UTC). ' + (LIVE ? 'Today is added live from the card.' : '') + ' P&L in dollars at the bot\'s size; option prices in 0.00.';
+    }
+    function cum() {
+      var cv = document.getElementById('rp-cum'), S = setup(cv), g = S[0], w = S[1], h = S[2], pad = { l: 46, r: 10, t: 10, b: 22 };
+      var A = [0], B = [0], C1 = [0], a = 0, b = 0, c1 = 0; DAILY.forEach(function (d) { a += d.card + d.opt; b += d.card; c1 += d.card1 || 0; A.push(a); B.push(b); C1.push(c1); });
+      var all = A.concat(B, C1), lo = Math.min.apply(null, all), hi = Math.max.apply(null, all); if (hi === lo) hi = lo + 1;
+      var n = A.length, X = function (i) { return pad.l + i / Math.max(1, n - 1) * (w - pad.l - pad.r); }, Y = function (v) { return pad.t + (hi - v) / (hi - lo) * (h - pad.t - pad.b); };
+      var step = [100, 250, 500, 1000, 2000, 5000].find(function (s) { return (hi - lo) / s <= 6; }) || 5000;
+      g.font = '11px ' + css('--mono');
+      for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) { g.strokeStyle = css('--grid'); g.beginPath(); g.moveTo(pad.l, Y(v)); g.lineTo(w - pad.r, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText((v < 0 ? '−' : '') + '$' + Math.abs(v), 2, Y(v) + 4); }
+      var every = Math.max(1, Math.ceil(DAILY.length * 44 / (w - pad.l - pad.r))); DAILY.forEach(function (d, i) { if (i % every === 0) { g.fillStyle = css('--mute'); g.fillText(d.date.slice(5), X(i + 1) - 14, h - 6); } });
+      [[A, '--win', []], [B, '--you', []], [C1, '--shake', [5, 4]]].forEach(function (s2) { g.strokeStyle = css(s2[1]); g.setLineDash(s2[2]); g.lineWidth = 2; g.beginPath(); s2[0].forEach(function (v2, i) { i ? g.lineTo(X(i), Y(v2)) : g.moveTo(X(i), Y(v2)); }); g.stroke(); g.setLineDash([]); });
+      cv.onmousemove = function (e) { var r = cv.getBoundingClientRect(), i = Math.round((e.clientX - r.left - pad.l) / (w - pad.l - pad.r) * (n - 1)); i = Math.max(1, Math.min(n - 1, i)); var d = DAILY[i - 1];
+        document.getElementById('rp-cum-r').textContent = d.weekday + ' ' + mmdd(d.date) + ' · card ' + usd(d.card) + ' · options ' + usd(d.opt) + ' · running: card + options ' + usd(A[i]) + ' · card ' + usd(B[i]) + ' · card 1 ct ' + usd(C1[i]); };
+    }
+
+    // ---------- LIVE: today's trades straight from the card while the morning runs ----------
+    var liveEl = document.getElementById('rp-live'), liveT = document.getElementById('rp-live-t');
+    function nyNow() { var p = {}; new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'short' }).formatToParts(new Date()).forEach(function (x) { p[x.type] = x.value; });
+      return { date: p.year + '-' + p.month + '-' + p.day, wd: p.weekday, min: (Number(p.hour) % 24) * 60 + Number(p.minute) }; }
+    function liveDay(X, vm) {
+      var day = X.day, t0 = V92MAP.open930(day), atM = Math.min(180, X.atM), bars = []; (X.today.candles || []).forEach(function (c) { var m = Math.floor((c.time - t0) / 60); if (m >= 0 && m <= 180) bars[m] = c; });
+      var pv = 0, vv = 0, lc = null, lvw = null, cs = [];
+      for (var m = 0; m <= atM; m++) { var b = bars[m]; if (b) { lc = b.close; if (b.volume > 0) { pv += (b.high + b.low + b.close) / 3 * b.volume; vv += b.volume; } lvw = vv > 0 ? pv / vv : b.close; cs.push([b.open, b.high, b.low, b.close, b.volume || 0, lvw]); } else if (lc != null) cs.push([lc, lc, lc, lc, 0, lvw]); else cs.push(null); }
+      var f0 = cs.findIndex(Boolean); if (f0 < 0) return null; for (var k = 0; k < f0; k++) cs[k] = cs[f0].slice();
+      var ds = Object.keys(X.hist).sort().slice(-3), yc = []; ds.forEach(function (d) { X.hist[d].slice(0, 390).forEach(function (q) { yc.push(q.close); }); });
+      var ln = {}; [8, 304].forEach(function (n) { var a = 2 / (n + 1), e = null; yc.forEach(function (x) { e = e === null ? x : a * x + (1 - a) * e; }); ln[n] = cs.map(function (q) { e = e === null ? q[3] : a * q[3] + (1 - a) * e; return e; }); });
+      var lv = { call_wall: [], put_wall: [], gamma_flip: [] }, P = {}, lp = null; (X.today.points || []).forEach(function (p) { P[Math.floor((p.time - t0) / 60)] = p; });
+      for (var m2 = -30; m2 <= atM; m2++) { if (P[m2]) lp = P[m2]; if (m2 >= 0) Object.keys(lv).forEach(function (q) { lv[q].push(lp && lp[q] != null ? lp[q] : null); }); }
+      var D = vm.D, c = D.ctx, mp = { yesterday: c.day > 0 ? 'green' : 'red', last_week: c.week > 0 ? 'up' : 'down', yday_high: c.PDH, yday_low: c.PDL, yday_close: c.PDC,
+        trap: c.day > 0 ? 'calls below ' + (c.PDL - 1).toFixed(2) : 'puts above ' + (c.PDH + 1).toFixed(2), value_area: [D.va.yval, D.va.yvah].map(function (v) { return Math.round(v * 100) / 100; }) };
+      var dayObj = { weekday: new Date(day + 'T12:00:00Z').toUTCString().slice(0, 3), candles: cs, g8: ln[8], r304: ln[304], levels: lv, yday: { high: c.PDH, low: c.PDL, close: c.PDC }, map: mp, vix: X.vix, htf: null };
+      var cards = [], ser = function (side, K, a, z) { var o = (D.opt[side] || {})[String(K)] || {}, s = []; for (var m3 = a; m3 <= z; m3++) if (o[m3]) s.push([m3, o[m3][0], o[m3][2]]); return s; };
+      var pathOf = function (side, K, fill, exit, paid) { var o = (D.opt[side] || {})[String(K)] || {}, q0 = o[fill] || o[fill + 1], aMid = q0 ? q0[0] : paid, best = null, worst = null, h30 = null, h50 = null;
+        for (var m4 = fill + 1; m4 <= exit; m4++) { var q = o[m4]; if (!q) continue; best = best == null ? q[2] - paid : Math.max(best, q[2] - paid); worst = worst == null ? q[2] - paid : Math.min(worst, q[2] - paid); if (h30 == null && q[0] >= aMid + 0.3) h30 = m4; if (h50 == null && q[0] >= aMid + 0.5) h50 = m4; }
+        return { aMid: aMid, iv: q0 ? q0[1] : null, best: best, worst: worst, hit30: h30, hit50: h50, after: null }; };
+      var KIND = { trap: 'trap', 'gap-and-go': 'gap', 'fade the week': 'fw', flip: 'flip', 'VIX bounce call': 'vb', 'failed poke (B)': 'failed poke (B)' };
+      var OPTSRC = ['box scalp', 'Playbook home run', 'Tulip v3.2', 'turn entry', 'sniper', 'calls checkpoint'];
+      var add = function (k, open) { var side = k.S === 'CALL' ? 'C' : 'P', exit = open ? atM : k.out, kindTxt = (k.kind || '').replace('OPTION · ', '');
+        var src = k.opt ? 'option' : 'card', setupName = src === 'card' ? (KIND[kindTxt.split(' · ')[0]] || (kindTxt.indexOf('re-entry') === 0 ? 're-' + (kindTxt.match(/\((.*)\)/) || [0, 'trap'])[1].replace('gap-and-go', 'gap').replace('fade the week', 'fw') : kindTxt.split(' · ')[0])) : (OPTSRC.filter(function (s) { return kindTxt.indexOf(s) === 0; })[0] || kindTxt.split(' · ')[0]);
+        var how = src === 'option' ? (kindTxt.indexOf('flipped') >= 0 ? 'flip' : kindTxt.indexOf('box (before') >= 0 ? 'box (before the card)' : 'agree') : null;
+        cards.push({ src: src, setup: setupName, how: how, side: k.S === 'CALL' ? 'call' : 'put', strike: k.K, sig: k.mf - 1, m: k.mf, exit_m: open ? null : k.out, paid: k.ask, sold: open ? null : k.px, why: open ? 'open' : (k.why === 'trail: 3 EMA8 ticks against you' ? 'trail (3 ticks)' : k.why === 'stop hit' ? 'stop' : k.why), ct: k.ct || 1,
+          pnl: open ? (k.pnl || 0) : (k.res || 0), per: null, opt: ser(side, k.K, k.mf - 10, exit + 20), path: pathOf(side, k.K, k.mf, exit, k.ask), date: day }); };
+      (vm.tickets || []).forEach(function (k) { add(k, k.state !== 'sell'); });
+      (vm.closed || []).forEach(function (k) { add(k, false); }); (vm.optClosed || []).forEach(function (k) { add(k, false); });
+      var cd = cards.filter(function (q) { return q.src === 'card'; }), od = cards.filter(function (q) { return q.src === 'option'; });
+      return { date: day, day: dayObj, cards: cards.sort(function (a, b) { return a.m - b.m; }), daily: { date: day, weekday: dayObj.weekday, card: cd.reduce(function (s2, q) { return s2 + q.pnl; }, 0), cardN: cd.length, card1: 0, opt: od.reduce(function (s2, q) { return s2 + q.pnl; }, 0), optN: od.length, forward: true, live: true } };
+    }
+    var liveTimer = null;
+    // test hook: ?sim=YYYY-MM-DD&at=H:MM replays a past morning through the live path (that day's paper-log trades are hidden)
+    var QS = new URLSearchParams(location.search), SIM = QS.get('sim'), SIMAT = QS.get('at') || '8:00';
+    if (SIM) { R.cards = R.cards.filter(function (c) { return c.date !== SIM; }); R.daily = R.daily.filter(function (d) { return d.date !== SIM; }); delete R.days[SIM]; rebuild(); }
+    function goLive() {
+      if (SIM) { V92CARD.loadReplay({ base: './', day: SIM, at: SIMAT }).then(function (X) { X.stale = null; liveRender(X, true); }).catch(function (e) { liveT.textContent = 'Live view error: ' + (e && e.message || e); }); return; }
+      var n = nyNow(), m = n.min - 570;
+      if (!window.V92CARD || !V92CARD.loadLive) { liveT.textContent = 'Live view unavailable (card scripts not loaded).'; return; }
+      if (R.days[n.date]) { liveEl.classList.remove('on'); liveT.textContent = 'Today (' + mmdd(n.date) + ') is already in the paper log below.'; return; }
+      if (n.wd === 'Sat' || n.wd === 'Sun' || m < -10 || m > 390) { liveEl.classList.remove('on'); liveT.textContent = 'Market closed · the next morning\'s bot trades will show here live from 6:30 AM PT.'; return; }
+      V92CARD.loadLive({ base: './' }).then(function (X) { liveRender(X, false); }).catch(function (e) { liveT.textContent = 'Live view error: ' + (e && e.message || e); });
+    }
+    function liveRender(X, sim) {
+      {
+        var vm = V92CARD.model(X); if (!vm.D || !vm.D.st || !vm.D.st.length) { liveEl.classList.add('on'); liveT.textContent = 'LIVE · waiting for the first bars (' + mmdd(X.day) + ')…'; return; }
+        var keep = sel.card ? sel.card.id : null; LIVE = liveDay(X, vm); rebuild(); chips();
+        if (!document.querySelector('#rp .pane[data-p="chart"]').hidden) strip(); else { summary(); cum(); }
+        var again = keep ? C.filter(function (c) { return c.id === keep; })[0] : null; if (again) select(again, false); else if (!sel.card && C.length) select(C[C.length - 1], false);
+        var open = LIVE.cards.filter(function (c) { return c.why === 'open'; }).length;
+        liveEl.classList.add('on'); liveT.textContent = (sim ? 'SIMULATED LIVE · ' : 'LIVE · ') + mmdd(X.day) + ' ' + pt(Math.max(0, X.atM)) + ' PT · ' + LIVE.cards.length + ' bot trade' + (LIVE.cards.length === 1 ? '' : 's') + ' today' + (open ? ' · ' + open + ' open' : '') + ' · ' + usd(LIVE.daily.card + LIVE.daily.opt) + (X.stale > 2 ? ' · data ' + Math.round(X.stale) + ' min old' : '') + ' · updates every 30 s';
+      }
+    }
+
+    chips(); strip();
+    var last = C.slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : b.m - a.m; })[0]; if (last) select(last, false);
+    goLive(); liveTimer = setInterval(goLive, 30000);
+    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (document.querySelector('#rp .pane[data-p="sum"]').hidden) { strip(); if (sel.card) { drawMain(); drawOpt(); } } else cum(); }, 150); });
   }
 })();
 </script>
-
 </body></html>

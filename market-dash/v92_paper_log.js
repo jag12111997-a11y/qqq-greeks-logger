@@ -235,4 +235,6 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
   htf_next: htfBefore("9999-12-31"),   // daily/weekly trend for the NEXT morning (the card reads this)
   days: rows }, null, 1));
 written.push(path.relative(ROOT, path.join(OUT, "index.json")));
+// Trade Replay tab: every bot trade (card + options) with its chart, rebuilt from the log above
+try { written.push(require(path.join(MD, "bot_replay_build.js")).build(ROOT)); } catch (e) { console.error("bot replay build failed: " + e.message); }
 written.forEach(p => console.log(p));

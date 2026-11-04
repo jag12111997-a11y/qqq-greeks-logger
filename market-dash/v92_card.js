@@ -448,6 +448,6 @@
     if (!o.day) { var t = setInterval(go, 20000); el._v92stop = function () { clearInterval(t); }; }
     return p;
   }
-  var api = { mount: mount, model: model, loadReplay: loadReplay, html: html, build: build };
+  var api = { mount: mount, model: model, loadReplay: loadReplay, loadLive: loadLive, html: html, build: build };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.V92CARD = api;
 })(this);
