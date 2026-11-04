@@ -99,6 +99,7 @@
         today: { date: day, complete: false,
           candles: (today.candles || []).filter(function (c) { return c.time + 60 <= cut; }),
           points: (today.points || []).filter(function (x) { return x.time <= cut + 10; }),
+          frames: (today.frames || []).filter(function (x) { return x.t <= cut + 10; }),
           quotes: (r[2] || []).filter(function (q) { return q.t <= cut + 10; }) } };
     }).then(function (X) { return withVix(o.base, X); });
   }
@@ -106,8 +107,9 @@
   function loadLive(o) {
     var now = Date.now(), nd = nyDate(now), day = nd.date, t0 = V92MAP.open930(day), atM = Math.floor((now / 1000 - t0) / 60);
     return Promise.all([history(o.base, day), live(o.base, "auction_live.json"), live(o.base, "gex_intraday.json"), live(o.base, "options_latest.json"),
-      live(o.base, "gex_live.json"), atM >= 0 ? csvQuotes(o.base, day) : Promise.resolve([]), getJSON(o.base + "v92_log/index.json?t=" + Math.floor(Date.now() / 600000))]).then(function (r) {
-      var au = r[1], gi = r[2], ol = r[3], gl = r[4];
+      live(o.base, "gex_live.json"), atM >= 0 ? csvQuotes(o.base, day) : Promise.resolve([]), getJSON(o.base + "v92_log/index.json?t=" + Math.floor(Date.now() / 600000)),
+      live(o.base, "gex_frames.json")]).then(function (r) {
+      var au = r[1], gi = r[2], ol = r[3], gl = r[4], gf = r[7];
       var Q = {};
       try { Q = JSON.parse(localStorage.getItem(QKEY(day)) || "{}"); } catch (e) { Q = {}; }
       function addQ(q) { if (q && q.t && q.bid > 0 && q.ask > 0) Q[q.side + "|" + q.strike + "|" + Math.floor((q.t - t0) / 60)] = q; }
@@ -121,7 +123,7 @@
       var fresh = au && au.session_date === day;
       var stale = atM >= 0 && atM < 150 ? Math.max(ageMin(au && au.generated_utc), ageMin(ol && ol.generated_utc)) : null;
       return { day: day, wd: nd.wd, atM: atM, hist: r[0], replay: false, stale: stale, gexRegime: gl && gl.regime, log: r[6],
-        today: { date: day, complete: false, candles: fresh ? (au.candles || []) : [], points: (gi && gi.session_date === day) ? (gi.points || []) : [],
+        today: { date: day, complete: false, candles: fresh ? (au.candles || []) : [], points: (gi && gi.session_date === day) ? (gi.points || []) : [], frames: (gf && gf.session_date === day) ? (gf.frames || []) : [],
           quotes: Object.keys(Q).map(function (k) { return Q[k]; }) } };
     }).then(function (X) { return withVix(o.base, X); });
   }
@@ -156,6 +158,26 @@
     return sg * (UV[8][m] - UV[304][m]) > 0 ? 3 : 1;
   }
 
+  // ---- options (paper-tested add-ons; see v95_options.js) ----
+  function OPTM() { return root.V95OPT || (typeof V95OPT !== "undefined" ? V95OPT : null); }
+  var OPTXT = "6 extra setups ride the card's side · against it → flipped · before its first buy, box only · none after the card's 2nd stop · box + Playbook 2× (flips 1×), the rest 1×";
+  var OPWHY = { target: "target hit", stop: "stop hit", "broke box": "QQQ closed outside the box", trail: "trail hit", "trail (3 ticks)": "trail: 3 EMA8 ticks against you",
+    crossback: "QQQ closed back through red 304", "hit 304": "QQQ reached red 304", time: "time limit" };
+  function optExit(t, D, fill) {
+    var a = t.aMid, pd = t.paid, C = t.side === "C";
+    if (t.how === "flip") return "stop " + q2(t.stopNow != null ? t.stopNow : a - 0.50) + (t.stopNow != null && t.stopNow > a - 0.5 ? " (moved up)" : "") + " · at " + q2(a + 0.30) + " stop → " + q2(a - 0.15) +
+      " · at " + q2(a + 0.50) + " trail (sell after 3 EMA8 ticks against)" + (t.armed ? " · ARMED" : "") + " · out by " + clock(Math.min(fill + 90, 146));
+    switch (t.src) {
+      case "box scalp": return "sell at " + q2(pd + 0.30) + " (+0.30) · out if QQQ closes " + (t.box ? (C ? "below " + q2(t.box[0] - 0.25) : "above " + q2(t.box[1] + 0.25)) : "outside the box") + " · stop " + q2(a - 0.30) + " · out by " + clock(Math.min(fill + 30, 150));
+      case "Playbook home run": return "stop " + q2(a - 0.30) + " · after +1.20, trail 0.30 under the high · out by " + clock(Math.floor(t.m) + 60);
+      case "Tulip v3.2": return "stop " + q2(a - 0.30) + " · target " + q2(pd + 2.00) + " (+2.00) · out by " + clock(Math.floor(t.m) + 60);
+      case "turn entry": return "stop " + q2(a - 0.55) + " · sell when QQQ closes back under red 304 after crossing above it · out by 8:56";
+      case "calls checkpoint": return "no stop · sell when QQQ closes back under red 304 after crossing above it · out by 8:56";
+      case "sniper": return C && D.ctx.day === 1 ? "sell when QQQ crosses above red 304 · out by 8:56" : "sell at " + q2(pd + 0.75) + " (+0.75) · out by 8:56";
+    }
+    return "";
+  }
+
   // ---------------- what the card says ----------------
   function model(X) {
     var day = X.day, atM = X.atM, wd = X.wd || new Date(day + "T12:00:00Z").toUTCString().slice(0, 3);
@@ -167,7 +189,8 @@
       if (past.length) vm.meter = { n: past.length, usd: eq, dip: dd, fwd: X.log.totals && X.log.totals.forward, combo: combo,
         comboAll: X.log.totals && X.log.totals.shadow_combo && X.log.totals.shadow_combo.all, comboFwd: X.log.totals && X.log.totals.shadow_combo && X.log.totals.shadow_combo.forward,
         v95: past.reduce(function (a, r) { return a + (r.v95_sized_usd == null ? 0 : r.v95_sized_usd); }, 0), v95All: X.log.totals && X.log.totals.shadow_v95 && X.log.totals.shadow_v95.all,
-        v95Fwd: X.log.totals && X.log.totals.shadow_v95 && X.log.totals.shadow_v95.forward };
+        v95Fwd: X.log.totals && X.log.totals.shadow_v95 && X.log.totals.shadow_v95.forward,
+        optAll: X.log.totals && X.log.totals.shadow_options && X.log.totals.shadow_options.all, optFwd: X.log.totals && X.log.totals.shadow_options && X.log.totals.shadow_options.forward };
     }
     if (HOLIDAYS[day] || wd === "Sat" || wd === "Sun") { vm.stage = "offday"; vm.head = HOLIDAYS[day] || "Weekend: no trading."; return vm; }
     if (Object.keys(X.hist).length < 12) { vm.stage = "loading"; vm.head = "Loading history…"; return vm; }
@@ -203,6 +226,7 @@
     if (!hasBars) {
       vm.lines.push(["Bounce", vbTxt + (vbSmall ? " · 1× (daily & weekly both down)" : "")]);
       vm.lines.push(["Failed poke", fpTxt]);
+      vm.lines.push(["Options", OPTXT]);
       vm.lines.push(["Gap-and-go", name(weekSide) + " if the open is " + (weekSide === "C" ? "≥ " + p2(c.PDC + 2.5) : "≤ " + p2(c.PDC - 2.5)) + " and the nearest GEX level is 1.00+ away"]);
       vm.lines.push(["Fade the week", name(fwSide) + " after 7:30 only if QQQ is inside yesterday's value area (" + p2(D.va.yval) + "–" + p2(D.va.yvah) + ") at 7:00"]);
       vm.stage = atM < 0 ? "prep" : "waiting"; vm.head = atM < 0 ? (name(sideDay) === name(weekSide) ? "A " + name(sideDay) + " morning." : "Map for today.") : "Waiting for the first bars…";
@@ -219,6 +243,7 @@
     vm.lines.push(["Fade the week", fwTxt]);
     vm.lines.push(["Bounce", vbTxt + (vbSmall ? " · 1× (daily & weekly both down)" : "")]);
     vm.lines.push(["Failed poke", UV ? fpTxt : "off (your lines / VWAP missing) · v9.4 signals"]);
+    vm.lines.push(["Options", UV && OPTM() ? OPTXT : "off (your lines / VWAP missing)"]);
     // ---- watch line: one steady sentence + live distance ----
     var zf = R ? R.zoneFirst[sideDay] : null;
     var dist = sideDay === "C" ? close - trapLine : trapLine - close;
@@ -255,6 +280,27 @@
       vm.reentry = "Re-entry watch until " + clock(last.t.out + 45) + " · same side on the next EMA8 turn · cancelled if QQQ breaks " + p2(last.t.fakeout);
     }
     vm.stops = stops; vm.dayPnl = vm.closed.reduce(function (s, b) { return s + b.res; }, 0);
+    // ---- OPTIONS: 6 extra setups in the card's direction (agree = as fired · against = flipped to the card's side · box before the card's first buy) ----
+    vm.optClosed = [];
+    if (OPTM() && UV && R) {
+      try {
+        var cardT = R.trades.filter(function (t) { return t.why !== "none"; }).map(function (t) { return { side: t.side, m: t.m, mf: t.mf, out: t.out, why: t.why, kind: t.kind }; });
+        var OP = OPTM().run(D, { candles: X.today.candles || [], points: X.today.points || [], frames: X.today.frames || [] }, X.hist, UV, D.info && D.info.t0, cardT, day);
+        OP.trades.forEach(function (t) {
+          var S = t.side === "C" ? "CALL" : "PUT", fill = t.fill != null ? t.fill : Math.floor(t.m) + 1;
+          var ct = t.ct || 1, how = t.how === "agree" ? "with the card" : t.how === "flip" ? "flipped to the card's side (" + (t.flipped_from === "C" ? "call" : "put") + " signal)" : "box (before the card)";
+          var k = { opt: true, S: S, K: t.K, ct: ct, mf: fill, ask: t.paid, kind: "OPTION · " + t.src + (ct > 1 ? " " + ct + "×" : "") + " · " + how,
+            exitTxt: (ct > 1 || t.src === "Tulip v3.2" ? t.src + (ct > 1 ? " (" + ct + "×)" : "") + ": " : "") + optExit(t, D, fill), sg: t.side === "C" ? 1 : -1 };
+          if (t.why === "open") { k.bid = t.bid; k.pnl = t.usd * ct; k.state = atM - fill <= 5 ? "buy" : "in"; }
+          else { k.out = t.out; k.res = t.usd * ct; k.px = t.sold; k.why = OPWHY[t.why] || t.why; k.state = atM - t.out <= 3 ? "sell" : "closed"; }
+          // same touch, same contract, same state (Tulip + Playbook) -> ONE ticket
+          var twin = (k.state === "closed" ? vm.optClosed : vm.tickets).filter(function (o) { return o.opt && o.S === k.S && String(o.K) === String(k.K) && o.mf === k.mf && o.state === k.state; })[0];
+          if (twin) { twin.ct += k.ct; twin.kind += " + " + k.kind.replace("OPTION · ", ""); twin.exitTxt += " | " + k.exitTxt; if (k.pnl != null) twin.pnl = (twin.pnl || 0) + k.pnl; if (k.res != null) twin.res = (twin.res || 0) + k.res; return; }
+          if (k.state === "closed") vm.optClosed.push(k); else vm.tickets.push(k);
+        });
+      } catch (e) { vm.optErr = String(e); }
+    }
+    vm.optPnl = vm.optClosed.reduce(function (s, b) { return s + b.res; }, 0);
     // ---- headline (changes only on real events) ----
     var sell = vm.tickets.filter(function (k) { return k.state === "sell"; }), buy = vm.tickets.filter(function (k) { return k.state === "buy"; }), inT = vm.tickets.filter(function (k) { return k.state === "in"; });
     if (sell.length) { vm.stage = "sell"; vm.head = "SELL NOW · " + sell[0].S + " " + sell[0].K; }
@@ -312,9 +358,17 @@
     ".v92 .rung b{font-weight:700}.v92 .rung i{font-style:normal;color:#6a5a8a}.v92 .rung em{font-style:normal;color:#8a7fb8;font-size:11px}" +
     ".v92 .rung.here{color:#ffd166;font-weight:700}.v92 .rung.here i{color:#ffd166}.v92 .rung.stop span{color:#ff6b6b}.v92 .rung.dim{color:#8a7fb8}.v92 .rung.hit span{color:#2fbf6d}" +
     ".v92 .closed{font-size:12px;color:#a99fd6}.v92 .up{color:#2fbf6d}.v92 .dn{color:#ff6b6b}" +
-    ".v92.stale{filter:grayscale(1);opacity:.7}.v92 .warn{color:#e0ab45;font-size:12px}.v92 .qchk{color:#a99fd6}";
+    ".v92 .oxt{font-size:12px;color:#d7cfff;line-height:1.4}.v92.stale{filter:grayscale(1);opacity:.7}.v92 .warn{color:#e0ab45;font-size:12px}.v92 .qchk{color:#a99fd6}";
   function ivTag(iv) { if (iv == null) return null; return "IV " + iv.toFixed(2) + (iv < 0.20 ? " (low)" : iv > 0.23 ? " (high)" : " (mid)"); }
+  function optTicketHtml(k, vm) {
+    if (k.state === "sell") return '<div class="tk sell"><div class="big">SELL NOW · ' + k.S + " " + k.K + '</div><div class="ctx">' + esc(k.kind) + '</div><div class="row"><span>' + esc(k.why) + "</span>" +
+      (k.px != null ? "<span>" + q2(k.px) + " → " + usd(k.res) + "</span>" : "") + "<span>sell by hand at the bid</span></div></div>";
+    var head = k.state === "buy" ? "BUY " + k.ct + "× " + k.K + " " + k.S + " @ " + q2(k.ask) : (k.ct > 1 ? k.ct + "× " : "") + k.S + " " + k.K + " · " + usd(k.pnl);
+    return '<div class="tk ' + k.state + '"><div class="big">' + esc(head) + '</div><div class="ctx">' + esc(k.kind) + "</div>" +
+      '<div class="oxt">' + esc(k.exitTxt) + "</div>" + '<div class="row">' + (k.bid != null ? "<span>bid " + q2(k.bid) + "</span>" : "") + "<span>signal " + clock(k.mf) + " (" + Math.max(0, vm.atM - k.mf) + " min ago)</span></div></div>";
+  }
   function ticketHtml(k, vm) {
+    if (k.opt) return optTicketHtml(k, vm);
     var ctx = [ivTag(k.iv), vm.gexRegime ? (/NEG/.test(vm.gexRegime) ? "GEX negative (moves accelerate)" : "GEX positive (pinning)") : null, vm.release ? vm.release + " morning (weaker in the backtest)" : null]
       .filter(Boolean).join(" · ");
     if (k.state === "sell") {
@@ -369,9 +423,14 @@
     if (vm.reentry) h += '<div class="watch">' + esc(vm.reentry) + "</div>";
     if (vm.closed.length) h += '<div class="closed">Today: ' + vm.closed.map(function (b) { return (b.ct > 1 ? b.ct + "× " : "") + b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +
       " · total " + usd(vm.dayPnl) + (vm.stops ? " · stops " + vm.stops + "/2" : "") + "</div>";
+    if (vm.optClosed && vm.optClosed.length) h += '<div class="closed">Options today: ' + vm.optClosed.map(function (b) { return (b.ct > 1 ? b.ct + "× " : "") + b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +
+      " · total " + usd(vm.optPnl) + "</div>";
+    if (vm.optErr) h += '<div class="warn">Options error: ' + esc(vm.optErr) + "</div>";
     if (vm.meter) h += (vm.meter.v95All ? '<div class="closed">Last ' + vm.meter.n + ' mornings (v9.5, paper log): <span class="' + (vm.meter.v95 >= 0 ? "up" : "dn") + '">' + usd(vm.meter.v95) + '</span> · all ' + usd(vm.meter.v95All.usd_sized) + ' (1 contract ' + usd(vm.meter.v95All.usd_1ct) + ')' +
-        (vm.meter.v95Fwd && vm.meter.v95Fwd.mornings ? ' · since Nov 2: ' + usd(vm.meter.v95Fwd.usd_sized) : '') + '</div>' : '');
-    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree") + ' · signals only, you place every trade · ' + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
+        (vm.meter.v95Fwd && vm.meter.v95Fwd.mornings ? ' · since Nov 2: ' + usd(vm.meter.v95Fwd.usd_sized) : '') + '</div>' : '') +
+      (vm.meter.optAll ? '<div class="closed">Options (paper log): ' + vm.meter.optAll.addons + ' extra trades ' + usd(vm.meter.optAll.addons_usd) + ' · card + options ' + usd(vm.meter.optAll.total_usd) +
+        (vm.meter.optFwd && vm.meter.optFwd.addons ? ' · forward: ' + usd(vm.meter.optFwd.addons_usd) : '') + '</div>' : '');
+    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "")) + ' · signals only, you place every trade · ' + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
     return h;
   }
   // For the dashboard: one refresh -> {html, vm}

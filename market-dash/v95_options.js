@@ -1,12 +1,13 @@
-/* 3v3 "v9.5 + options" — PAPER ONLY (shadow line in the nightly paper log; the card never reads this).
-   Six older strategies are allowed to add trades, but the card (v9.5) sets the direction:
+/* 3v3 "v9.5 + options" — six older strategies add trades in the card's (v9.5) direction. Used by the card and the nightly paper log.
      1) the card's latest side today = the direction (nothing counts before the card's first buy, except the box)
      2) an old signal on the card's side      -> taken as it fired, with its own exits ("agree")
      3) an old signal AGAINST the card's side -> flipped: buy the card's side at that minute, card's ladder exit ("flip")
      4) before the card's first buy           -> only the box scalp may trade ("box")
-   The six: box scalp · Playbook home run · Tulip v3.2 · turn entry + 0.55 stop · sniper (A+ 3.0 / B 1.5 under red 304) · calls checkpoint.
+     5) after the card's 2nd stop (card done for the day) -> no more option trades
+     6) size by rank: box scalp + Playbook home run = 2 contracts unless flipped; everything else 1
+   The six (ranked by their own SQN): box scalp · Playbook home run · Tulip v3.2 · turn entry + 0.55 stop · sniper (A+ 3.0 / B 1.5 under red 304) · calls checkpoint.
    Honest timing everywhere: signal on a bar close -> first logged quote after it, buy the ask, sell the bid, $0.013/ct fee per side.
-   Backtest (68 mornings, Jul 20 – Nov 3): card +$4,505 · card + options +$7,415 (142 trades, SQN 5.23). */
+   Backtest (68 mornings, Jul 20 – Nov 3): add-ons +$4,113 (53 trades, 74 contracts); card sized + options +$15,969, drawdown $186. */
 "use strict";
 (function (root) {
   var FEE = 2.6, LN = [8, 14, 35, 52, 80, 120, 250, 304, 400];
@@ -24,16 +25,21 @@
     return { get: function (m) { return out[m] == null ? null : out[m]; }, mid: function (m) { for (var j = m; j >= m - 5; j--) if (b[j]) return b[j][0]; return null; } }; }
   function walk(D, side, p, endM, f) { var b = D.opt[side][p.K], lastJ = null;
     for (var j = p.j + 1; j <= Math.min(endM, 150); j++) { var q = b[j]; if (!q) continue; lastJ = j; var why = f(j, q);
-      if (why) { var px = typeof why === "object" ? why.px : q[2]; return { usd: (px - p.q[3]) * 100 - FEE, why: why.why || why, out: j }; } }
-    return lastJ == null ? null : { usd: (b[lastJ][2] - p.q[3]) * 100 - FEE, why: "time", out: lastJ }; }
+      if (why) { var px = typeof why === "object" ? why.px : q[2]; return { usd: (px - p.q[3]) * 100 - FEE, why: why.why || why, out: j, aMid: p.q[0], fill: p.j, sold: px }; } }
+    if (lastJ == null && !D.complete) return { usd: (p.q[2] - p.q[3]) * 100 - FEE, why: "open", out: Infinity, bid: p.q[2], aMid: p.q[0], fill: p.j };
+    if (lastJ == null) return null;
+    // live (incomplete data): if the window has not run out yet, the trade is still OPEN, not a time exit
+    if (!D.complete && lastJ < Math.min(endM, 150) && D.st.length - 1 < Math.min(endM, 150)) return { usd: (b[lastJ][2] - p.q[3]) * 100 - FEE, why: "open", out: Infinity, bid: b[lastJ][2], aMid: p.q[0], fill: p.j };
+    return { usd: (b[lastJ][2] - p.q[3]) * 100 - FEE, why: "time", out: lastJ, aMid: p.q[0], fill: p.j, sold: b[lastJ][2] }; }
   // the card's ladder (used for flipped signals): 0.50 stop, +0.30 -> stop −0.15, +0.50 arms a 3-tick EMA8 trail, 90 min / 8:56
   function ladder(D, side, m) { var st = D.st, sg = side === "C" ? 1 : -1, p = st[m] ? pick(D, side, m, 0.80, 1.25, 0.35) : null; if (!p) return null;
     var b = D.opt[side][p.K], a = p.q[0], paid = p.q[3], stop = a - 0.50, armed = false, cnt = 0, last = null, lastJ = null;
     for (var j = p.j + 1; j <= Math.min(p.j + 90, 146); j++) { var x = b[j]; if (!x) continue; last = x; lastJ = j;
-      if (x[0] <= stop) return { usd: (x[2] - paid) * 100 - FEE, why: "stop", out: j, K: p.K, paid: paid, sold: x[2], fill: p.j };
+      if (x[0] <= stop) return { usd: (x[2] - paid) * 100 - FEE, why: "stop", out: j, K: p.K, paid: paid, sold: x[2], fill: p.j, aMid: a };
       if (x[0] >= a + 0.30) stop = Math.max(stop, a - 0.15); if (x[0] >= a + 0.50) armed = true;
-      if (armed && st[j] && st[j - 1]) { cnt = sg * (st[j][3] - st[j - 1][3]) < 0 ? cnt + 1 : 0; if (cnt >= 3) return { usd: (x[2] - paid) * 100 - FEE, why: "trail (3 ticks)", out: j, K: p.K, paid: paid, sold: x[2], fill: p.j }; } }
-    return last ? { usd: (last[2] - paid) * 100 - FEE, why: "time", out: lastJ, K: p.K, paid: paid, sold: last[2], fill: p.j } : null; }
+      if (armed && st[j] && st[j - 1]) { cnt = sg * (st[j][3] - st[j - 1][3]) < 0 ? cnt + 1 : 0; if (cnt >= 3) return { usd: (x[2] - paid) * 100 - FEE, why: "trail (3 ticks)", out: j, K: p.K, paid: paid, sold: x[2], fill: p.j, aMid: a }; } }
+    if (!D.complete && (lastJ == null || lastJ < Math.min(p.j + 90, 146)) && D.st.length - 1 < Math.min(p.j + 90, 146)) { var bq = last || p.q; return { usd: (bq[2] - paid) * 100 - FEE, why: "open", out: Infinity, K: p.K, paid: paid, bid: bq[2], fill: p.j, stopNow: stop, armed: armed, aMid: a }; }
+    return last ? { usd: (last[2] - paid) * 100 - FEE, why: "time", out: lastJ, K: p.K, paid: paid, sold: last[2], fill: p.j, aMid: a } : null; }
   // ---------- the six old strategies (signals + their own exits) ----------
   function signals(D, H, hist, V, t0, day) {
     var st = D.st, X = D.ctx, out = [], PT = {}, FR = {}, vol = {};
@@ -42,7 +48,7 @@
     (H.candles || []).forEach(function (c) { var m = Math.floor((c.time - t0) / 60); if (m >= 0 && m < 390) vol[m] = c.volume; });
     function pt(m) { for (var j = m - 1; j >= m - 4; j--) if (PT[j]) return PT[j]; return null; }
     function fr(m) { for (var j = m - 1; j >= m - 4; j--) if (FR[j]) return FR[j]; return null; }
-    function add(src, side, m, res, extra) { if (!res) return; var o = { src: src, side: side, m: m, usd: res.usd, why: res.why, out: res.out }; for (var k in (extra || {})) o[k] = extra[k]; out.push(o); }
+    function add(src, side, m, res, extra) { if (!res) return; var o = { src: src, side: side, m: m, usd: res.usd, why: res.why, out: res.out, aMid: res.aMid, fill: res.fill, bid: res.bid, sold: res.sold }; for (var k in (extra || {})) o[k] = extra[k]; out.push(o); }
     if (!st.length || !st[5]) return out;
     var dow = new Date(day + "T12:00:00Z").getUTCDay();
     var crossback = function (sgn) { var went = false; return function (j) { var x = st[j]; if (!x) return null; if (sgn * (x[0] - V[304][j]) > 0) went = true; else if (went && sgn * (x[0] - V[304][j]) < 0) return "crossback"; return null; }; };
@@ -72,7 +78,7 @@
         if (q[0] <= a - ex.stop) return "stop"; if (ex.tgt && q[2] >= paid + ex.tgt) return { why: "target", px: paid + ex.tgt }; return null; }); if (r) { r.K = p.K; r.paid = paid; } return r; }
     // Tulip v3.2: Tue–Fri, max 2/day, one at a time, one loss = done, stop −0.30 / target +2.00 / 60 min, 1 strike OTM
     if (dow >= 2 && dow <= 5) { var n = 0, busy = -1, lost = false; TUL.forEach(function (t) { if (n >= 2 || lost || t.m <= busy) return; var r = tulTrade(t, { stop: 0.30, tgt: 2.00 }); if (!r) return;
-      add("Tulip v3.2", t.side, t.m, r, { K: r.K, paid: r.paid, level: t.lvl }); n++; busy = r.out; if (r.usd <= 0) lost = true; }); }
+      add("Tulip v3.2", t.side, t.m, r, { K: r.K, paid: r.paid, level: t.lvl }); n++; busy = r.out; if (r.why !== "open" && r.usd <= 0) lost = true; }); }
     // Playbook home run: any weekday, max 2/day, one at a time, stop −0.30, trail from +1.20 (0.30 under the peak), 60 min
     (function () { var n = 0, busy = -1; TUL.forEach(function (t) { if (n >= 2 || t.m <= busy) return; var r = tulTrade(t, { stop: 0.30, trailFrom: 1.20 }); if (!r) return;
       add("Playbook home run", t.side, t.m, r, { K: r.K, paid: r.paid, level: t.lvl }); n++; busy = r.out; }); })();
@@ -108,13 +114,19 @@
   function run(D, H, hist, V, t0, card, day) {
     var sig = signals(D, H, hist, V, t0, day), trades = [];
     var cm = function (a) { return a.mf != null ? a.mf : a.m; };
+    // rule 5: the card is done after its 2nd stop (failed-poke stops don't count, same as the card)
+    var stopsOut = card.filter(function (a) { return a.why === "stop" && a.kind !== "fp" && a.out != null && isFinite(a.out); }).map(function (a) { return a.out; }).sort(function (x, y) { return x - y; });
+    var doneAt = stopsOut.length >= 2 ? stopsOut[1] : Infinity;
     sig.forEach(function (t) {
+      if (t.m >= doneAt) return;
       var before = card.filter(function (a) { return cm(a) < t.m; }).sort(function (x, y) { return cm(y) - cm(x); })[0], cs = before ? before.side : null;
       if (!cs) { if (t.src === "box scalp") trades.push(Object.assign({ how: "box (before the card)" }, t)); return; }
       if (cs === t.side) { trades.push(Object.assign({ how: "agree" }, t)); return; }
-      var L = ladder(D, cs, Math.floor(t.m)); if (L) trades.push({ how: "flip", src: t.src, side: cs, m: t.m, usd: L.usd, why: L.why, out: L.out, K: L.K, paid: L.paid, flipped_from: t.side });
+      var L = ladder(D, cs, Math.floor(t.m)); if (L) trades.push({ how: "flip", src: t.src, side: cs, m: t.m, usd: L.usd, why: L.why, out: L.out, K: L.K, paid: L.paid, flipped_from: t.side, aMid: L.aMid, fill: L.fill, bid: L.bid, sold: L.sold, stopNow: L.stopNow, armed: L.armed });
     });
-    return { trades: trades, signals: sig };
+    // rule 6: size by rank — box + Playbook 2 contracts unless flipped
+    trades.forEach(function (t) { t.ct = t.how !== "flip" && (t.src === "box scalp" || t.src === "Playbook home run") ? 2 : 1; });
+    return { trades: trades, signals: sig, doneAt: doneAt };
   }
   var api = { run: run, signals: signals, ladder: ladder };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.V95OPT = api;
