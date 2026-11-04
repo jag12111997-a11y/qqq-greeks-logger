@@ -93,7 +93,7 @@
  ],
  "usd": 360.5,
  "stops": 1,
- "generated_utc": "2026-11-04T05:46:44.892Z",
+ "generated_utc": "2026-11-04T11:55:38.668Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 15.13,
@@ -250,7 +250,8 @@
     "sold": 0.55,
     "why": "stop",
     "usd": -58.3,
-    "contracts": 3
+    "contracts": 3,
+    "fakeout_line": 701.87
    },
    {
     "side": "call",
@@ -263,7 +264,8 @@
     "sold": 1.85,
     "why": "trail (3 ticks)",
     "usd": 82.7,
-    "contracts": 3
+    "contracts": 3,
+    "fakeout_line": 701.83
    },
    {
     "side": "call",
@@ -276,7 +278,8 @@
     "sold": 1.85,
     "why": "trail (3 ticks)",
     "usd": 79.7,
-    "contracts": 3
+    "contracts": 3,
+    "fakeout_line": 701.83
    },
    {
     "side": "call",
@@ -289,7 +292,8 @@
     "sold": 1.83,
     "why": "time exit",
     "usd": 89.7,
-    "contracts": 1
+    "contracts": 1,
+    "fakeout_line": 704.4
    },
    {
     "side": "call",
@@ -302,7 +306,8 @@
     "sold": 2.57,
     "why": "time exit",
     "usd": 168.7,
-    "contracts": 1
+    "contracts": 1,
+    "fakeout_line": 703.91
    }
   ],
   "usd_1ct": 362.5,
@@ -326,7 +331,9 @@
     "exit": "8:44",
     "why": "time",
     "usd": 205.4,
-    "contracts": 2
+    "contracts": 2,
+    "level": "put_wall",
+    "level_px": 705
    },
    {
     "how": "agree",
@@ -338,7 +345,11 @@
     "exit": "8:25",
     "why": "target",
     "usd": 27.4,
-    "contracts": 2
+    "contracts": 2,
+    "box": [
+     704.91,
+     706.53
+    ]
    }
   ],
   "addons_usd": 465.6,

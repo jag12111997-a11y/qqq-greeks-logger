@@ -290,7 +290,7 @@
           var S = t.side === "C" ? "CALL" : "PUT", fill = t.fill != null ? t.fill : Math.floor(t.m) + 1;
           var ct = t.ct || 1, how = t.how === "agree" ? "with the card" : t.how === "flip" ? "flipped to the card's side (" + (t.flipped_from === "C" ? "call" : "put") + " signal)" : "box (before the card)";
           var k = { opt: true, S: S, K: t.K, ct: ct, mf: fill, ask: t.paid, kind: "OPTION · " + t.src + (ct > 1 ? " " + ct + "×" : "") + " · " + how,
-            exitTxt: (ct > 1 || t.src === "Tulip v3.2" ? t.src + (ct > 1 ? " (" + ct + "×)" : "") + ": " : "") + optExit(t, D, fill), sg: t.side === "C" ? 1 : -1 };
+            exitTxt: (ct > 1 || t.src === "Tulip v3.2" ? t.src + (ct > 1 ? " (" + ct + "×)" : "") + ": " : "") + optExit(t, D, fill), sg: t.side === "C" ? 1 : -1, box: t.box, level: t.level, levelPx: t.levelPx };
           if (t.why === "open") { k.bid = t.bid; k.pnl = t.usd * ct; k.state = atM - fill <= 5 ? "buy" : "in"; }
           else { k.out = t.out; k.res = t.usd * ct; k.px = t.sold; k.why = OPWHY[t.why] || t.why; k.state = atM - t.out <= 3 ? "sell" : "closed"; }
           // same touch, same contract, same state (Tulip + Playbook) -> ONE ticket

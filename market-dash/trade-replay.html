@@ -93,6 +93,10 @@
 #rp .card.open { border-color:var(--you); }
 #rp .tag.live { color:var(--you); border-color:currentColor; }
 #rp .tag.opt { color:var(--accent); border-color:currentColor; }
+#rp .lchips { display:flex; flex-wrap:wrap; gap:5px; }
+#rp .lchip { font:600 11.5px var(--display); padding:3px 9px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--mute); cursor:pointer; }
+#rp .lchip[aria-pressed="true"] { color:var(--fg); border-color:var(--accent); background:color-mix(in srgb,var(--accent) 18%,transparent); }
+#rp .lchip i { display:inline-block; width:10px; height:0; border-top:2.5px solid; margin-right:5px; vertical-align:middle; }
 </style>
 <div id="rp">
   <div class="hd"><h2>Trade Replay</h2><span class="sub">Every trade the bot made, on the chart, checked against its own rules · today's trades appear live</span></div>
@@ -129,18 +133,25 @@
     var C = [], DAYS = R.days, DAILY = [], LIVE = null;
     function rebuild() {
       C = R.cards.slice(); DAILY = R.daily.slice();
-      if (LIVE) { LIVE.cards.forEach(function (c) { C.push(c); }); DAILY.push(LIVE.daily); DAYS[LIVE.date] = LIVE.day; }
+      if (LIVE) { LIVE.cards.forEach(function (c) { C.push(c); }); DAILY.push(LIVE.daily); DAYS[LIVE.date] = LIVE.day; delete LIVE.day.L; }
       C.forEach(function (c) { c.id = c.date + '|' + c.src + '|' + c.setup + '|' + c.side + '|' + c.strike + '|' + c.m; c.weekday = DAYS[c.date].weekday; c.time_pt = pt(c.m); });
     }
     rebuild();
+    // ---- your 9 lines, rebuilt in the page from each morning's seed (the EMA after the 3 prior sessions) ----
+    var LINES = [[8, '#7CFF6B', 'g'], [14, '#4FD44A', 'g'], [35, '#2E9B3A', 'g'], [52, '#F5E663', 'y'], [80, '#C9B840', 'y'], [120, '#FF9A3C', 'o'], [250, '#FF8A80', 'r'], [304, '#FF4D4D', 'r'], [400, '#B23A36', 'r']];
+    function linesOf(D) { if (D.L) return D.L; D.L = {}; LINES.forEach(function (q) { var n = q[0], a = 2 / (n + 1), e = D.seed && D.seed[n] != null ? D.seed[n] : null;
+      D.L[n] = D.candles.map(function (k) { e = e === null ? k[3] : a * k[3] + (1 - a) * e; return e; }); }); return D.L; }
+    var LT = { core: true, g: false, y: false, o: false, r: false, va: true, gex: true };
+    try { var sv = JSON.parse(localStorage.getItem('rp-lines') || 'null'); if (sv) Object.keys(LT).forEach(function (k) { if (typeof sv[k] === 'boolean') LT[k] = sv[k]; }); } catch (e) {}
+    var LCH = [['core', 'Green 8 + red 304', '#7CFF6B'], ['g', 'Green 14 / 35', '#4FD44A'], ['y', 'Yellow 52 / 80', '#F5E663'], ['o', 'Orange 120', '#FF9A3C'], ['r', 'Red 250 / 400', '#FF8A80'], ['va', 'Value area', '#9c879a'], ['gex', 'GEX walls', '#ff7a7a']];
+    var lineOn = function (n) { return n === 8 || n === 304 ? LT.core : n === 14 || n === 35 ? LT.g : n === 52 || n === 80 ? LT.y : n === 120 ? LT.o : LT.r; };
 
     var html = '<div class="pane" data-p="chart"><div class="live" id="rp-live"><span class="dot"></span><span id="rp-live-t">Checking for a live morning…</span></div>';
     html += '<div class="chips" id="rp-f"></div><div id="rp-strip"></div>' +
-      '<div class="desk" id="rp-desk"><section class="panel main"><p class="ttl" id="rp-title"></p><canvas id="rp-main"></canvas>' +
+      '<div class="desk" id="rp-desk"><section class="panel main"><p class="ttl" id="rp-title"></p><div class="lchips" id="rp-lines"></div><canvas id="rp-main"></canvas>' +
       '<p class="readout" id="rp-main-r">Hover the chart for a minute.</p>' +
-      '<div class="legend"><span><i style="border-color:var(--vwap)"></i>VWAP</span><span><i style="border-color:var(--win)"></i>Green 8</span><span><i style="border-color:var(--loss)"></i>Red 304</span>' +
-      '<span><i style="border-color:var(--cw)"></i>Call wall</span><span><i style="border-color:var(--pw)"></i>Put wall</span><span><i style="border-color:var(--gf)"></i>Gamma flip</span>' +
-      '<span><i style="border-color:var(--yd);border-top-style:dashed"></i>Yesterday H/L/C</span><span><i style="border-color:var(--level);border-top-style:dashed"></i>Trap line</span><span>▲ bot buy · ▼ bot sell · ● other bot trades</span></div></section>' +
+      '<div class="legend"><span><i style="border-color:var(--vwap)"></i>VWAP</span><span>Your lines: green 8/14/35 · yellow 52/80 · orange 120 · red 250/304/400</span><span><i style="border-color:var(--cw)"></i>Call wall</span><span><i style="border-color:var(--pw)"></i>Put wall</span><span><i style="border-color:var(--gf)"></i>Gamma flip</span>' +
+      '<span><i style="border-color:var(--yd);border-top-style:dashed"></i>Yesterday H/L/C</span><span>▒ yesterday\'s value area</span><span><i style="border-color:var(--level);border-top-style:dashed"></i>Trap line</span><span><i style="border-color:var(--accent);border-top-style:dashed"></i>Trade level (box / bounce level / fake-out)</span><span>▲ bot buy · ▼ bot sell · ● other bot trades</span></div></section>' +
       '<aside class="panel"><p class="eyebrow">The contract</p><p class="ttl" id="rp-opt-t"></p><div class="opt"><canvas id="rp-opt"></canvas></div><p class="fine" id="rp-opt-n"></p><div id="rp-side" style="display:flex;flex-direction:column;gap:10px"></div></aside></div>';
     html += '</div><div class="pane" data-p="sum" hidden><div class="kpis" id="rp-kpis"></div>' +
       '<div class="grid2"><section class="panel"><p class="eyebrow">Every morning · card vs options · tap a day</p><div class="tbl"><table id="rp-daily"></table></div><p class="fine" id="rp-daily-n"></p></section>' +
@@ -157,6 +168,8 @@
       if (p === 'sum') { summary(); cum(); } else { strip(); if (sel.card) { drawMain(); drawOpt(); } }
     }
     document.querySelectorAll('#rp .tab').forEach(function (b) { b.addEventListener('click', function () { showPane(b.dataset.p); }); });
+    document.getElementById('rp-lines').innerHTML = LCH.map(function (q) { return '<button class="lchip" data-k="' + q[0] + '" aria-pressed="' + LT[q[0]] + '"><i style="border-color:' + q[2] + '"></i>' + q[1] + '</button>'; }).join('');
+    document.querySelectorAll('#rp-lines .lchip').forEach(function (b) { b.addEventListener('click', function () { LT[b.dataset.k] = !LT[b.dataset.k]; b.setAttribute('aria-pressed', LT[b.dataset.k]); try { localStorage.setItem('rp-lines', JSON.stringify(LT)); } catch (e) {} drawMain(); }); });
 
     // ---------- filters + strip (newest month first) ----------
     var FILT = [['all', 'All'], ['win', 'Wins'], ['loss', 'Losses'], ['open', 'Open now'], ['card', 'Card'], ['option', 'Options'], ['Trap', 'Trap'], ['Gap-and-go', 'Gap-and-go'], ['Fade the week', 'Fade the week'],
@@ -214,25 +227,31 @@
       var pd = (hi - lo) * 0.1 || 0.2; lo -= pd; hi += pd;
       var pw = w - padL - padR, cw = pw / (z - a + 1);
       var X = function (i) { return padL + (i - a + 0.5) * cw; }, Y = function (v) { return top + (hi - v) / (hi - lo) * (ph - top); };
-      var inR = function (v) { return v != null && v >= lo && v <= hi; };
+      var inR = function (v) { return v != null && v >= lo && v <= hi; }, labels0 = [];
       g.fillStyle = css('--grid'); g.fillRect(X(Math.max(a, c.m)) - cw / 2, top, X(Math.min(z, exitOf(c))) - X(Math.max(a, c.m)) + cw, ph - top);
+      if (LT.va && D.va && D.va.length === 2) { var v0 = Math.max(lo, D.va[0]), v1 = Math.min(hi, D.va[1]); if (v1 > v0) { g.fillStyle = css('--mute'); g.globalAlpha = 0.09; g.fillRect(padL, Y(v1), w - padL - padR, Y(v0) - Y(v1)); g.globalAlpha = 1; labels0.push([Y(v1), 'VA high ' + D.va[1].toFixed(2), '--mute'], [Y(v0), 'VA low ' + D.va[0].toFixed(2), '--mute']); } }
       var step = [0.25, 0.5, 1, 2, 2.5, 5].find(function (s) { return (hi - lo) / s <= 7; }) || 5;
       g.font = '11px ' + css('--mono'); g.textBaseline = 'middle';
       for (var v = Math.ceil(lo / step) * step; v <= hi; v += step) { g.strokeStyle = css('--grid'); g.lineWidth = 1; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText(v.toFixed(2), w - padR + 6, Y(v)); }
       g.textBaseline = 'alphabetic';
       var tstep = (z - a) > 150 ? 30 : 15;
       for (var m = Math.ceil(a / tstep) * tstep; m <= z; m += tstep) { g.fillStyle = css('--mute'); g.fillText(pt(m), X(m) - 14, h - 4); }
-      var labels = [], yd = D.yday || {}; g.setLineDash([4, 4]); g.lineWidth = 1;
+      var labelsC = [], labels = labels0, yd = D.yday || {}; g.setLineDash([4, 4]); g.lineWidth = 1;
       [['high', 'Y high'], ['low', 'Y low'], ['close', 'Y close']].forEach(function (p) { if (!inR(yd[p[0]])) return; g.strokeStyle = css('--yd'); g.beginPath(); g.moveTo(padL, Y(yd[p[0]])); g.lineTo(w - padR, Y(yd[p[0]])); g.stroke(); g.fillStyle = css('--yd'); g.fillText(p[1], padL + 4, Y(yd[p[0]]) - 3); });
       var tl = trapLine(D); if (inR(tl)) { g.strokeStyle = css('--level'); g.globalAlpha = 0.7; g.beginPath(); g.moveTo(padL, Y(tl)); g.lineTo(w - padR, Y(tl)); g.stroke(); g.globalAlpha = 1; labels.push([Y(tl), 'TRAP ' + tl.toFixed(2), '--level']); }
       g.setLineDash([]);
       [['call_wall', '--cw', 'Call wall'], ['put_wall', '--pw', 'Put wall'], ['gamma_flip', '--gf', 'Gamma flip']].forEach(function (q) {
-        var s = D.levels[q[0]]; if (!s) return; g.strokeStyle = css(q[1]); g.lineWidth = 1.2; g.globalAlpha = 0.85; g.beginPath(); var on = false, lv = null;
+        var s = D.levels[q[0]]; if (!s || !LT.gex) return; g.strokeStyle = css(q[1]); g.lineWidth = 1.2; g.globalAlpha = 0.85; g.beginPath(); var on = false, lv = null;
         for (var i = a; i <= z; i++) { var v2 = s[i]; if (!inR(v2)) { on = false; continue; } var y = Y(v2); if (!on || v2 !== lv) { g.moveTo(X(i) - cw / 2, y); on = true; } g.lineTo(X(i) + cw / 2, y); lv = v2; }
         g.stroke(); g.globalAlpha = 1; var last = s[z]; if (inR(last)) labels.push([Y(last), q[2] + ' ' + last.toFixed(0), q[1]]);
       });
       g.strokeStyle = css('--vwap'); g.lineWidth = 2; g.beginPath(); for (var i = a; i <= z; i++) { var y = Y(D.candles[i][5]); i === a ? g.moveTo(X(i), y) : g.lineTo(X(i), y); } g.stroke(); labels.push([Y(D.candles[z][5]), 'VWAP', '--vwap']);
-      [['g8', '--win', 'Green 8'], ['r304', '--loss', 'Red 304']].forEach(function (q) { var s = D[q[0]]; if (!s) return; g.strokeStyle = css(q[1]); g.lineWidth = 1.4; g.beginPath(); var st = false; for (var i = a; i <= z; i++) { var v3 = s[i]; if (v3 == null || !inR(v3)) { st = false; continue; } st ? g.lineTo(X(i), Y(v3)) : g.moveTo(X(i), Y(v3)); st = true; } g.stroke(); if (inR(s[z])) labels.push([Y(s[z]), q[2], q[1]]); });
+      var LL = linesOf(D); LINES.forEach(function (q) { if (!lineOn(q[0])) return; var s = LL[q[0]]; g.strokeStyle = q[1]; g.lineWidth = q[0] === 8 || q[0] === 304 ? 1.6 : 1.2; g.beginPath(); var st = false;
+        for (var i = a; i <= z; i++) { var v3 = s[i]; if (v3 == null || !inR(v3)) { st = false; continue; } st ? g.lineTo(X(i), Y(v3)) : g.moveTo(X(i), Y(v3)); st = true; } g.stroke(); if (inR(s[z])) labelsC.push([Y(s[z]), String(q[0]), q[1]]); });
+      var tlev = function (v, txt) { if (!inR(v)) return; g.strokeStyle = css('--accent'); g.setLineDash([7, 4]); g.lineWidth = 1.6; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.setLineDash([]); labels.push([Y(v), txt, '--accent']); };
+      if (c.box) { tlev(c.box[0], 'BOX floor ' + c.box[0].toFixed(2)); tlev(c.box[1], 'BOX top ' + c.box[1].toFixed(2)); }
+      if (c.levelPx != null) tlev(c.levelPx, (c.level || 'level').replace('_', ' ') + ' ' + c.levelPx.toFixed(2));
+      if (c.fake != null) tlev(c.fake, 'FAKE-OUT ' + c.fake.toFixed(2));
       var vmax = Math.max.apply(null, vis.map(function (x) { return x[4]; })) || 1;
       for (var i2 = a; i2 <= z; i2++) {
         var k = D.candles[i2], col = css(k[3] >= k[0] ? '--up' : '--down'); g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 1;
@@ -253,6 +272,7 @@
       if (c.why !== 'open' && c.exit_m != null && c.exit_m <= z) tri(c.exit_m, false, c.pnl > 0 ? '--win' : '--loss', 'SELL · ' + why(c) + ' · ' + pt(c.exit_m) + ' · ' + usd(c.pnl), 1);
       labels.sort(function (p, q) { return p[0] - q[0]; }); var prevY = -99; g.font = '600 10.5px ' + css('--display');
       labels.forEach(function (L) { var yy = Math.max(L[0], prevY + 12); prevY = yy; g.fillStyle = css('--panel'); g.fillRect(w - padR + 2, yy - 7, padR - 2, 13); g.fillStyle = css(L[2]); g.fillText(L[1], w - padR + 5, yy + 4); });
+      labelsC.sort(function (p, q) { return p[0] - q[0]; }); var py2 = -99; labelsC.forEach(function (L) { var yy = Math.max(L[0], py2 + 11); py2 = yy; g.fillStyle = L[2]; g.fillText(L[1], w - padR - 22, yy + 4); });
       if (hoverM != null && hoverM >= a && hoverM <= z) { g.strokeStyle = css('--mute'); g.lineWidth = 1; g.beginPath(); g.moveTo(X(hoverM), top); g.lineTo(X(hoverM), vTop + vh); g.stroke(); }
       cv._map = { a: a, z: z, padL: padL, cw: cw };
     }
@@ -260,7 +280,7 @@
       var cv = document.getElementById('rp-main');
       cv.onmousemove = function (e) { var mp = cv._map; if (!mp || !sel.card) return; var r = cv.getBoundingClientRect(), m = Math.round(mp.a + (e.clientX - r.left - mp.padL) / mp.cw - 0.5); m = Math.max(mp.a, Math.min(mp.z, m));
         hoverM = m; drawMain(); var D = DAYS[sel.card.date], k = D.candles[m];
-        document.getElementById('rp-main-r').textContent = pt(m) + ' PT · O ' + q2(k[0]) + ' H ' + q2(k[1]) + ' L ' + q2(k[2]) + ' C ' + q2(k[3]) + ' · VWAP ' + q2(k[5]) + (D.g8 ? ' · green 8 ' + q2(D.g8[m]) + ' · red 304 ' + q2(D.r304[m]) : '') + ' · vol ' + (k[4] || 0).toLocaleString('en-US'); };
+        document.getElementById('rp-main-r').textContent = pt(m) + ' PT · O ' + q2(k[0]) + ' H ' + q2(k[1]) + ' L ' + q2(k[2]) + ' C ' + q2(k[3]) + ' · VWAP ' + q2(k[5]) + ' · ' + LINES.map(function (q) { return q[0] + ' ' + q2(linesOf(D)[q[0]][m]); }).join(' · ') + ' · vol ' + (k[4] || 0).toLocaleString('en-US'); };
       cv.onmouseleave = function () { hoverM = null; drawMain(); };
     })();
 
@@ -284,6 +304,10 @@
         if (s.indexOf('re-') === 0) ok(true, 'Re-entry: the next turn after a stop, swing still holding', '');
         ok(true, 'Bought on a closed bar, next quote', 'signal ' + pt(c.sig != null ? c.sig : c.m) + ' → filled ' + pt(c.m) + ' at ' + q2(c.paid));
         ok(c.paid >= 0.75 && c.paid <= 1.30 && (P.iv == null || P.iv <= 0.35), 'Contract near the money (0.80–1.25) · IV ≤ 35%', 'paid ' + q2(c.paid) + (P.iv != null ? ' · IV ' + (P.iv * 100).toFixed(0) + '%' : ''));
+        var LLc = linesOf(D), mm = Math.min(D.candles.length - 1, Math.max(0, Math.floor(c.sig != null ? c.sig : c.m))), vals = LINES.map(function (q) { return LLc[q[0]][mm]; }), spread = Math.max.apply(null, vals) - Math.min.apply(null, vals);
+        var fan = [8, 52, 304].every(function (n, i, A) { return i === 0 || LLc[A[i - 1]][mm] > LLc[n][mm]; }) ? 'up (8 > 52 > 304)' : [8, 52, 304].every(function (n, i, A) { return i === 0 || LLc[A[i - 1]][mm] < LLc[n][mm]; }) ? 'down (8 < 52 < 304)' : 'mixed';
+        ok(null, 'Your lines at the signal', 'spread of all 9: ' + spread.toFixed(2) + ' · stack ' + fan + ' · green 8 ' + q2(LLc[8][mm]) + ' vs red 304 ' + q2(LLc[304][mm]) + ' · QQQ ' + q2(D.candles[mm][3]) + (D.va ? ' · value area ' + D.va.join('–') : ''));
+        if (D.htf) ok(null, 'Higher time frames', 'daily trend ' + (D.htf.daily > 0 ? 'up' : D.htf.daily < 0 ? 'down' : 'mixed') + ' · weekly ' + (D.htf.weekly > 0 ? 'up' : D.htf.weekly < 0 ? 'down' : 'mixed'));
         ok(null, 'Size: ' + c.ct + '×', c.ct === 3 ? 'your lines agreed (green 8 vs red 304 / stretched from the reds)' : base === 'vb' && D.htf && D.htf.daily === -1 && D.htf.weekly === -1 ? 'bounce call against daily + weekly → 1×' : '1 contract');
         ok(P.hit30 != null, '+0.30 → stop moves up to −0.15', P.hit30 != null ? 'reached at ' + pt(P.hit30) : 'never reached · best ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—'));
         ok(P.hit50 != null, '+0.50 → trail armed (sell after 3 green 8 ticks against)', P.hit50 != null ? 'armed at ' + pt(P.hit50) : 'never armed');
@@ -292,6 +316,8 @@
         ok(true, 'Direction: ' + (c.how === 'agree' ? 'same side as the card' : c.how === 'flip' ? 'flipped to the card\'s side (the ' + (c.flipped_from || '') + ' signal was against it)' : 'box before the card\'s first buy'), '');
         ok(true, c.how === 'flip' ? 'Flip uses the card\'s ladder: stop −0.50 · +0.30 → −0.15 · +0.50 trail' : (OPTRULE[c.setup] || c.setup), '');
         ok(null, 'Size: ' + c.ct + '×', c.ct > 1 ? 'top-ranked strategy (box / Playbook)' : '1 contract');
+        if (c.box) ok(null, 'The box', 'floor ' + q2(c.box[0]) + ' · top ' + q2(c.box[1]) + ' · ' + (c.box[1] - c.box[0]).toFixed(2) + ' wide');
+        if (c.levelPx != null) ok(null, 'The level', (c.level || '').replace('_', ' ') + ' ' + q2(c.levelPx));
         ok(true, 'Bought on a closed bar, next quote', 'signal ' + pt(c.sig != null ? c.sig : c.m - 1) + ' → ' + pt(c.m) + ' at ' + q2(c.paid) + (P.iv != null ? ' · IV ' + (P.iv * 100).toFixed(0) + '%' : ''));
         ok(P.hit30 != null, 'Went +0.30 while held', P.hit30 != null ? 'at ' + pt(P.hit30) : 'best ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—'));
         ok(c.why === 'open' ? null : c.why !== 'stop' && c.why !== 'broke box', 'Exit: ' + (c.why === 'open' ? 'still open' : why(c)), c.why === 'open' ? '' : 'out ' + pt(c.exit_m) + ' · ' + usd(c.pnl));
@@ -328,10 +354,13 @@
       if (pts.length) {
         g.strokeStyle = css('--mute'); g.globalAlpha = 0.5; g.lineWidth = 1; g.beginPath(); pts.forEach(function (o, i) { i ? g.lineTo(X(o[0]), Y(o[2])) : g.moveTo(X(o[0]), Y(o[2])); }); g.stroke(); g.globalAlpha = 1;
         g.strokeStyle = css('--fg'); g.lineWidth = 2; g.beginPath(); pts.forEach(function (o, i) { i ? g.lineTo(X(o[0]), Y(o[1])) : g.moveTo(X(o[0]), Y(o[1])); }); g.stroke();
+        [[3, '#FF4D4D', 'EMA 11'], [4, '#3fd3ff', 'EMA 18']].forEach(function (q) { var P2 = pts.filter(function (o) { return o[q[0]] != null && o[q[0]] >= lo && o[q[0]] <= hi; }); if (!P2.length) return;
+          g.strokeStyle = q[1]; g.lineWidth = 1.2; g.setLineDash([3, 2]); g.beginPath(); P2.forEach(function (o, i) { i ? g.lineTo(X(o[0]), Y(o[q[0]])) : g.moveTo(X(o[0]), Y(o[q[0]])); }); g.stroke(); g.setLineDash([]);
+          g.fillStyle = q[1]; g.font = '600 10px ' + css('--display'); var lp = P2[P2.length - 1]; g.fillText(q[2], Math.min(X(lp[0]) + 3, w - padR - 36), Y(lp[q[0]]) - 3); g.font = '11px ' + css('--mono'); });
       }
       var dot = function (m, v, col) { g.fillStyle = css('--panel'); g.beginPath(); g.arc(X(m), Y(v), 7, 0, 7); g.fill(); g.fillStyle = css(col); g.beginPath(); g.arc(X(m), Y(v), 5, 0, 7); g.fill(); };
       dot(c.m, entry, '--you'); if (c.why !== 'open' && sold != null && c.exit_m != null) dot(c.exit_m, sold, c.pnl > 0 ? '--win' : '--loss');
-      document.getElementById('rp-opt-n').textContent = pts.length ? 'Mid (white) and bid (grey) per minute · best bid while held ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—') + ' · worst ' + (P.worst != null ? (P.worst >= 0 ? '+' : '') + q2(P.worst) : '—') + ' a contract.' : 'No quotes were logged for this strike.';
+      document.getElementById('rp-opt-n').textContent = pts.length ? 'Mid (white) · bid (grey) · option EMA 11 (red) / 18 (blue) · best bid while held ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—') + ' · worst ' + (P.worst != null ? (P.worst >= 0 ? '+' : '') + q2(P.worst) : '—') + ' a contract.' : 'No quotes were logged for this strike.';
     }
 
     // ---------- side panel ----------
@@ -411,13 +440,14 @@
       for (var m = 0; m <= atM; m++) { var b = bars[m]; if (b) { lc = b.close; if (b.volume > 0) { pv += (b.high + b.low + b.close) / 3 * b.volume; vv += b.volume; } lvw = vv > 0 ? pv / vv : b.close; cs.push([b.open, b.high, b.low, b.close, b.volume || 0, lvw]); } else if (lc != null) cs.push([lc, lc, lc, lc, 0, lvw]); else cs.push(null); }
       var f0 = cs.findIndex(Boolean); if (f0 < 0) return null; for (var k = 0; k < f0; k++) cs[k] = cs[f0].slice();
       var ds = Object.keys(X.hist).sort().slice(-3), yc = []; ds.forEach(function (d) { X.hist[d].slice(0, 390).forEach(function (q) { yc.push(q.close); }); });
-      var ln = {}; [8, 304].forEach(function (n) { var a = 2 / (n + 1), e = null; yc.forEach(function (x) { e = e === null ? x : a * x + (1 - a) * e; }); ln[n] = cs.map(function (q) { e = e === null ? q[3] : a * q[3] + (1 - a) * e; return e; }); });
+      var seed = {}; LINES.forEach(function (q) { var n = q[0], a = 2 / (n + 1), e = null; yc.forEach(function (x) { e = e === null ? x : a * x + (1 - a) * e; }); seed[n] = e; });
       var lv = { call_wall: [], put_wall: [], gamma_flip: [] }, P = {}, lp = null; (X.today.points || []).forEach(function (p) { P[Math.floor((p.time - t0) / 60)] = p; });
       for (var m2 = -30; m2 <= atM; m2++) { if (P[m2]) lp = P[m2]; if (m2 >= 0) Object.keys(lv).forEach(function (q) { lv[q].push(lp && lp[q] != null ? lp[q] : null); }); }
       var D = vm.D, c = D.ctx, mp = { yesterday: c.day > 0 ? 'green' : 'red', last_week: c.week > 0 ? 'up' : 'down', yday_high: c.PDH, yday_low: c.PDL, yday_close: c.PDC,
         trap: c.day > 0 ? 'calls below ' + (c.PDL - 1).toFixed(2) : 'puts above ' + (c.PDH + 1).toFixed(2), value_area: [D.va.yval, D.va.yvah].map(function (v) { return Math.round(v * 100) / 100; }) };
-      var dayObj = { weekday: new Date(day + 'T12:00:00Z').toUTCString().slice(0, 3), candles: cs, g8: ln[8], r304: ln[304], levels: lv, yday: { high: c.PDH, low: c.PDL, close: c.PDC }, map: mp, vix: X.vix, htf: null };
-      var cards = [], ser = function (side, K, a, z) { var o = (D.opt[side] || {})[String(K)] || {}, s = []; for (var m3 = a; m3 <= z; m3++) if (o[m3]) s.push([m3, o[m3][0], o[m3][2]]); return s; };
+      var dayObj = { weekday: new Date(day + 'T12:00:00Z').toUTCString().slice(0, 3), candles: cs, seed: seed, va: mp.value_area, levels: lv, yday: { high: c.PDH, low: c.PDL, close: c.PDC }, map: mp, vix: X.vix, htf: X.log && X.log.htf_next || null };
+      var cards = [], ser = function (side, K, a, z) { var o = (D.opt[side] || {})[String(K)] || {}, s = [], e11 = null, e18 = null, last = null;
+        for (var m3 = -5; m3 <= z; m3++) { if (o[m3]) last = o[m3][0]; if (last == null) continue; e11 = e11 === null ? last : 2 / 12 * last + 10 / 12 * e11; e18 = e18 === null ? last : 2 / 19 * last + 17 / 19 * e18; if (m3 >= a && o[m3]) s.push([m3, o[m3][0], o[m3][2], e11, e18]); } return s; };
       var pathOf = function (side, K, fill, exit, paid) { var o = (D.opt[side] || {})[String(K)] || {}, q0 = o[fill] || o[fill + 1], aMid = q0 ? q0[0] : paid, best = null, worst = null, h30 = null, h50 = null;
         for (var m4 = fill + 1; m4 <= exit; m4++) { var q = o[m4]; if (!q) continue; best = best == null ? q[2] - paid : Math.max(best, q[2] - paid); worst = worst == null ? q[2] - paid : Math.min(worst, q[2] - paid); if (h30 == null && q[0] >= aMid + 0.3) h30 = m4; if (h50 == null && q[0] >= aMid + 0.5) h50 = m4; }
         return { aMid: aMid, iv: q0 ? q0[1] : null, best: best, worst: worst, hit30: h30, hit50: h50, after: null }; };
@@ -427,7 +457,8 @@
         var src = k.opt ? 'option' : 'card', setupName = src === 'card' ? (KIND[kindTxt.split(' · ')[0]] || (kindTxt.indexOf('re-entry') === 0 ? 're-' + (kindTxt.match(/\((.*)\)/) || [0, 'trap'])[1].replace('gap-and-go', 'gap').replace('fade the week', 'fw') : kindTxt.split(' · ')[0])) : (OPTSRC.filter(function (s) { return kindTxt.indexOf(s) === 0; })[0] || kindTxt.split(' · ')[0]);
         var how = src === 'option' ? (kindTxt.indexOf('flipped') >= 0 ? 'flip' : kindTxt.indexOf('box (before') >= 0 ? 'box (before the card)' : 'agree') : null;
         cards.push({ src: src, setup: setupName, how: how, side: k.S === 'CALL' ? 'call' : 'put', strike: k.K, sig: k.mf - 1, m: k.mf, exit_m: open ? null : k.out, paid: k.ask, sold: open ? null : k.px, why: open ? 'open' : (k.why === 'trail: 3 EMA8 ticks against you' ? 'trail (3 ticks)' : k.why === 'stop hit' ? 'stop' : k.why), ct: k.ct || 1,
-          pnl: open ? (k.pnl || 0) : (k.res || 0), per: null, opt: ser(side, k.K, k.mf - 10, exit + 20), path: pathOf(side, k.K, k.mf, exit, k.ask), date: day }); };
+          pnl: open ? (k.pnl || 0) : (k.res || 0), per: null, opt: ser(side, k.K, k.mf - 10, exit + 20), path: pathOf(side, k.K, k.mf, exit, k.ask), date: day,
+          fake: k.opt ? null : (k.fake == null ? null : k.fake), box: k.box || null, level: k.level || null, levelPx: k.levelPx == null ? null : k.levelPx }); };
       (vm.tickets || []).forEach(function (k) { add(k, k.state !== 'sell'); });
       (vm.closed || []).forEach(function (k) { add(k, false); }); (vm.optClosed || []).forEach(function (k) { add(k, false); });
       var cd = cards.filter(function (q) { return q.src === 'card'; }), od = cards.filter(function (q) { return q.src === 'option'; });

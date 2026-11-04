@@ -178,7 +178,7 @@ for (const day of want) {
     const tr5 = r5.map(t => ({ side: t.side === "C" ? "call" : "put", setup: t.kind === "fp" ? "failed poke (B)" : t.kind, signal: clock(t.m), filled: clock(t.mf), strike: t.K,
       paid: +t.ask.toFixed(2), exit: clock(t.out), sold: t.px == null ? null : +t.px.toFixed(2),
       why: { stop: "stop", q8: "trail (3 ticks)", time: "time exit", yield: "gave way to a v9.2 setup" }[t.why] || t.why,
-      usd: t.res == null ? null : Math.round(t.res * 10000) / 100, contracts: x3(t) ? 3 : 1 }));
+      usd: t.res == null ? null : Math.round(t.res * 10000) / 100, contracts: x3(t) ? 3 : 1, fakeout_line: t.fakeout == null ? null : +t.fakeout.toFixed(2) }));
     doc.shadow_v95 = { rule: "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
       trades: tr5, usd_1ct: Math.round(tr5.reduce((s, t) => s + (t.usd || 0), 0) * 100) / 100,
       usd_sized: Math.round(tr5.reduce((s, t) => s + (t.usd || 0) * t.contracts, 0) * 100) / 100, htf: HT };
@@ -187,7 +187,7 @@ for (const day of want) {
     try {
       const OP = V95OPT.run(D, H, hist, UV, D.info && D.info.t0, r5.map(t => ({ side: t.side, m: t.m, mf: t.mf, out: t.out, why: t.why, kind: t.kind })), day);
       const tro = OP.trades.map(t => ({ how: t.how, from: t.src, side: t.side === "C" ? "call" : "put", signal: clock(Math.floor(t.m)), strike: t.K, paid: t.paid == null ? null : +t.paid.toFixed(2),
-        exit: t.out == null ? null : clock(t.out), why: t.why, usd: Math.round(t.usd * 100) / 100, contracts: t.ct, flipped_from: t.flipped_from ? (t.flipped_from === "C" ? "call" : "put") : undefined }));
+        exit: t.out == null ? null : clock(t.out), why: t.why, usd: Math.round(t.usd * 100) / 100, contracts: t.ct, box: t.box || undefined, level: t.level || undefined, level_px: t.levelPx == null ? undefined : +t.levelPx.toFixed(2), flipped_from: t.flipped_from ? (t.flipped_from === "C" ? "call" : "put") : undefined }));
       const addUsd = Math.round(tro.reduce((s, t) => s + t.usd * t.contracts, 0) * 100) / 100, add1 = Math.round(tro.reduce((s, t) => s + t.usd, 0) * 100) / 100;
       doc.shadow_options = { rule: "options (live on the card): box · Playbook home run · Tulip v3.2 · turn entry · sniper · calls checkpoint. Card's latest side = direction; agreeing signals as fired; signals against it flipped to the card's side (card's ladder); before the card's first buy only the box; none after the card's 2nd stop; box + Playbook 2 contracts unless flipped.",
         trades: tro, addons_usd: addUsd, addons_usd_1ct: add1, total_usd: Math.round((doc.shadow_v95.usd_sized + addUsd) * 100) / 100 };

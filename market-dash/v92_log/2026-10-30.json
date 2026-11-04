@@ -37,7 +37,7 @@
  ],
  "usd": 96.7,
  "stops": 0,
- "generated_utc": "2026-11-04T05:46:52.533Z",
+ "generated_utc": "2026-11-04T11:55:43.501Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 17.2,
@@ -144,7 +144,8 @@
     "sold": 0.77,
     "why": "stop",
     "usd": -55.3,
-    "contracts": 1
+    "contracts": 1,
+    "fakeout_line": 693.42
    },
    {
     "side": "put",
@@ -157,7 +158,8 @@
     "sold": 2.21,
     "why": "trail (3 ticks)",
     "usd": 77.7,
-    "contracts": 3
+    "contracts": 3,
+    "fakeout_line": 698
    },
    {
     "side": "call",
@@ -170,7 +172,8 @@
     "sold": 0.51,
     "why": "stop",
     "usd": -62.3,
-    "contracts": 1
+    "contracts": 1,
+    "fakeout_line": 693.9
    }
   ],
   "usd_1ct": -39.9,

@@ -72,16 +72,16 @@
         for (var i = 0; i < names.length; i++) { var x = LV[names[i]], touch = Math.abs(c - x) <= 0.06 * U || (st[m][1] >= x && st[m][2] <= x); if (!touch) continue;
           var side = pc > x ? "C" : pc < x ? "P" : null; if (!side) continue; var sg = side === "C" ? 1 : -1, arm = false;
           for (var j = m - 30; j < m; j++) if (st[j] && sg * (st[j][0] - x) >= 0.4 * U) { arm = true; break; } if (!arm) continue;
-          var dv = sg * (c - V.vw[m]) / U; if (dv < -0.37 || dv > 0.05) continue; TUL.push({ m: m, side: side, lvl: names[i] }); break; } } })();
+          var dv = sg * (c - V.vw[m]) / U; if (dv < -0.37 || dv > 0.05) continue; TUL.push({ m: m, side: side, lvl: names[i], px: x }); break; } } })();
     function tulTrade(t, ex) { var p = pickOtm1(D, t.side, t.m); if (!p) return null; var a = p.q[0], paid = p.q[3], peak = -9;
       var r = walk(D, t.side, p, t.m + 60, function (j, q) { if (ex.trailFrom != null) { peak = Math.max(peak, q[0] - a); if (peak >= ex.trailFrom && q[0] - a <= peak - 0.30) return "trail"; }
         if (q[0] <= a - ex.stop) return "stop"; if (ex.tgt && q[2] >= paid + ex.tgt) return { why: "target", px: paid + ex.tgt }; return null; }); if (r) { r.K = p.K; r.paid = paid; } return r; }
     // Tulip v3.2: Tue–Fri, max 2/day, one at a time, one loss = done, stop −0.30 / target +2.00 / 60 min, 1 strike OTM
     if (dow >= 2 && dow <= 5) { var n = 0, busy = -1, lost = false; TUL.forEach(function (t) { if (n >= 2 || lost || t.m <= busy) return; var r = tulTrade(t, { stop: 0.30, tgt: 2.00 }); if (!r) return;
-      add("Tulip v3.2", t.side, t.m, r, { K: r.K, paid: r.paid, level: t.lvl }); n++; busy = r.out; if (r.why !== "open" && r.usd <= 0) lost = true; }); }
+      add("Tulip v3.2", t.side, t.m, r, { K: r.K, paid: r.paid, level: t.lvl, levelPx: t.px }); n++; busy = r.out; if (r.why !== "open" && r.usd <= 0) lost = true; }); }
     // Playbook home run: any weekday, max 2/day, one at a time, stop −0.30, trail from +1.20 (0.30 under the peak), 60 min
     (function () { var n = 0, busy = -1; TUL.forEach(function (t) { if (n >= 2 || t.m <= busy) return; var r = tulTrade(t, { stop: 0.30, trailFrom: 1.20 }); if (!r) return;
-      add("Playbook home run", t.side, t.m, r, { K: r.K, paid: r.paid, level: t.lvl }); n++; busy = r.out; }); })();
+      add("Playbook home run", t.side, t.m, r, { K: r.K, paid: r.paid, level: t.lvl, levelPx: t.px }); n++; busy = r.out; }); })();
     // SNIPER (rubber band = stretch under red 304: A+ 3.0, B 1.5)
     (function () { for (var m = 5; m <= 130; m++) { var s = st[m]; if (!s) continue; var band = V[304][m] - s[0]; if (band < 1.5) continue; var F = fr(m), net = F ? F.d.reduce(function (t, z) { return t + z[2]; }, 0) : 0;
       if (e8up(st, m) && (band >= 3.0 || net > 0)) { var p = pick(D, "C", m, 0.70, 1.50, 0.35); if (!p) continue; var buyer = X.day === 1, paid = p.q[3];
@@ -122,7 +122,7 @@
       var before = card.filter(function (a) { return cm(a) < t.m; }).sort(function (x, y) { return cm(y) - cm(x); })[0], cs = before ? before.side : null;
       if (!cs) { if (t.src === "box scalp") trades.push(Object.assign({ how: "box (before the card)" }, t)); return; }
       if (cs === t.side) { trades.push(Object.assign({ how: "agree" }, t)); return; }
-      var L = ladder(D, cs, Math.floor(t.m)); if (L) trades.push({ how: "flip", src: t.src, side: cs, m: t.m, usd: L.usd, why: L.why, out: L.out, K: L.K, paid: L.paid, flipped_from: t.side, aMid: L.aMid, fill: L.fill, bid: L.bid, sold: L.sold, stopNow: L.stopNow, armed: L.armed });
+      var L = ladder(D, cs, Math.floor(t.m)); if (L) trades.push({ how: "flip", src: t.src, side: cs, m: t.m, usd: L.usd, why: L.why, out: L.out, K: L.K, paid: L.paid, flipped_from: t.side, box: t.box, level: t.level, levelPx: t.levelPx, aMid: L.aMid, fill: L.fill, bid: L.bid, sold: L.sold, stopNow: L.stopNow, armed: L.armed });
     });
     // rule 6: size by rank — box + Playbook 2 contracts unless flipped
     trades.forEach(function (t) { t.ct = t.how !== "flip" && (t.src === "box scalp" || t.src === "Playbook home run") ? 2 : 1; });
