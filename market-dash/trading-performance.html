@@ -363,20 +363,75 @@ function _hrPaperPanel() {
   }
   return h + '</div>';
 }
+
+// ===== BOT · PAPER TEST (v9.5 + options; refreshed nightly from the paper log) =====
+var BOT_IX = null, BOT_DOCS = {};
+fetch('v92_log/index.json?t=' + Date.now()).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+  if (!j || !j.days) return; BOT_IX = j; var fw = j.days.filter(function (r) { return r.forward; }).slice(-6);
+  return Promise.all(fw.map(function (r) { return fetch('v92_log/' + r.date + '.json?t=' + Date.now()).then(function (x) { return x.ok ? x.json() : null; }).then(function (d) { if (d) BOT_DOCS[r.date] = d; }).catch(function () {}); }));
+}).then(function () { var el = document.getElementById('root'); if (el && el.innerHTML && BOT_IX) el.innerHTML = renderCombinedWidget(); }).catch(function () {});
+function _botPaperPanel() {
+  var mute = 'rgba(200,160,160,0.55)', box = 'border:1px solid rgba(140,20,20,0.25);border-radius:6px;padding:8px 10px;background:rgba(10,2,16,0.5)';
+  if (!BOT_IX) return '<div style="' + box + ';color:' + mute + ';font-size:10px">BOT · PAPER TEST — loading…</div>';
+  var rows = BOT_IX.days, fw = rows.filter(function (r) { return r.forward; }), T = BOT_IX.totals || {}, O = (T.shadow_options && T.shadow_options.all) || {};
+  var c = 0, o = 0, pk = 0, acc = 0, dd = 0, W = 0, Lx = 0, nT = 0;
+  var trades = []; fw.forEach(function (r) { var cv = r.v95_sized_usd || 0, ov = r.opt_addons_usd || 0; c += cv; o += ov; acc += cv + ov; pk = Math.max(pk, acc); dd = Math.max(dd, pk - acc);
+    var d = BOT_DOCS[r.date]; if (!d) return;
+    (d.shadow_v95 && d.shadow_v95.trades || []).forEach(function (t) { trades.push({ date: r.date, t: t.filled, setup: t.setup, side: t.side, strike: t.strike, paid: t.paid, sold: t.sold, ct: t.contracts || 1, pnl: (t.usd || 0) * (t.contracts || 1), why: t.why, exit: t.exit, opt: false }); });
+    (d.shadow_options && d.shadow_options.trades || []).forEach(function (t) { trades.push({ date: r.date, t: t.signal, setup: t.from, side: t.side, strike: t.strike, paid: t.paid, sold: t.paid == null ? null : t.paid + ((t.usd || 0) + 2.6) / 100, ct: t.contracts || 1, pnl: (t.usd || 0) * (t.contracts || 1), why: t.why, exit: t.exit, opt: true, how: t.how }); }); });
+  trades.forEach(function (t) { nT++; if (t.pnl > 0) W += t.pnl; else Lx -= t.pnl; });
+  var pf = Lx ? W / Lx : null, tot = c + o, n = fw.length, st = n < 10 ? n + ' / 10 MORNINGS' : (o >= 0 && tot > 0 ? 'ON TRACK' : 'REVIEW'), stCol = n < 10 ? '#fcb103' : (o >= 0 && tot > 0 ? '#66ff00' : '#ff6b62');
+  var tile = function (k, v, col) { return '<div style="flex:1;min-width:84px"><div style="color:' + mute + ';font-size:7.5px;letter-spacing:0.12em">' + k + '</div><div style="font-size:15px;font-weight:700;color:' + (col || '#e6c8c8') + '">' + v + '</div></div>'; };
+  var pc = function (v) { return v > 0 ? '#66ff00' : v < 0 ? '#ff6b62' : null; };
+  var h = '<div style="' + box + ';display:flex;flex-direction:column;gap:8px">';
+  h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="color:#b0408f;font-size:8px;letter-spacing:0.15em">BOT · PAPER TEST · v9.5 + options · live mornings since ' + (fw.length ? fw[0].date : '2026-11-02') + '</span><span style="flex:1"></span>' +
+    '<span style="border:1px solid ' + stCol + ';color:' + stCol + ';border-radius:999px;padding:1px 8px;font-size:9px;font-weight:700">' + st + '</span></div>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap">' + tile('MORNINGS', n) + tile('TRADES', nT) + tile('P&L · CARD + OPTIONS', perfNum(tot), pc(tot)) + tile('CARD', perfNum(c), pc(c)) + tile('OPTIONS', perfNum(o), pc(o)) +
+    tile('PROFIT FACTOR', pf != null ? pf.toFixed(2) : '—', pf != null ? (pf >= 1.3 ? '#66ff00' : '#ff6b62') : null) + tile('WORST DIP', dd ? perfNum(-dd) : '$0', dd ? '#ff6b62' : null) + '</div>';
+  h += '<div style="color:' + mute + ';font-size:8.5px">Sized as the card (3× when your lines agree; options 1–2×). Check after 10 live mornings: positive, options still positive, drawdown no bigger than the backtest ($186). Backtest for reference: 68 mornings, ' + ((T.shadow_options && T.shadow_options.all && T.shadow_options.all.addons) || 0) + ' option trades, card + options ' + perfNum(O.total_usd || 0) + '. Every trade with its chart: Trade Replay tab.</div>';
+  if (!trades.length) h += '<div style="color:' + mute + ';font-size:9.5px;padding:6px 0">No live bot trades yet. Each morning\'s trades land here after the close (live on the Trade Replay tab during the morning).</div>';
+  else {
+    var LAB = { trap: 'Trap', gap: 'Gap-and-go', fw: 'Fade week', vb: 'VIX bounce', 'failed poke (B)': 'Failed poke', flip: 'Flip', 'box scalp': 'Box', 'Playbook home run': 'Playbook', 'Tulip v3.2': 'Tulip', 'turn entry': 'Turn entry', sniper: 'Sniper', 'calls checkpoint': 'Calls ckpt' };
+    h += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:9.5px"><tr style="color:' + mute + '">' +
+      ['Day', 'Time PT', 'Setup', 'Contract', 'Entry', 'Exit', 'P&L', 'Why out'].map(function (x, i) { return '<th style="text-align:' + (i < 4 || i === 7 ? 'left' : 'right') + ';padding:3px 5px;font-weight:400;border-bottom:1px solid rgba(140,20,20,0.25)">' + x + '</th>'; }).join('') + '</tr>';
+    trades.slice().reverse().forEach(function (t) { var col = t.pnl > 0 ? '#66ff00' : '#ff6b62', wd = new Date(t.date + 'T12:00:00Z').toUTCString().slice(0, 3);
+      var cells = [wd + ' ' + t.date.slice(5), t.t || '', (t.opt ? 'opt · ' : '') + (LAB[t.setup] || (t.setup && t.setup.indexOf('re-') === 0 ? 'Re-entry' : t.setup)), (t.side === 'call' ? 'Call ' : 'Put ') + t.strike + (t.ct > 1 ? ' ×' + t.ct : ''),
+        t.paid != null ? '$' + Number(t.paid).toFixed(2) : '', t.sold != null ? '$' + Number(t.sold).toFixed(2) : '', perfNum(t.pnl), t.why || ''];
+      h += '<tr>' + cells.map(function (x, i) { return '<td style="text-align:' + (i < 4 || i === 7 ? 'left' : 'right') + ';padding:3px 5px;border-bottom:1px solid rgba(140,20,20,0.12);' + (i === 6 ? 'color:' + col + ';font-weight:700' : '') + '">' + _hrEsc(x) + '</td>'; }).join('') + '</tr>'; });
+    h += '</table></div>';
+  }
+  return h + '</div>';
+}
+// Budget: $150 per 2 weeks (blocks of 2 weeks starting Mon Nov 2, 2026). Uses the net P&L of your own trades in the block (wins give room back).
+function _budget2w(D) {
+  var CAP = 150, now = new Date(), anchor = new Date(2026, 10, 2), dayMs = 864e5;
+  function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  var k = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - anchor) / dayMs / 14), start = new Date(anchor.getTime() + k * 14 * dayMs), end = new Date(start.getTime() + 11 * dayMs);
+  var s0 = iso(start), s1 = iso(end), wk = (D.equity || []).filter(function (e) { return e.trade_date >= s0 && e.trade_date <= s1; });
+  var net = wk.reduce(function (s, e) { return s + e.day_pnl; }, 0), used = Math.max(0, -net), left = Math.max(0, CAP - used);
+  var md = function (d) { return d.toLocaleString('en-US', { month: 'short', day: 'numeric' }); };
+  var h = '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">';
+  h += '<span style="font-size:18px;font-weight:700;color:' + (left > 0 ? '#00e5cc' : '#cc1111') + '">$' + Math.round(left) + ' left</span>';
+  h += '<span style="font-size:8px;color:' + _MUTE + ';text-align:right">' + md(start) + '–' + md(end) + ': $' + Math.round(used) + ' of $' + CAP + ' used</span></div>';
+  h += '<div style="position:relative;height:6px;background:rgba(140,20,20,0.10);border-radius:3px;margin:5px 0 3px"><div style="position:absolute;left:0;top:0;bottom:0;width:' + Math.min(100, used / CAP * 100).toFixed(1) + '%;background:#cc1111;border-radius:3px"></div></div>';
+  h += '<div style="font-size:7.5px;color:' + _MUTE + '">$150 per 2 weeks · net P&amp;L of your own trades in this 2-week block' + (wk.length ? '' : ' · no trades logged in this block yet') + ' · net so far ' + perfNum(net) + '</div>';
+  return _box(h);
+}
+
 function renderCombinedWidget(){
   var D=_getPerfData('perf-combined');
   var css='font-family:ui-monospace,monospace;font-size:10px;display:grid;gap:7px;grid-template-columns:1fr 1fr;';
   var html='<div style="'+css+'">';
   html+='<div style="grid-column:1/-1">'+_filterBar('perf-combined')+'</div>';
   html+='<div style="grid-column:1/-1">'+_combinedHero(D)+'</div>';
-  html+='<div style="grid-column:1/-1">'+_hrPaperPanel()+'</div>';
+  html+='<div style="grid-column:1/-1">'+_botPaperPanel()+'</div>';
   var hasData=(D.winrate&&D.winrate.total)||(D.equity&&D.equity.length);
   if(!hasData){
     html+='<div style="grid-column:1/-1" class="tp-empty">No trades yet — official data starts September.<br>This fills in once trade data is loaded.</div>';
     html+='</div>';return html;
   }
   html+='<div style="grid-column:1/-1">'+_miniEquity(D)+'</div>';
-  if(D.alpha) html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('CHIP STACK · THIS WEEK')+_chipStack(D)+'</div>';
+  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('BUDGET · $150 PER 2 WEEKS')+_budget2w(D)+'</div>';
   html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('P&L CALENDAR')+_pnlCalendar(D)+'</div>';
   if(D.alpha){
     html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('STRIKE ZONE')+_strikeZone(D)+'</div>';

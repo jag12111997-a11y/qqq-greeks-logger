@@ -102,11 +102,12 @@ window.dash=(function(){
 <div class="pb">
   <header style="display:flex;flex-direction:column;gap:var(--cds-gap-xs)">
     <h1 id="top">3v3 Playbook</h1>
-    <p class="lede">QQQ 0DTE mornings, 6:30–9:00 PT. v9.2 is the locked model. Older tabs keep the v7 history and your own trades.</p>
+    <p class="lede">QQQ 0DTE mornings, 6:30–9:00 PT. <b>v9.5 + options is the live model</b> (the card on the Nasdaq tab). Its tab refreshes every night from the paper log; v9.2 and the older tabs are kept as history.</p>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button role="tab" data-tab="v92" aria-selected="true">v9.2 (locked)</button>
+    <button role="tab" data-tab="live" aria-selected="true">v9.5 + options (live)</button>
+    <button role="tab" data-tab="v92" aria-selected="false">v9.2 (history)</button>
     <button role="tab" data-tab="overview" aria-selected="false">Overview (v7)</button>
     <button role="tab" data-tab="model" aria-selected="false">The model</button>
     <button role="tab" data-tab="stress" aria-selected="false">Stress test</button>
@@ -119,8 +120,62 @@ window.dash=(function(){
     <button role="tab" data-tab="rules" aria-selected="false">Rules &amp; risks</button>
   </nav>
 
-  <!-- V9.2 LOCKED -->
-  <section id="v92" data-page="v92">
+  <!-- V9.5 + OPTIONS (LIVE) — numbers refresh from the nightly paper log (../v92_log/index.json) and the bot's trades (../bot_replay.js) -->
+  <section id="live" data-page="live">
+    <div class="card">
+      <h2 id="live-top">v9.5 + options is the live model</h2>
+      <p class="note">Every number on this tab is recomputed each time the page opens, from the nightly paper log and every bot trade. 68 backfilled mornings (Jul 20 – Nov 3) plus every live morning since Nov 2. Dollars at the bot's size, fees out; option prices in 0.00.</p>
+      <div class="tiles" id="lv-kpis"><div class="tile"><span class="lab">Loading…</span><span class="big">—</span></div></div>
+    </div>
+    <div class="card">
+      <h2 id="live-equity">Running total</h2>
+      <div class="legend"><span style="--sw:var(--color-ok)">Card + options</span><span style="--sw:var(--cds-chart-series-1,#60a5fa)">Card (as sized)</span><span style="--sw:var(--cds-chart-series-3,#e0ab45)">Card at 1 contract</span><span style="--sw:var(--cds-chart-muted,#888)">live mornings start (Nov 2)</span></div>
+      <div class="chart tall" id="lv-eq"></div>
+    </div>
+    <div class="card">
+      <h2 id="live-forward">Live mornings (never seen by the research)</h2>
+      <p class="note">Promotion bar for anything new: after 10 live mornings it must have made more, with no bigger drawdown and zero glitches. Options stay on while they stay positive.</p>
+      <div class="tiles" id="lv-fwd"></div>
+      <div class="tbox"><table><thead><tr><th>Morning</th><th class="n">Card</th><th class="n">Options</th><th class="n">Total</th><th>Trades</th></tr></thead><tbody id="lv-fwd-rows"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="live-rules">The rules (what the card does)</h2>
+      <div class="tbox"><table class="rules"><thead><tr><th>Piece</th><th>Rule</th><th>Why / evidence</th></tr></thead><tbody>
+        <tr><td>Side of the day</td><td class="wrap">Yesterday's candle and last week's candle pick the side; every setup buys an EMA8 (green 8) turn on a closed 1-min bar, filled at the next quote.</td><td class="wrap">Side selection is the edge (random side+time beat it 0 of 300).</td></tr>
+        <tr><td>Trap</td><td class="wrap">Yesterday green → calls once QQQ is 1.00+ below yesterday's low (red → puts 1.00+ above the high); buy every green 8 turn back.</td><td class="wrap">Best setup: PF 6.22, +$67 a trade at 1 contract.</td></tr>
+        <tr><td>Gap-and-go</td><td class="wrap">Gap 2.50+ your way, nearest GEX strike 1.00+ away, last week's candle with you. Max 2 a day, 30 min apart.</td><td class="wrap">PF 3.12.</td></tr>
+        <tr><td>Fade the week</td><td class="wrap">Green 8 turn against last week's candle after 7:30, only if QQQ was inside yesterday's value area at 7:00 and nothing else fired.</td><td class="wrap">PF 3.91 (balance mornings only).</td></tr>
+        <tr><td>VIX bounce calls</td><td class="wrap">Red yesterday + VIX ≥ 16.5 → call turns after 7:30, 1 a day. 1× (never 3×) when the daily AND weekly trend are both down.</td><td class="wrap">PF 2.72; 3× bounce calls against daily+weekly won 43% vs 77%.</td></tr>
+        <tr><td>Failed poke</td><td class="wrap">QQQ closes past yesterday's high/low then back inside; first pullback rejected at green 14 with room to VWAP; trap-colour days 7:00–8:30; always 1 contract.</td><td class="wrap">PF 2.97 (7 trades).</td></tr>
+        <tr><td>Exit ladder</td><td class="wrap">Stop 0.50 under the entry · at +0.30 the stop moves to −0.15 · at +0.50 the trail arms: sell after 3 green 8 ticks against · out by 90 min / 8:56. One re-entry, fake-out line, one flip, 2 stops = done.</td><td class="wrap">Same ladder since v9.2; 3-tick trail since v9.4.</td></tr>
+        <tr><td>Size</td><td class="wrap">3 contracts when your lines agree (green 8 vs red 304 on the trade's side; traps: all 3 stacks fanned against, spread ≥ 5); else 1.</td><td class="wrap">Random 3× bets beat it 0.6% of 2,000 tries.</td></tr>
+        <tr><td>Options (6 extra setups)</td><td class="wrap">Box · Playbook home run · Tulip · turn entry · sniper · calls checkpoint. The card's latest side is the direction: a signal on that side is taken with its own exits; a signal against it is flipped to the card's side with the card's ladder; before the card's first buy only the box trades; nothing after the card's 2nd stop.</td><td class="wrap">Add-ons +$4,113 on 53 trades (74% won); against the card they lost 33% → flipped they won 57%.</td></tr>
+        <tr><td>Options size</td><td class="wrap">Box and Playbook 2 contracts unless flipped; the rest 1.</td><td class="wrap">Ranked by their own SQN; sizing by rank paid, blocking by rank did not.</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="live-score">Scoreboard · every setup (SQN = √trades × average ÷ swing)</h2>
+      <p class="note">SQN rewards a real edge, steady results and enough trades together: under 1.6 poor · 2–2.5 average · 2.5–3 good · 3–5 excellent. Recomputed from every bot trade.</p>
+      <div class="tbox"><table><thead><tr><th>Setup</th><th class="n">Trades</th><th class="n">Won</th><th class="n">P&amp;L</th><th class="n">Avg</th><th class="n">PF</th><th class="n">SQN</th></tr></thead><tbody id="lv-score"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 id="live-stress">Stress test (Nov 3, 68 mornings)</h2>
+      <div class="tbox"><table><thead><tr><th>Test</th><th class="n">Card + options</th><th class="n">Card alone</th></tr></thead><tbody>
+        <tr><td>As tested (card sized)</td><td class="n">+$15,969 · dd $186</td><td class="n">+$11,856 · dd $163</td></tr>
+        <tr><td>Fills $10 a contract worse on the options</td><td class="n">+$15,680 · dd $228</td><td class="n">—</td></tr>
+        <tr><td>Card 2 min late + 5¢ worse, options worse + flips 2 min late (1 contract)</td><td class="n">+$6,131</td><td class="n">+$3,653</td></tr>
+        <tr><td>Without the best 5 mornings</td><td class="n">+$8,368</td><td class="n">—</td></tr>
+        <tr><td>10,000 random 21-morning months</td><td class="n">0.0% losing · median +$4,820</td><td class="n">0.0% · median +$3,517</td></tr>
+        <tr><td>Drop any one of the 6 options (1 contract)</td><td class="n">+$6,511 – $7,183 · SQN &gt; 5</td><td class="n">—</td></tr>
+        <tr><td>Live replay, every minute, 10,268 snapshots</td><td class="n">0 crashes · signals on time · exits 1,734 / 1,734</td><td class="n">—</td></tr>
+        <tr><td>Bad data (16 cases × 10,744 snapshots)</td><td class="n">0 crashes · 0 errors</td><td class="n">—</td></tr>
+      </tbody></table></div>
+      <p class="note">Honest limits: the options and the ranking were found on these same 68 mornings, so the live mornings are the real test. Up to 9 contracts can be open at once (Oct 26, 8:30).</p>
+    </div>
+  </section>
+
+  <!-- V9.2 LOCKED (history) -->
+  <section id="v92" data-page="v92" hidden>
     <div class="card">
       <h2 id="v92-top">v9.2 is the locked model</h2>
       <p>P&amp;L is in dollars at 1 contract, fees out. Option prices and moves (the 0.50 stop, +0.30, +0.50) are in 0.00. 66 replayed mornings, Jul 20 – Oct 30, on real (unadjusted) prices.</p>
@@ -301,7 +356,11 @@ window.dash=(function(){
   <!-- STRESS -->
   <section id="stress" data-page="stress" hidden>
     <div class="card">
-      <h2 id="stress-ladder">Stress ladder</h2>
+      <h2 id="stress-v95">v9.5 + options (Nov 3)</h2>
+      <p class="note">Positive in every test: as sized +$15,969 (dd $186) · fills $10 worse on options +$15,680 · everything late and worse at 1 contract +$6,131 (card alone +$3,653) · without the best 5 mornings +$8,368 · 10,000 random months 0.0% losing · any one option removed still SQN &gt; 5 · 0 crashes in 10,268 live-replay and 171,904 bad-data snapshots. Full table on the first tab. Everything below is the v7 / v9.2 history.</p>
+    </div>
+    <div class="card">
+      <h2 id="stress-ladder">Stress ladder (v7 history)</h2>
       <p class="note">Every row reruns the same live engine on all mornings at 7/3 contracts. Missed-signal rows with random runs show the median.</p>
       <div class="hb" data-draw="stressbars" data-source="stress"></div>
     </div>
@@ -461,6 +520,10 @@ window.dash=(function(){
   <!-- DAY REPLAY -->
   <section id="replay" data-page="replay" hidden>
     <div class="card">
+      <h2 id="replay-now">Every v9.5 + options trade is on the Trade Replay tab</h2>
+      <p class="note">The dashboard's Trade Replay tab shows every bot trade (card and options) with its chart, all your lines, the contract and the rules it followed. New trades appear live during the morning. This tab keeps the v9.2 replay as history.</p>
+    </div>
+    <div class="card">
       <h2 id="replay-day">Pick a morning</h2>
       <p class="note">Every morning where the model or you traded. QQQ 1-minute closes from 6:30 to 9:30 PT with the indicators the model reads, plus every entry and exit.</p>
       <select class="daypick" id="daypick" data-draw="daypick" data-source="days" aria-label="Morning"></select>
@@ -514,6 +577,12 @@ window.dash=(function(){
 
   <!-- ACCOUNT -->
   <section id="account" data-page="account" hidden>
+    <div class="card">
+      <h2 id="acct-now">Your budget now: $150 per 2 weeks · v9.5 + options</h2>
+      <p class="note">Recomputed from the paper log each time this page opens. A "2-week stretch" is 10 mornings in a row; the dip is the deepest drop inside it. Sizing is the card's (3× when your lines agree, options 1–2×), so dips are bigger than at 1 contract. Your size is your call.</p>
+      <div class="tiles" id="acct-v95"><div class="tile"><span class="lab">Loading…</span><span class="big">—</span></div></div>
+    </div>
+    <h2>History: v9.2 at 1 contract ($120 limit at the time)</h2>
     <p>With a $600–1,000 account and a limit of $120 lost per two weeks, the model runs at 1 contract per signal. At that size it made <b data-draw="bud" data-source="budget" data-where="id=base" data-field="total">—</b> over 66 mornings. Its worst drop inside any two weeks was <b data-draw="bud" data-source="budget" data-where="id=base" data-field="worst_dip_2wk">—</b>. In the pessimistic case it still made <b data-draw="bud" data-source="budget" data-where="id=pess" data-field="total">—</b>, and <b data-draw="bud" data-source="budget" data-where="id=pess" data-field="p_over120">—</b> of two-week stretches lost more than $120.</p>
     <div class="tiles">
       <div class="tile"><span class="lab">Total at 1 contract</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="total">—</span></div>
@@ -550,7 +619,12 @@ window.dash=(function(){
   <!-- MORNING CHECK -->
   <section id="precheck" data-page="precheck" hidden>
     <div class="card">
-      <h2 id="monday">Monday, Nov 2</h2>
+      <h2 id="next-morning">Next morning</h2>
+      <p class="note">The full morning map (trap line, gap-and-go, fade-the-week value area, VIX bounce, failed poke, options) is on the card on the Nasdaq tab from 6:00 PT and updates live. This is the part decided the night before.</p>
+      <div class="tiles" id="pre-v95"><div class="tile"><span class="lab">Loading…</span><span class="big">—</span></div></div>
+    </div>
+    <div class="card">
+      <h2 id="monday">Monday, Nov 2 (history)</h2>
       <p class="note">From Friday Oct 30 (live IEX bars) and the week of Oct 26–30. The gap is only known at the open.</p>
       <div class="tiles">
         <div class="tile"><span class="lab">Yesterday's candle</span><span class="big" data-draw="mon" data-source="monday" data-row="0" data-field="yday">—</span></div>
@@ -577,6 +651,19 @@ window.dash=(function(){
   <!-- RULES -->
   <section id="rules" data-page="rules" hidden>
     <div class="card">
+      <h2 id="rules-v95">v9.5 + options: the rules and the open risks</h2>
+      <div class="tbox"><table class="rules"><thead><tr><th>Rule / risk</th><th>What it is</th><th>Status</th></tr></thead><tbody>
+        <tr><td>Follow the card's side</td><td class="wrap">Options never trade against the card: a signal against it is flipped to the card's side.</td><td class="wrap">Built in.</td></tr>
+        <tr><td>2 stops = done</td><td class="wrap">After the card's 2nd stop, no more card or option trades that morning.</td><td class="wrap">Built in (Nov 3).</td></tr>
+        <tr><td>Bounce calls 1×</td><td class="wrap">VIX bounce calls stay at 1 contract when the daily and weekly trend are both down.</td><td class="wrap">Built in.</td></tr>
+        <tr><td>Same-research risk</td><td class="wrap">Options and the ranking were found on the same 68 mornings.</td><td class="wrap">Watching the live mornings; options stay on while positive.</td></tr>
+        <tr><td>Live feed vs official</td><td class="wrap">The card runs on the IEX feed; the paper log uses official bars, so a signal can come at a different minute (Nov 3: 8:15 live vs 8:30 official).</td><td class="wrap">Known; the paper log is the record.</td></tr>
+        <tr><td>Size</td><td class="wrap">3× card trades plus 2× options can stack (up to 9 contracts at once in the backtest).</td><td class="wrap">Your call.</td></tr>
+        <tr><td>High VIX</td><td class="wrap">This week's VIX (~21) sits at the top of what the backtest has seen (14–21).</td><td class="wrap">Watching.</td></tr>
+      </tbody></table></div>
+    </div>
+    <h2>History: the v9.2-era checklist</h2>
+    <div class="card">
       <h2 id="checklist">Before every buy</h2>
       <p class="note">Your checklist, built from your own losses and the model's rules.</p>
       <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Check</th><th data-field="detail">Rule</th><th data-field="evidence">Why</th></tr></thead><tbody data-draw="rules" data-group="check"></tbody></table></div>
@@ -589,6 +676,60 @@ window.dash=(function(){
   </section>
 </div>
 
+<script>
+/* v9.5 + options: live numbers for the Playbook (Live tab, Your account, Morning check). Reads ../v92_log/index.json and ../bot_replay.js. */
+(function(){
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var usd=function(v){v=v||0;var r=Math.round(v);return (r<0?'−$':r>0?'+$':'$')+Math.abs(r).toLocaleString('en-US');};
+  var cls=function(v){return v>0?'up':v<0?'dn':'';};
+  var mmdd=function(d){return new Date(d+'T12:00:00Z').toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});};
+  var tile=function(lab,big,sub,c){return '<div class="tile"><span class="lab">'+esc(lab)+'</span><span class="big '+(c||'')+'">'+big+'</span>'+(sub?'<span class="note">'+sub+'</span>':'')+'</div>';};
+  var set=function(id,h){var el=document.getElementById(id);if(el)el.innerHTML=h;};
+  function svgLines(el,rows,series){ if(!el)return; var w=el.clientWidth||600,h=Math.max(260,el.clientHeight||260),pad={l:56,r:12,t:10,b:26};
+    var all=[];series.forEach(function(s){rows.forEach(function(r){all.push(r[s.k]);});}); var lo=Math.min.apply(null,all.concat([0])),hi=Math.max.apply(null,all.concat([1]));
+    var n=rows.length,X=function(i){return pad.l+i/Math.max(1,n-1)*(w-pad.l-pad.r);},Y=function(v){return pad.t+(hi-v)/(hi-lo||1)*(h-pad.t-pad.b);};
+    var st=[250,500,1000,2000,2500,5000].find(function(s){return (hi-lo)/s<=6;})||5000, g='';
+    for(var v=Math.ceil(lo/st)*st;v<=hi;v+=st) g+='<line x1="'+pad.l+'" x2="'+(w-pad.r)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="currentColor" stroke-opacity=".12"/><text x="'+(pad.l-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="currentColor" fill-opacity=".6">'+(v<0?'−':'')+'$'+Math.abs(v).toLocaleString('en-US')+'</text>';
+    var every=Math.max(1,Math.ceil(n*48/(w-pad.l-pad.r))); rows.forEach(function(r,i){if(i%every===0)g+='<text x="'+X(i)+'" y="'+(h-6)+'" text-anchor="middle" font-size="11" fill="currentColor" fill-opacity=".6">'+r.date.slice(5)+'</text>';});
+    var f=rows.findIndex(function(r){return r.forward;}); if(f>=0) g+='<line x1="'+X(f)+'" x2="'+X(f)+'" y1="'+pad.t+'" y2="'+(h-pad.b)+'" stroke="currentColor" stroke-opacity=".35" stroke-dasharray="4 4"/><text x="'+(X(f)+4)+'" y="'+(pad.t+12)+'" font-size="11" fill="currentColor" fill-opacity=".7">live →</text>';
+    series.forEach(function(s){g+='<polyline fill="none" stroke="'+s.c+'" stroke-width="2"'+(s.dash?' stroke-dasharray="5 4"':'')+' points="'+rows.map(function(r,i){return X(i).toFixed(1)+','+Y(r[s.k]).toFixed(1);}).join(' ')+'"/>';});
+    el.innerHTML='<svg width="100%" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Running total">'+g+'</svg>'; }
+  function sqn(u){var n=u.length;if(!n)return 0;var m=u.reduce(function(a,b){return a+b;},0)/n,sd=Math.sqrt(u.reduce(function(a,b){return a+(b-m)*(b-m);},0)/Math.max(1,n-1));return Math.sqrt(Math.min(n,100))*m/(sd||1);}
+  var LAB={trap:'Trap',gap:'Gap-and-go',fw:'Fade the week',vb:'VIX bounce','failed poke (B)':'Failed poke',flip:'Flip','box scalp':'Box','Playbook home run':'Playbook home run','Tulip v3.2':'Tulip','turn entry':'Turn entry',sniper:'Sniper','calls checkpoint':'Calls checkpoint'};
+  function go(IX,BR){
+    var rows=(IX&&IX.days)||[],acc=0,acc1=0,accC=0,dd=0,pk=0;
+    var eq=rows.map(function(r){var c=r.v95_sized_usd||0,o=r.opt_addons_usd||0,c1=r.v95_usd||0;accC+=c;acc+=c+o;acc1+=c1;pk=Math.max(pk,acc);dd=Math.max(dd,pk-acc);return {date:r.date,forward:r.forward,all:acc,card:accC,c1:acc1,day:c+o,c:c,o:o,n:(r.v95_n!=null?r.v95_n:null),on:r.opt_addons_n||0};});
+    var T=IX&&IX.totals||{},O=T.shadow_options&&T.shadow_options.all||{},V=T.shadow_v95&&T.shadow_v95.all||{};
+    var fw=eq.filter(function(r){return r.forward;}),fwT=fw.reduce(function(a,r){return a+r.day;},0);
+    var cards=(BR&&BR.cards)||[],won=cards.filter(function(c){return c.pnl>0;}).length;
+    set('lv-kpis',tile('Card + options',usd(acc),cards.length+' trades · '+Math.round(100*won/Math.max(1,cards.length))+'% won',cls(acc))+tile('Card (as sized)',usd(accC),'3× when your lines agree',cls(accC))+
+      tile('Options',usd(O.addons_usd),(O.addons||0)+' extra trades · '+(O.contracts||0)+' contracts',cls(O.addons_usd))+tile('Worst drawdown',usd(-dd),'by morning, card + options','dn')+tile('Live since Nov 2',usd(fwT),fw.length+' morning'+(fw.length===1?'':'s'),cls(fwT)));
+    svgLines(document.getElementById('lv-eq'),eq,[{k:'all',c:'var(--color-ok)'},{k:'card',c:'var(--cds-chart-series-1,#60a5fa)'},{k:'c1',c:'var(--cds-chart-series-3,#e0ab45)',dash:1}]);
+    var fpk=0,fac=0,fdd=0;fw.forEach(function(r){fac+=r.day;fpk=Math.max(fpk,fac);fdd=Math.max(fdd,fpk-fac);});
+    var fo=fw.reduce(function(a,r){return a+r.o;},0);
+    set('lv-fwd',tile('Live mornings',fw.length+' / 10','10 needed before any new promotion','')+tile('Card + options',usd(fwT),'',cls(fwT))+tile('Options only',usd(fo),fo>=0?'staying positive':'below zero — review','')+tile('Worst dip',usd(-fdd),'live mornings only','dn'));
+    var bc={};cards.forEach(function(c){(bc[c.date]=bc[c.date]||[]).push(c);});
+    set('lv-fwd-rows',fw.slice().reverse().map(function(r){var L=bc[r.date]||[];return '<tr><td>'+mmdd(r.date)+'</td><td class="n '+cls(r.c)+'">'+usd(r.c)+'</td><td class="n '+cls(r.o)+'">'+(r.on?usd(r.o):'—')+'</td><td class="n '+cls(r.day)+'"><b>'+usd(r.day)+'</b></td><td class="wrap">'+(L.length?L.map(function(c){return esc((c.src==='option'?'option ':'')+(LAB[c.setup]||c.setup)+' '+c.side+' '+c.strike+(c.ct>1?' ×'+c.ct:'')+' '+usd(c.pnl));}).join(' · '):'sat out')+'</td></tr>';}).join('')||'<tr><td colspan="5">No live mornings yet.</td></tr>');
+    var by={};cards.forEach(function(c){var k=(c.src==='option'?'Option · ':'')+(c.setup&&c.setup.indexOf('re-')===0?'Re-entry':(LAB[c.setup]||c.setup));(by[k]=by[k]||[]).push(c.pnl);});
+    set('lv-score',Object.keys(by).map(function(k){var u=by[k],t=u.reduce(function(a,b){return a+b;},0),W=u.filter(function(x){return x>0;}).reduce(function(a,b){return a+b;},0),Lx=-u.filter(function(x){return x<=0;}).reduce(function(a,b){return a+b;},0);return {k:k,u:u,t:t,pf:Lx?W/Lx:null,s:sqn(u)};})
+      .sort(function(a,b){return b.s-a.s;}).map(function(z){return '<tr><td>'+esc(z.k)+'</td><td class="n">'+z.u.length+'</td><td class="n">'+Math.round(100*z.u.filter(function(x){return x>0;}).length/z.u.length)+'%</td><td class="n '+cls(z.t)+'">'+usd(z.t)+'</td><td class="n">'+usd(z.t/z.u.length)+'</td><td class="n">'+(z.pf==null?'∞':z.pf.toFixed(2))+'</td><td class="n"><b>'+z.s.toFixed(2)+'</b></td></tr>';}).join(''));
+    // ---- Your account: the $150 per 2 weeks budget with v9.5 + options ----
+    var roll=function(key){var out=[];for(var i=9;i<eq.length;i++){var s=0,pk=0,run=0,dd=0;for(var j=i-9;j<=i;j++){var v=key==='all'?eq[j].day:key==='card'?eq[j].c:(rows[j].v95_usd||0);s+=v;run+=v;pk=Math.max(pk,run);dd=Math.max(dd,pk-run);}out.push({s:s,dip:-dd});}return out;};
+    var ra=roll('all'),rc=roll('card'),r1=roll('c1');var worst=function(R){return Math.min.apply(null,R.map(function(x){return x.dip;}));},over=function(R){return R.filter(function(x){return x.dip<-150;}).length;};
+    var worstDay=Math.min.apply(null,eq.map(function(r){return r.day;}));
+    set('acct-v95',tile('Worst 2-week dip · card + options (as sized)',usd(worst(ra)),over(ra)+' of '+ra.length+' two-week stretches went past −$150','dn')+tile('Worst 2-week dip · card as sized',usd(worst(rc)),over(rc)+' of '+rc.length+' past −$150','dn')+
+      tile('Worst 2-week dip · card at 1 contract',usd(worst(r1)),over(r1)+' of '+r1.length+' past −$150','dn')+tile('Worst single morning',usd(worstDay),'card + options as sized','dn')+tile('Most contracts open at once','9','Oct 26 8:30 (3× card trades + options)',''));
+    // ---- Morning check: next morning ----
+    var H=IX&&IX.htf_next,tw=function(v){return v>0?'up':v<0?'down':'mixed';};
+    set('pre-v95',tile('Daily trend (next morning)',H?tw(H.daily):'—',H?'close vs daily MA17 + its slope, through '+H.through:'',H&&H.daily<0?'dn':H&&H.daily>0?'up':'')+tile('Weekly trend',H?tw(H.weekly):'—','weekly close vs weekly MA17 + slope',H&&H.weekly<0?'dn':H&&H.weekly>0?'up':'')+
+      tile('Bounce calls',H&&H.daily===-1&&H.weekly===-1?'1× only':'normal size',H&&H.daily===-1&&H.weekly===-1?'daily and weekly both down':'3× allowed when your lines agree','')+tile('Last 10 mornings',usd(eq.slice(-10).reduce(function(a,r){return a+r.day;},0)),'card + options as sized',''));
+  }
+  var IX=null,BR=null,left=2,done=function(){if(--left===0){try{go(IX,BR);}catch(e){console.error('v9.5 live tab',e);}}};
+  fetch('../v92_log/index.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(j){IX=j;}).catch(function(){}).then(done);
+  var s=document.createElement('script');s.src='../bot_replay.js?t='+Date.now();s.onload=function(){BR=window.BOTREPLAY;done();};s.onerror=done;document.head.appendChild(s);
+  var t;window.addEventListener('resize',function(){clearTimeout(t);t=setTimeout(function(){if(IX)try{go(IX,BR);}catch(e){}},200);});
+})();
+</script>
 <script>
 (function(){
   // ---- tabs: only listen and set hidden / aria
