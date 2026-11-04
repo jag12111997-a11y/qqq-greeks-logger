@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-04T03:00:12.091Z",
+ "updated_utc": "2026-11-04T03:30:08.758Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -59,19 +59,24 @@
    "note": "v9.5 candidate (paper only): combo + failed poke B + 3x on A trades by your lines. Promote over the combo only if, after 10 forward mornings, it made more, drawdown no bigger, zero glitches.",
    "all": {
     "usd_1ct": 4504.9,
-    "usd_sized": 11751.3,
+    "usd_sized": 11855.9,
     "off_mornings": 0
    },
    "forward": {
     "usd_1ct": 93.8,
-    "usd_sized": -10.8,
+    "usd_sized": 93.8,
     "mornings": 2
    },
    "last10": {
     "usd_1ct": 335.3,
-    "usd_sized": 1297.3
+    "usd_sized": 1401.9
    }
   }
+ },
+ "htf_next": {
+  "through": "2026-11-03",
+  "daily": -1,
+  "weekly": -1
  },
  "days": [
   {
@@ -86,6 +91,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -101,6 +110,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -116,6 +129,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -131,6 +148,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -146,6 +167,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -161,6 +186,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -176,6 +205,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -191,6 +224,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -206,6 +243,10 @@
    "combo_usd": 25.4,
    "ribbon_x3_usd": 25.4,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 25.4,
    "v95_sized_usd": -87.2
   },
@@ -221,6 +262,10 @@
    "combo_usd": 11.1,
    "ribbon_x3_usd": 11.1,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 11.1,
    "v95_sized_usd": -24.1
   },
@@ -236,6 +281,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -251,6 +300,10 @@
    "combo_usd": 122.7,
    "ribbon_x3_usd": 368.1,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 122.7,
    "v95_sized_usd": 368.1
   },
@@ -266,6 +319,10 @@
    "combo_usd": 134.1,
    "ribbon_x3_usd": 166.9,
    "ribbon_trades": 2,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 170.8,
    "v95_sized_usd": 439
   },
@@ -281,6 +338,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -296,6 +357,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -311,6 +376,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -326,6 +395,10 @@
    "combo_usd": 138.1,
    "ribbon_x3_usd": 332.9,
    "ribbon_trades": 2,
+   "htf": {
+    "daily": 0,
+    "weekly": 0
+   },
    "v95_usd": 138.1,
    "v95_sized_usd": 441.5
   },
@@ -341,6 +414,10 @@
    "combo_usd": 362.5,
    "ribbon_x3_usd": 362.5,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 362.5,
    "v95_sized_usd": 570.7
   },
@@ -356,6 +433,10 @@
    "combo_usd": 164.7,
    "ribbon_x3_usd": 164.7,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 0
+   },
    "v95_usd": 164.7,
    "v95_sized_usd": 164.7
   },
@@ -371,6 +452,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -386,6 +471,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -401,6 +490,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -416,6 +509,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -431,6 +528,10 @@
    "combo_usd": 262.8,
    "ribbon_x3_usd": 262.8,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 262.8,
    "v95_sized_usd": 677.6
   },
@@ -446,6 +547,10 @@
    "combo_usd": -64.9,
    "ribbon_x3_usd": -64.9,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": -64.9,
    "v95_sized_usd": -64.9
   },
@@ -461,6 +566,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -476,6 +585,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -491,6 +604,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 128.7,
    "v95_sized_usd": 128.7
   },
@@ -506,6 +623,10 @@
    "combo_usd": 176.1,
    "ribbon_x3_usd": 288.9,
    "ribbon_trades": 2,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 176.1,
    "v95_sized_usd": 528.3
   },
@@ -521,6 +642,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -536,6 +661,10 @@
    "combo_usd": -56.6,
    "ribbon_x3_usd": -56.6,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": -56.6,
    "v95_sized_usd": -56.6
   },
@@ -551,6 +680,10 @@
    "combo_usd": 656.4,
    "ribbon_x3_usd": 656.4,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 656.4,
    "v95_sized_usd": 1969.2
   },
@@ -566,6 +699,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -581,6 +718,10 @@
    "combo_usd": 48.7,
    "ribbon_x3_usd": 146.1,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 48.7,
    "v95_sized_usd": 146.1
   },
@@ -596,6 +737,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -611,6 +756,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -626,6 +775,10 @@
    "combo_usd": 201.4,
    "ribbon_x3_usd": 604.2,
    "ribbon_trades": 2,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 201.4,
    "v95_sized_usd": 604.2
   },
@@ -641,6 +794,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -656,6 +813,10 @@
    "combo_usd": 92.7,
    "ribbon_x3_usd": 92.7,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 92.7,
    "v95_sized_usd": 278.1
   },
@@ -671,6 +832,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -686,6 +851,10 @@
    "combo_usd": 164.7,
    "ribbon_x3_usd": 164.7,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 231.4,
    "v95_sized_usd": 231.4
   },
@@ -701,6 +870,10 @@
    "combo_usd": 202.4,
    "ribbon_x3_usd": 713.8,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 202.4,
    "v95_sized_usd": 607.2
   },
@@ -716,6 +889,10 @@
    "combo_usd": -19.6,
    "ribbon_x3_usd": -19.6,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": -19.6,
    "v95_sized_usd": -19.6
   },
@@ -731,6 +908,10 @@
    "combo_usd": 27.4,
    "ribbon_x3_usd": 82.2,
    "ribbon_trades": 2,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 27.4,
    "v95_sized_usd": 82.2
   },
@@ -746,6 +927,10 @@
    "combo_usd": 4.4,
    "ribbon_x3_usd": 4.4,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 34.8,
    "v95_sized_usd": 212.2
   },
@@ -761,6 +946,10 @@
    "combo_usd": -44.9,
    "ribbon_x3_usd": -28.1,
    "ribbon_trades": 2,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": -44.9,
    "v95_sized_usd": -28.1
   },
@@ -776,6 +965,10 @@
    "combo_usd": -73.6,
    "ribbon_x3_usd": -73.6,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": -73.6,
    "v95_sized_usd": -73.6
   },
@@ -791,6 +984,10 @@
    "combo_usd": 33.4,
    "ribbon_x3_usd": 100.2,
    "ribbon_trades": 2,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 33.4,
    "v95_sized_usd": 100.2
   },
@@ -806,6 +1003,10 @@
    "combo_usd": 116.8,
    "ribbon_x3_usd": 116.8,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 116.8,
    "v95_sized_usd": 117.6
   },
@@ -821,6 +1022,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -836,6 +1041,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -851,6 +1060,10 @@
    "combo_usd": 86.1,
    "ribbon_x3_usd": 86.1,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 86.1,
    "v95_sized_usd": 86.1
   },
@@ -866,6 +1079,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -881,6 +1098,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -896,6 +1117,10 @@
    "combo_usd": 174.7,
    "ribbon_x3_usd": 174.7,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 174.7,
    "v95_sized_usd": 174.7
   },
@@ -911,6 +1136,10 @@
    "combo_usd": 283.7,
    "ribbon_x3_usd": 283.7,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": 0,
+    "weekly": 1
+   },
    "v95_usd": 283.7,
    "v95_sized_usd": 851.1
   },
@@ -926,6 +1155,10 @@
    "combo_usd": 142.7,
    "ribbon_x3_usd": 428.1,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 142.7,
    "v95_sized_usd": 428.1
   },
@@ -941,6 +1174,10 @@
    "combo_usd": 533.7,
    "ribbon_x3_usd": 533.7,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 533.7,
    "v95_sized_usd": 1601.1
   },
@@ -956,6 +1193,10 @@
    "combo_usd": -20.6,
    "ribbon_x3_usd": 44.8,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 81.8,
    "v95_sized_usd": 348.6
   },
@@ -971,6 +1212,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -986,6 +1231,10 @@
    "combo_usd": -54.3,
    "ribbon_x3_usd": -162.9,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": -54.3,
    "v95_sized_usd": -162.9
   },
@@ -1001,6 +1250,10 @@
    "combo_usd": 314.1,
    "ribbon_x3_usd": 845.5,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": 185.5,
    "v95_sized_usd": 691.1
   },
@@ -1016,6 +1269,10 @@
    "combo_usd": 123.7,
    "ribbon_x3_usd": 371.1,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
    "v95_usd": 123.7,
    "v95_sized_usd": 371.1
   },
@@ -1031,6 +1288,10 @@
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 1
+   },
    "v95_usd": 0,
    "v95_sized_usd": 0
   },
@@ -1046,6 +1307,10 @@
    "combo_usd": -55.3,
    "ribbon_x3_usd": -55.3,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": 1
+   },
    "v95_usd": -55.3,
    "v95_sized_usd": -55.3
   },
@@ -1061,6 +1326,10 @@
    "combo_usd": -39.9,
    "ribbon_x3_usd": 115.5,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": 0
+   },
    "v95_usd": -39.9,
    "v95_sized_usd": 115.5
   },
@@ -1076,8 +1345,12 @@
    "combo_usd": -25.6,
    "ribbon_x3_usd": -130.2,
    "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
    "v95_usd": 114.1,
-   "v95_sized_usd": 9.5
+   "v95_sized_usd": 114.1
   },
   {
    "date": "2026-11-03",
@@ -1091,6 +1364,10 @@
    "combo_usd": -20.3,
    "ribbon_x3_usd": -20.3,
    "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
    "v95_usd": -20.3,
    "v95_sized_usd": -20.3
   }
