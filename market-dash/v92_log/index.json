@@ -1,56 +1,56 @@
 {
- "updated_utc": "2026-11-03T07:22:59.515Z",
+ "updated_utc": "2026-11-04T03:00:12.091Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 67,
-   "usd": 3316.6
+   "mornings": 68,
+   "usd": 3296.3
   },
   "forward": {
-   "mornings": 1,
-   "usd": 0,
+   "mornings": 2,
+   "usd": -20.3,
    "green": 0,
-   "red": 0
+   "red": 1
   },
   "last10": {
-   "usd": 630.6,
+   "usd": 85.6,
    "worst_dip": 107.6,
-   "from": "2026-10-20"
+   "from": "2026-10-21"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
    "all": {
-    "usd": 3593.2,
+    "usd": 3572.9,
     "vs_v92": 276.6,
-    "bounce_days": 11
+    "bounce_days": 12
    },
    "forward": {
-    "usd": 8.4,
+    "usd": -11.9,
     "vs_v92": 8.4,
-    "bounce_days": 1
+    "bounce_days": 2
    }
   },
   "shadow_combo": {
    "note": "v9.2 + 3-tick trail + VIX bounce calls (paper only; the card's signals stay v9.2)",
    "all": {
-    "usd": 4149.2
+    "usd": 4128.9
    },
    "forward": {
-    "usd": -25.6,
-    "mornings": 1
+    "usd": -45.9,
+    "mornings": 2
    },
    "last10": {
-    "usd": 775.8
+    "usd": 221.8
    },
    "ribbon_watch": {
     "note": "combo with 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees, else 1 (paper only)",
     "all": {
-     "usd": 6956.8,
+     "usd": 6936.5,
      "ribbon_trades": 24
     },
     "forward": {
-     "usd": -130.2,
+     "usd": -150.5,
      "ribbon_trades": 1
     }
    }
@@ -58,18 +58,18 @@
   "shadow_v95": {
    "note": "v9.5 candidate (paper only): combo + failed poke B + 3x on A trades by your lines. Promote over the combo only if, after 10 forward mornings, it made more, drawdown no bigger, zero glitches.",
    "all": {
-    "usd_1ct": 4525.2,
-    "usd_sized": 11771.6,
+    "usd_1ct": 4504.9,
+    "usd_sized": 11751.3,
     "off_mornings": 0
    },
    "forward": {
-    "usd_1ct": 114.1,
-    "usd_sized": 9.5,
-    "mornings": 1
+    "usd_1ct": 93.8,
+    "usd_sized": -10.8,
+    "mornings": 2
    },
    "last10": {
-    "usd_1ct": 889.3,
-    "usd_sized": 2918.7
+    "usd_1ct": 335.3,
+    "usd_sized": 1297.3
    }
   }
  },
@@ -1078,6 +1078,21 @@
    "ribbon_trades": 1,
    "v95_usd": 114.1,
    "v95_sized_usd": 9.5
+  },
+  {
+   "date": "2026-11-03",
+   "forward": true,
+   "n": 1,
+   "usd": -20.3,
+   "stops": 0,
+   "vix": 21.15,
+   "bounce_day": true,
+   "shadow_usd": -20.3,
+   "combo_usd": -20.3,
+   "ribbon_x3_usd": -20.3,
+   "ribbon_trades": 0,
+   "v95_usd": -20.3,
+   "v95_sized_usd": -20.3
   }
  ]
 }
