@@ -294,7 +294,7 @@
           if (t.why === "open") { k.bid = t.bid; k.pnl = t.usd * ct; k.state = atM - fill <= 5 ? "buy" : "in"; }
           else { k.out = t.out; k.res = t.usd * ct; k.px = t.sold; k.why = OPWHY[t.why] || t.why; k.state = atM - t.out <= 3 ? "sell" : "closed"; }
           // same touch, same contract, same state (Tulip + Playbook) -> ONE ticket
-          var twin = (k.state === "closed" ? vm.optClosed : vm.tickets).filter(function (o) { return o.opt && o.S === k.S && String(o.K) === String(k.K) && o.mf === k.mf && o.state === k.state; })[0];
+          var twin = (k.state === "closed" ? vm.optClosed : vm.tickets).filter(function (o) { return o.opt && o.S === k.S && String(o.K) === String(k.K) && o.mf === k.mf && o.state === k.state && (k.state === "buy" || k.state === "in" || (o.out === k.out && o.why === k.why)); })[0];
           if (twin) { twin.ct += k.ct; twin.kind += " + " + k.kind.replace("OPTION · ", ""); twin.exitTxt += " | " + k.exitTxt; if (k.pnl != null) twin.pnl = (twin.pnl || 0) + k.pnl; if (k.res != null) twin.res = (twin.res || 0) + k.res; return; }
           if (k.state === "closed") vm.optClosed.push(k); else vm.tickets.push(k);
         });
