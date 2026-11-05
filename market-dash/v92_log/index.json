@@ -1,22 +1,22 @@
 {
- "updated_utc": "2026-11-04T11:55:43.751Z",
+ "updated_utc": "2026-11-05T03:28:09.478Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 68,
+   "mornings": 69,
    "usd": 3296.3
   },
   "forward": {
-   "mornings": 2,
+   "mornings": 3,
    "usd": -20.3,
    "green": 0,
    "red": 1
   },
   "last10": {
-   "usd": 85.6,
-   "worst_dip": 107.6,
-   "from": "2026-10-21"
+   "usd": 138.9,
+   "worst_dip": 55.3,
+   "from": "2026-10-22"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
@@ -38,10 +38,10 @@
    },
    "forward": {
     "usd": -45.9,
-    "mornings": 2
+    "mornings": 3
    },
    "last10": {
-    "usd": 221.8
+    "usd": 242.4
    },
    "ribbon_watch": {
     "note": "combo with 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees, else 1 (paper only)",
@@ -65,11 +65,11 @@
    "forward": {
     "usd_1ct": 93.8,
     "usd_sized": 93.8,
-    "mornings": 2
+    "mornings": 3
    },
    "last10": {
-    "usd_1ct": 335.3,
-    "usd_sized": 1401.9
+    "usd_1ct": 253.5,
+    "usd_sized": 1053.3
    }
   },
   "shadow_options": {
@@ -84,16 +84,16 @@
     "addons_usd": 0,
     "addons": 0,
     "total_usd": 93.8,
-    "mornings": 2
+    "mornings": 3
    },
    "last10": {
-    "addons_usd": 589.2,
-    "total_usd": 1991.1
+    "addons_usd": 525.8,
+    "total_usd": 1579.1
    }
   }
  },
  "htf_next": {
-  "through": "2026-11-03",
+  "through": "2026-11-04",
   "daily": -1,
   "weekly": -1
  },
@@ -1590,6 +1590,28 @@
    },
    "v95_usd": -20.3,
    "v95_sized_usd": -20.3,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0,
+   "opt_contracts": 0
+  },
+  {
+   "date": "2026-11-04",
+   "forward": true,
+   "n": 0,
+   "usd": 0,
+   "stops": 0,
+   "vix": 20.83,
+   "bounce_day": false,
+   "shadow_usd": 0,
+   "combo_usd": 0,
+   "ribbon_x3_usd": 0,
+   "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
+   "v95_usd": 0,
+   "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
    "opt_contracts": 0
