@@ -1,14 +1,14 @@
 {
- "updated_utc": "2026-11-05T03:28:09.478Z",
+ "updated_utc": "2026-11-06T03:23:50.360Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 69,
+   "mornings": 70,
    "usd": 3296.3
   },
   "forward": {
-   "mornings": 3,
+   "mornings": 4,
    "usd": -20.3,
    "green": 0,
    "red": 1
@@ -16,7 +16,7 @@
   "last10": {
    "usd": 138.9,
    "worst_dip": 55.3,
-   "from": "2026-10-22"
+   "from": "2026-10-23"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
@@ -38,7 +38,7 @@
    },
    "forward": {
     "usd": -45.9,
-    "mornings": 3
+    "mornings": 4
    },
    "last10": {
     "usd": 242.4
@@ -65,7 +65,7 @@
    "forward": {
     "usd_1ct": 93.8,
     "usd_sized": 93.8,
-    "mornings": 3
+    "mornings": 4
    },
    "last10": {
     "usd_1ct": 253.5,
@@ -84,16 +84,16 @@
     "addons_usd": 0,
     "addons": 0,
     "total_usd": 93.8,
-    "mornings": 3
+    "mornings": 4
    },
    "last10": {
-    "addons_usd": 525.8,
-    "total_usd": 1579.1
+    "addons_usd": 471,
+    "total_usd": 1524.3
    }
   }
  },
  "htf_next": {
-  "through": "2026-11-04",
+  "through": "2026-11-05",
   "daily": -1,
   "weekly": -1
  },
@@ -1601,6 +1601,28 @@
    "usd": 0,
    "stops": 0,
    "vix": 20.83,
+   "bounce_day": false,
+   "shadow_usd": 0,
+   "combo_usd": 0,
+   "ribbon_x3_usd": 0,
+   "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
+   "v95_usd": 0,
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0,
+   "opt_contracts": 0
+  },
+  {
+   "date": "2026-11-05",
+   "forward": true,
+   "n": 0,
+   "usd": 0,
+   "stops": 0,
+   "vix": 16.61,
    "bounce_day": false,
    "shadow_usd": 0,
    "combo_usd": 0,
