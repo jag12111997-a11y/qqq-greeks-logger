@@ -1,34 +1,34 @@
 {
- "updated_utc": "2026-11-06T03:23:50.360Z",
+ "updated_utc": "2026-11-07T02:45:16.014Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 70,
+   "mornings": 71,
    "usd": 3296.3
   },
   "forward": {
-   "mornings": 4,
+   "mornings": 5,
    "usd": -20.3,
    "green": 0,
    "red": 1
   },
   "last10": {
-   "usd": 138.9,
+   "usd": 193.2,
    "worst_dip": 55.3,
-   "from": "2026-10-23"
+   "from": "2026-10-26"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
    "all": {
     "usd": 3572.9,
     "vs_v92": 276.6,
-    "bounce_days": 12
+    "bounce_days": 13
    },
    "forward": {
     "usd": -11.9,
     "vs_v92": 8.4,
-    "bounce_days": 2
+    "bounce_days": 3
    }
   },
   "shadow_combo": {
@@ -38,10 +38,10 @@
    },
    "forward": {
     "usd": -45.9,
-    "mornings": 4
+    "mornings": 5
    },
    "last10": {
-    "usd": 242.4
+    "usd": 296.7
    },
    "ribbon_watch": {
     "note": "combo with 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees, else 1 (paper only)",
@@ -65,11 +65,11 @@
    "forward": {
     "usd_1ct": 93.8,
     "usd_sized": 93.8,
-    "mornings": 4
+    "mornings": 5
    },
    "last10": {
-    "usd_1ct": 253.5,
-    "usd_sized": 1053.3
+    "usd_1ct": 307.8,
+    "usd_sized": 1216.2
    }
   },
   "shadow_options": {
@@ -84,16 +84,16 @@
     "addons_usd": 0,
     "addons": 0,
     "total_usd": 93.8,
-    "mornings": 4
+    "mornings": 5
    },
    "last10": {
-    "addons_usd": 471,
-    "total_usd": 1524.3
+    "addons_usd": 493.6,
+    "total_usd": 1709.8
    }
   }
  },
  "htf_next": {
-  "through": "2026-11-05",
+  "through": "2026-11-06",
   "daily": -1,
   "weekly": -1
  },
@@ -1624,6 +1624,28 @@
    "stops": 0,
    "vix": 16.61,
    "bounce_day": false,
+   "shadow_usd": 0,
+   "combo_usd": 0,
+   "ribbon_x3_usd": 0,
+   "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
+   "v95_usd": 0,
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0,
+   "opt_contracts": 0
+  },
+  {
+   "date": "2026-11-06",
+   "forward": true,
+   "n": 0,
+   "usd": 0,
+   "stops": 0,
+   "vix": 28.18,
+   "bounce_day": true,
    "shadow_usd": 0,
    "combo_usd": 0,
    "ribbon_x3_usd": 0,
