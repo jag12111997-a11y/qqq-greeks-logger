@@ -43,7 +43,7 @@ function build(ROOT) {
     out.days[day] = { weekday: new Date(day + "T12:00:00Z").toUTCString().slice(0, 3), candles, g8: lines[8], r304: lines[304], levels: lv,
       yday: { high: mp.yday_high, low: mp.yday_low, close: mp.yday_close }, map: mp, vix: row.vix == null ? null : row.vix, htf: row.htf || null, seed, va: mp.value_area || null };
     // option quotes per minute (last quote of the minute)
-    const Q = quotes(day), OQ = {}; Q.forEach(q => { if (!(q.bid > 0) || !(q.ask > 0)) return; const m = Math.floor((q.t - t0) / 60); if (m < -5 || m > 200) return; (OQ[q.side + "|" + q.strike] = OQ[q.side + "|" + q.strike] || {})[m] = q; });
+    const Q = quotes(day), OQ = {}; Q.forEach(q => { if (!(q.bid > 0) || !(q.ask > 0)) return; const m = Math.floor((q.t - t0) / 60); if (m < -5 || m > 335) return; (OQ[q.side + "|" + q.strike] = OQ[q.side + "|" + q.strike] || {})[m] = q; });
     // contract mid + bid per minute, with the option's own EMA 11 / 18 (forward-filled mid from its first quote, same as the bot)
     function series(side, K, a, z) { const o = OQ[side + "|" + Number(K)] || {}, s = [], e = { 11: null, 18: null }; let last = null;
       for (let m = -5; m <= z; m++) { if (o[m]) last = (o[m].bid + o[m].ask) / 2; if (last == null) continue; [11, 18].forEach(n => { const k = 2 / (n + 1); e[n] = e[n] === null ? last : k * last + (1 - k) * e[n]; });
@@ -52,14 +52,20 @@ function build(ROOT) {
       for (let m = fill + 1; m <= (exit == null ? fill + 90 : exit); m++) { const q = o[m]; if (!q) continue; const mid = (q.bid + q.ask) / 2; best = Math.max(best, q.bid - paid); worst = Math.min(worst, q.bid - paid); if (hit30 == null && mid >= aMid + 0.30) hit30 = m; if (hit50 == null && mid >= aMid + 0.50) hit50 = m; }
       let after = -9; for (let m = (exit == null ? fill : exit) + 1; m <= (exit == null ? fill : exit) + 30; m++) { const q = o[m]; if (q) after = Math.max(after, q.bid - paid); }
       return { aMid: r2(aMid), iv: q0 ? q0.iv : null, best: best > -9 ? r2(best) : null, worst: worst < 9 ? r2(worst) : null, hit30, hit50, after: after > -9 ? r2(after) : null }; }
+    // the contract's own 30-min candles (mid), 6:30 .. 12:00 PT: [open, high, low, close] or null
+    function c30(side, K) { const o = OQ[side + "|" + Number(K)] || {}, out = [];
+      for (let w = 0; w < 11; w++) { const v = []; for (let m = w * 30; m < w * 30 + 30; m++) if (o[m]) v.push((o[m].bid + o[m].ask) / 2);
+        out.push(v.length >= 5 ? [r2(v[0]), r2(Math.max(...v)), r2(Math.min(...v)), r2(v[v.length - 1])] : null); }
+      while (out.length && out[out.length - 1] === null) out.pop();
+      return out; }
     const sideOf = s => s === "call" ? "C" : "P";
     const cardsToday = [];
     (doc.shadow_v95 && doc.shadow_v95.trades || []).forEach((t, i) => { const fill = toM(t.filled), exit = toM(t.exit), side = sideOf(t.side), pth = path_(side, t.strike, fill, exit, t.paid);
       cardsToday.push({ src: "card", fake: t.fakeout_line == null ? null : t.fakeout_line, setup: t.setup, side: t.side, strike: t.strike, sig: toM(t.signal), m: fill, exit_m: exit, paid: t.paid, sold: t.sold, why: t.why, per: t.usd, ct: t.contracts || 1, pnl: r2((t.usd || 0) * (t.contracts || 1)),
-        opt: series(side, t.strike, fill - 10, (exit == null ? fill + 60 : exit) + 20), path: pth }); });
+        opt: series(side, t.strike, fill - 10, (exit == null ? fill + 60 : exit) + 20), c30: c30(side, t.strike), path: pth }); });
     (doc.shadow_options && doc.shadow_options.trades || []).forEach(t => { const sig = toM(t.signal), fill = sig + 1, exit = toM(t.exit), side = sideOf(t.side), pth = path_(side, t.strike, fill, exit, t.paid);
       cardsToday.push({ src: "option", box: t.box || null, level: t.level || null, levelPx: t.level_px == null ? null : t.level_px, setup: t.from, how: t.how, flipped_from: t.flipped_from || null, side: t.side, strike: t.strike, sig, m: fill, exit_m: exit, paid: t.paid, sold: t.paid == null ? null : r2(t.paid + (t.usd + 2.6) / 100), why: t.why, per: t.usd, ct: t.contracts || 1, pnl: r2((t.usd || 0) * (t.contracts || 1)),
-        opt: series(side, t.strike, fill - 10, (exit == null ? fill + 60 : exit) + 20), path: pth }); });
+        opt: series(side, t.strike, fill - 10, (exit == null ? fill + 60 : exit) + 20), c30: c30(side, t.strike), path: pth }); });
     cardsToday.sort((a, b) => a.m - b.m).forEach((c, i) => { c.date = day; c.n = i + 1; out.cards.push(c); });
     const cs = cardsToday.filter(c => c.src === "card"), os = cardsToday.filter(c => c.src === "option");
     out.daily.push({ date: day, weekday: out.days[day].weekday, card: r2(cs.reduce((a, c) => a + c.pnl, 0)), cardN: cs.length, card1: r2(cs.reduce((a, c) => a + (c.per || 0), 0)), opt: r2(os.reduce((a, c) => a + c.pnl, 0)), optN: os.length, forward: !!doc.forward });

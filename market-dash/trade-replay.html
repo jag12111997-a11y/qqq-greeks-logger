@@ -62,6 +62,16 @@
 #rp .dayhead { display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; font-size:13px; border-top:1px solid var(--line); padding-top:8px; }
 #rp .dayhead b { font-size:14px; }
 #rp .strip { display:grid; grid-template-columns:repeat(auto-fill,minmax(165px,1fr)); gap:8px; }
+/* one month at a time: month tabs, then that month's trades in one sideways-scrolling row */
+#rp .mbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+#rp .mtab { font:600 13px var(--display); background:var(--panel); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:6px 10px; cursor:pointer; display:flex; gap:8px; align-items:baseline; }
+#rp .mtab small { font:500 11.5px var(--mono); color:var(--mute); }
+#rp .mtab[aria-pressed="true"] { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+#rp .mtab:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+#rp .strip.h { display:flex; overflow-x:auto; gap:8px; padding-bottom:6px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; }
+#rp .strip.h .card { flex:0 0 178px; scroll-snap-align:start; }
+#rp .mhint { font:500 12px var(--mono); color:var(--mute); margin:0; }
+#rp .opt30 canvas { height:170px; }
 #rp .card { text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px 10px; color:var(--fg); cursor:pointer; display:flex; flex-direction:column; gap:5px; font-family:var(--display); }
 #rp .card[aria-current="true"] { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
 #rp .card .top { display:flex; justify-content:space-between; align-items:baseline; gap:6px; font-size:12.5px; }
@@ -152,7 +162,7 @@
       '<p class="readout" id="rp-main-r">Hover the chart for a minute.</p>' +
       '<div class="legend"><span><i style="border-color:var(--vwap)"></i>VWAP</span><span>Your lines: green 8/14/35 · yellow 52/80 · orange 120 · red 250/304/400</span><span><i style="border-color:var(--cw)"></i>Call wall</span><span><i style="border-color:var(--pw)"></i>Put wall</span><span><i style="border-color:var(--gf)"></i>Gamma flip</span>' +
       '<span><i style="border-color:var(--yd);border-top-style:dashed"></i>Yesterday H/L/C</span><span>▒ yesterday\'s value area</span><span><i style="border-color:var(--level);border-top-style:dashed"></i>Trap line</span><span><i style="border-color:var(--accent);border-top-style:dashed"></i>Trade level (box / bounce level / fake-out)</span><span>▲ bot buy · ▼ bot sell · ● other bot trades</span></div></section>' +
-      '<aside class="panel"><p class="eyebrow">The contract</p><p class="ttl" id="rp-opt-t"></p><div class="opt"><canvas id="rp-opt"></canvas></div><p class="fine" id="rp-opt-n"></p><div id="rp-side" style="display:flex;flex-direction:column;gap:10px"></div></aside></div>';
+      '<aside class="panel"><p class="eyebrow">The contract</p><p class="ttl" id="rp-opt-t"></p><div class="opt"><canvas id="rp-opt"></canvas></div><p class="fine" id="rp-opt-n"></p><p class="eyebrow" style="margin-top:4px">30-min candles · this contract, 6:30 →</p><div class="opt30"><canvas id="rp-opt30"></canvas></div><p class="fine" id="rp-opt30-n"></p><div id="rp-side" style="display:flex;flex-direction:column;gap:10px"></div></aside></div>';
     html += '</div><div class="pane" data-p="sum" hidden><div class="kpis" id="rp-kpis"></div>' +
       '<div class="grid2"><section class="panel"><p class="eyebrow">Every morning · card vs options · tap a day</p><div class="tbl"><table id="rp-daily"></table></div><p class="fine" id="rp-daily-n"></p></section>' +
       '<section class="panel"><p class="eyebrow">Running total</p><canvas id="rp-cum" style="height:240px"></canvas>' +
@@ -189,15 +199,22 @@
       if (c.ct > 1) t.push('<span class="tag">' + c.ct + '×</span>');
       t.push('<span class="tag ' + (c.why === 'open' ? 'live' : c.why === 'stop' ? 'bad' : c.pnl > 0 ? 'ok' : 'warn') + '">' + esc(c.why === 'open' ? 'open now' : why(c)) + '</span>');
       return t.join(''); }
+    var monthSel = null;   // the month being shown (newest by default)
     function strip() {
       var el = document.getElementById('rp-strip'), months = {};
       C.filter(function (c) { return fOk(c); }).forEach(function (c) { (months[c.date.slice(0, 7)] = months[c.date.slice(0, 7)] || []).push(c); });
-      el.innerHTML = Object.keys(months).sort().reverse().map(function (m) {
+      var keys = Object.keys(months).sort().reverse();
+      if (!keys.length) { el.innerHTML = '<p class="fine">No trades for this filter.</p>'; return; }
+      if (!months[monthSel]) monthSel = keys[0];
+      var bar = '<div class="mbar">' + keys.map(function (m) { var L = months[m], t = L.reduce(function (a, c) { return a + (c.pnl || 0); }, 0);
+        return '<button class="mtab" data-m="' + m + '" aria-pressed="' + (m === monthSel) + '">' + mname(m) + '<small>' + L.length + ' · <span class="' + cl(t) + '">' + usd(t) + '</span></small></button>'; }).join('') + '</div>';
+      el.innerHTML = bar + [monthSel].map(function (m) {
         var L = months[m].slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : a.m - b.m; });
-        return '<p class="month">' + mname(m) + '</p><div class="strip">' + L.map(function (c) { var i = C.indexOf(c);
+        return '<p class="mhint">' + mname(m) + ' · ' + L.length + ' trade' + (L.length === 1 ? '' : 's') + (L.length > 2 ? ' · swipe sideways for more →' : '') + '</p><div class="strip h">' + L.map(function (c) { var i = C.indexOf(c);
           return '<button class="card' + (c.why === 'open' ? ' open' : '') + '" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><div class="top"><span>' + c.weekday + ' ' + c.date.slice(5) + ' · ' + c.time_pt + ' · ' + (c.side === 'call' ? 'Call' : 'Put') + ' ' + c.strike + (c.ct > 1 ? ' ×' + c.ct : '') +
             '</span><span class="pnl ' + cl(c.pnl) + '">' + usd(c.pnl) + '</span></div><canvas></canvas><div class="tags">' + tagsOf(c) + '</div></button>'; }).join('') + '</div>';
-      }).join('') || '<p class="fine">No trades for this filter.</p>';
+      }).join('');
+      el.querySelectorAll('.mtab').forEach(function (b) { b.addEventListener('click', function () { monthSel = b.dataset.m; strip(); }); });
       el.querySelectorAll('.card[data-i]').forEach(function (b) { var c = C[+b.dataset.i]; mini(b.querySelector('canvas'), c); b.addEventListener('click', function () { select(c, true); }); });
     }
     function setup(cv) { var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); return [g, w, h]; }
@@ -328,6 +345,35 @@
     }
 
     // ---------- contract chart ----------
+    // the contract's 30-min candles for the morning (from the logger's quotes), with the bot's buy ▲ and sell ▼ inside their candle
+    function drawOpt30(c) {
+      var cv = document.getElementById('rp-opt30'), note = document.getElementById('rp-opt30-n'); if (!cv) return;
+      var S = setup(cv), g = S[0], w = S[1], h = S[2], K = c.c30;
+      if (!K || !K.length) {          // live trades: build what we can from the minute quotes we have
+        var b = {}; (c.opt || []).forEach(function (o) { var k = Math.floor(o[0] / 30); if (k < 0 || o[1] == null) return; (b[k] = b[k] || []).push(o[1]); });
+        K = []; var top = Math.max.apply(null, Object.keys(b).map(Number).concat([-1]));
+        for (var k = 0; k <= top; k++) { var v = b[k]; K.push(v && v.length ? [v[0], Math.max.apply(null, v), Math.min.apply(null, v), v[v.length - 1]] : null); }
+      }
+      if (!K.length) { note.textContent = 'No quotes were logged for this strike.'; return; }
+      var n = Math.max(K.length, Math.min(11, Math.ceil(((c.exit_m != null ? c.exit_m : c.m) + 1) / 30))), padL = 4, padR = 42, top = 8, bot = 18;
+      var sold = c.sold != null ? c.sold : (c.per != null && c.paid != null ? c.paid + (c.per + 2.6) / 100 : null);
+      var vals = []; K.forEach(function (k) { if (k) vals.push(k[1], k[2]); }); if (c.paid != null) vals.push(c.paid); if (sold != null) vals.push(sold);
+      var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), pd = (hi - lo) * 0.08 || 0.05; lo -= pd; hi += pd;
+      var cw = (w - padL - padR) / n, X = function (i) { return padL + i * cw; }, Y = function (v) { return top + (hi - v) / (hi - lo) * (h - top - bot); };
+      g.font = '10.5px ' + css('--mono');
+      var st = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2].find(function (s) { return (hi - lo) / s <= 5; }) || 5;
+      for (var v = Math.ceil(lo / st) * st; v <= hi; v += st) { g.strokeStyle = css('--grid'); g.lineWidth = 1; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText(v.toFixed(2), w - padR + 4, Y(v) + 3); }
+      for (var i = 0; i < n; i += (n > 6 ? 2 : 1)) { g.fillStyle = css('--mute'); g.fillText(pt(i * 30), X(i) + 1, h - 4); }
+      var fw = Math.floor(c.m / 30); g.fillStyle = css('--grid'); g.fillRect(X(fw), top, cw * (Math.floor(((c.exit_m != null ? c.exit_m : c.m)) / 30) - fw + 1), h - top - bot);
+      K.forEach(function (k, i) { if (!k) return; var up = k[3] >= k[0], col = css(up ? '--win' : '--loss'), cx = X(i) + cw / 2, bw = Math.max(3, cw * 0.55);
+        g.strokeStyle = col; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx, Y(k[1])); g.lineTo(cx, Y(k[2])); g.stroke();
+        g.fillStyle = col; var y1 = Y(Math.max(k[0], k[3])), y2 = Y(Math.min(k[0], k[3])); g.fillRect(cx - bw / 2, y1, bw, Math.max(1.5, y2 - y1)); });
+      function mark(m, p, buy) { if (m == null || p == null) return; var x = X(Math.floor(m / 30)) + (m % 30) / 30 * cw, y = Y(p);
+        g.fillStyle = css(buy ? '--you' : (c.pnl > 0 ? '--win' : '--loss')); g.beginPath();
+        if (buy) { g.moveTo(x, y + 1); g.lineTo(x - 5, y + 10); g.lineTo(x + 5, y + 10); } else { g.moveTo(x, y - 1); g.lineTo(x - 5, y - 10); g.lineTo(x + 5, y - 10); } g.closePath(); g.fill(); }
+      mark(c.m, c.paid, true); if (c.why !== 'open') mark(c.exit_m, sold, false);
+      var bk = K[fw]; note.textContent = 'Each candle = 30 min of this contract (mid). ▲ bought ' + q2(c.paid) + ' at ' + pt(c.m) + (bk ? ' (that candle opened ' + q2(bk[0]) + ', high ' + q2(bk[1]) + ', low ' + q2(bk[2]) + ')' : '') + (c.why !== 'open' && sold != null ? ' · ▼ sold ' + q2(sold) + ' at ' + pt(c.exit_m) : '') + '.';
+    }
     function drawOpt() {
       var c = sel.card, cv = document.getElementById('rp-opt'), S = setup(cv), g = S[0], w = S[1], h = S[2], P = c.path || {};
       document.getElementById('rp-opt-t').textContent = (c.side === 'call' ? 'Call ' : 'Put ') + c.strike + ' · ' + c.ct + '× · ' + lab(c);
@@ -361,6 +407,7 @@
       var dot = function (m, v, col) { g.fillStyle = css('--panel'); g.beginPath(); g.arc(X(m), Y(v), 7, 0, 7); g.fill(); g.fillStyle = css(col); g.beginPath(); g.arc(X(m), Y(v), 5, 0, 7); g.fill(); };
       dot(c.m, entry, '--you'); if (c.why !== 'open' && sold != null && c.exit_m != null) dot(c.exit_m, sold, c.pnl > 0 ? '--win' : '--loss');
       document.getElementById('rp-opt-n').textContent = pts.length ? 'Mid (white) · bid (grey) · option EMA 11 (red) / 18 (blue) · best bid while held ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—') + ' · worst ' + (P.worst != null ? (P.worst >= 0 ? '+' : '') + q2(P.worst) : '—') + ' a contract.' : 'No quotes were logged for this strike.';
+      drawOpt30(c);
     }
 
     // ---------- side panel ----------
@@ -381,8 +428,10 @@
     function select(card, scroll) {
       sel.card = card; hoverM = null;
       if (document.querySelector('#rp .pane[data-p="chart"]').hidden) showPane('chart');
+      if (card.date.slice(0, 7) !== monthSel) { monthSel = card.date.slice(0, 7); strip(); }
       document.getElementById('rp-title').textContent = card.weekday + ' ' + mmdd(card.date) + ' · ' + card.time_pt + ' PT · ' + (card.side === 'call' ? 'Call ' : 'Put ') + card.strike + ' · ' + lab(card) + ' · ' + usd(card.pnl);
-      document.querySelectorAll('#rp-strip .card').forEach(function (b) { b.setAttribute('aria-current', C[+b.dataset.i] === card ? 'true' : 'false'); });
+      document.querySelectorAll('#rp-strip .card').forEach(function (b) { var on = C[+b.dataset.i] === card; b.setAttribute('aria-current', on ? 'true' : 'false');
+        if (on && b.parentNode) { var s = b.parentNode; if (b.offsetLeft < s.scrollLeft || b.offsetLeft + b.offsetWidth > s.scrollLeft + s.clientWidth) s.scrollLeft = b.offsetLeft - 8; } });
       drawMain(); drawOpt(); side();
       if (scroll) document.getElementById('rp-desk').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
