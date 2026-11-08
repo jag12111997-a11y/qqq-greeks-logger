@@ -53,6 +53,18 @@
       });
       return best;
     }
+    // why no contract passed the rules at minute m (recorded only; never changes a trade)
+    var skipped = [];
+    function whyNone(side, m, kind) {
+      var c = S(m).close, near = null, band = null;
+      ORDER[side].forEach(function (K) {
+        var x = OPT[side][K].q[m]; if (!x) return;
+        if (near === null || Math.abs(K - c) < Math.abs(near.K - c)) near = { K: K, mid: x[0], iv: x[1] };
+        if (x[0] >= C.LO && x[0] <= C.HI && (band === null || Math.abs(K - c) < Math.abs(band.K - c))) band = { K: K, mid: x[0], iv: x[1] };
+      });
+      var w = near === null ? "quotes" : (band === null ? "price" : "iv"), r = band || near || {};
+      return { m: m, side: side, kind: kind, why: w, K: r.K == null ? null : r.K, mid: r.mid == null ? null : r.mid, iv: r.iv == null ? null : r.iv, lo: C.LO, hi: C.HI, ivmax: C.IVMAX };
+    }
     function nearroom(m, side) {
       var p = (D.pts && m < D.pts.length && D.pts[m]) || {}, c = S(m).close, sg = side === "C" ? 1 : -1;
       var gex = ["put_wall", "call_wall", "oi_magnet", "max_pos_gamma", "max_neg_gamma"].map(function (kk) { return p[kk]; }).filter(function (v) { return v; });
@@ -167,7 +179,7 @@
         if (isGap && (gapn[side] >= C.gap_maxn || m - gaplast[side] < C.gap_gap)) return;
         if (isGap && trapSeen[side === "C" ? "P" : "C"]) { log.push([m, "block", side]); return; }
         if (trades.filter(function (t) { return t.out > m && !(C.fpYield && t.kind === "fp" && !pureB); }).length >= 2) { log.push([m, "busy", side]); return; }
-        var K = nearest(side, m); if (K === null) return;
+        var K = nearest(side, m); if (K === null) { skipped.push(whyNone(side, m, isTrap ? "trap" : (isGap ? "gap" : (isVB ? "vb" : (isFw ? "fw" : "fp"))))); return; }
         var r = actq(side, K, m); if (!r[1]) return;
         var t = { side: side, K: K, kind: isTrap ? "trap" : (isGap ? "gap" : (isVB ? "vb" : (isFw ? "fw" : "fp"))), m: m, mf: r[0], out: Infinity };
         trades.push(t);
@@ -187,7 +199,7 @@
       var side = e.side, sg = side === "C" ? 1 : -1;
       if (mm >= blocked[side]) continue;
       if (taken[side + mm]) continue;
-      var L = leg(side, mm); if (!L) continue;
+      var L = leg(side, mm); if (!L) { if (e.src !== "model" && nearest(side, mm) === null) skipped.push(whyNone(side, mm, e.kind)); continue; }
       taken[side + mm] = true;
       for (k in L) e[k] = L[k];
       fin.push(e);
@@ -230,7 +242,7 @@
       if (!a) return; var r = nextq(e.side, e.K, a.mf); if (!r[1]) return;
       e.out = r[0]; e.px = r[1][2]; e.why = "yield"; e.res = e.px - e.ask - C.FEE;
     });
-    return { trades: fin, signals: trades, log: log, gap: o - X.PDC, open: o, zoneFirst: zoneFirst,
+    return { trades: fin, signals: trades, log: log, skipped: skipped, gap: o - X.PDC, open: o, zoneFirst: zoneFirst,
       gapArmed: { C: gapC >= C.gapx && X.week === 1, P: gapP >= C.gapx && X.week === -1 }, fwOk: fwValueOk() };
   }
   var api = { runDay: runDay, DEF: DEF };

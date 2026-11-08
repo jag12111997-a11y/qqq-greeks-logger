@@ -154,6 +154,11 @@ window.dash=(function(){
       </tbody></table></div>
     </div>
     <div class="card">
+      <h2 id="live-sqn">SQN by version (nightly, from the paper log)</h2>
+      <p class="note">One score per version, per trade in dollars. Under 1.6 poor · 2–2.5 average · 2.5–3 good · 3–5 excellent. Live needs a few dozen trades before it means much.</p>
+      <div class="tbox"><table><thead><tr><th>Version</th><th class="n">Trades</th><th class="n">SQN</th><th class="n">Live trades</th><th class="n">Live SQN</th></tr></thead><tbody id="lv-sqn"></tbody></table></div>
+    </div>
+    <div class="card">
       <h2 id="live-score">Scoreboard · every setup (SQN = √trades × average ÷ swing)</h2>
       <p class="note">SQN rewards a real edge, steady results and enough trades together: under 1.6 poor · 2–2.5 average · 2.5–3 good · 3–5 excellent. Recomputed from every bot trade.</p>
       <div class="tbox"><table><thead><tr><th>Setup</th><th class="n">Trades</th><th class="n">Won</th><th class="n">P&amp;L</th><th class="n">Avg</th><th class="n">PF</th><th class="n">SQN</th></tr></thead><tbody id="lv-score"></tbody></table></div>
@@ -713,6 +718,9 @@ window.dash=(function(){
     var by={};cards.forEach(function(c){var k=(c.src==='option'?'Option · ':'')+(c.setup&&c.setup.indexOf('re-')===0?'Re-entry':(LAB[c.setup]||c.setup));(by[k]=by[k]||[]).push(c.pnl);});
     set('lv-score',Object.keys(by).map(function(k){var u=by[k],t=u.reduce(function(a,b){return a+b;},0),W=u.filter(function(x){return x>0;}).reduce(function(a,b){return a+b;},0),Lx=-u.filter(function(x){return x<=0;}).reduce(function(a,b){return a+b;},0);return {k:k,u:u,t:t,pf:Lx?W/Lx:null,s:sqn(u)};})
       .sort(function(a,b){return b.s-a.s;}).map(function(z){return '<tr><td>'+esc(z.k)+'</td><td class="n">'+z.u.length+'</td><td class="n">'+Math.round(100*z.u.filter(function(x){return x>0;}).length/z.u.length)+'%</td><td class="n '+cls(z.t)+'">'+usd(z.t)+'</td><td class="n">'+usd(z.t/z.u.length)+'</td><td class="n">'+(z.pf==null?'∞':z.pf.toFixed(2))+'</td><td class="n"><b>'+z.s.toFixed(2)+'</b></td></tr>';}).join(''));
+    // ---- SQN by version (paper log index.sqn) ----
+    var SQ=IX&&IX.sqn, VN=[['v92','v9.2 (locked Nov 1, OLD)'],['v93_vix_bounce','v9.3 + VIX bounce (OLD)'],['combo','v9.4 combo (OLD)'],['v95_1ct','v9.5 card at 1 contract'],['v95_sized','v9.5 card as sized'],['options_sized','Options (as sized)'],['card_plus_options_sized','v9.5 + options (CURRENT)']];
+    set('lv-sqn',SQ?VN.map(function(v){var a=SQ.all[v[0]]||{},f=(SQ.forward&&SQ.forward[v[0]])||{};var cur=v[0]==='card_plus_options_sized';return '<tr><td>'+(cur?'<b>'+esc(v[1])+'</b>':esc(v[1]))+'</td><td class="n">'+(a.trades||0)+'</td><td class="n">'+(cur?'<b>':'')+(a.sqn==null?'—':a.sqn.toFixed(2))+(cur?'</b>':'')+'</td><td class="n">'+(f.trades||0)+'</td><td class="n">'+(f.sqn==null?'—':f.sqn.toFixed(2))+'</td></tr>';}).join(''):'<tr><td colspan="5">SQN appears after the next nightly paper-log run.</td></tr>');
     // ---- Your account: the $150 per 2 weeks budget with v9.5 + options ----
     var roll=function(key){var out=[];for(var i=9;i<eq.length;i++){var s=0,pk=0,run=0,dd=0;for(var j=i-9;j<=i;j++){var v=key==='all'?eq[j].day:key==='card'?eq[j].c:(rows[j].v95_usd||0);s+=v;run+=v;pk=Math.max(pk,run);dd=Math.max(dd,pk-run);}out.push({s:s,dip:-dd});}return out;};
     var ra=roll('all'),rc=roll('card'),r1=roll('c1');var worst=function(R){return Math.min.apply(null,R.map(function(x){return x.dip;}));},over=function(R){return R.filter(function(x){return x.dip<-150;}).length;};

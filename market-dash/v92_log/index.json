@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-07T02:45:16.014Z",
+ "updated_utc": "2026-11-08T10:41:48.381Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -89,6 +89,127 @@
    "last10": {
     "addons_usd": 493.6,
     "total_usd": 1709.8
+   }
+  }
+ },
+ "sqn": {
+  "note": "SQN = √(trades, capped at 100) × average trade ÷ standard deviation, per trade in dollars. Under 1.6 poor · 2–2.5 average · 2.5–3 good · 3–5 excellent.",
+  "all": {
+   "v92": {
+    "sqn": 3.95,
+    "trades": 72
+   },
+   "v93_vix_bounce": {
+    "sqn": 4.04,
+    "trades": 80
+   },
+   "combo": {
+    "sqn": 4.25,
+    "trades": 77
+   },
+   "v95_1ct": {
+    "sqn": 4.5,
+    "trades": 87
+   },
+   "v95_sized": {
+    "sqn": 4.34,
+    "trades": 87
+   },
+   "options_sized": {
+    "sqn": 4.5,
+    "trades": 53
+   },
+   "card_plus_options_sized": {
+    "sqn": 4.67,
+    "trades": 140
+   },
+   "by_setup_1ct": {
+    "fw": {
+     "sqn": 1.66,
+     "trades": 13
+    },
+    "trap": {
+     "sqn": 3.07,
+     "trades": 34
+    },
+    "gap": {
+     "sqn": 1.24,
+     "trades": 14
+    },
+    "re-gap": {
+     "sqn": 3.69,
+     "trades": 3
+    },
+    "failed poke (B)": {
+     "sqn": 1.13,
+     "trades": 7
+    },
+    "vb": {
+     "sqn": 1.38,
+     "trades": 9
+    },
+    "flip": {
+     "sqn": 1.24,
+     "trades": 6
+    },
+    "re-vb": {
+     "sqn": null,
+     "trades": 1
+    },
+    "option · Tulip v3.2": {
+     "sqn": 1.91,
+     "trades": 7
+    },
+    "option · Playbook home run": {
+     "sqn": 2.92,
+     "trades": 10
+    },
+    "option · box scalp": {
+     "sqn": 2.24,
+     "trades": 24
+    },
+    "option · sniper": {
+     "sqn": 2.24,
+     "trades": 4
+    },
+    "option · calls checkpoint": {
+     "sqn": 1.98,
+     "trades": 4
+    },
+    "option · turn entry": {
+     "sqn": 0.95,
+     "trades": 4
+    }
+   }
+  },
+  "forward": {
+   "v92": {
+    "sqn": null,
+    "trades": 1
+   },
+   "v93_vix_bounce": {
+    "sqn": -0.12,
+    "trades": 3
+   },
+   "combo": {
+    "sqn": -0.67,
+    "trades": 3
+   },
+   "v95_1ct": {
+    "sqn": 0.56,
+    "trades": 4
+   },
+   "v95_sized": {
+    "sqn": 0.56,
+    "trades": 4
+   },
+   "options_sized": {
+    "sqn": null,
+    "trades": 0
+   },
+   "card_plus_options_sized": {
+    "sqn": 0.56,
+    "trades": 4
    }
   }
  },

@@ -217,6 +217,7 @@
     if (!HT && X.log && X.log.htf_next && X.log.htf_next.through === lastH) HT = X.log.htf_next;
     var vbSmall = vbDay && HT && HT.daily === -1 && HT.weekly === -1;
     if (hasBars) { try { R = V92.runDay(D, opt); } catch (e) { R = null; vm.err = String(e); } }
+    vm.blocked = (R && R.skipped) || [];
     var lastBar = D.st.length - 1, close = hasBars ? D.st[lastBar][0] : null;
     var vbTxt = vbDay ? "calls after 7:30 (red yesterday · VIX " + p2(X.vix) + ")" : "off";
     var fpTxt = (sideDay === "C" ? "calls if QQQ pokes below " + p2(c.PDL) : "puts if QQQ pokes above " + p2(c.PDH)) + " and fails (1×)";
@@ -406,6 +407,14 @@
     var mins = Math.max(0, vm.atM - k.mf);
     return h + '</div><div class="ctx">Time limit ' + clock(k.timeOut) + " · min " + mins + (k.qchk ? " · " + esc(k.qchk.shape) : "") + " · no more " + (k.sg > 0 ? "calls" : "puts") + " if QQQ " + (k.sg > 0 ? "< " : "> ") + q2(k.fake) + "</div>";
   }
+  // "⛔ No trade · IV rule — IV 58% (limit 35%)": the latest signal the contract rules blocked, plus how many today
+  function blockedTxt(B) {
+    var k = B[B.length - 1], KN = { trap: "trap", gap: "gap-and-go", vb: "VIX bounce", fw: "fade the week", fp: "failed poke", flip: "flip" };
+    var what = clock(k.m) + " " + (KN[k.kind] || (String(k.kind).indexOf("re-") === 0 ? "re-entry" : k.kind)) + " " + (k.side === "C" ? "call" : "put");
+    var t = k.why === "iv" ? "IV rule — IV " + Math.round(k.iv * 100) + "% (limit " + Math.round(k.ivmax * 100) + "%)" :
+      k.why === "price" ? "Price rule — near-money contracts $" + q2(k.mid) + " (limit $" + q2(k.lo) + "–" + q2(k.hi) + ")" : "no option quotes";
+    return "⛔ No trade · " + t + " · " + what + (B.length > 1 ? " · " + B.length + " signals blocked today" : "");
+  }
   function render(el, vm) { el.innerHTML = build(vm); }
   function build(vm) {
     var pill = { buy: ["BUY", "buy"], sell: ["SELL NOW", "sell"], "in": ["IN TRADE", "in"], done: ["DONE", ""], recap: ["RECAP", ""], reentry: ["RE-ENTRY WATCH", ""],
@@ -419,6 +428,7 @@
     if (vm.map) h += '<div class="sub">Yesterday ' + vm.map.yday + " · last week " + vm.map.week + " · value area " + p2(vm.map.va.yval) + "–" + p2(vm.map.va.yvah) + (vm.vix != null ? " · VIX yesterday " + p2(vm.vix) : "") + "</div>";
     if (vm.lines.length) h += '<div class="lines">' + vm.lines.map(function (l) { return "<b>" + esc(l[0]) + "</b><span>" + esc(l[1]) + "</span>"; }).join("") + "</div>";
     if (vm.watch && vm.stage !== "recap") h += '<div class="watch">' + esc(vm.watch) + "</div>";
+    if (vm.blocked && vm.blocked.length) h += '<div class="warn">' + esc(blockedTxt(vm.blocked)) + "</div>";
     vm.tickets.slice().sort(function (a, b) { return b.mf - a.mf; }).forEach(function (k) { h += ticketHtml(k, vm); });
     if (vm.reentry) h += '<div class="watch">' + esc(vm.reentry) + "</div>";
     if (vm.closed.length) h += '<div class="closed">Today: ' + vm.closed.map(function (b) { return (b.ct > 1 ? b.ct + "× " : "") + b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +

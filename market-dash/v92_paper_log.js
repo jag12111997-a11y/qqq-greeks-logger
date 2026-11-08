@@ -208,6 +208,21 @@ const rows = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).
     opt_addons_usd: d.shadow_options && d.shadow_options.addons_usd != null ? d.shadow_options.addons_usd : null, opt_addons_n: d.shadow_options ? d.shadow_options.trades.length : 0,
     opt_contracts: d.shadow_options ? d.shadow_options.trades.reduce((s, t) => s + (t.contracts || 1), 0) : 0 }; });
 const sum = a => Math.round(a.reduce((s, r) => s + r.usd, 0) * 100) / 100;
+// SQN = √(trades, capped at 100) × average trade ÷ standard deviation (per trade, dollars) — one score per version and per setup
+const DOCS = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).sort().map(f => readJSON(path.join(OUT, f))).filter(Boolean);
+const sqnOf = u => { const n = u.length; if (n < 2) return null; const m = u.reduce((a, b) => a + b, 0) / n, sd = Math.sqrt(u.reduce((a, b) => a + (b - m) * (b - m), 0) / (n - 1));
+  return sd ? Math.round(Math.sqrt(Math.min(n, 100)) * m / sd * 100) / 100 : null; };
+const tradesOf = (pick, fwOnly) => DOCS.filter(d => !fwOnly || d.forward).flatMap(d => { const x = pick(d); return (x && x.trades) || []; });
+const usdOf = (t, sized) => (t.usd || 0) * (sized ? (t.contracts || 1) : 1);
+const sqnBlock = fwOnly => {
+  const v95 = tradesOf(d => d.shadow_v95, fwOnly), opt = tradesOf(d => d.shadow_options, fwOnly), out = {
+    v92: tradesOf(d => d, fwOnly).map(t => t.usd || 0), v93_vix_bounce: tradesOf(d => d.shadow_v93_vix_bounce, fwOnly).map(t => t.usd || 0),
+    combo: tradesOf(d => d.shadow_combo, fwOnly).map(t => t.usd || 0), v95_1ct: v95.map(t => t.usd || 0), v95_sized: v95.map(t => usdOf(t, true)),
+    options_sized: opt.map(t => usdOf(t, true)), card_plus_options_sized: v95.map(t => usdOf(t, true)).concat(opt.map(t => usdOf(t, true))) };
+  const r = {}; Object.keys(out).forEach(k => r[k] = { sqn: sqnOf(out[k]), trades: out[k].length });
+  if (!fwOnly) { const by = {}; v95.forEach(t => (by[t.setup] = by[t.setup] || []).push(usdOf(t, false))); opt.forEach(t => (by["option · " + t.from] = by["option · " + t.from] || []).push(usdOf(t, false)));
+    r.by_setup_1ct = {}; Object.keys(by).forEach(k => r.by_setup_1ct[k] = { sqn: sqnOf(by[k]), trades: by[k].length }); }
+  return r; };
 const fw = rows.filter(r => r.forward), last10 = rows.slice(-10);
 let eq = 0, pk = 0, dd = 0; last10.forEach(r => { eq += r.usd; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
 fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
@@ -232,6 +247,7 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
       all: { addons_usd: sum(rows.map(r => ({ usd: r.opt_addons_usd || 0 }))), addons: rows.reduce((s, r) => s + r.opt_addons_n, 0), contracts: rows.reduce((s, r) => s + r.opt_contracts, 0), total_usd: sum(rows.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) }))) },
       forward: { addons_usd: sum(fw.map(r => ({ usd: r.opt_addons_usd || 0 }))), addons: fw.reduce((s, r) => s + r.opt_addons_n, 0), total_usd: sum(fw.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) }))), mornings: fw.length },
       last10: { addons_usd: sum(last10.map(r => ({ usd: r.opt_addons_usd || 0 }))), total_usd: sum(last10.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) }))) } } },
+  sqn: { note: "SQN = √(trades, capped at 100) × average trade ÷ standard deviation, per trade in dollars. Under 1.6 poor · 2–2.5 average · 2.5–3 good · 3–5 excellent.", all: sqnBlock(false), forward: sqnBlock(true) },
   htf_next: htfBefore("9999-12-31"),   // daily/weekly trend for the NEXT morning (the card reads this)
   days: rows }, null, 1));
 written.push(path.relative(ROOT, path.join(OUT, "index.json")));

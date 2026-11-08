@@ -6873,13 +6873,17 @@
       +'<span style="flex:1;font-size:12px;color:'+(bold?'var(--fg,#e8dede)':'var(--dim)')+'">'+label+'</span><span style="font-size:15px;color:'+(bold?'inherit':col)+'">'+v+'</span>'
       +'<span style="width:92px;text-align:right;font-size:11px;color:var(--dim)">'+dist+'</span></div>';
   }
+  // "(so far)" only while that session is today in Pacific time and the market hasn't closed (not on weekends/evenings)
+  function _gsSessionOpen(d){var pt=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+    var ds=pt.getFullYear()+'-'+String(pt.getMonth()+1).padStart(2,'0')+'-'+String(pt.getDate()).padStart(2,'0');
+    return ds===String(d||'').slice(0,10)&&pt.getHours()*60+pt.getMinutes()<13*60+5;}
   function _gsDayPanel(r0,tf,isToday){
     var r=_sdAgg(r0,GS_TF_MIN[tf]||1),UP='#00e676',DN='#ff453a',FL='#ffd600',E9='#29b6f6',E20='#ff9f0a';
     var mv=_sdNum(r.mv)?r.mv:NaN,pct=_sdNum(mv)&&r.o?mv/r.o*100:NaN,col=mv>0?UP:mv<0?DN:'var(--dim)';
     var sign=function(x){return (x>=0?'+':'−')+Math.abs(x).toFixed(2);};
     var hasSnap=_sdNum(r.hv)||_sdNum(r.flip);
     // headline
-    var hl=_gsNice(r.date)+(isToday?' (so far)':'')+': QQQ '+(mv>=0?'rose':'fell')+' <span style="color:'+col+'">$'+Math.abs(mv).toFixed(2)+'</span>';
+    var hl=_gsNice(r.date)+(isToday&&_gsSessionOpen(r.date)?' (so far)':'')+': QQQ '+(mv>=0?'rose':'fell')+' <span style="color:'+col+'">$'+Math.abs(mv).toFixed(2)+'</span>';
     if(_sdNum(r.flip))hl+=', '+(isToday?'is':'closed')+' <span style="color:'+FL+'">'+(r.c>=r.flip?'above':'below')+' the gamma flip ('+(r.flipFb?'≈':'')+r.flip.toFixed(0)+')</span>';
     if(_sdNum(r.hv)&&_sdNum(r.iv))hl+=', and the market moved '+(r.hv>r.iv?'more':'less')+' than options priced in';
     hl+='.';
