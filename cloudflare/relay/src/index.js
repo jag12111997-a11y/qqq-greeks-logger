@@ -53,6 +53,17 @@ export default {
     if (url.pathname === "/" || url.pathname === "/v1/") {
       return reply(req, 200, "gex relay", { "Content-Type": "text/plain" });
     }
+    // Live pull (read-only): the dashboard asks for fresh bars / option quotes / VIX; the Durable Object
+    // fetches them from Alpaca (keys stay here) or Cboe at most once per 15 s and everyone shares that copy.
+    const lv = url.pathname.match(/^\/live\/(bars|options|vix)$/);
+    if (lv) {
+      if (req.method !== "GET") return reply(req, 405, "method not allowed");
+      const day = url.searchParams.get("day");
+      if (day && !/^\d{4}-\d\d-\d\d$/.test(day)) return reply(req, 400, "bad day");
+      const relay = env.RELAY.get(env.RELAY.idFromName("qqq"));
+      const out = await relay.live(lv[1], day || null);
+      return reply(req, out.ok ? 200 : 502, out.body, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+    }
     const m = url.pathname.match(/^\/v1\/([a-z_]+\.json)$/);
     if (!m || !FILES.has(m[1])) return reply(req, 404, "not found", { "Content-Type": "text/plain" });
     const name = m[1];
@@ -81,7 +92,92 @@ export default {
   },
 };
 
+// ---- live pull helpers ----
+const DATA = "https://data.alpaca.markets";
+const PULL_TTL_MS = 15000;
+function nyParts(ms) {
+  const f = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const p = {}; for (const x of f.formatToParts(new Date(ms))) p[x.type] = x.value;
+  return p;
+}
+function openUtcMs(day) {          // 9:30 New York on `day` as epoch ms (works in EST and EDT)
+  for (const h of [13, 14]) {        // 9:30 ET is 13:30Z in summer, 14:30Z in winter
+    const ms = Date.parse(day + "T" + h + ":30:00Z"), p = nyParts(ms);
+    if (p.hour === "09" && p.minute === "30") return ms;
+  }
+  return Date.parse(day + "T14:30:00Z");
+}
+function iso(ms) { return new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z"); }
+
 export class Relay extends DurableObject {
+  constructor(ctx, env) { super(ctx, env); this.env = env; this.mem = {}; }
+
+  async live(kind, day) {
+    const key = kind + "|" + (day || ""), hit = this.mem[key];
+    if (hit && Date.now() - hit.at < PULL_TTL_MS) return hit.out;
+    if (hit && hit.pending) return hit.pending;
+    const pending = this.fetchLive(kind, day).then((out) => {
+      this.mem[key] = { at: Date.now(), out }; return out;
+    }).catch((e) => {
+      const out = { ok: false, body: JSON.stringify({ error: String(e && e.message || e).slice(0, 200) }) };
+      this.mem[key] = { at: Date.now() - PULL_TTL_MS + 3000, out }; return out;   // retry a failure after 3 s
+    });
+    this.mem[key] = { ...(hit || { at: 0 }), pending };
+    return pending;
+  }
+
+  async alpaca(path, params) {
+    const u = new URL(DATA + path);
+    for (const [k, v] of Object.entries(params)) if (v != null) u.searchParams.set(k, String(v));
+    const r = await fetch(u, { headers: { "APCA-API-KEY-ID": this.env.ALPACA_API_KEY || "", "APCA-API-SECRET-KEY": this.env.ALPACA_API_SECRET || "" } });
+    if (!r.ok) throw new Error("alpaca " + r.status);
+    return r.json();
+  }
+
+  async bars(day) {
+    const now = Date.now(), today = day || (() => { const p = nyParts(now); return p.year + "-" + p.month + "-" + p.day; })();
+    const open = openUtcMs(today), end = Math.min(now, open + 389 * 60000 + 59000);
+    if (end <= open) return { session_date: today, candles: [] };
+    const out = []; let token = null;
+    for (let i = 0; i < 4; i++) {
+      const j = await this.alpaca("/v2/stocks/QQQ/bars", { timeframe: "1Min", start: iso(open), end: iso(end), feed: "iex", limit: 10000, adjustment: "raw", sort: "asc", page_token: token });
+      for (const b of j.bars || []) out.push({ time: Math.floor(Date.parse(b.t) / 1000), open: b.o, high: b.h, low: b.l, close: b.c, volume: b.v });
+      token = j.next_page_token; if (!token) break;
+    }
+    return { session_date: today, candles: out };
+  }
+
+  async fetchLive(kind, day) {
+    const gen = iso(Date.now());
+    if (kind === "vix") {
+      const r = await fetch("https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json", { headers: { "User-Agent": "qqq-greeks-logger" } });
+      if (!r.ok) throw new Error("cboe " + r.status);
+      const d = ((await r.json()) || {}).data || {};
+      if (!(d.current_price > 0)) throw new Error("no vix");
+      return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "VIX", last: d.current_price, pct: d.price_change_percent, src_time: d.last_trade_time, source: "Cboe delayed quote (~15 min)" }) };
+    }
+    if (kind === "bars") {
+      const b = await this.bars(day);
+      return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "iex", ...b }) };
+    }
+    // options: today's 0DTE calls + puts within ±15 of spot (spot = last 1-min close)
+    const bo = await this.live("bars", day);              // reuse the shared bars copy (no extra Alpaca call)
+    if (!bo.ok) throw new Error("bars unavailable");
+    const b = JSON.parse(bo.body), today = b.session_date, last = b.candles.length ? b.candles[b.candles.length - 1].close : null;
+    if (!last) return { ok: true, body: JSON.stringify({ generated_utc: gen, session_date: today, contracts: [] }) };
+    const t = Math.floor(Date.now() / 1000), contracts = [];
+    for (const type of ["call", "put"]) {
+      const j = await this.alpaca("/v1beta1/options/snapshots/QQQ", { feed: "indicative", type, expiration_date: today, strike_price_gte: Math.floor(last - 15), strike_price_lte: Math.ceil(last + 15), limit: 1000 });
+      for (const [sym, s] of Object.entries(j.snapshots || {})) {
+        const q = s.latestQuote || {}, strike = Number(sym.slice(-8)) / 1000;
+        if (!(q.bp > 0) || !(q.ap > 0)) continue;
+        contracts.push({ side: type === "call" ? "C" : "P", strike, bid: q.bp, ask: q.ap, iv: s.impliedVolatility == null ? null : s.impliedVolatility,
+          delta: s.greeks && s.greeks.delta != null ? s.greeks.delta : null, t, quote_t: q.t || null });
+      }
+    }
+    return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "indicative", session_date: today, spot: last, contracts }) };
+  }
+
   async read(name) {
     return (await this.ctx.storage.get(name)) || null;
   }

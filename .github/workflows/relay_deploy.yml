@@ -35,5 +35,9 @@ jobs:
           wranglerVersion: '4.148.0'
           secrets: |
             RELAY_KEY
+            ALPACA_API_KEY
+            ALPACA_API_SECRET
         env:
           RELAY_KEY: ${{ secrets.RELAY_KEY }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}

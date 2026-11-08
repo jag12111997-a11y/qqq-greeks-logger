@@ -3615,6 +3615,26 @@
   }
 
   var LIVE_CANDLE_HISTORY = null;
+  // Live pull (test switch ?live=pull): today's 1-min bars straight from Alpaca through the relay (~15 s old),
+  // merged into the candle history so the QQQ chart doesn't wait for GitHub Pages. Off -> nothing changes.
+  var PULL_ON = /[?&]live=pull\b/.test(location.search);
+  function pullTodayBars() {
+    if (!PULL_ON || !LIVE_CANDLE_HISTORY || !Array.isArray(LIVE_CANDLE_HISTORY.minute)) return Promise.resolve(false);
+    return fetch("https://gex-relay.jag12111997.workers.dev/live/bars", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      .then(function (j) {
+        if (!j || !Array.isArray(j.candles) || !j.candles.length) return false;
+        var m = LIVE_CANDLE_HISTORY.minute, at = {}, changed = false;
+        m.forEach(function (c, i) { at[c.time] = i; });
+        j.candles.forEach(function (c) {
+          var i = at[c.time];
+          if (i == null) { m.push(c); changed = true; }
+          else if (m[i].close !== c.close || m[i].high !== c.high || m[i].low !== c.low || m[i].volume !== c.volume) { m[i] = c; changed = true; }
+        });
+        if (changed) m.sort(function (a, b) { return a.time - b.time; });
+        return changed;
+      });
+  }
   function loadCandleHistory() {
     return fetch(LIVE_DATA_BASE + 'qqq_candle_history.json?t=' + Date.now())
       .then(function(response) { return response.ok ? response.json() : null; })
@@ -7909,7 +7929,8 @@
     // is there or it's over 2 hours old, VIX keeps the snapshot.
     function fetchVix() {
       function get(u, o) { return fetch(u, o).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
-      return get("https://gex-relay.jag12111997.workers.dev/v1/vix_live.json", { cache: "no-cache" })
+      return get("https://gex-relay.jag12111997.workers.dev/live/vix", { cache: "no-store" })
+        .then(function (j) { return j && j.last ? j : get("https://gex-relay.jag12111997.workers.dev/v1/vix_live.json", { cache: "no-cache" }); })
         .then(function (j) { return j && j.last ? j : get("vix_live.json?t=" + Date.now(), { cache: "no-store" }); })
         .then(function (j) {
           if (!j || typeof j.last !== "number" || j.last <= 0) return;
@@ -7993,7 +8014,9 @@
       // Skip refreshes while hidden, but always load once.
       if (document.hidden && cycle.ran) return;
       cycle.ran = true;
-      loadCandleHistory();
+      Promise.resolve(loadCandleHistory()).catch(function () {}).then(pullTodayBars).then(function (ch) {
+        if (ch && idx === FULL.length - 1 && TAB !== "journal" && TAB !== "perf" && TAB !== "strategy" && TAB !== "replay" && !(TAB === "nasdaq" && QQQ_TV && QQQ_VIEW_STATE.userAdjusted)) renderAllWidgets();
+      });
       loadLiveGex();
       loadGexIntraday();
       loadGexFrames();

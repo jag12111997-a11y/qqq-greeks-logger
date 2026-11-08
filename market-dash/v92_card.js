@@ -7,6 +7,10 @@
 (function (root) {
   "use strict";
   var RELAY = "https://gex-relay.jag12111997.workers.dev/v1/";
+  // Live pull (test switch ?live=pull): fresh bars + option quotes straight from Alpaca through the relay (~15 s old),
+  // instead of waiting for the logger's GitHub Pages copy. Anything missing falls back to the old path.
+  var PULLB = "https://gex-relay.jag12111997.workers.dev/live/";
+  var PULL = (function () { try { return /[?&]live=pull\b/.test(root.location && root.location.search || ""); } catch (e) { return false; } })();
   var HOLIDAYS = { "2026-11-26": "Thanksgiving: market closed", "2026-12-25": "Christmas: market closed" };
   var EARLY = { "2026-11-27": "Early close 10:00 AM PT", "2026-12-24": "Early close 10:00 AM PT" };
   var RELEASES = { "2026-07-02": "Jobs report", "2026-07-14": "CPI", "2026-07-30": "PCE", "2026-08-07": "Jobs report", "2026-08-12": "CPI",
@@ -108,7 +112,7 @@
     var now = Date.now(), nd = nyDate(now), day = nd.date, t0 = V92MAP.open930(day), atM = Math.floor((now / 1000 - t0) / 60);
     return Promise.all([history(o.base, day), live(o.base, "auction_live.json"), live(o.base, "gex_intraday.json"), live(o.base, "options_latest.json"),
       live(o.base, "gex_live.json"), atM >= 0 ? csvQuotes(o.base, day) : Promise.resolve([]), getJSON(o.base + "v92_log/index.json?t=" + Math.floor(Date.now() / 600000)),
-      live(o.base, "gex_frames.json")]).then(function (r) {
+      live(o.base, "gex_frames.json"), PULL && atM >= -5 ? getJSON(PULLB + "bars", 8000) : null, PULL && atM >= 0 ? getJSON(PULLB + "options", 8000) : null]).then(function (r) {
       var au = r[1], gi = r[2], ol = r[3], gl = r[4], gf = r[7];
       var Q = {};
       try { Q = JSON.parse(localStorage.getItem(QKEY(day)) || "{}"); } catch (e) { Q = {}; }
@@ -119,11 +123,16 @@
         var t = Date.parse(String(c.stamp).replace(" ", "T") + "Z") / 1000;
         addQ({ t: t, side: c.kind === "call" ? "C" : "P", strike: Number(c.strike), bid: Number(c.bid), ask: Number(c.ask), iv: c.iv == null ? null : Number(c.iv) / 100, delta: c.delta == null ? null : Number(c.delta) });
       });
+      var pb = r[8], po = r[9], pullBars = !!(pb && pb.session_date === day && pb.candles && pb.candles.length), pullOpt = !!(po && po.session_date === day && po.contracts && po.contracts.length);
+      if (pullOpt) po.contracts.forEach(function (c) { addQ({ t: c.t, side: c.side, strike: Number(c.strike), bid: Number(c.bid), ask: Number(c.ask), iv: c.iv == null ? null : Number(c.iv), delta: c.delta == null ? null : Number(c.delta) }); });
       try { localStorage.setItem(QKEY(day), JSON.stringify(Q)); } catch (e) {}
       var fresh = au && au.session_date === day;
       var stale = atM >= 0 && atM < 150 ? Math.max(ageMin(au && au.generated_utc), ageMin(ol && ol.generated_utc)) : null;
-      return { day: day, wd: nd.wd, atM: atM, hist: r[0], replay: false, stale: stale, gexRegime: gl && gl.regime, log: r[6],
-        today: { date: day, complete: false, candles: fresh ? (au.candles || []) : [], points: (gi && gi.session_date === day) ? (gi.points || []) : [], frames: (gf && gf.session_date === day) ? (gf.frames || []) : [],
+      if (pullBars && pullOpt && atM >= 0 && atM < 150) stale = Math.max(ageMin(pb.generated_utc), ageMin(po.generated_utc));
+      var lastT = function (L) { return L && L.length ? L[L.length - 1].time : -1; };
+      var candles = pullBars && (!fresh || lastT(pb.candles) >= lastT(au.candles)) ? pb.candles : (fresh ? (au.candles || []) : []);
+      return { day: day, wd: nd.wd, atM: atM, hist: r[0], replay: false, stale: stale, gexRegime: gl && gl.regime, log: r[6], pull: PULL ? (pullBars && pullOpt ? "on" : "fallback") : null,
+        today: { date: day, complete: false, candles: candles, points: (gi && gi.session_date === day) ? (gi.points || []) : [], frames: (gf && gf.session_date === day) ? (gf.frames || []) : [],
           quotes: Object.keys(Q).map(function (k) { return Q[k]; }) } };
     }).then(function (X) { return withVix(o.base, X); });
   }
@@ -312,6 +321,7 @@
     else if (vm.reentry) { vm.stage = "reentry"; vm.head = "Stopped. Watching for the re-entry."; }
     else { vm.stage = "watch"; vm.head = zf !== null ? name(sideDay).toUpperCase() + " trap zone: wait for the turn." : (gArmed ? "Gap-and-go " + name(R.gapArmed.C ? "C" : "P") + " armed: wait for the turn." : "Watching. No setup yet."); }
     if (X.stale != null && X.stale > 2) { vm.stale = Math.round(X.stale); }
+    vm.pull = X.pull || null;
     vm.gexRegime = X.gexRegime;
     return vm;
   }
@@ -440,7 +450,7 @@
         (vm.meter.v95Fwd && vm.meter.v95Fwd.mornings ? ' · since Nov 2: ' + usd(vm.meter.v95Fwd.usd_sized) : '') + '</div>' : '') +
       (vm.meter.optAll ? '<div class="closed">Options (paper log): ' + vm.meter.optAll.addons + ' extra trades ' + usd(vm.meter.optAll.addons_usd) + ' · card + options ' + usd(vm.meter.optAll.total_usd) +
         (vm.meter.optFwd && vm.meter.optFwd.addons ? ' · forward: ' + usd(vm.meter.optFwd.addons_usd) : '') + '</div>' : '');
-    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "")) + ' · signals only, you place every trade · ' + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
+    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "")) + ' · signals only, you place every trade · ' + (vm.pull === "on" ? "live pull (~15 s) · " : vm.pull === "fallback" ? "live pull unavailable, using the logger copy · " : "") + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
     return h;
   }
   // For the dashboard: one refresh -> {html, vm}
