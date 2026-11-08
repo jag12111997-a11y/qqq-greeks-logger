@@ -93,7 +93,10 @@ CI_PUSH = os.environ.get("GITHUB_ACTIONS") == "true"
 RELAY_URL = os.environ.get("RELAY_URL", "https://gex-relay.jag12111997.workers.dev").rstrip("/")
 RELAY_KEY = os.environ.get("RELAY_KEY", "")
 RELAY_FILES = ("gex_live.json", "gex_intraday.json", "gex_frames.json",
-               "auction_live.json", "options_latest.json")
+               "auction_live.json", "options_latest.json", "vix_live.json")
+# VIX for the dashboard: browsers can't read Cboe directly (CORS), so the logger saves it.
+VIX_LIVE_PATH = os.path.join("market-dash", "vix_live.json")
+VIX_URL = "https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json"
 _RELAY_SENT = {}
 LIVE_PUSH_SECONDS = int(os.environ.get("LIVE_PUSH_SECONDS", "300"))
 CANDLE_REFRESH_SECONDS = int(os.environ.get("CANDLE_REFRESH_SECONDS", "300"))
@@ -1091,6 +1094,24 @@ def push_relay():
             print(f"Relay {name} skipped: {exc.__class__.__name__}", flush=True)
 
 
+def write_vix_live():
+    """Save Cboe's delayed VIX quote for the dashboard. Never raises; a miss keeps the last file."""
+    try:
+        r = requests.get(VIX_URL, timeout=8, headers={"User-Agent": "qqq-greeks-logger"})
+        d = (r.json() or {}).get("data") or {}
+        last = d.get("current_price")
+        if not isinstance(last, (int, float)) or last <= 0:
+            return
+        out = {"generated_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+               "symbol": "VIX", "last": last, "pct": d.get("price_change_percent"),
+               "src_time": d.get("last_trade_time"), "source": "Cboe delayed quote (~15 min)"}
+        os.makedirs(os.path.dirname(VIX_LIVE_PATH), exist_ok=True)
+        with open(VIX_LIVE_PATH, "w") as f:
+            json.dump(out, f, indent=1)
+    except Exception as e:
+        print(f"VIX skipped (continuing): {e.__class__.__name__}", flush=True)
+
+
 def snapshot_and_write(spot):
     """Capture calls + puts (separate CSVs) and write the live GEX json."""
     got = {}
@@ -1152,6 +1173,7 @@ def snapshot_and_write(spot):
     except Exception as e:
         print(f"1DTE skipped (continuing): {e}")
 
+    write_vix_live()   # isolated; never stops logging
     push_relay()
 
 

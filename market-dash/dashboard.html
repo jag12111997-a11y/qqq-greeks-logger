@@ -7902,24 +7902,26 @@
         .catch(function () { /* offline / blocked / bad symbol -> keep snapshot */ });
     }
 
-    // VIX isn't on Finnhub's free tier — pull it live (~15-min delayed) from
-    // Cboe's public delayed-quote CDN so the VIX tile AND everything keyed off it
-    // (range used, expected move, touch odds) refresh every minute. Fails silently
-    // if the CDN blocks cross-origin, in which case VIX just keeps the snapshot.
+    // VIX isn't on Finnhub's free tier and browsers can't read Cboe directly (CORS),
+    // so the logger saves Cboe's delayed quote as vix_live.json every run: read the
+    // relay copy first (seconds old), then the Pages copy. The VIX tile AND everything
+    // keyed off it (range used, expected move, touch odds) refresh from it. If neither
+    // is there or it's over 2 hours old, VIX keeps the snapshot.
     function fetchVix() {
-      return fetch("https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json?t=" + Date.now(),
-                   { cache: "no-store" })
-        .then(function (r) { return r.ok ? r.json() : null; })
+      function get(u, o) { return fetch(u, o).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+      return get("https://gex-relay.jag12111997.workers.dev/v1/vix_live.json", { cache: "no-cache" })
+        .then(function (j) { return j && j.last ? j : get("vix_live.json?t=" + Date.now(), { cache: "no-store" }); })
         .then(function (j) {
-          var d = j && j.data;
-          if (!d || typeof d.current_price !== "number" || d.current_price <= 0) return;
+          if (!j || typeof j.last !== "number" || j.last <= 0) return;
+          var gen = Date.parse(String(j.generated_utc || ""));
+          if (!isFinite(gen) || Date.now() - gen > 2 * 3600000) return;   // stale -> keep the snapshot
           LIVE["VIX"] = {
-            last: d.current_price,
-            pct: (typeof d.price_change_percent === "number") ? d.price_change_percent : null,
-            srcTime: Date.parse(String(d.last_trade_time || "")) || Date.now()
+            last: j.last,
+            pct: (typeof j.pct === "number") ? j.pct : null,
+            srcTime: Date.parse(String(j.src_time || "")) || gen
           };
         })
-        .catch(function () { /* CORS / offline -> keep the snapshot VIX */ });
+        .catch(function () { /* offline -> keep the snapshot VIX */ });
     }
 
     function fetchAll() {

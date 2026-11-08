@@ -10,7 +10,8 @@ from scripts.sync_local_history import merge_csv
 
 LIVE_PATHS = ['market-dash/gex_live.json', 'market-dash/gex_intraday.json',
               'market-dash/auction_live.json', 'market-dash/qqq_candle_history.json',
-              'market-dash/options_latest.json', 'market-dash/gex_frames.json']
+              'market-dash/options_latest.json', 'market-dash/gex_frames.json',
+              'market-dash/vix_live.json']
 
 
 def timestamp(raw):

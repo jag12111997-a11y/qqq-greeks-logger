@@ -10,7 +10,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 const FILES = new Set(["gex_live.json", "gex_intraday.json", "gex_frames.json",
-                       "auction_live.json", "options_latest.json"]);
+                       "auction_live.json", "options_latest.json", "vix_live.json"]);
 const MINUTE_LISTS = { "gex_intraday.json": ["points", "time"], "gex_frames.json": ["frames", "t"] };
 const ORIGINS = new Set(["https://jag12111997-a11y.github.io"]);
 const MAX_BYTES = 1_500_000;
