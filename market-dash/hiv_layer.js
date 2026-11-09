@@ -25,8 +25,8 @@
   function median(a) { if (!a.length) return null; var s = a.slice().sort(function (x, y) { return x - y; }), n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; }
   function q(D, side, K, m) { var b = (D.opt[side] || {})[K]; return b ? b[m] || null : null; }
   // the ~$1.00 contracts' IV right now: median IV of all 0DTE contracts priced 0.80-1.25 in the latest minute at or before m (both sides)
-  function ivAt(D, m) {
-    for (var k = m; k >= Math.max(0, m - 5); k--) {
+  function ivAt(D, m, look) {
+    for (var k = m; k >= Math.max(0, m - (look || 5)); k--) {
       var v = [];
       ["C", "P"].forEach(function (s) { var O = D.opt[s] || {}; Object.keys(O).forEach(function (K) { var x = O[K][k]; if (x && x[1] != null && x[0] >= LO && x[0] <= HI) v.push(x[1]); }); });
       if (v.length) return median(v);
@@ -84,7 +84,7 @@
   }
   function run(o) {
     var D = o.D, vw = o.vw || [], atM = o.atM == null ? END : o.atM, st = D.st || [], out = { trades: [], ivNow: null, on: false };
-    out.ivNow = ivAt(D, Math.max(0, Math.min(atM, st.length - 1)));
+    out.ivNow = ivAt(D, Math.max(0, Math.min(atM, END)), 15);   // newest quotes can be a minute ahead of the bars; Pages history lags ~9 min
     out.on = out.ivNow != null && out.ivNow > IVMAX;
     var n = nightNumbers(o.night, o.openPx);
     out.night = n; out.lean = lean(n); out.odds = crashOdds(o.night, o.day, n && n.gapPct);
