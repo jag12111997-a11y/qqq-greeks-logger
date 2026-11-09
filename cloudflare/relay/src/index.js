@@ -55,7 +55,7 @@ export default {
     }
     // Live pull (read-only): the dashboard asks for fresh bars / option quotes / VIX; the Durable Object
     // fetches them from Alpaca (keys stay here) or Cboe at most once per 15 s and everyone shares that copy.
-    const lv = url.pathname.match(/^\/live\/(bars|options|vix)$/);
+    const lv = url.pathname.match(/^\/live\/(bars|options|vix|night)$/);
     if (lv) {
       if (req.method !== "GET") return reply(req, 405, "method not allowed");
       const day = url.searchParams.get("day");
@@ -147,8 +147,45 @@ export class Relay extends DurableObject {
     return { session_date: today, candles: out };
   }
 
+  // Night before the open (high-IV layer + info lines): yesterday's close, after-hours / premarket prices (IEX has no
+  // 8 PM - 4 AM session, so the 4:00 AM ET price carries the overnight move), and daily stats for the crash-odds line.
+  async night(day) {
+    const now = Date.now(), today = day || (() => { const p = nyParts(now); return p.year + "-" + p.month + "-" + p.day; })();
+    const open = openUtcMs(today);
+    const dj = await this.alpaca("/v2/stocks/QQQ/bars", { timeframe: "1Day", start: iso(open - 130 * 86400000), end: iso(open - 3600000), feed: "sip", limit: 200, adjustment: "split", sort: "asc" });
+    const daily = (dj.bars || []).filter((b) => b.t.slice(0, 10) < today);
+    if (daily.length < 22) throw new Error("not enough daily bars");
+    const prev = daily[daily.length - 1], prevDay = prev.t.slice(0, 10), prevClose = prev.c;
+    const closeMs = openUtcMs(prevDay) + 390 * 60000;                     // 4:00 PM ET yesterday
+    const end = Math.min(now - 60000, open);
+    const bars = []; let token = null;
+    for (let i = 0; i < 4 && end > closeMs; i++) {
+      const j = await this.alpaca("/v2/stocks/QQQ/bars", { timeframe: "1Min", start: iso(closeMs), end: iso(end), feed: "iex", limit: 10000, adjustment: "raw", sort: "asc", page_token: token });
+      for (const b of j.bars || []) bars.push({ t: Date.parse(b.t), o: b.o, c: b.c });
+      token = j.next_page_token; if (!token) break;
+    }
+    const at = (ms) => { let v = null; for (const b of bars) { if (b.t < ms) v = b.c; else break; } return v; };   // last close before ms
+    const ah = bars.filter((b) => b.t < closeMs + 4 * 3600000), pre = bars.filter((b) => b.t >= open - 330 * 60000);
+    const lc = daily.slice(-21).map((b) => b.c), rets = [];
+    for (let i = 1; i < lc.length; i++) rets.push(Math.log(lc[i] / lc[i - 1]));
+    const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+    const sd = Math.sqrt(rets.reduce((a, b) => a + (b - mean) * (b - mean), 0) / (rets.length - 1));
+    const ma50 = daily.slice(-50).reduce((a, b) => a + b.c, 0) / Math.min(50, daily.length);
+    return { session_date: today, prev_day: prevDay, prev_close: prevClose,
+      after_hours_last: ah.length ? ah[ah.length - 1].c : null,
+      pre_first: pre.length ? pre[0].o : null,                      // ~4:00 AM ET = yesterday's close + after-hours + overnight
+      pre_0900: at(open - 30 * 60000),                              // 9:00 AM ET = 6:00 AM PT
+      pre_last: pre.length ? pre[pre.length - 1].c : null, pre_last_t: pre.length ? iso(pre[pre.length - 1].t) : null,
+      night_bars: bars.length, rv20: Math.round(sd * Math.sqrt(252) * 1000) / 10, ma50: Math.round(ma50 * 100) / 100,
+      below50: prevClose < ma50 };
+  }
+
   async fetchLive(kind, day) {
     const gen = iso(Date.now());
+    if (kind === "night") {
+      const n = await this.night(day);
+      return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "iex (night) + sip (daily)", ...n }) };
+    }
     if (kind === "vix") {
       const r = await fetch("https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json", { headers: { "User-Agent": "qqq-greeks-logger" } });
       if (!r.ok) throw new Error("cboe " + r.status);
