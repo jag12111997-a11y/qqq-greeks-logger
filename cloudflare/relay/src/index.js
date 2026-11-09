@@ -147,8 +147,8 @@ export class Relay extends DurableObject {
     return { session_date: today, candles: out };
   }
 
-  // Night before the open (high-IV layer + info lines): yesterday's close, after-hours / premarket prices (IEX has no
-  // 8 PM - 4 AM session, so the 4:00 AM ET price carries the overnight move), and daily stats for the crash-odds line.
+  // Night before the open (high-IV layer + info lines): yesterday's close, after-hours / premarket prices (SIP, 15+ min old;
+  // no 8 PM - 4 AM session, so the 4:00 AM ET price carries the overnight move), and daily stats for the crash-odds line.
   async night(day) {
     const now = Date.now(), today = day || (() => { const p = nyParts(now); return p.year + "-" + p.month + "-" + p.day; })();
     const open = openUtcMs(today);
@@ -157,10 +157,10 @@ export class Relay extends DurableObject {
     if (daily.length < 22) throw new Error("not enough daily bars");
     const prev = daily[daily.length - 1], prevDay = prev.t.slice(0, 10), prevClose = prev.c;
     const closeMs = openUtcMs(prevDay) + 390 * 60000;                     // 4:00 PM ET yesterday
-    const end = Math.min(now - 60000, open);
+    const end = Math.min(now - 16 * 60000, open - 60000);   // SIP is free once 15+ min old; we only need prices up to 9:00 ET
     const bars = []; let token = null;
     for (let i = 0; i < 4 && end > closeMs; i++) {
-      const j = await this.alpaca("/v2/stocks/QQQ/bars", { timeframe: "1Min", start: iso(closeMs), end: iso(end), feed: "iex", limit: 10000, adjustment: "raw", sort: "asc", page_token: token });
+      const j = await this.alpaca("/v2/stocks/QQQ/bars", { timeframe: "1Min", start: iso(closeMs), end: iso(end), feed: "sip", limit: 10000, adjustment: "raw", sort: "asc", page_token: token });
       for (const b of j.bars || []) bars.push({ t: Date.parse(b.t), o: b.o, c: b.c });
       token = j.next_page_token; if (!token) break;
     }
@@ -184,7 +184,7 @@ export class Relay extends DurableObject {
     const gen = iso(Date.now());
     if (kind === "night") {
       const n = await this.night(day);
-      return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "iex (night) + sip (daily)", ...n }) };
+      return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "sip (15+ min old)", ...n }) };
     }
     if (kind === "vix") {
       const r = await fetch("https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json", { headers: { "User-Agent": "qqq-greeks-logger" } });
