@@ -96,7 +96,7 @@
   // ---------------- data for one refresh ----------------
   function loadReplay(o) {
     var day = o.day, p = o.at.split(":").map(Number), atM = (p[0] < 6 ? p[0] + 12 : p[0]) * 60 + p[1] - 390;
-    return Promise.all([history(o.base, day), getJSON(o.base + "history/" + day + ".json"), csvQuotes(o.base, day), getJSON(o.base + "v92_log/index.json?t=" + Math.floor(Date.now() / 600000))]).then(function (r) {
+    return Promise.all([history(o.base, day), getJSON(o.base + "history/" + day + ".json"), csvQuotes(o.base, day), getJSON(o.base + "v92_log/index.json?t=" + Math.floor(Date.now() / 600000)), nightFor(o.base, day, false, 999)]).then(function (r) {
       var t0 = V92MAP.open930(day), cut = t0 + atM * 60;
       var today = r[1] || { candles: [], points: [] };
       return { day: day, atM: atM, hist: r[0], replay: true, stale: null, log: r[3],
@@ -104,15 +104,22 @@
           candles: (today.candles || []).filter(function (c) { return c.time + 60 <= cut; }),
           points: (today.points || []).filter(function (x) { return x.time <= cut + 10; }),
           frames: (today.frames || []).filter(function (x) { return x.t <= cut + 10; }),
-          quotes: (r[2] || []).filter(function (q) { return q.t <= cut + 10; }) } };
+          quotes: (r[2] || []).filter(function (q) { return q.t <= cut + 10; }) }, night: r[4] };
     }).then(function (X) { return withVix(o.base, X); });
   }
   var QKEY = function (d) { return "v92q-" + d; };
+  // high-IV layer: the night before the open (relay /live/night; final once the 6:00 PT price is in)
+  var NIGHT = {};
+  function nightFor(base, day, live, atM) {
+    if (NIGHT[day] && (!live || atM >= 2)) return Promise.resolve(NIGHT[day]);
+    var src = live ? getJSON(PULLB + "night", 8000) : getJSON(base + "night/" + day + ".json").then(function (j) { return j || getJSON(PULLB + "night?day=" + day, 8000); });
+    return src.then(function (j) { if (j && j.session_date === day && j.prev_close > 0) NIGHT[day] = j; return NIGHT[day] || null; }).catch(function () { return NIGHT[day] || null; });
+  }
   function loadLive(o) {
     var now = Date.now(), nd = nyDate(now), day = nd.date, t0 = V92MAP.open930(day), atM = Math.floor((now / 1000 - t0) / 60);
     return Promise.all([history(o.base, day), live(o.base, "auction_live.json"), live(o.base, "gex_intraday.json"), live(o.base, "options_latest.json"),
       live(o.base, "gex_live.json"), atM >= 0 ? csvQuotes(o.base, day) : Promise.resolve([]), getJSON(o.base + "v92_log/index.json?t=" + Math.floor(Date.now() / 600000)),
-      live(o.base, "gex_frames.json"), PULL && atM >= -5 ? getJSON(PULLB + "bars", 8000) : null, PULL && atM >= 0 ? getJSON(PULLB + "options", 8000) : null]).then(function (r) {
+      live(o.base, "gex_frames.json"), PULL && atM >= -5 ? getJSON(PULLB + "bars", 8000) : null, PULL && atM >= 0 ? getJSON(PULLB + "options", 8000) : null, atM >= -150 ? nightFor(o.base, day, true, atM) : null]).then(function (r) {
       var au = r[1], gi = r[2], ol = r[3], gl = r[4], gf = r[7];
       var Q = {};
       try { Q = JSON.parse(localStorage.getItem(QKEY(day)) || "{}"); } catch (e) { Q = {}; }
@@ -131,7 +138,7 @@
       if (pullBars && pullOpt && atM >= 0 && atM < 150) stale = Math.max(ageMin(pb.generated_utc), ageMin(po.generated_utc));
       var lastT = function (L) { return L && L.length ? L[L.length - 1].time : -1; };
       var candles = pullBars && (!fresh || lastT(pb.candles) >= lastT(au.candles)) ? pb.candles : (fresh ? (au.candles || []) : []);
-      return { day: day, wd: nd.wd, atM: atM, hist: r[0], replay: false, stale: stale, gexRegime: gl && gl.regime, log: r[6], pull: PULL ? (pullBars && pullOpt ? "on" : "fallback") : null,
+      return { day: day, wd: nd.wd, atM: atM, hist: r[0], replay: false, stale: stale, night: r[10] || null, gexRegime: gl && gl.regime, log: r[6], pull: PULL ? (pullBars && pullOpt ? "on" : "fallback") : null,
         today: { date: day, complete: false, candles: candles, points: (gi && gi.session_date === day) ? (gi.points || []) : [], frames: (gf && gf.session_date === day) ? (gf.frames || []) : [],
           quotes: Object.keys(Q).map(function (k) { return Q[k]; }) } };
     }).then(function (X) { return withVix(o.base, X); });
@@ -168,6 +175,7 @@
   }
 
   // ---- options (paper-tested add-ons; see v95_options.js) ----
+  function HIVL() { return root.HIVLAYER || (typeof HIVLAYER !== "undefined" ? HIVLAYER : null); }
   function OPTM() { return root.V95OPT || (typeof V95OPT !== "undefined" ? V95OPT : null); }
   var OPTXT = "6 extra setups ride the card's side · against it → flipped · before its first buy, box only · none after the card's 2nd stop · box + Playbook 2× (flips 1×), the rest 1×";
   var OPWHY = { target: "target hit", stop: "stop hit", "broke box": "QQQ closed outside the box", trail: "trail hit", "trail (3 ticks)": "trail: 3 EMA8 ticks against you",
@@ -195,7 +203,8 @@
       var past = X.log.days.filter(function (r) { return r.date < day; }).slice(-10), eq = 0, pk = 0, dd = 0;
       past.forEach(function (r) { eq += r.usd; pk = Math.max(pk, eq); dd = Math.max(dd, pk - eq); });
       var combo = past.reduce(function (a, r) { return a + (r.combo_usd == null ? r.usd : r.combo_usd); }, 0);
-      if (past.length) vm.meter = { n: past.length, usd: eq, dip: dd, fwd: X.log.totals && X.log.totals.forward, combo: combo,
+      var hivAll = X.log.totals && X.log.totals.shadow_hiv && X.log.totals.shadow_hiv.all;
+      if (past.length) vm.meter = { hiv: hivAll || null, n: past.length, usd: eq, dip: dd, fwd: X.log.totals && X.log.totals.forward, combo: combo,
         comboAll: X.log.totals && X.log.totals.shadow_combo && X.log.totals.shadow_combo.all, comboFwd: X.log.totals && X.log.totals.shadow_combo && X.log.totals.shadow_combo.forward,
         v95: past.reduce(function (a, r) { return a + (r.v95_sized_usd == null ? 0 : r.v95_sized_usd); }, 0), v95All: X.log.totals && X.log.totals.shadow_v95 && X.log.totals.shadow_v95.all,
         v95Fwd: X.log.totals && X.log.totals.shadow_v95 && X.log.totals.shadow_v95.forward,
@@ -239,6 +248,7 @@
       vm.lines.push(["Options", OPTXT]);
       vm.lines.push(["Gap-and-go", name(weekSide) + " if the open is " + (weekSide === "C" ? "≥ " + p2(c.PDC + 2.5) : "≤ " + p2(c.PDC - 2.5)) + " and the nearest GEX level is 1.00+ away"]);
       vm.lines.push(["Fade the week", name(fwSide) + " after 7:30 only if QQQ is inside yesterday's value area (" + p2(D.va.yval) + "–" + p2(D.va.yvah) + ") at 7:00"]);
+      if (HIVL() && X.night) vm.hiv = { pre: true, night: HIVL().nightNumbers(X.night, null), odds: HIVL().crashOdds(X.night, day, null) };
       vm.stage = atM < 0 ? "prep" : "waiting"; vm.head = atM < 0 ? (name(sideDay) === name(weekSide) ? "A " + name(sideDay) + " morning." : "Map for today.") : "Waiting for the first bars…";
       return vm;
     }
@@ -311,6 +321,22 @@
       } catch (e) { vm.optErr = String(e); }
     }
     vm.optPnl = vm.optClosed.reduce(function (s, b) { return s + b.res; }, 0);
+    // ---- HIGH-IV LAYER (Nov 9): its own section; only acts when the ~$1.00 contracts' IV is over 35% at that minute ----
+    if (HIVL() && UV && R) {
+      try {
+        var botT = R.trades.filter(function (t) { return t.why !== "none"; }).map(function (t) { return { side: t.side, mf: t.mf, out: t.why === "open" || t.why === "sell_now" ? null : t.out }; });
+        (vm.tickets || []).concat(vm.optClosed || []).forEach(function (k) { if (k.opt) botT.push({ side: k.S === "CALL" ? "C" : "P", mf: k.mf, out: k.out == null ? null : k.out }); });
+        var LY = HIVL().run({ D: D, vw: UV.vw, night: X.night, openPx: X.today.candles && X.today.candles[0] ? X.today.candles[0].open : null, botTrades: botT, atM: atM, day: day });
+        vm.hiv = LY; vm.hivTk = []; vm.hivClosed = [];
+        LY.trades.forEach(function (t) {
+          var k = { rule: t.rule === "pop" ? "pop put" : "bell put", K: t.K, mf: t.mf, ask: t.paid, iv: t.iv, why: t.why, usd: t.usd, bid: t.bid, stop: t.stop, be: t.be, sellBy: t.sellBy, out: t.out, sold: t.sold };
+          if (t.state === "open") { k.state = atM - t.mf <= 3 ? "buy" : "in"; vm.hivTk.push(k); }
+          else if (atM - t.out <= 3) { k.state = "sell"; vm.hivTk.push(k); } else vm.hivClosed.push(k);
+        });
+      } catch (e) { vm.hivErr = String(e); }
+    } else if (HIVL() && X.night) {
+      vm.hiv = { pre: true, night: HIVL().nightNumbers(X.night, null), odds: HIVL().crashOdds(X.night, day, null) };
+    }
     // ---- headline (changes only on real events) ----
     var sell = vm.tickets.filter(function (k) { return k.state === "sell"; }), buy = vm.tickets.filter(function (k) { return k.state === "buy"; }), inT = vm.tickets.filter(function (k) { return k.state === "in"; });
     if (sell.length) { vm.stage = "sell"; vm.head = "SELL NOW · " + sell[0].S + " " + sell[0].K; }
@@ -369,6 +395,7 @@
     ".v92 .rung b{font-weight:700}.v92 .rung i{font-style:normal;color:#6a5a8a}.v92 .rung em{font-style:normal;color:#8a7fb8;font-size:11px}" +
     ".v92 .rung.here{color:#ffd166;font-weight:700}.v92 .rung.here i{color:#ffd166}.v92 .rung.stop span{color:#ff6b6b}.v92 .rung.dim{color:#8a7fb8}.v92 .rung.hit span{color:#2fbf6d}" +
     ".v92 .closed{font-size:12px;color:#a99fd6}.v92 .up{color:#2fbf6d}.v92 .dn{color:#ff6b6b}" +
+    ".v92 .hiv{border:1px solid #6a3a2a;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:5px;background:#120a0c}.v92 .hiv .hl{color:#e0a030;font-size:11px;letter-spacing:2px}.v92 .hiv .on{color:#ff9f43;font-weight:700}" +
     ".v92 .oxt{font-size:12px;color:#d7cfff;line-height:1.4}.v92.stale{filter:grayscale(1);opacity:.7}.v92 .warn{color:#e0ab45;font-size:12px}.v92 .qchk{color:#a99fd6}";
   function ivTag(iv) { if (iv == null) return null; return "IV " + iv.toFixed(2) + (iv < 0.20 ? " (low)" : iv > 0.23 ? " (high)" : " (mid)"); }
   function optTicketHtml(k, vm) {
@@ -425,12 +452,43 @@
       k.why === "price" ? "Price rule — near-money contracts $" + q2(k.mid) + " (limit $" + q2(k.lo) + "–" + q2(k.hi) + ")" : "no option quotes";
     return "⛔ No trade · " + t + " · " + what + (B.length > 1 ? " · " + B.length + " signals blocked today" : "");
   }
+  // ---- HIGH-IV LAYER section (separate from the bot; signals only) ----
+  function hivHtml(vm) {
+    var L = vm.hiv; if (!L && !vm.hivErr) return "";
+    var pc = function (v) { return v == null ? "—" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%"; };
+    var h = '<div class="hiv"><div class="top"><span class="hl">HIGH-IV LAYER</span><span class="sp"></span>';
+    if (L && !L.pre) h += '<span class="' + (L.on ? "on" : "ctx") + '">IV now ' + (L.ivNow == null ? "?" : Math.round(L.ivNow * 100) + "%") + (L.on ? " · ON" : " · off (needs over 35%)") + "</span>";
+    h += "</div>";
+    var n = L && L.night;
+    if (n) h += '<div class="row"><span>Night: after-hours + overnight ' + pc(n.nightPct) + "</span>" + (n.lastPct != null ? "<span>6:00→open " + pc(n.lastPct) + "</span>" : "") + (n.gapPct != null ? "<span>gap " + pc(n.gapPct) + "</span>" : "") + "</div>";
+    else if (L && !L.pre) h += '<div class="ctx">Night data not in yet (bell put + lean need it)</div>';
+    if (L && L.lean) h += '<div class="row"><span>Night lean: ' + esc(L.lean.txt) + '</span></div><div class="ctx">bot trades with the lean: 74% wins · against: 60% (still profitable) · info only, never a filter</div>';
+    if (L && L.odds) h += '<div class="row"><span>Crash odds today ≈ ' + L.odds.pct + "% · " + esc(L.odds.why) + "</span><span>normal day 3.4%</span></div>";
+    if (L && !L.pre) {
+      var b = L.bell || {};
+      h += '<div class="row"><span>Bell put: ' + esc(b.state === "fired" ? "FIRED at 6:31" : b.txt || (b.state === "nodata" ? "no night data" : b.state)) + "</span></div>";
+      var pp = L.pop || {}, ptxt = pp.state === "fired" ? "fired" : pp.state === "watching" ? (L.on ? "watching · triggers above QQQ " + q2(pp.level) + " ($1.50 over VWAP and +$1.50 in 15 min)" : "waiting for IV over 35%") : pp.state === "done" ? "window over (6:50–8:29)" : (pp.txt || pp.state);
+      h += '<div class="row"><span>Pop put: ' + esc(ptxt) + "</span></div>";
+    } else if (L && L.pre) h += '<div class="ctx">Bell put is decided at 6:31 (needs QQQ down 0.15%+ from 6:00 to the open after a red night, and IV over 35%).</div>';
+    (vm.hivTk || []).forEach(function (k) {
+      var head = k.state === "buy" ? "BUY 1× " + k.K + " PUT @ " + q2(k.ask) : k.state === "sell" ? "SELL NOW · PUT " + k.K : "PUT " + k.K + " · " + usd(k.usd);
+      h += '<div class="tk ' + k.state + '"><div class="big">' + esc(head) + '</div><div class="ctx">HIGH-IV LAYER · ' + esc(k.rule) + (k.iv != null ? " · IV " + Math.round(k.iv * 100) + "%" : "") + "</div>";
+      if (k.state === "sell") h += '<div class="row"><span>' + esc(k.why) + "</span><span>" + q2(k.sold) + " → " + usd(k.usd) + "</span><span>sell by hand at the bid</span></div>";
+      else h += '<div class="row"><span>stop ' + q2(k.stop) + (k.be ? " (moved to breakeven)" : " (−25%)") + "</span><span>" + (k.rule === "pop put" ? "sell by " + clock(k.sellBy) : "hold to 8:56 · stop to breakeven at " + q2(k.ask * 1.5)) + "</span>" + (k.bid != null ? "<span>bid " + q2(k.bid) + "</span>" : "") + "</div>";
+      h += "</div>";
+    });
+    if (vm.hivClosed && vm.hivClosed.length) h += '<div class="closed">Layer today: ' + vm.hivClosed.map(function (k) { return k.rule + " " + k.K + " " + clock(k.mf) + "–" + clock(k.out) + " " + esc(k.why) + ' <span class="' + (k.usd >= 0 ? "up" : "dn") + '">' + usd(k.usd) + "</span>"; }).join(" · ") + "</div>";
+    if (vm.hivErr) h += '<div class="warn">High-IV layer error: ' + esc(vm.hivErr) + "</div>";
+    if (vm.meter && vm.meter.hiv) h += '<div class="closed">Layer (paper log): ' + vm.meter.hiv.trades + " trades " + usd(vm.meter.hiv.usd) + " · card + options + layer " + usd(vm.meter.hiv.total_usd) + "</div>";
+    return h + '<div class="ctx">Separate from the bot · 1 contract · signals only, you place every trade</div></div>';
+  }
   function render(el, vm) { el.innerHTML = build(vm); }
   function build(vm) {
     var pill = { buy: ["BUY", "buy"], sell: ["SELL NOW", "sell"], "in": ["IN TRADE", "in"], done: ["DONE", ""], recap: ["RECAP", ""], reentry: ["RE-ENTRY WATCH", ""],
       watch: ["WATCH", ""], prep: ["PREP", ""], waiting: ["OPEN", ""], offday: ["SIT OUT", ""], loading: ["…", ""] }[vm.stage] || ["", ""];
     var h = '<style>' + CSS + '</style><div class="v92' + (vm.stale ? " stale" : "") + '">' +
       '<div class="top"><span class="lab">3V3 v9.5 · GAME PLAN</span><span class="sp"></span>' + (vm.release ? '<span class="pill">' + esc(vm.release) + "</span>" : "") +
+      ((vm.hivTk || []).some(function (k) { return k.state === "buy"; }) ? '<span class="pill buy">HIGH-IV LAYER: BUY</span>' : (vm.hivTk || []).some(function (k) { return k.state === "sell"; }) ? '<span class="pill sell">HIGH-IV LAYER: SELL</span>' : "") +
       '<span class="pill ' + pill[1] + '">' + pill[0] + "</span></div>" +
       '<div class="head">' + esc(vm.head) + "</div>";
     if (vm.stale) h += '<div class="warn">Data is ' + vm.stale + " min old: don't act until it refreshes.</div>";
@@ -446,11 +504,12 @@
     if (vm.optClosed && vm.optClosed.length) h += '<div class="closed">Options today: ' + vm.optClosed.map(function (b) { return (b.ct > 1 ? b.ct + "× " : "") + b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +
       " · total " + usd(vm.optPnl) + "</div>";
     if (vm.optErr) h += '<div class="warn">Options error: ' + esc(vm.optErr) + "</div>";
+    try { h += hivHtml(vm); } catch (e) { h += '<div class="warn">High-IV layer display error</div>'; }
     if (vm.meter) h += (vm.meter.v95All ? '<div class="closed">Last ' + vm.meter.n + ' mornings (v9.5, paper log): <span class="' + (vm.meter.v95 >= 0 ? "up" : "dn") + '">' + usd(vm.meter.v95) + '</span> · all ' + usd(vm.meter.v95All.usd_sized) + ' (1 contract ' + usd(vm.meter.v95All.usd_1ct) + ')' +
         (vm.meter.v95Fwd && vm.meter.v95Fwd.mornings ? ' · since Nov 2: ' + usd(vm.meter.v95Fwd.usd_sized) : '') + '</div>' : '') +
       (vm.meter.optAll ? '<div class="closed">Options (paper log): ' + vm.meter.optAll.addons + ' extra trades ' + usd(vm.meter.optAll.addons_usd) + ' · card + options ' + usd(vm.meter.optAll.total_usd) +
         (vm.meter.optFwd && vm.meter.optFwd.addons ? ' · forward: ' + usd(vm.meter.optFwd.addons_usd) : '') + '</div>' : '');
-    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "")) + ' · signals only, you place every trade · ' + (vm.pull === "on" ? "live pull (~15 s) · " : vm.pull === "fallback" ? "live pull unavailable, using the logger copy · " : "") + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
+    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "") + (HIVL() ? " · + high-IV layer" : "")) + ' · signals only, you place every trade · ' + (vm.pull === "on" ? "live pull (~15 s) · " : vm.pull === "fallback" ? "live pull unavailable, using the logger copy · " : "") + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
     return h;
   }
   // For the dashboard: one refresh -> {html, vm}

@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-08T10:41:48.381Z",
+ "updated_utc": "2026-11-09T10:20:53.175Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -90,6 +90,19 @@
     "addons_usd": 493.6,
     "total_usd": 1709.8
    }
+  },
+  "shadow_hiv": {
+   "note": "high-IV layer (on the card since Nov 9, its own section): pop put + bell put, only when option IV is over 35% at that minute. Scored on its own; total = card sized + options + layer. Keep only while it helps.",
+   "all": {
+    "usd": 1688.3,
+    "trades": 11,
+    "total_usd": 17656.8
+   },
+   "forward": {
+    "from": "2026-11-09",
+    "usd": 0,
+    "trades": 0
+   }
   }
  },
  "sqn": {
@@ -122,6 +135,10 @@
    "card_plus_options_sized": {
     "sqn": 4.67,
     "trades": 140
+   },
+   "hiv_layer": {
+    "sqn": 1.16,
+    "trades": 11
    },
    "by_setup_1ct": {
     "fw": {
@@ -210,6 +227,10 @@
    "card_plus_options_sized": {
     "sqn": 0.56,
     "trades": 4
+   },
+   "hiv_layer": {
+    "sqn": 1.06,
+    "trades": 4
    }
   }
  },
@@ -239,7 +260,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-07-31",
@@ -261,7 +284,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-03",
@@ -283,7 +308,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-04",
@@ -305,7 +332,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-05",
@@ -327,7 +356,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-06",
@@ -349,7 +380,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-07",
@@ -371,7 +404,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-10",
@@ -393,7 +428,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-11",
@@ -415,7 +452,9 @@
    "v95_sized_usd": -87.2,
    "opt_addons_usd": 82.8,
    "opt_addons_n": 2,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-12",
@@ -437,7 +476,9 @@
    "v95_sized_usd": -24.1,
    "opt_addons_usd": 75.6,
    "opt_addons_n": 3,
-   "opt_contracts": 4
+   "opt_contracts": 4,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-13",
@@ -459,7 +500,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-14",
@@ -481,7 +524,9 @@
    "v95_sized_usd": 368.1,
    "opt_addons_usd": 61.8,
    "opt_addons_n": 2,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-17",
@@ -503,7 +548,9 @@
    "v95_sized_usd": 439,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-18",
@@ -525,7 +572,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-19",
@@ -547,7 +596,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-20",
@@ -569,7 +620,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-21",
@@ -591,7 +644,9 @@
    "v95_sized_usd": 441.5,
    "opt_addons_usd": 602.4,
    "opt_addons_n": 5,
-   "opt_contracts": 6
+   "opt_contracts": 6,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-24",
@@ -613,7 +668,9 @@
    "v95_sized_usd": 570.7,
    "opt_addons_usd": 465.6,
    "opt_addons_n": 2,
-   "opt_contracts": 4
+   "opt_contracts": 4,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-25",
@@ -635,7 +692,9 @@
    "v95_sized_usd": 164.7,
    "opt_addons_usd": -33.2,
    "opt_addons_n": 2,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-26",
@@ -657,7 +716,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-27",
@@ -679,7 +740,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-28",
@@ -701,7 +764,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-08-31",
@@ -723,7 +788,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": -3.2,
    "opt_addons_n": 1,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-01",
@@ -745,7 +812,9 @@
    "v95_sized_usd": 677.6,
    "opt_addons_usd": 323.8,
    "opt_addons_n": 2,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-02",
@@ -767,7 +836,9 @@
    "v95_sized_usd": -64.9,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-03",
@@ -789,7 +860,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-04",
@@ -811,7 +884,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-08",
@@ -833,7 +908,9 @@
    "v95_sized_usd": 128.7,
    "opt_addons_usd": 121.4,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-09",
@@ -855,7 +932,9 @@
    "v95_sized_usd": 528.3,
    "opt_addons_usd": 136.8,
    "opt_addons_n": 2,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-10",
@@ -877,7 +956,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 54.8,
    "opt_addons_n": 1,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-11",
@@ -899,7 +980,9 @@
    "v95_sized_usd": -56.6,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-14",
@@ -921,7 +1004,9 @@
    "v95_sized_usd": 1969.2,
    "opt_addons_usd": 862.2,
    "opt_addons_n": 2,
-   "opt_contracts": 3
+   "opt_contracts": 3,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-15",
@@ -943,7 +1028,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-16",
@@ -965,7 +1052,9 @@
    "v95_sized_usd": 146.1,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-17",
@@ -987,7 +1076,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-18",
@@ -1009,7 +1100,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-21",
@@ -1031,7 +1124,9 @@
    "v95_sized_usd": 604.2,
    "opt_addons_usd": 45.4,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-22",
@@ -1053,7 +1148,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 109.6,
    "opt_addons_n": 2,
-   "opt_contracts": 4
+   "opt_contracts": 4,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-23",
@@ -1075,7 +1172,9 @@
    "v95_sized_usd": 278.1,
    "opt_addons_usd": 81.2,
    "opt_addons_n": 2,
-   "opt_contracts": 3
+   "opt_contracts": 3,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-24",
@@ -1097,7 +1196,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 54.8,
    "opt_addons_n": 1,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-25",
@@ -1119,7 +1220,9 @@
    "v95_sized_usd": 231.4,
    "opt_addons_usd": -56.4,
    "opt_addons_n": 3,
-   "opt_contracts": 4
+   "opt_contracts": 4,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-28",
@@ -1141,7 +1244,9 @@
    "v95_sized_usd": 607.2,
    "opt_addons_usd": -61.6,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-29",
@@ -1163,7 +1268,9 @@
    "v95_sized_usd": -19.6,
    "opt_addons_usd": -0.6,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-09-30",
@@ -1185,7 +1292,9 @@
    "v95_sized_usd": 82.2,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-01",
@@ -1207,7 +1316,9 @@
    "v95_sized_usd": 212.2,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-02",
@@ -1229,7 +1340,9 @@
    "v95_sized_usd": -28.1,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-05",
@@ -1251,7 +1364,9 @@
    "v95_sized_usd": -73.6,
    "opt_addons_usd": -23.6,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-06",
@@ -1273,7 +1388,9 @@
    "v95_sized_usd": 100.2,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-07",
@@ -1295,7 +1412,9 @@
    "v95_sized_usd": 117.6,
    "opt_addons_usd": 133.4,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-08",
@@ -1317,7 +1436,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": -51.2,
    "opt_addons_n": 1,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-09",
@@ -1339,7 +1460,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-12",
@@ -1361,7 +1484,9 @@
    "v95_sized_usd": 86.1,
    "opt_addons_usd": 87.2,
    "opt_addons_n": 2,
-   "opt_contracts": 3
+   "opt_contracts": 3,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-13",
@@ -1383,7 +1508,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 52.4,
    "opt_addons_n": 3,
-   "opt_contracts": 6
+   "opt_contracts": 6,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-14",
@@ -1405,7 +1532,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 109.6,
    "opt_addons_n": 2,
-   "opt_contracts": 4
+   "opt_contracts": 4,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-15",
@@ -1427,7 +1556,9 @@
    "v95_sized_usd": 174.7,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": -33.6,
+   "hiv_n": 1
   },
   {
    "date": "2026-10-16",
@@ -1449,7 +1580,9 @@
    "v95_sized_usd": 851.1,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-19",
@@ -1471,7 +1604,9 @@
    "v95_sized_usd": 428.1,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-20",
@@ -1493,7 +1628,9 @@
    "v95_sized_usd": 1601.1,
    "opt_addons_usd": 292.4,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-21",
@@ -1515,7 +1652,9 @@
    "v95_sized_usd": 348.6,
    "opt_addons_usd": 63.4,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-22",
@@ -1537,7 +1676,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 54.8,
    "opt_addons_n": 1,
-   "opt_contracts": 2
+   "opt_contracts": 2,
+   "hiv_usd": 289.3,
+   "hiv_n": 1
   },
   {
    "date": "2026-10-23",
@@ -1559,7 +1700,9 @@
    "v95_sized_usd": -162.9,
    "opt_addons_usd": -22.6,
    "opt_addons_n": 1,
-   "opt_contracts": 1
+   "opt_contracts": 1,
+   "hiv_usd": -33.6,
+   "hiv_n": 1
   },
   {
    "date": "2026-10-26",
@@ -1581,7 +1724,9 @@
    "v95_sized_usd": 691.1,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": -28.6,
+   "hiv_n": 1
   },
   {
    "date": "2026-10-27",
@@ -1603,7 +1748,9 @@
    "v95_sized_usd": 371.1,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-28",
@@ -1625,7 +1772,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-10-29",
@@ -1647,7 +1796,9 @@
    "v95_sized_usd": -55.3,
    "opt_addons_usd": 493.6,
    "opt_addons_n": 3,
-   "opt_contracts": 4
+   "opt_contracts": 4,
+   "hiv_usd": -43.2,
+   "hiv_n": 2
   },
   {
    "date": "2026-10-30",
@@ -1669,7 +1820,9 @@
    "v95_sized_usd": 115.5,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 21.4,
+   "hiv_n": 1
   },
   {
    "date": "2026-11-02",
@@ -1691,7 +1844,9 @@
    "v95_sized_usd": 114.1,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0
   },
   {
    "date": "2026-11-03",
@@ -1713,7 +1868,9 @@
    "v95_sized_usd": -20.3,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 47.4,
+   "hiv_n": 1
   },
   {
    "date": "2026-11-04",
@@ -1735,7 +1892,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": -54.6,
+   "hiv_n": 1
   },
   {
    "date": "2026-11-05",
@@ -1757,7 +1916,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 1444.4,
+   "hiv_n": 1
   },
   {
    "date": "2026-11-06",
@@ -1779,7 +1940,9 @@
    "v95_sized_usd": 0,
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
-   "opt_contracts": 0
+   "opt_contracts": 0,
+   "hiv_usd": 79.4,
+   "hiv_n": 1
   }
  ]
 }

@@ -74,6 +74,8 @@ jobs:
       - name: v9.2 paper log
         if: always()
         run: |
+          node market-dash/night_fetch.js > /tmp/night_written.txt || true   # high-IV layer: night-before numbers (relay, read-only)
           node market-dash/v92_paper_log.js > /tmp/v92_written.txt || true
+          cat /tmp/night_written.txt >> /tmp/v92_written.txt
           cat /tmp/v92_written.txt
           python -c "from pathlib import Path; from publish_history import publish; p=[l.strip() for l in open('/tmp/v92_written.txt') if l.strip()]; print('published' if p and publish(Path('.').resolve(), p) else 'nothing new')"

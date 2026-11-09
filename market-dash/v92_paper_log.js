@@ -12,6 +12,7 @@ const ROOT = process.cwd(), MD = path.join(ROOT, "market-dash"), OUT = path.join
 global.V92 = require(path.join(MD, "v92_engine.js"));
 global.V92MAP = require(path.join(MD, "v92_map.js"));
 const V95OPT = require(path.join(MD, "v95_options.js"));   // "v9.5 + options" shadow (paper only)
+const HIV = require(path.join(MD, "hiv_layer.js"));         // high-IV layer (added Nov 9): pop put + bell put, scored on its own
 const FORWARD_FROM = "2026-11-02";     // mornings on or after this date were never seen by the research
 const VB = { th: 16.5, vbStart: 60, vbMax: 1, from: "2026-11-02" };   // v9.3 candidate "VIX bounce calls" (shadow only)
 
@@ -67,6 +68,7 @@ function ribbon5(yc, st) {
   }
   return out;
 }
+function ptMinClock(c) { const [h, m] = String(c).split(":").map(Number); return (h < 6 ? h + 12 : h) * 60 + m - 390; }
 function readJSON(p) { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { return null; } }
 function csv(f) {
   if (!fs.existsSync(f)) return null;
@@ -192,6 +194,20 @@ for (const day of want) {
       doc.shadow_options = { rule: "options (live on the card): box · Playbook home run · Tulip v3.2 · turn entry · sniper · calls checkpoint. Card's latest side = direction; agreeing signals as fired; signals against it flipped to the card's side (card's ladder); before the card's first buy only the box; none after the card's 2nd stop; box + Playbook 2 contracts unless flipped.",
         trades: tro, addons_usd: addUsd, addons_usd_1ct: add1, total_usd: Math.round((doc.shadow_v95.usd_sized + addUsd) * 100) / 100 };
     } catch (e) { doc.shadow_options = { status: "off this morning: " + e.message, trades: [], addons_usd: null, total_usd: null }; }
+    // shadow 5: HIGH-IV LAYER (Nov 9) — only acts when the ~$1.00 contracts' IV is over 35% at that minute. Never changes the bot.
+    try {
+      const night = readJSON(path.join(MD, "night", day + ".json"));
+      const bot = r5.map(t => ({ side: t.side, mf: t.mf, out: t.out }));
+      ((doc.shadow_options && doc.shadow_options.trades) || []).forEach(t => bot.push({ side: t.side === "call" ? "C" : "P", mf: ptMinClock(t.signal), out: t.exit ? ptMinClock(t.exit) : null }));
+      const L = HIV.run({ D, vw: UV.vw, night, openPx: H.candles[0] ? H.candles[0].open : null, botTrades: bot, atM: 146, day });
+      const trh = L.trades.map(t => ({ rule: t.rule === "pop" ? "pop put" : "bell put", side: "put", signal: clock(t.sig != null ? t.sig : t.mf - 1), filled: clock(t.mf), strike: t.K,
+        paid: +t.paid.toFixed(2), iv: t.iv == null ? null : +t.iv.toFixed(3), exit: t.out == null ? null : clock(t.out), sold: t.sold == null ? null : +t.sold.toFixed(2), why: t.why || t.state,
+        usd: t.usd == null ? null : Math.round(t.usd * 100) / 100, contracts: 1 }));
+      const n = L.night;
+      doc.shadow_hiv = { rule: "high-IV layer: POP PUT (after 6:50, QQQ $1.50+ over VWAP and +$1.50 in 15 min, IV over 35% at that minute; 25% stop, sell within 40 min) + BELL PUT (6:00->open down 0.15%+ after a red night, IV over 35% at 6:31; 1 contract, 25% stop, breakeven after +50%, hold to 8:56). Skips a pop while the bot holds a call.",
+        night: n ? { night_pct: n.nightPct == null ? null : +n.nightPct.toFixed(2), premarket_pct: n.prePct == null ? null : +n.prePct.toFixed(2), last30_pct: n.lastPct == null ? null : +n.lastPct.toFixed(2), gap_pct: n.gapPct == null ? null : +n.gapPct.toFixed(2) } : null,
+        lean: L.lean ? L.lean.txt : null, odds: L.odds, bell: L.bell.state, trades: trh, usd: Math.round(trh.reduce((a, t) => a + (t.usd || 0), 0) * 100) / 100 };
+    } catch (e) { doc.shadow_hiv = { status: "off this morning: " + e.message, trades: [], usd: null }; }
   }
   const f = path.join(OUT, day + ".json");
   fs.writeFileSync(f, JSON.stringify(doc, null, 1));
@@ -206,7 +222,8 @@ const rows = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).
     htf: d.shadow_v95 && d.shadow_v95.htf ? { daily: d.shadow_v95.htf.daily, weekly: d.shadow_v95.htf.weekly } : null,
     v95_usd: d.shadow_v95 && d.shadow_v95.usd_1ct != null ? d.shadow_v95.usd_1ct : null, v95_sized_usd: d.shadow_v95 && d.shadow_v95.usd_sized != null ? d.shadow_v95.usd_sized : null,
     opt_addons_usd: d.shadow_options && d.shadow_options.addons_usd != null ? d.shadow_options.addons_usd : null, opt_addons_n: d.shadow_options ? d.shadow_options.trades.length : 0,
-    opt_contracts: d.shadow_options ? d.shadow_options.trades.reduce((s, t) => s + (t.contracts || 1), 0) : 0 }; });
+    opt_contracts: d.shadow_options ? d.shadow_options.trades.reduce((s, t) => s + (t.contracts || 1), 0) : 0,
+    hiv_usd: d.shadow_hiv && d.shadow_hiv.usd != null ? d.shadow_hiv.usd : null, hiv_n: d.shadow_hiv ? d.shadow_hiv.trades.length : 0 }; });
 const sum = a => Math.round(a.reduce((s, r) => s + r.usd, 0) * 100) / 100;
 // SQN = √(trades, capped at 100) × average trade ÷ standard deviation (per trade, dollars) — one score per version and per setup
 const DOCS = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).sort().map(f => readJSON(path.join(OUT, f))).filter(Boolean);
@@ -218,7 +235,8 @@ const sqnBlock = fwOnly => {
   const v95 = tradesOf(d => d.shadow_v95, fwOnly), opt = tradesOf(d => d.shadow_options, fwOnly), out = {
     v92: tradesOf(d => d, fwOnly).map(t => t.usd || 0), v93_vix_bounce: tradesOf(d => d.shadow_v93_vix_bounce, fwOnly).map(t => t.usd || 0),
     combo: tradesOf(d => d.shadow_combo, fwOnly).map(t => t.usd || 0), v95_1ct: v95.map(t => t.usd || 0), v95_sized: v95.map(t => usdOf(t, true)),
-    options_sized: opt.map(t => usdOf(t, true)), card_plus_options_sized: v95.map(t => usdOf(t, true)).concat(opt.map(t => usdOf(t, true))) };
+    options_sized: opt.map(t => usdOf(t, true)), card_plus_options_sized: v95.map(t => usdOf(t, true)).concat(opt.map(t => usdOf(t, true))),
+    hiv_layer: tradesOf(d => d.shadow_hiv, fwOnly).map(t => t.usd || 0) };
   const r = {}; Object.keys(out).forEach(k => r[k] = { sqn: sqnOf(out[k]), trades: out[k].length });
   if (!fwOnly) { const by = {}; v95.forEach(t => (by[t.setup] = by[t.setup] || []).push(usdOf(t, false))); opt.forEach(t => (by["option · " + t.from] = by["option · " + t.from] || []).push(usdOf(t, false)));
     r.by_setup_1ct = {}; Object.keys(by).forEach(k => r.by_setup_1ct[k] = { sqn: sqnOf(by[k]), trades: by[k].length }); }
@@ -246,7 +264,10 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
     shadow_options: { note: "options (live on the card since Nov 4): 6 older strategies add trades in the card's direction (against it -> flipped; none after the card's 2nd stop; box + Playbook 2 contracts unless flipped). total = card sized + options. Keep only while it stays positive.",
       all: { addons_usd: sum(rows.map(r => ({ usd: r.opt_addons_usd || 0 }))), addons: rows.reduce((s, r) => s + r.opt_addons_n, 0), contracts: rows.reduce((s, r) => s + r.opt_contracts, 0), total_usd: sum(rows.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) }))) },
       forward: { addons_usd: sum(fw.map(r => ({ usd: r.opt_addons_usd || 0 }))), addons: fw.reduce((s, r) => s + r.opt_addons_n, 0), total_usd: sum(fw.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) }))), mornings: fw.length },
-      last10: { addons_usd: sum(last10.map(r => ({ usd: r.opt_addons_usd || 0 }))), total_usd: sum(last10.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) }))) } } },
+      last10: { addons_usd: sum(last10.map(r => ({ usd: r.opt_addons_usd || 0 }))), total_usd: sum(last10.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) }))) } },
+    shadow_hiv: { note: "high-IV layer (on the card since Nov 9, its own section): pop put + bell put, only when option IV is over 35% at that minute. Scored on its own; total = card sized + options + layer. Keep only while it helps.",
+      all: { usd: sum(rows.map(r => ({ usd: r.hiv_usd || 0 }))), trades: rows.reduce((s, r) => s + r.hiv_n, 0), total_usd: sum(rows.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) + (r.hiv_usd || 0) }))) },
+      forward: { from: "2026-11-09", usd: sum(rows.filter(r => r.date >= "2026-11-09").map(r => ({ usd: r.hiv_usd || 0 }))), trades: rows.filter(r => r.date >= "2026-11-09").reduce((s, r) => s + r.hiv_n, 0) } } },
   sqn: { note: "SQN = √(trades, capped at 100) × average trade ÷ standard deviation, per trade in dollars. Under 1.6 poor · 2–2.5 average · 2.5–3 good · 3–5 excellent.", all: sqnBlock(false), forward: sqnBlock(true) },
   htf_next: htfBefore("9999-12-31"),   // daily/weekly trend for the NEXT morning (the card reads this)
   days: rows }, null, 1));

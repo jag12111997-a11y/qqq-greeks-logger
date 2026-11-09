@@ -37,7 +37,7 @@
  ],
  "usd": 96.7,
  "stops": 0,
- "generated_utc": "2026-11-04T11:55:43.501Z",
+ "generated_utc": "2026-11-09T10:20:52.335Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 17.2,
@@ -190,5 +190,41 @@
   "addons_usd": 0,
   "addons_usd_1ct": 0,
   "total_usd": 115.5
+ },
+ "shadow_hiv": {
+  "rule": "high-IV layer: POP PUT (after 6:50, QQQ $1.50+ over VWAP and +$1.50 in 15 min, IV over 35% at that minute; 25% stop, sell within 40 min) + BELL PUT (6:00->open down 0.15%+ after a red night, IV over 35% at 6:31; 1 contract, 25% stop, breakeven after +50%, hold to 8:56). Skips a pop while the bot holds a call.",
+  "night": {
+   "night_pct": -2.01,
+   "premarket_pct": -0.54,
+   "last30_pct": -0.06,
+   "gap_pct": -2.53
+  },
+  "lean": "calls — red all night (sellers usually tired by the open)",
+  "odds": {
+   "pct": 2,
+   "why": "calm market",
+   "rv": 20.1,
+   "below50": true,
+   "event": null,
+   "base": 3.4
+  },
+  "bell": "no",
+  "trades": [
+   {
+    "rule": "pop put",
+    "side": "put",
+    "signal": "6:59",
+    "filled": "7:00",
+    "strike": 694,
+    "paid": 1.11,
+    "iv": 0.364,
+    "exit": "7:40",
+    "sold": 1.35,
+    "why": "40-min limit",
+    "usd": 21.4,
+    "contracts": 1
+   }
+  ],
+  "usd": 21.4
  }
 }
