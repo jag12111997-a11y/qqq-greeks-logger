@@ -109,6 +109,24 @@ function openUtcMs(day) {          // 9:30 New York on `day` as epoch ms (works 
 }
 function iso(ms) { return new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z"); }
 
+
+// Implied vol the same way the logger does it (qqq_greeks_logger_alpaca.py): Black-Scholes on the mid, r 4.3%, q 0,
+// time to 4:00 PM ET, bisection 1e-4..5. Alpaca's indicative snapshots often come without IV/greeks.
+const BS_R = 0.043;
+function ncdf(x) { const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2), y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x / 2); return x >= 0 ? 0.5 * (1 + y) : 0.5 * (1 - y); }
+function bsPrice(call, S, K, T, s) {
+  const d1 = (Math.log(S / K) + (BS_R + 0.5 * s * s) * T) / (s * Math.sqrt(T)), d2 = d1 - s * Math.sqrt(T), dk = K * Math.exp(-BS_R * T);
+  return call ? S * ncdf(d1) - dk * ncdf(d2) : dk * ncdf(-d2) - S * ncdf(-d1);
+}
+function bsIV(call, price, S, K, T) {
+  const dk = K * Math.exp(-BS_R * T), intr = call ? Math.max(S - dk, 0) : Math.max(dk - S, 0);
+  if (!(price > 0) || !(T > 0) || price <= intr + 1e-6 || price >= (call ? S : dk)) return null;
+  let lo = 1e-4, hi = 5; if (bsPrice(call, S, K, T, hi) < price) return null;
+  for (let i = 0; i < 100 && hi - lo >= 1e-6; i++) { const m = (lo + hi) / 2; if (bsPrice(call, S, K, T, m) < price) lo = m; else hi = m; }
+  return (lo + hi) / 2;
+}
+function bsDelta(call, S, K, T, s) { const d1 = (Math.log(S / K) + (BS_R + 0.5 * s * s) * T) / (s * Math.sqrt(T)); return call ? ncdf(d1) : ncdf(d1) - 1; }
+
 export class Relay extends DurableObject {
   constructor(ctx, env) { super(ctx, env); this.env = env; this.mem = {}; }
 
@@ -208,8 +226,10 @@ export class Relay extends DurableObject {
       for (const [sym, s] of Object.entries(j.snapshots || {})) {
         const q = s.latestQuote || {}, strike = Number(sym.slice(-8)) / 1000;
         if (!(q.bp > 0) || !(q.ap > 0)) continue;
-        contracts.push({ side: type === "call" ? "C" : "P", strike, bid: q.bp, ask: q.ap, iv: s.impliedVolatility == null ? null : s.impliedVolatility,
-          delta: s.greeks && s.greeks.delta != null ? s.greeks.delta : null, t, quote_t: q.t || null });
+        let iv = s.impliedVolatility == null ? null : s.impliedVolatility, delta = s.greeks && s.greeks.delta != null ? s.greeks.delta : null, ivSrc = "alpaca";
+        if (iv == null) { const T = Math.max((openUtcMs(today) + 390 * 60000 - Date.now()) / 1000, 60) / (365 * 24 * 3600); iv = bsIV(type === "call", (q.bp + q.ap) / 2, last, strike, T); ivSrc = "computed"; if (iv != null && delta == null) delta = bsDelta(type === "call", last, strike, T, iv); }
+        contracts.push({ side: type === "call" ? "C" : "P", strike, bid: q.bp, ask: q.ap, iv: iv == null ? null : Math.round(iv * 10000) / 10000,
+          delta: delta == null ? null : Math.round(delta * 10000) / 10000, iv_src: ivSrc, t, quote_t: q.t || null });
       }
     }
     return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "indicative", session_date: today, spot: last, contracts }) };
