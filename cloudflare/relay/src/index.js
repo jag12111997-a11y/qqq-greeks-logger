@@ -152,7 +152,7 @@ export class Relay extends DurableObject {
   async night(day) {
     const now = Date.now(), today = day || (() => { const p = nyParts(now); return p.year + "-" + p.month + "-" + p.day; })();
     const open = openUtcMs(today);
-    const dj = await this.alpaca("/v2/stocks/QQQ/bars", { timeframe: "1Day", start: iso(open - 130 * 86400000), end: iso(open - 3600000), feed: "sip", limit: 200, adjustment: "split", sort: "asc" });
+    const dj = await this.alpaca("/v2/stocks/QQQ/bars", { timeframe: "1Day", start: iso(open - 130 * 86400000), end: iso(Math.min(open - 3600000, now - 16 * 60000)), feed: "sip", limit: 200, adjustment: "split", sort: "asc" });
     const daily = (dj.bars || []).filter((b) => b.t.slice(0, 10) < today);
     if (daily.length < 22) throw new Error("not enough daily bars");
     const prev = daily[daily.length - 1], prevDay = prev.t.slice(0, 10), prevClose = prev.c;
