@@ -195,7 +195,10 @@ export class Relay extends DurableObject {
       pre_0900: at(open - 30 * 60000),                              // 9:00 AM ET = 6:00 AM PT
       pre_last: pre.length ? pre[pre.length - 1].c : null, pre_last_t: pre.length ? iso(pre[pre.length - 1].t) : null,
       night_bars: bars.length, rv20: Math.round(sd * Math.sqrt(252) * 1000) / 10, ma50: Math.round(ma50 * 100) / 100,
-      below50: prevClose < ma50 };
+      below50: prevClose < ma50,
+      // big-fish setup (Nov 10): yesterday's close vs 5 and 20 trading days earlier, %
+      r5: Math.round((prevClose / daily[daily.length - 6].c - 1) * 10000) / 100,
+      r20: Math.round((prevClose / daily[daily.length - 21].c - 1) * 10000) / 100 };
   }
 
   async fetchLive(kind, day) {
