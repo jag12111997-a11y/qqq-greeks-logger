@@ -12,7 +12,8 @@ const ROOT = process.cwd(), MD = path.join(ROOT, "market-dash"), OUT = path.join
 global.V92 = require(path.join(MD, "v92_engine.js"));
 global.V92MAP = require(path.join(MD, "v92_map.js"));
 const V95OPT = require(path.join(MD, "v95_options.js"));   // "v9.5 + options" shadow (paper only)
-const HIV = require(path.join(MD, "hiv_layer.js"));         // high-IV layer (added Nov 9): pop put + bell put, scored on its own
+const HIV = require(path.join(MD, "hiv_layer.js"));
+const BIGFISH = require(path.join(MD, "bigfish_layer.js"));  // big-fish layer (added Nov 10): trend days after a selloff/fear market + 1% gap, scored on its own         // high-IV layer (added Nov 9): pop put + bell put, scored on its own
 const FORWARD_FROM = "2026-11-02";     // mornings on or after this date were never seen by the research
 const VB = { th: 16.5, vbStart: 60, vbMax: 1, from: "2026-11-02" };   // v9.3 candidate "VIX bounce calls" (shadow only)
 
@@ -208,6 +209,18 @@ for (const day of want) {
         night: n ? { night_pct: n.nightPct == null ? null : +n.nightPct.toFixed(2), premarket_pct: n.prePct == null ? null : +n.prePct.toFixed(2), last30_pct: n.lastPct == null ? null : +n.lastPct.toFixed(2), gap_pct: n.gapPct == null ? null : +n.gapPct.toFixed(2) } : null,
         lean: L.lean ? L.lean.txt : null, odds: L.odds, bell: L.bell.state, trades: trh, usd: Math.round(trh.reduce((a, t) => a + (t.usd || 0), 0) * 100) / 100 };
     } catch (e) { doc.shadow_hiv = { status: "off this morning: " + e.message, trades: [], usd: null }; }
+    // shadow 6: BIG-FISH LAYER (Nov 10) — setup = (20-day −8% or 5-day −3% or 20-day vol 26%+) AND gap 1%+; 6:35 agrees with the gap; no IV rule.
+    try {
+      const night = readJSON(path.join(MD, "night", day + ".json"));
+      const bellT = doc.shadow_hiv && doc.shadow_hiv.trades ? doc.shadow_hiv.trades.filter(t => t.rule === "bell put")[0] : null;
+      const B = BIGFISH.run({ D, vw: UV.vw, night, openPx: H.candles[0] ? H.candles[0].open : null, atM: 146, bell: bellT ? { side: "P" } : null });
+      const trb = B.trades.map(t => ({ rule: "big fish", side: t.side === "C" ? "call" : "put", filled: clock(t.mf), strike: t.K, paid: +t.paid.toFixed(2), iv: t.iv == null ? null : +t.iv.toFixed(3),
+        exit: t.out == null ? null : clock(t.out), sold: t.sold == null ? null : +t.sold.toFixed(2), why: t.why || t.state, usd: t.usd == null ? null : Math.round(t.usd * 100) / 100, contracts: 1 }));
+      const S = B.setup;
+      doc.shadow_bigfish = { rule: "big fish: setup = (20-day return −8% or worse OR 5-day −3% or worse OR QQQ 20-day vol 26%+) AND gap 1%+; 6:35 close on the gap's side of the open; buy the ~$1.00 0DTE at 6:36 (no IV rule); out on the first 1-min close back across VWAP from 6:40, −35% stop, else 8:56. Skipped if the bell put holds the same side.",
+        setup: S ? { on: S.on, why: S.why, gap_pct: S.gap == null ? null : +S.gap.toFixed(2), r5: S.r5, r20: S.r20, rv20: S.rv } : null, state: B.state, note: B.txt || null, trades: trb,
+        usd: Math.round(trb.reduce((a, t) => a + (t.usd || 0), 0) * 100) / 100 };
+    } catch (e) { doc.shadow_bigfish = { status: "off this morning: " + e.message, trades: [], usd: null }; }
   }
   const f = path.join(OUT, day + ".json");
   fs.writeFileSync(f, JSON.stringify(doc, null, 1));
@@ -223,7 +236,8 @@ const rows = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).
     v95_usd: d.shadow_v95 && d.shadow_v95.usd_1ct != null ? d.shadow_v95.usd_1ct : null, v95_sized_usd: d.shadow_v95 && d.shadow_v95.usd_sized != null ? d.shadow_v95.usd_sized : null,
     opt_addons_usd: d.shadow_options && d.shadow_options.addons_usd != null ? d.shadow_options.addons_usd : null, opt_addons_n: d.shadow_options ? d.shadow_options.trades.length : 0,
     opt_contracts: d.shadow_options ? d.shadow_options.trades.reduce((s, t) => s + (t.contracts || 1), 0) : 0,
-    hiv_usd: d.shadow_hiv && d.shadow_hiv.usd != null ? d.shadow_hiv.usd : null, hiv_n: d.shadow_hiv ? d.shadow_hiv.trades.length : 0 }; });
+    hiv_usd: d.shadow_hiv && d.shadow_hiv.usd != null ? d.shadow_hiv.usd : null, hiv_n: d.shadow_hiv ? d.shadow_hiv.trades.length : 0,
+    bf_usd: d.shadow_bigfish && d.shadow_bigfish.usd != null ? d.shadow_bigfish.usd : null, bf_n: d.shadow_bigfish ? d.shadow_bigfish.trades.length : 0, bf_setup: !!(d.shadow_bigfish && d.shadow_bigfish.setup && d.shadow_bigfish.setup.on) }; });
 const sum = a => Math.round(a.reduce((s, r) => s + r.usd, 0) * 100) / 100;
 // SQN = √(trades, capped at 100) × average trade ÷ standard deviation (per trade, dollars) — one score per version and per setup
 const DOCS = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).sort().map(f => readJSON(path.join(OUT, f))).filter(Boolean);
@@ -236,7 +250,7 @@ const sqnBlock = fwOnly => {
     v92: tradesOf(d => d, fwOnly).map(t => t.usd || 0), v93_vix_bounce: tradesOf(d => d.shadow_v93_vix_bounce, fwOnly).map(t => t.usd || 0),
     combo: tradesOf(d => d.shadow_combo, fwOnly).map(t => t.usd || 0), v95_1ct: v95.map(t => t.usd || 0), v95_sized: v95.map(t => usdOf(t, true)),
     options_sized: opt.map(t => usdOf(t, true)), card_plus_options_sized: v95.map(t => usdOf(t, true)).concat(opt.map(t => usdOf(t, true))),
-    hiv_layer: tradesOf(d => d.shadow_hiv, fwOnly).map(t => t.usd || 0) };
+    hiv_layer: tradesOf(d => d.shadow_hiv, fwOnly).map(t => t.usd || 0), big_fish: tradesOf(d => d.shadow_bigfish, fwOnly).map(t => t.usd || 0) };
   const r = {}; Object.keys(out).forEach(k => r[k] = { sqn: sqnOf(out[k]), trades: out[k].length });
   if (!fwOnly) { const by = {}; v95.forEach(t => (by[t.setup] = by[t.setup] || []).push(usdOf(t, false))); opt.forEach(t => (by["option · " + t.from] = by["option · " + t.from] || []).push(usdOf(t, false)));
     r.by_setup_1ct = {}; Object.keys(by).forEach(k => r.by_setup_1ct[k] = { sqn: sqnOf(by[k]), trades: by[k].length }); }
@@ -267,7 +281,11 @@ fs.writeFileSync(path.join(OUT, "index.json"), JSON.stringify({
       last10: { addons_usd: sum(last10.map(r => ({ usd: r.opt_addons_usd || 0 }))), total_usd: sum(last10.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) }))) } },
     shadow_hiv: { note: "high-IV layer (on the card since Nov 9, its own section): pop put + bell put, only when option IV is over 35% at that minute. Scored on its own; total = card sized + options + layer. Keep only while it helps.",
       all: { usd: sum(rows.map(r => ({ usd: r.hiv_usd || 0 }))), trades: rows.reduce((s, r) => s + r.hiv_n, 0), total_usd: sum(rows.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) + (r.hiv_usd || 0) }))) },
-      forward: { from: "2026-11-09", usd: sum(rows.filter(r => r.date >= "2026-11-09").map(r => ({ usd: r.hiv_usd || 0 }))), trades: rows.filter(r => r.date >= "2026-11-09").reduce((s, r) => s + r.hiv_n, 0) } } },
+      forward: { from: "2026-11-09", usd: sum(rows.filter(r => r.date >= "2026-11-09").map(r => ({ usd: r.hiv_usd || 0 }))), trades: rows.filter(r => r.date >= "2026-11-09").reduce((s, r) => s + r.hiv_n, 0) } },
+    shadow_bigfish: { note: "big-fish layer (on the card since Nov 10): setup days only (selloff/fear market + 1% gap), 6:35 agrees with the gap, ~$1.00 contract, hold to the VWAP cross, no IV rule. Scored on its own; total = card sized + options + high-IV layer + big fish.",
+      all: { usd: sum(rows.map(r => ({ usd: r.bf_usd || 0 }))), trades: rows.reduce((s, r) => s + r.bf_n, 0), setup_days: rows.filter(r => r.bf_setup).length,
+        total_usd: sum(rows.map(r => ({ usd: (r.v95_sized_usd || 0) + (r.opt_addons_usd || 0) + (r.hiv_usd || 0) + (r.bf_usd || 0) }))) },
+      forward: { from: "2026-11-10", usd: sum(rows.filter(r => r.date >= "2026-11-10").map(r => ({ usd: r.bf_usd || 0 }))), trades: rows.filter(r => r.date >= "2026-11-10").reduce((s, r) => s + r.bf_n, 0) } } },
   sqn: { note: "SQN = √(trades, capped at 100) × average trade ÷ standard deviation, per trade in dollars. Under 1.6 poor · 2–2.5 average · 2.5–3 good · 3–5 excellent.", all: sqnBlock(false), forward: sqnBlock(true) },
   htf_next: htfBefore("9999-12-31"),   // daily/weekly trend for the NEXT morning (the card reads this)
   days: rows }, null, 1));

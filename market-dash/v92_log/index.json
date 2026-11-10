@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-10T04:36:44.297Z",
+ "updated_utc": "2026-11-10T16:48:40.380Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -103,6 +103,20 @@
     "usd": -30.6,
     "trades": 1
    }
+  },
+  "shadow_bigfish": {
+   "note": "big-fish layer (on the card since Nov 10): setup days only (selloff/fear market + 1% gap), 6:35 agrees with the gap, ~$1.00 contract, hold to the VWAP cross, no IV rule. Scored on its own; total = card sized + options + high-IV layer + big fish.",
+   "all": {
+    "usd": -51.6,
+    "trades": 1,
+    "setup_days": 5,
+    "total_usd": 17574.6
+   },
+   "forward": {
+    "from": "2026-11-10",
+    "usd": 0,
+    "trades": 0
+   }
   }
  },
  "sqn": {
@@ -139,6 +153,10 @@
    "hiv_layer": {
     "sqn": 1.13,
     "trades": 12
+   },
+   "big_fish": {
+    "sqn": null,
+    "trades": 1
    },
    "by_setup_1ct": {
     "fw": {
@@ -231,6 +249,10 @@
    "hiv_layer": {
     "sqn": 1.03,
     "trades": 5
+   },
+   "big_fish": {
+    "sqn": null,
+    "trades": 0
    }
   }
  },
@@ -262,7 +284,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": true
   },
   {
    "date": "2026-07-31",
@@ -286,7 +311,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-03",
@@ -310,7 +338,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-04",
@@ -334,7 +365,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-05",
@@ -358,7 +392,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-06",
@@ -382,7 +419,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-07",
@@ -406,7 +446,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-10",
@@ -430,7 +473,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-11",
@@ -454,7 +500,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-12",
@@ -478,7 +527,10 @@
    "opt_addons_n": 3,
    "opt_contracts": 4,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-13",
@@ -502,7 +554,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-14",
@@ -526,7 +581,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-17",
@@ -550,7 +608,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-18",
@@ -574,7 +635,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-19",
@@ -598,7 +662,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-20",
@@ -622,7 +689,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-21",
@@ -646,7 +716,10 @@
    "opt_addons_n": 5,
    "opt_contracts": 6,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-24",
@@ -670,7 +743,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 4,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-25",
@@ -694,7 +770,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-26",
@@ -718,7 +797,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-27",
@@ -742,7 +824,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-28",
@@ -766,7 +851,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-08-31",
@@ -790,7 +878,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-01",
@@ -814,7 +905,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-02",
@@ -838,7 +932,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-03",
@@ -862,7 +959,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-04",
@@ -886,7 +986,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-08",
@@ -910,7 +1013,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-09",
@@ -934,7 +1040,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-10",
@@ -958,7 +1067,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-11",
@@ -982,7 +1094,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-14",
@@ -1006,7 +1121,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 3,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-15",
@@ -1030,7 +1148,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-16",
@@ -1054,7 +1175,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-17",
@@ -1078,7 +1202,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-18",
@@ -1102,7 +1229,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-21",
@@ -1126,7 +1256,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-22",
@@ -1150,7 +1283,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 4,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-23",
@@ -1174,7 +1310,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 3,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-24",
@@ -1198,7 +1337,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-25",
@@ -1222,7 +1364,10 @@
    "opt_addons_n": 3,
    "opt_contracts": 4,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-28",
@@ -1246,7 +1391,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-29",
@@ -1270,7 +1418,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-09-30",
@@ -1294,7 +1445,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-01",
@@ -1318,7 +1472,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-02",
@@ -1342,7 +1499,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-05",
@@ -1366,7 +1526,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-06",
@@ -1390,7 +1553,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-07",
@@ -1414,7 +1580,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-08",
@@ -1438,7 +1607,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 2,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-09",
@@ -1462,7 +1634,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-12",
@@ -1486,7 +1661,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 3,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-13",
@@ -1510,7 +1688,10 @@
    "opt_addons_n": 3,
    "opt_contracts": 6,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-14",
@@ -1534,7 +1715,10 @@
    "opt_addons_n": 2,
    "opt_contracts": 4,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-15",
@@ -1558,7 +1742,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": -33.6,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": -51.6,
+   "bf_n": 1,
+   "bf_setup": true
   },
   {
    "date": "2026-10-16",
@@ -1582,7 +1769,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-19",
@@ -1606,7 +1796,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": true
   },
   {
    "date": "2026-10-20",
@@ -1630,7 +1823,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-21",
@@ -1654,7 +1850,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-22",
@@ -1678,7 +1877,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 2,
    "hiv_usd": 289.3,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-23",
@@ -1702,7 +1904,10 @@
    "opt_addons_n": 1,
    "opt_contracts": 1,
    "hiv_usd": -33.6,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-26",
@@ -1726,7 +1931,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": -28.6,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-27",
@@ -1750,7 +1958,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-28",
@@ -1774,7 +1985,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-29",
@@ -1798,7 +2012,10 @@
    "opt_addons_n": 3,
    "opt_contracts": 4,
    "hiv_usd": -43.2,
-   "hiv_n": 2
+   "hiv_n": 2,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-10-30",
@@ -1822,7 +2039,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 21.4,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-11-02",
@@ -1846,7 +2066,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 0,
-   "hiv_n": 0
+   "hiv_n": 0,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-11-03",
@@ -1870,7 +2093,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 47.4,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-11-04",
@@ -1894,7 +2120,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": -54.6,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   },
   {
    "date": "2026-11-05",
@@ -1918,7 +2147,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 1444.4,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": true
   },
   {
    "date": "2026-11-06",
@@ -1942,7 +2174,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": 79.4,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": true
   },
   {
    "date": "2026-11-09",
@@ -1966,7 +2201,10 @@
    "opt_addons_n": 0,
    "opt_contracts": 0,
    "hiv_usd": -30.6,
-   "hiv_n": 1
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   }
  ]
 }
