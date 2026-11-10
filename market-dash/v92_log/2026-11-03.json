@@ -37,7 +37,7 @@
  ],
  "usd": -20.3,
  "stops": 0,
- "generated_utc": "2026-11-10T16:48:39.860Z",
+ "generated_utc": "2026-11-10T16:55:29.736Z",
  "shadow_v93_vix_bounce": {
   "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
   "vix_yesterday": 21.15,
@@ -150,7 +150,7 @@
   "usd": 47.4
  },
  "shadow_bigfish": {
-  "rule": "big fish: setup = (20-day return −8% or worse OR 5-day −3% or worse OR QQQ 20-day vol 26%+) AND gap 1%+; 6:35 close on the gap's side of the open; buy the ~$1.00 0DTE at 6:36 (no IV rule); out on the first 1-min close back across VWAP from 6:40, −35% stop, else 8:56. Skipped if the bell put holds the same side.",
+  "rule": "gap vs week (queue #7a): last week down + open $2.50+ above yesterday's close → calls, same entry/exit (big fish wins if both). big fish: setup = (20-day return −8% or worse OR 5-day −3% or worse OR QQQ 20-day vol 26%+) AND gap 1%+; 6:35 close on the gap's side of the open; buy the ~$1.00 0DTE at 6:36 (no IV rule); out on the first 1-min close back across VWAP from 6:40, −35% stop, else 8:56. Skipped if the bell put holds the same side.",
   "setup": {
    "on": false,
    "why": [
@@ -162,9 +162,23 @@
    "r20": -9.93,
    "rv20": 22.6
   },
-  "state": "no",
-  "note": "no: gap +0.49% (needs 1%+) · 20-day -9.9% · 5-day -4.4%",
-  "trades": [],
-  "usd": 0
+  "state": "fired",
+  "note": "GAP vs WEEK FIRED · calls · hold until QQQ closes back below VWAP",
+  "trades": [
+   {
+    "rule": "gap vs week",
+    "side": "call",
+    "filled": "6:36",
+    "strike": 691,
+    "paid": 1.13,
+    "iv": 0.431,
+    "exit": "6:53",
+    "sold": 0.91,
+    "why": "QQQ closed back across VWAP",
+    "usd": -24.6,
+    "contracts": 1
+   }
+  ],
+  "usd": -24.6
  }
 }

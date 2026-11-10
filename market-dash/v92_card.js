@@ -250,7 +250,7 @@
       vm.lines.push(["Gap-and-go", name(weekSide) + " if the open is " + (weekSide === "C" ? "≥ " + p2(c.PDC + 2.5) : "≤ " + p2(c.PDC - 2.5)) + " and the nearest GEX level is 1.00+ away"]);
       vm.lines.push(["Fade the week", name(fwSide) + " after 7:30 only if QQQ is inside yesterday's value area (" + p2(D.va.yval) + "–" + p2(D.va.yvah) + ") at 7:00"]);
       if (HIVL() && X.night) vm.hiv = { pre: true, night: HIVL().nightNumbers(X.night, null), odds: HIVL().crashOdds(X.night, day, null) };
-      if (BFL() && X.night) vm.bf = bfPre(X.night);
+      if (BFL() && X.night) vm.bf = bfPre(X.night, c.week, c.PDC);
       vm.stage = atM < 0 ? "prep" : "waiting"; vm.head = atM < 0 ? (name(sideDay) === name(weekSide) ? "A " + name(sideDay) + " morning." : "Map for today.") : "Waiting for the first bars…";
       return vm;
     }
@@ -328,7 +328,14 @@
       try {
         var botT = R.trades.filter(function (t) { return t.why !== "none"; }).map(function (t) { return { side: t.side, mf: t.mf, out: t.why === "open" || t.why === "sell_now" ? null : t.out }; });
         (vm.tickets || []).concat(vm.optClosed || []).forEach(function (k) { if (k.opt) botT.push({ side: k.S === "CALL" ? "C" : "P", mf: k.mf, out: k.out == null ? null : k.out }); });
-        var LY = HIVL().run({ D: D, vw: UV.vw, night: X.night, openPx: X.today.candles && X.today.candles[0] ? X.today.candles[0].open : null, botTrades: botT, atM: atM, day: day });
+        var op0 = X.today.candles && X.today.candles[0] ? X.today.candles[0].open : null;
+        var LY = HIVL().run({ D: D, vw: UV.vw, night: X.night, openPx: op0, botTrades: botT, atM: atM, day: day });
+        // one direction at a time: while a big-fish / gap-vs-week CALL is open, the layer's pop put is skipped (same as a bot call)
+        if (BFL()) { try {
+          var bf0 = BFL().run({ D: D, vw: UV.vw, night: X.night, openPx: op0, atM: atM, bell: LY.trades.filter(function (t) { return t.rule === "bell"; })[0] || null, week: c.week, pdc: c.PDC });
+          var bfc = bf0.trades.filter(function (t) { return t.side === "C"; });
+          if (bfc.length) { bfc.forEach(function (t) { botT.push({ side: "C", mf: t.mf, out: t.state === "open" ? null : t.out }); }); LY = HIVL().run({ D: D, vw: UV.vw, night: X.night, openPx: op0, botTrades: botT, atM: atM, day: day }); }
+        } catch (e) {} }
         vm.hiv = LY; vm.hivTk = []; vm.hivClosed = [];
         LY.trades.forEach(function (t) {
           var k = { rule: t.rule === "pop" ? "pop put" : "bell put", K: t.K, mf: t.mf, ask: t.paid, iv: t.iv, why: t.why, usd: t.usd, bid: t.bid, stop: t.stop, be: t.be, sellBy: t.sellBy, out: t.out, sold: t.sold };
@@ -343,15 +350,15 @@
     if (BFL() && UV && R) {
       try {
         var bell = vm.hiv && vm.hiv.trades ? vm.hiv.trades.filter(function (t) { return t.rule === "bell"; })[0] || null : null;
-        var BF = BFL().run({ D: D, vw: UV.vw, night: X.night, openPx: X.today.candles && X.today.candles[0] ? X.today.candles[0].open : null, atM: atM, bell: bell });
+        var BF = BFL().run({ D: D, vw: UV.vw, night: X.night, openPx: X.today.candles && X.today.candles[0] ? X.today.candles[0].open : null, atM: atM, bell: bell, week: c.week, pdc: c.PDC });
         vm.bf = BF; vm.bfTk = []; vm.bfClosed = [];
         BF.trades.forEach(function (t) {
-          var k = { rule: "big fish", S: t.side === "C" ? "CALL" : "PUT", side: t.side, K: t.K, mf: t.mf, ask: t.paid, iv: t.iv, why: t.why, usd: t.usd, bid: t.bid, stop: t.stop, out: t.out, sold: t.sold, vwapNow: t.vwapNow };
+          var k = { rule: t.rule, S: t.side === "C" ? "CALL" : "PUT", side: t.side, K: t.K, mf: t.mf, ask: t.paid, iv: t.iv, why: t.why, usd: t.usd, bid: t.bid, stop: t.stop, out: t.out, sold: t.sold, vwapNow: t.vwapNow };
           if (t.state === "open") { k.state = atM - t.mf <= 3 ? "buy" : "in"; vm.bfTk.push(k); }
           else if (atM - t.out <= 3) { k.state = "sell"; vm.bfTk.push(k); } else vm.bfClosed.push(k);
         });
       } catch (e) { vm.bfErr = String(e); }
-    } else if (BFL() && X.night) vm.bf = bfPre(X.night);
+    } else if (BFL() && X.night) vm.bf = bfPre(X.night, c.week, c.PDC);
     // ---- headline (changes only on real events) ----
     var allTk = vm.tickets.concat((vm.hivTk || []).map(function (k) { return { S: "PUT", K: k.K, ct: 1, ask: k.ask, state: k.state, pnl: k.usd, layer: true }; }))
       .concat((vm.bfTk || []).map(function (k) { return { S: k.S, K: k.K, ct: 1, ask: k.ask, state: k.state, pnl: k.usd, layer: true }; }));
@@ -470,11 +477,12 @@
   }
   // "⛔ No trade · IV rule — IV 58% (limit 35%)": the latest signal the contract rules blocked, plus how many today
   // before the open: is tonight a big-fish setup? (the gap is estimated from the latest premarket price until 6:30)
-  function bfPre(night) {
-    var S = BFL().setup(night, night && night.pre_last > 0 ? night.pre_last : null); if (!S) return null;
-    if (!S.hasR && !S.ctx) return { state: "nodata", txt: "night numbers missing" };
-    if (!S.ctx) return { state: "no", txt: "no setup (no selloff or fear market)" };
-    return { state: "preopen", txt: "SETUP if the gap is 1%+ (" + S.why.join(" · ") + ")" + (S.gap != null ? " · premarket gap now " + (S.gap >= 0 ? "+" : "") + S.gap.toFixed(2) + "%" : "") };
+  function bfPre(night, week, pdc) {
+    var pre = night && night.pre_last > 0 ? night.pre_last : null, S = BFL().setup(night, pre); if (!S) return null;
+    var aw = week != null && week < 0 ? " · gap vs week (calls) if QQQ opens " + p2(pdc + BFL().RULE.awGap) + "+" + (pre ? " (premarket " + p2(pre) + ")" : "") : "";
+    if (!S.hasR && !S.ctx) return { state: aw ? "preopen" : "nodata", txt: aw ? aw.slice(3) : "night numbers missing" };
+    if (!S.ctx) return { state: aw ? "preopen" : "no", txt: aw ? aw.slice(3) : "no setup (no selloff or fear market)" };
+    return { state: "preopen", txt: "SETUP if the gap is 1%+ (" + S.why.join(" · ") + ")" + (S.gap != null ? " · premarket gap now " + (S.gap >= 0 ? "+" : "") + S.gap.toFixed(2) + "%" : "") + aw };
   }
   var KNAME = { trap: "trap", gap: "gap-and-go", vb: "VIX bounce", fw: "fade the week", fp: "failed poke", flip: "flip" };
   function blockedHead(k) {
@@ -524,12 +532,12 @@
     var h = "", B = vm.bf;
     (vm.bfTk || []).forEach(function (k) {
       var up = k.side === "C", head = k.state === "buy" ? "BUY 1× " + k.K + " " + k.S + " @ " + q2(k.ask) : k.state === "sell" ? "SELL NOW · " + k.S + " " + k.K : k.S + " " + k.K + " · " + usd(k.usd);
-      h += '<div class="tk ' + k.state + '"><div class="big">' + esc(head) + '</div><div class="ctx">BIG FISH · no IV rule' + (k.iv != null ? " · IV " + Math.round(k.iv * 100) + "%" : "") + "</div>";
+      h += '<div class="tk ' + k.state + '"><div class="big">' + esc(head) + '</div><div class="ctx">' + esc(String(k.rule).toUpperCase()) + ' · no IV rule' + (k.iv != null ? " · IV " + Math.round(k.iv * 100) + "%" : "") + "</div>";
       if (k.state === "sell") h += '<div class="row"><span>' + esc(k.why) + "</span><span>" + q2(k.sold) + " → " + usd(k.usd) + "</span><span>sell by hand at the bid</span></div>";
       else h += '<div class="row"><span>hold until QQQ closes back ' + (up ? "below" : "above") + " VWAP" + (k.vwapNow != null ? " (now " + q2(k.vwapNow) + ")" : "") + "</span><span>disaster stop " + q2(k.stop) + " (−35%)</span>" + (k.bid != null ? "<span>bid " + q2(k.bid) + "</span>" : "") + "</div>";
       h += "</div>";
     });
-    if (vm.bfClosed && vm.bfClosed.length) h += '<div class="closed">Big fish today: ' + vm.bfClosed.map(function (k) { return k.S + " " + k.K + " " + clock(k.mf) + "–" + clock(k.out) + " " + esc(k.why) + ' <span class="' + (k.usd >= 0 ? "up" : "dn") + '">' + usd(k.usd) + "</span>"; }).join(" · ") + "</div>";
+    if (vm.bfClosed && vm.bfClosed.length) h += '<div class="closed">Today: ' + vm.bfClosed.map(function (k) { return k.rule + " " + k.S + " " + k.K + " " + clock(k.mf) + "–" + clock(k.out) + " " + esc(k.why) + ' <span class="' + (k.usd >= 0 ? "up" : "dn") + '">' + usd(k.usd) + "</span>"; }).join(" · ") + "</div>";
     if (B && /^(preopen|armed|skip|noquote)$/.test(B.state)) h += '<div class="watch">Big fish: ' + esc(B.txt) + "</div>";
     if (vm.bfErr) h += '<div class="warn">Big-fish error: ' + esc(vm.bfErr) + "</div>";
     return h;

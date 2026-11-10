@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-11-10T16:48:40.380Z",
+ "updated_utc": "2026-11-10T16:55:40.685Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
@@ -94,23 +94,23 @@
   "shadow_hiv": {
    "note": "high-IV layer (on the card since Nov 9, its own section): pop put + bell put, only when option IV is over 35% at that minute. Scored on its own; total = card sized + options + layer. Keep only while it helps.",
    "all": {
-    "usd": 1657.7,
-    "trades": 12,
-    "total_usd": 17626.2
+    "usd": 1742.9,
+    "trades": 10,
+    "total_usd": 17711.4
    },
    "forward": {
     "from": "2026-11-09",
-    "usd": -30.6,
-    "trades": 1
+    "usd": 0,
+    "trades": 0
    }
   },
   "shadow_bigfish": {
    "note": "big-fish layer (on the card since Nov 10): setup days only (selloff/fear market + 1% gap), 6:35 agrees with the gap, ~$1.00 contract, hold to the VWAP cross, no IV rule. Scored on its own; total = card sized + options + high-IV layer + big fish.",
    "all": {
-    "usd": -51.6,
-    "trades": 1,
+    "usd": 494.4,
+    "trades": 6,
     "setup_days": 5,
-    "total_usd": 17574.6
+    "total_usd": 18205.8
    },
    "forward": {
     "from": "2026-11-10",
@@ -151,12 +151,12 @@
     "trades": 140
    },
    "hiv_layer": {
-    "sqn": 1.13,
-    "trades": 12
+    "sqn": 1.21,
+    "trades": 10
    },
    "big_fish": {
-    "sqn": null,
-    "trades": 1
+    "sqn": 1.42,
+    "trades": 6
    },
    "by_setup_1ct": {
     "fw": {
@@ -247,12 +247,12 @@
     "trades": 4
    },
    "hiv_layer": {
-    "sqn": 1.03,
-    "trades": 5
+    "sqn": 1.14,
+    "trades": 3
    },
    "big_fish": {
-    "sqn": null,
-    "trades": 0
+    "sqn": 1.61,
+    "trades": 3
    }
   }
  },
@@ -1932,8 +1932,8 @@
    "opt_contracts": 0,
    "hiv_usd": -28.6,
    "hiv_n": 1,
-   "bf_usd": 0,
-   "bf_n": 0,
+   "bf_usd": 32.4,
+   "bf_n": 1,
    "bf_setup": false
   },
   {
@@ -1959,8 +1959,8 @@
    "opt_contracts": 0,
    "hiv_usd": 0,
    "hiv_n": 0,
-   "bf_usd": 0,
-   "bf_n": 0,
+   "bf_usd": 32.4,
+   "bf_n": 1,
    "bf_setup": false
   },
   {
@@ -2094,8 +2094,8 @@
    "opt_contracts": 0,
    "hiv_usd": 47.4,
    "hiv_n": 1,
-   "bf_usd": 0,
-   "bf_n": 0,
+   "bf_usd": -24.6,
+   "bf_n": 1,
    "bf_setup": false
   },
   {
@@ -2119,10 +2119,10 @@
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
    "opt_contracts": 0,
-   "hiv_usd": -54.6,
-   "hiv_n": 1,
-   "bf_usd": 0,
-   "bf_n": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0,
+   "bf_usd": 187.4,
+   "bf_n": 1,
    "bf_setup": false
   },
   {
@@ -2200,10 +2200,10 @@
    "opt_addons_usd": 0,
    "opt_addons_n": 0,
    "opt_contracts": 0,
-   "hiv_usd": -30.6,
-   "hiv_n": 1,
-   "bf_usd": 0,
-   "bf_n": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0,
+   "bf_usd": 318.4,
+   "bf_n": 1,
    "bf_setup": false
   }
  ]

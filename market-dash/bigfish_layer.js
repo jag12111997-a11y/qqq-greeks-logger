@@ -7,13 +7,16 @@
      ENTRY  6:36, the ~$1.00 0DTE contract (mid 0.80–1.25) on that side, 1 contract, at the ask.
      EXIT   from 6:40, the first 1-min close back across session VWAP (sell at the bid), or −35% disaster stop (bid), else 8:56.
      One position: skipped if the high-IV layer's bell put already holds the same side (same idea, Nov 5).
+   GAP vs WEEK (queue #7a, added Nov 10, same entry/exit): last week DOWN and QQQ opens $2.50+ ABOVE yesterday's close → calls.
+     Since Jul 30: 16 mornings, QQQ up by 8:56 on 12; options (Oct 8+) with 6:35 agreeing: 5 trades +$546, 4 won (Nov 4 + Nov 9
+     carry it). The mirror (gap down against an up week → puts) lost (−$130) and is NOT used. Big fish wins if both are on.
    Inputs: D = V92MAP.buildDay(...) day ({st, opt}), vw = session VWAP per minute, night = relay /live/night JSON (prev_close, rv20, r5, r20),
            openPx = the 6:30 open, atM = minutes after 6:30 now (146 = final), bell = the high-IV layer's bell trade (or null).
    Units: option prices 0.00 per contract; dollars at 1 contract, fees out (0.013 per contract per side). */
 (function (root) {
   "use strict";
   var LO = 0.80, HI = 1.25, FEE = 0.013, END = 146;
-  var RULE = { r20: -8, r5: -3, rv: 26, gap: 1, decide: 5, entry: 6, vwapFrom: 10, stop: 0.35 };
+  var RULE = { r20: -8, r5: -3, rv: 26, gap: 1, decide: 5, entry: 6, vwapFrom: 10, stop: 0.35, awGap: 2.5 };
   function q(D, side, K, m) { var b = (D.opt[side] || {})[K]; return b ? b[m] || null : null; }
   function nearOne(D, side, m) {
     var best = null, O = D.opt[side] || {};
@@ -34,19 +37,27 @@
   function run(o) {
     var D = o.D, vw = o.vw || [], atM = o.atM == null ? END : o.atM, st = D.st || [], out = { trades: [], state: "nodata" };
     var S = setup(o.night, o.openPx); out.setup = S;
-    if (!S) return out;
-    if (!S.ctx) { out.state = "no"; out.txt = "no setup (no selloff or fear market)"; return out; }
-    if (S.gap == null) { out.state = "preopen"; out.txt = "SETUP if the gap is 1%+ (" + S.why.join(" · ") + ")"; return out; }
-    if (!S.gapOk) { out.state = "no"; out.txt = "no: gap " + (S.gap >= 0 ? "+" : "") + S.gap.toFixed(2) + "% (needs 1%+) · " + S.why.join(" · "); return out; }
-    var gs = S.gap > 0 ? 1 : -1, side = gs > 0 ? "C" : "P", nm = gs > 0 ? "calls" : "puts";
-    if (atM < RULE.entry || !st[RULE.decide]) { out.state = "armed"; out.txt = "SETUP · gap " + (gs > 0 ? "up " : "down ") + Math.abs(S.gap).toFixed(2) + "% · 6:35 decides: " + nm + " if QQQ is still " + (gs > 0 ? "above" : "below") + " the open " + o.openPx.toFixed(2); return out; }
+    var awGap = o.pdc > 0 && o.openPx > 0 ? o.openPx - o.pdc : null, aw = o.week != null && o.week < 0 && awGap != null && awGap >= RULE.awGap;
+    out.aw = { on: aw, gap: awGap, week: o.week };
+    var bfOn = !!(S && S.ctx && S.gapOk);
+    if (!bfOn && !aw) {
+      if (!S) return out;
+      var awTxt = o.week != null && o.week < 0 ? " · gap vs week: needs QQQ to open $2.50+ above yesterday's close" : "";
+      if (!S.ctx) { out.state = "no"; out.txt = "no setup (no selloff or fear market)" + awTxt; return out; }
+      if (S.gap == null) { out.state = "preopen"; out.txt = "SETUP if the gap is 1%+ (" + S.why.join(" · ") + ")" + awTxt; return out; }
+      out.state = "no"; out.txt = "no: gap " + (S.gap >= 0 ? "+" : "") + S.gap.toFixed(2) + "% (needs 1%+) · " + S.why.join(" · ") + awTxt; return out;
+    }
+    var rule = bfOn ? "big fish" : "gap vs week", gs = bfOn ? (S.gap > 0 ? 1 : -1) : 1, side = gs > 0 ? "C" : "P", nm = gs > 0 ? "calls" : "puts";
+    var label = bfOn ? "SETUP · gap " + (gs > 0 ? "up " : "down ") + Math.abs(S.gap).toFixed(2) + "%" : "GAP vs WEEK · opened $" + awGap.toFixed(2) + " above yesterday against a down week";
+    out.rule = rule;
+    if (atM < RULE.entry || !st[RULE.decide]) { out.state = "armed"; out.txt = label + " · 6:35 decides: " + nm + " if QQQ is still " + (gs > 0 ? "above" : "below") + " the open " + o.openPx.toFixed(2); return out; }
     var s35 = st[RULE.decide][0] > o.openPx ? 1 : -1;
-    if (s35 !== gs) { out.state = "skip"; out.txt = "SETUP, but skipped: 6:35 went against the gap"; return out; }
+    if (s35 !== gs) { out.state = "skip"; out.txt = label + ", but skipped: 6:35 went against the gap"; return out; }
     if (o.bell && o.bell.side === side) { out.state = "skip"; out.txt = "SETUP, same put as the high-IV bell put (one position)"; return out; }
     var e = RULE.entry, p = nearOne(D, side, e);
     if (!p) { e = e + 1; p = nearOne(D, side, e); }
-    if (!p) { out.state = atM <= RULE.entry + 1 ? "armed" : "noquote"; out.txt = "SETUP, " + nm + " — no contract priced 0.80–1.25 at 6:36"; return out; }
-    var ask = p.ask, stop = ask * (1 - RULE.stop), t = { rule: "big fish", side: side, K: Number(p.K), mf: e, paid: ask, iv: p.iv, ct: 1, stop: stop, sellBy: END };
+    if (!p) { out.state = atM <= RULE.entry + 1 ? "armed" : "noquote"; out.txt = label + " · " + nm + " — no contract priced 0.80–1.25 at 6:36"; return out; }
+    var ask = p.ask, stop = ask * (1 - RULE.stop), t = { rule: rule, side: side, K: Number(p.K), mf: e, paid: ask, iv: p.iv, ct: 1, stop: stop, sellBy: END };
     var lastBid = null, lastM = e, now = Math.min(atM, END), done = null;
     for (var m = e + 1; m <= now && !done; m++) {
       var x = q(D, side, p.K, m); if (!x) continue;
@@ -59,7 +70,7 @@
     if (done) Object.assign(t, { state: "closed", usd: (done.sold - ask - 2 * FEE) * 100 }, done);
     else Object.assign(t, { state: "open", bid: lastBid, at: lastM, usd: lastBid == null ? null : (lastBid - ask - 2 * FEE) * 100,
       vwapNow: vw[Math.min(now, vw.length - 1)] });
-    out.trades.push(t); out.state = "fired"; out.txt = "FIRED · " + nm + " · hold until QQQ closes back " + (gs > 0 ? "below" : "above") + " VWAP";
+    out.trades.push(t); out.state = "fired"; out.txt = (rule === "big fish" ? "BIG FISH" : "GAP vs WEEK") + " FIRED · " + nm + " · hold until QQQ closes back " + (gs > 0 ? "below" : "above") + " VWAP";
     out.usd = t.usd;
     return out;
   }

@@ -200,7 +200,11 @@ for (const day of want) {
       const night = readJSON(path.join(MD, "night", day + ".json"));
       const bot = r5.map(t => ({ side: t.side, mf: t.mf, out: t.out }));
       ((doc.shadow_options && doc.shadow_options.trades) || []).forEach(t => bot.push({ side: t.side === "call" ? "C" : "P", mf: ptMinClock(t.signal), out: t.exit ? ptMinClock(t.exit) : null }));
-      const L = HIV.run({ D, vw: UV.vw, night, openPx: H.candles[0] ? H.candles[0].open : null, botTrades: bot, atM: 146, day });
+      let L = HIV.run({ D, vw: UV.vw, night, openPx: H.candles[0] ? H.candles[0].open : null, botTrades: bot, atM: 146, day });
+      // same as the card: while a big-fish / gap-vs-week CALL is open, the pop put is skipped
+      const bf0 = BIGFISH.run({ D, vw: UV.vw, night, openPx: H.candles[0] ? H.candles[0].open : null, atM: 146, bell: L.trades.filter(t => t.rule === "bell")[0] || null, week: D.ctx.week, pdc: D.ctx.PDC });
+      const bfc = bf0.trades.filter(t => t.side === "C");
+      if (bfc.length) { bfc.forEach(t => bot.push({ side: "C", mf: t.mf, out: t.out == null ? null : t.out })); L = HIV.run({ D, vw: UV.vw, night, openPx: H.candles[0] ? H.candles[0].open : null, botTrades: bot, atM: 146, day }); }
       const trh = L.trades.map(t => ({ rule: t.rule === "pop" ? "pop put" : "bell put", side: "put", signal: clock(t.sig != null ? t.sig : t.mf - 1), filled: clock(t.mf), strike: t.K,
         paid: +t.paid.toFixed(2), iv: t.iv == null ? null : +t.iv.toFixed(3), exit: t.out == null ? null : clock(t.out), sold: t.sold == null ? null : +t.sold.toFixed(2), why: t.why || t.state,
         usd: t.usd == null ? null : Math.round(t.usd * 100) / 100, contracts: 1 }));
@@ -213,11 +217,11 @@ for (const day of want) {
     try {
       const night = readJSON(path.join(MD, "night", day + ".json"));
       const bellT = doc.shadow_hiv && doc.shadow_hiv.trades ? doc.shadow_hiv.trades.filter(t => t.rule === "bell put")[0] : null;
-      const B = BIGFISH.run({ D, vw: UV.vw, night, openPx: H.candles[0] ? H.candles[0].open : null, atM: 146, bell: bellT ? { side: "P" } : null });
-      const trb = B.trades.map(t => ({ rule: "big fish", side: t.side === "C" ? "call" : "put", filled: clock(t.mf), strike: t.K, paid: +t.paid.toFixed(2), iv: t.iv == null ? null : +t.iv.toFixed(3),
+      const B = BIGFISH.run({ D, vw: UV.vw, night, openPx: H.candles[0] ? H.candles[0].open : null, atM: 146, bell: bellT ? { side: "P" } : null, week: D.ctx.week, pdc: D.ctx.PDC });
+      const trb = B.trades.map(t => ({ rule: t.rule, side: t.side === "C" ? "call" : "put", filled: clock(t.mf), strike: t.K, paid: +t.paid.toFixed(2), iv: t.iv == null ? null : +t.iv.toFixed(3),
         exit: t.out == null ? null : clock(t.out), sold: t.sold == null ? null : +t.sold.toFixed(2), why: t.why || t.state, usd: t.usd == null ? null : Math.round(t.usd * 100) / 100, contracts: 1 }));
       const S = B.setup;
-      doc.shadow_bigfish = { rule: "big fish: setup = (20-day return −8% or worse OR 5-day −3% or worse OR QQQ 20-day vol 26%+) AND gap 1%+; 6:35 close on the gap's side of the open; buy the ~$1.00 0DTE at 6:36 (no IV rule); out on the first 1-min close back across VWAP from 6:40, −35% stop, else 8:56. Skipped if the bell put holds the same side.",
+      doc.shadow_bigfish = { rule: "gap vs week (queue #7a): last week down + open $2.50+ above yesterday's close → calls, same entry/exit (big fish wins if both). big fish: setup = (20-day return −8% or worse OR 5-day −3% or worse OR QQQ 20-day vol 26%+) AND gap 1%+; 6:35 close on the gap's side of the open; buy the ~$1.00 0DTE at 6:36 (no IV rule); out on the first 1-min close back across VWAP from 6:40, −35% stop, else 8:56. Skipped if the bell put holds the same side.",
         setup: S ? { on: S.on, why: S.why, gap_pct: S.gap == null ? null : +S.gap.toFixed(2), r5: S.r5, r20: S.r20, rv20: S.rv } : null, state: B.state, note: B.txt || null, trades: trb,
         usd: Math.round(trb.reduce((a, t) => a + (t.usd || 0), 0) * 100) / 100 };
     } catch (e) { doc.shadow_bigfish = { status: "off this morning: " + e.message, trades: [], usd: null }; }
