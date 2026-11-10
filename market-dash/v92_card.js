@@ -338,14 +338,22 @@
       vm.hiv = { pre: true, night: HIVL().nightNumbers(X.night, null), odds: HIVL().crashOdds(X.night, day, null) };
     }
     // ---- headline (changes only on real events) ----
-    var sell = vm.tickets.filter(function (k) { return k.state === "sell"; }), buy = vm.tickets.filter(function (k) { return k.state === "buy"; }), inT = vm.tickets.filter(function (k) { return k.state === "in"; });
+    var allTk = vm.tickets.concat((vm.hivTk || []).map(function (k) { return { S: "PUT", K: k.K, ct: 1, ask: k.ask, state: k.state, pnl: k.usd, layer: true }; }));
+    var sell = allTk.filter(function (k) { return k.state === "sell"; }), buy = allTk.filter(function (k) { return k.state === "buy"; }), inT = allTk.filter(function (k) { return k.state === "in"; });
+    var blkNow = vm.blocked.filter(function (b) { return atM - b.m >= 0 && atM - b.m <= 5; });
+    // every live event this minute; the headline takes the first, the "also" line lists the rest (so nothing is hidden by a collision)
+    var ev = sell.map(function (k) { return "SELL NOW · " + k.S + " " + k.K; })
+      .concat(buy.map(function (k) { return "BUY " + (k.ct || 1) + "× " + k.K + " " + k.S + " @ " + q2(k.ask); }))
+      .concat(blkNow.length ? [blockedHead(blkNow[blkNow.length - 1])] : []);
+    vm.also = ev.slice(1);
     if (sell.length) { vm.stage = "sell"; vm.head = "SELL NOW · " + sell[0].S + " " + sell[0].K; }
     else if (buy.length) { vm.stage = "buy"; vm.head = "BUY " + (buy[0].ct || 1) + "× " + buy[0].K + " " + buy[0].S + " @ " + q2(buy[0].ask); }
+    else if (blkNow.length) { vm.stage = "blocked"; vm.head = blockedHead(blkNow[blkNow.length - 1]); }
     else if (inT.length) { vm.stage = "in"; vm.head = "In trade · " + inT.map(function (k) { return k.S + " " + k.K + " " + usd(k.pnl); }).join(" · "); }
     else if (stops >= 2) { vm.stage = "done"; vm.head = "DONE for today: 2 stops."; }
     else if (atM >= 150) { vm.stage = "recap"; vm.head = "Morning over · " + vm.closed.length + " trade" + (vm.closed.length === 1 ? "" : "s") + " · " + usd(vm.dayPnl); }
     else if (vm.reentry) { vm.stage = "reentry"; vm.head = "Stopped. Watching for the re-entry."; }
-    else { vm.stage = "watch"; vm.head = zf !== null ? name(sideDay).toUpperCase() + " trap zone: wait for the turn." : (gArmed ? "Gap-and-go " + name(R.gapArmed.C ? "C" : "P") + " armed: wait for the turn." : "Watching. No setup yet."); }
+    else { vm.stage = "watch"; vm.head = "Not firing · " + (zf !== null ? name(sideDay) + " trap zone reached, waiting for the turn" : (gArmed ? "gap-and-go " + name(R.gapArmed.C ? "C" : "P") + " armed, waiting for the turn" : "no setup armed")); }
     if (X.stale != null && X.stale > 2) { vm.stale = Math.round(X.stale); }
     vm.pull = X.pull || null;
     vm.gexRegime = X.gexRegime;
@@ -386,7 +394,7 @@
     ".v92 .pill.buy{background:rgba(47,191,109,.18);color:#2fbf6d}.v92 .pill.sell{background:rgba(236,72,72,.22);color:#ff6b6b}.v92 .pill.in{background:rgba(96,165,250,.18);color:#60a5fa}" +
     ".v92 .head{font-size:18px;font-weight:700;line-height:1.3}.v92 .sub{color:#a99fd6;font-size:12px}" +
     ".v92 .lines{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px}.v92 .lines b{color:#c8a0d0;font-weight:600;white-space:nowrap}" +
-    ".v92 .watch{border:1px dashed #3a2a5a;border-radius:8px;padding:8px 10px;font-size:13px}" +
+    ".v92 .more summary{cursor:pointer;color:#8a7fb8;font-size:12px}.more .morein{display:flex;flex-direction:column;gap:10px;margin-top:10px}.also{font-size:15px;font-weight:700;color:#e0ab45}.watch{border:1px dashed #3a2a5a;border-radius:8px;padding:8px 10px;font-size:13px}" +
     ".v92 .tk{border-radius:10px;padding:10px 12px;border:1px solid #2a1a4a;background:#140b22;display:flex;flex-direction:column;gap:6px}" +
     ".v92 .tk.buy{border-color:#2fbf6d}.v92 .tk.sell{border-color:#ff6b6b;background:rgba(236,72,72,.10)}.v92 .tk.in{border-color:#60a5fa}" +
     ".v92 .tk .big{font-size:20px;font-weight:800}.v92 .tk.sell .big{color:#ff6b6b}.v92 .tk.buy .big{color:#2fbf6d}" +
@@ -445,6 +453,12 @@
     return h + '</div><div class="ctx">Time limit ' + clock(k.timeOut) + " · min " + mins + (k.qchk ? " · " + esc(k.qchk.shape) : "") + " · no more " + (k.sg > 0 ? "calls" : "puts") + " if QQQ " + (k.sg > 0 ? "< " : "> ") + q2(k.fake) + "</div>";
   }
   // "⛔ No trade · IV rule — IV 58% (limit 35%)": the latest signal the contract rules blocked, plus how many today
+  var KNAME = { trap: "trap", gap: "gap-and-go", vb: "VIX bounce", fw: "fade the week", fp: "failed poke", flip: "flip" };
+  function blockedHead(k) {
+    var what = (KNAME[k.kind] || (String(k.kind).indexOf("re-") === 0 ? "re-entry" : k.kind)) + " " + (k.side === "C" ? "CALL" : "PUT");
+    var why = k.why === "iv" ? "IV " + Math.round(k.iv * 100) + "% (limit " + Math.round(k.ivmax * 100) + "%)" : k.why === "price" ? "contracts $" + q2(k.mid) + " (limit $" + q2(k.lo) + "–" + q2(k.hi) + ")" : "no option quotes";
+    return "FIRED · BLOCKED · " + clock(k.m) + " " + what + " · " + why;
+  }
   function blockedTxt(B) {
     var k = B[B.length - 1], KN = { trap: "trap", gap: "gap-and-go", vb: "VIX bounce", fw: "fade the week", fp: "failed poke", flip: "flip" };
     var what = clock(k.m) + " " + (KN[k.kind] || (String(k.kind).indexOf("re-") === 0 ? "re-entry" : k.kind)) + " " + (k.side === "C" ? "call" : "put");
@@ -462,7 +476,7 @@
     var n = L && L.night;
     if (n) h += '<div class="row"><span>Night: after-hours + overnight ' + pc(n.nightPct) + "</span>" + (n.lastPct != null ? "<span>6:00→open " + pc(n.lastPct) + "</span>" : "") + (n.gapPct != null ? "<span>gap " + pc(n.gapPct) + "</span>" : "") + "</div>";
     else if (L && !L.pre) h += '<div class="ctx">Night data not in yet (bell put + lean need it)</div>';
-    if (L && L.lean) h += '<div class="row"><span>Night lean: ' + esc(L.lean.txt) + '</span></div><div class="ctx">bot trades with the lean: 74% wins · against: 60% (still profitable) · info only, never a filter</div>';
+    if (L && L.lean) h += '<div class="row"><span>Night lean: ' + esc(L.lean.txt) + '</span></div><div class="ctx">bot trades with the lean: 74% wins · against: 60% (still profitable)</div>';
     if (L && L.odds) h += '<div class="row"><span>Crash odds today ≈ ' + L.odds.pct + "% · " + esc(L.odds.why) + "</span><span>normal day 3.4%</span></div>";
     if (L && !L.pre) {
       var b = L.bell || {};
@@ -470,6 +484,10 @@
       var pp = L.pop || {}, ptxt = pp.state === "fired" ? "fired" : pp.state === "watching" ? (L.on ? "watching · triggers above QQQ " + q2(pp.level) + " ($1.50 over VWAP and +$1.50 in 15 min)" : "waiting for IV over 35%") : pp.state === "done" ? "window over (6:50–8:29)" : (pp.txt || pp.state);
       h += '<div class="row"><span>Pop put: ' + esc(ptxt) + "</span></div>";
     } else if (L && L.pre) h += '<div class="ctx">Bell put is decided at 6:31 (needs QQQ down 0.15%+ from 6:00 to the open after a red night, and IV over 35%).</div>';
+    return h + "</div>";
+  }
+  function hivTkHtml(vm) {
+    var h = "";
     (vm.hivTk || []).forEach(function (k) {
       var head = k.state === "buy" ? "BUY 1× " + k.K + " PUT @ " + q2(k.ask) : k.state === "sell" ? "SELL NOW · PUT " + k.K : "PUT " + k.K + " · " + usd(k.usd);
       h += '<div class="tk ' + k.state + '"><div class="big">' + esc(head) + '</div><div class="ctx">HIGH-IV LAYER · ' + esc(k.rule) + (k.iv != null ? " · IV " + Math.round(k.iv * 100) + "%" : "") + "</div>";
@@ -477,39 +495,46 @@
       else h += '<div class="row"><span>stop ' + q2(k.stop) + (k.be ? " (moved to breakeven)" : " (−25%)") + "</span><span>" + (k.rule === "pop put" ? "sell by " + clock(k.sellBy) : "hold to 8:56 · stop to breakeven at " + q2(k.ask * 1.5)) + "</span>" + (k.bid != null ? "<span>bid " + q2(k.bid) + "</span>" : "") + "</div>";
       h += "</div>";
     });
+    return h;
+  }
+  function hivRestHtml(vm) {
+    var L = vm.hiv, h = "";
     if (vm.hivClosed && vm.hivClosed.length) h += '<div class="closed">Layer today: ' + vm.hivClosed.map(function (k) { return k.rule + " " + k.K + " " + clock(k.mf) + "–" + clock(k.out) + " " + esc(k.why) + ' <span class="' + (k.usd >= 0 ? "up" : "dn") + '">' + usd(k.usd) + "</span>"; }).join(" · ") + "</div>";
     if (vm.hivErr) h += '<div class="warn">High-IV layer error: ' + esc(vm.hivErr) + "</div>";
-    if (vm.meter && vm.meter.hiv) h += '<div class="closed">Layer (paper log): ' + vm.meter.hiv.trades + " trades " + usd(vm.meter.hiv.usd) + " · card + options + layer " + usd(vm.meter.hiv.total_usd) + "</div>";
-    return h + '<div class="ctx">Separate from the bot · 1 contract · signals only, you place every trade</div></div>';
+    return h;
   }
   function render(el, vm) { el.innerHTML = build(vm); }
   function build(vm) {
     var pill = { buy: ["BUY", "buy"], sell: ["SELL NOW", "sell"], "in": ["IN TRADE", "in"], done: ["DONE", ""], recap: ["RECAP", ""], reentry: ["RE-ENTRY WATCH", ""],
-      watch: ["WATCH", ""], prep: ["PREP", ""], waiting: ["OPEN", ""], offday: ["SIT OUT", ""], loading: ["…", ""] }[vm.stage] || ["", ""];
+      blocked: ["BLOCKED", "sell"], watch: ["NOT FIRING", ""], prep: ["PREP", ""], waiting: ["OPEN", ""], offday: ["SIT OUT", ""], loading: ["…", ""] }[vm.stage] || ["", ""];
     var h = '<style>' + CSS + '</style><div class="v92' + (vm.stale ? " stale" : "") + '">' +
       '<div class="top"><span class="lab">3V3 v9.5 · GAME PLAN</span><span class="sp"></span>' + (vm.release ? '<span class="pill">' + esc(vm.release) + "</span>" : "") +
       ((vm.hivTk || []).some(function (k) { return k.state === "buy"; }) ? '<span class="pill buy">HIGH-IV LAYER: BUY</span>' : (vm.hivTk || []).some(function (k) { return k.state === "sell"; }) ? '<span class="pill sell">HIGH-IV LAYER: SELL</span>' : "") +
-      '<span class="pill ' + pill[1] + '">' + pill[0] + "</span></div>" +
-      '<div class="head">' + esc(vm.head) + "</div>";
+      '<span class="pill ' + pill[1] + '">' + pill[0] + "</span>" + (vm.replay ? '<span class="pill">replay ' + clock(vm.atM) + "</span>" : vm.atM >= 0 && vm.atM < 150 && vm.stage !== "offday" ? '<span class="pill">' + clock(vm.atM) + " PT · live</span>" : "") + "</div>" +
+      '<div class="head">' + esc(vm.head) + "</div>" + (vm.also && vm.also.length ? '<div class="also">' + vm.also.map(function (t) { return "+ " + esc(t); }).join("<br>") + "</div>" : "");
     if (vm.stale) h += '<div class="warn">Data is ' + vm.stale + " min old: don't act until it refreshes.</div>";
     if (vm.early) h += '<div class="sub">' + esc(vm.early) + " (the 6:30–9:00 window is unaffected)</div>";
-    if (vm.map) h += '<div class="sub">Yesterday ' + vm.map.yday + " · last week " + vm.map.week + " · value area " + p2(vm.map.va.yval) + "–" + p2(vm.map.va.yvah) + (vm.vix != null ? " · VIX yesterday " + p2(vm.vix) : "") + "</div>";
-    if (vm.lines.length) h += '<div class="lines">' + vm.lines.map(function (l) { return "<b>" + esc(l[0]) + "</b><span>" + esc(l[1]) + "</span>"; }).join("") + "</div>";
-    if (vm.watch && vm.stage !== "recap") h += '<div class="watch">' + esc(vm.watch) + "</div>";
-    if (vm.blocked && vm.blocked.length) h += '<div class="warn">' + esc(blockedTxt(vm.blocked)) + "</div>";
     vm.tickets.slice().sort(function (a, b) { return b.mf - a.mf; }).forEach(function (k) { h += ticketHtml(k, vm); });
+    try { h += hivTkHtml(vm); } catch (e) {}
     if (vm.reentry) h += '<div class="watch">' + esc(vm.reentry) + "</div>";
+    if (vm.blocked && vm.blocked.length && vm.stage !== "blocked") h += '<div class="warn">' + esc(blockedTxt(vm.blocked)) + "</div>";
     if (vm.closed.length) h += '<div class="closed">Today: ' + vm.closed.map(function (b) { return (b.ct > 1 ? b.ct + "× " : "") + b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +
       " · total " + usd(vm.dayPnl) + (vm.stops ? " · stops " + vm.stops + "/2" : "") + "</div>";
     if (vm.optClosed && vm.optClosed.length) h += '<div class="closed">Options today: ' + vm.optClosed.map(function (b) { return (b.ct > 1 ? b.ct + "× " : "") + b.S + " " + b.K + " " + clock(b.mf) + "–" + clock(b.out) + " " + b.why + ' <span class="' + (b.res >= 0 ? "up" : "dn") + '">' + usd(b.res) + "</span>"; }).join(" · ") +
       " · total " + usd(vm.optPnl) + "</div>";
+    try { h += hivRestHtml(vm); } catch (e) {}
+    h += '<details class="more"' + (root.__v92more ? " open" : "") + ' ontoggle="window.__v92more=this.open"><summary>details · setups, map, high-IV layer, paper log</summary><div class="morein">';
+    if (vm.map) h += '<div class="sub">Yesterday ' + vm.map.yday + " · last week " + vm.map.week + " · value area " + p2(vm.map.va.yval) + "–" + p2(vm.map.va.yvah) + (vm.vix != null ? " · VIX yesterday " + p2(vm.vix) : "") + "</div>";
+    if (vm.lines.length) h += '<div class="lines">' + vm.lines.map(function (l) { return "<b>" + esc(l[0]) + "</b><span>" + esc(l[1]) + "</span>"; }).join("") + "</div>";
+    if (vm.watch && vm.stage !== "recap") h += '<div class="watch">' + esc(vm.watch) + "</div>";
     if (vm.optErr) h += '<div class="warn">Options error: ' + esc(vm.optErr) + "</div>";
     try { h += hivHtml(vm); } catch (e) { h += '<div class="warn">High-IV layer display error</div>'; }
+    if (vm.meter && vm.meter.hiv) h += '<div class="closed">Layer (paper log): ' + vm.meter.hiv.trades + " trades " + usd(vm.meter.hiv.usd) + " · card + options + layer " + usd(vm.meter.hiv.total_usd) + "</div>";
     if (vm.meter) h += (vm.meter.v95All ? '<div class="closed">Last ' + vm.meter.n + ' mornings (v9.5, paper log): <span class="' + (vm.meter.v95 >= 0 ? "up" : "dn") + '">' + usd(vm.meter.v95) + '</span> · all ' + usd(vm.meter.v95All.usd_sized) + ' (1 contract ' + usd(vm.meter.v95All.usd_1ct) + ')' +
         (vm.meter.v95Fwd && vm.meter.v95Fwd.mornings ? ' · since Nov 2: ' + usd(vm.meter.v95Fwd.usd_sized) : '') + '</div>' : '') +
       (vm.meter.optAll ? '<div class="closed">Options (paper log): ' + vm.meter.optAll.addons + ' extra trades ' + usd(vm.meter.optAll.addons_usd) + ' · card + options ' + usd(vm.meter.optAll.total_usd) +
         (vm.meter.optFwd && vm.meter.optFwd.addons ? ' · forward: ' + usd(vm.meter.optFwd.addons_usd) : '') + '</div>' : '');
-    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "") + (HIVL() ? " · + high-IV layer" : "")) + ' · signals only, you place every trade · ' + (vm.pull === "on" ? "live pull (~15 s) · " : vm.pull === "fallback" ? "live pull unavailable, using the logger copy · " : "") + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div>";
+    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "") + (HIVL() ? " · + high-IV layer" : "")) + ' · ' + (vm.pull === "on" ? "live pull (~15 s) · " : vm.pull === "fallback" ? "live pull unavailable, using the logger copy · " : "") + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div></details></div>";
     return h;
   }
   // For the dashboard: one refresh -> {html, vm}
