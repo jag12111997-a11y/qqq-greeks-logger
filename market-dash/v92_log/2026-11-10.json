@@ -1,0 +1,113 @@
+{
+ "date": "2026-11-10",
+ "forward": true,
+ "engine": "v9.2 (market-dash/v92_engine.js)",
+ "units": "P&L in dollars at 1 contract, fees out; prices in 0.00",
+ "map": {
+  "yesterday": "green",
+  "last_week": "down",
+  "yday_high": 682.48,
+  "yday_low": 662.02,
+  "yday_close": 678.765,
+  "trap": "calls below 661.02",
+  "gap": -7.46,
+  "gap_and_go_armed": "puts",
+  "value_area": [
+   675.2,
+   681.5
+  ],
+  "fade_week_value_ok": true,
+  "trap_zone_reached": null
+ },
+ "trades": [],
+ "usd": 0,
+ "stops": 0,
+ "generated_utc": "2026-11-11T02:44:51.906Z",
+ "shadow_v93_vix_bounce": {
+  "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
+  "vix_yesterday": 19.92,
+  "bounce_day": false,
+  "trades": [],
+  "usd": 0,
+  "bounce_usd": 0
+ },
+ "shadow_combo": {
+  "rule": "v9.2 + sell after 3 EMA8 ticks against (not 1) + VIX bounce calls",
+  "trades": [],
+  "usd": 0,
+  "ribbon_rule": "watch only: 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees with the trade, else 1",
+  "ribbon_x3_usd": 0
+ },
+ "shadow_v95": {
+  "rule": "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
+  "trades": [],
+  "usd_1ct": 0,
+  "usd_sized": 0,
+  "htf": {
+   "through": "2026-11-09",
+   "daily": -1,
+   "weekly": -1
+  }
+ },
+ "shadow_options": {
+  "rule": "options (live on the card): box · Playbook home run · Tulip v3.2 · turn entry · sniper · calls checkpoint. Card's latest side = direction; agreeing signals as fired; signals against it flipped to the card's side (card's ladder); before the card's first buy only the box; none after the card's 2nd stop; box + Playbook 2 contracts unless flipped.",
+  "trades": [],
+  "addons_usd": 0,
+  "addons_usd_1ct": 0,
+  "total_usd": 0
+ },
+ "shadow_hiv": {
+  "rule": "high-IV layer: POP PUT (after 6:50, QQQ $1.50+ over VWAP and +$1.50 in 15 min, IV over 35% at that minute; 25% stop, sell within 40 min) + BELL PUT (6:00->open down 0.15%+ after a red night, IV over 35% at 6:31; 1 contract, 25% stop, breakeven after +50%, hold to 8:56). Skips a pop while the bot holds a call.",
+  "night": {
+   "night_pct": 0.02,
+   "premarket_pct": -1.02,
+   "last30_pct": 0.33,
+   "gap_pct": -1
+  },
+  "lean": "no clear lean",
+  "odds": {
+   "pct": 23,
+   "why": "fear market (20-day volatility 36%) + below the 50-day + CPI (5:30 AM)",
+   "rv": 35.9,
+   "below50": true,
+   "event": "CPI (5:30 AM)",
+   "base": 3.4
+  },
+  "bell": "no",
+  "trades": [
+   {
+    "rule": "pop put",
+    "side": "put",
+    "signal": "6:53",
+    "filled": "6:54",
+    "strike": 668,
+    "paid": 0.96,
+    "iv": 0.451,
+    "exit": "6:56",
+    "sold": 0.57,
+    "why": "stop (−25%)",
+    "usd": -41.6,
+    "contracts": 1
+   }
+  ],
+  "usd": -41.6
+ },
+ "shadow_bigfish": {
+  "rule": "gap vs week (queue #7a): last week down + open $2.50+ above yesterday's close → calls, same entry/exit (big fish wins if both). big fish: setup = (20-day return −8% or worse OR 5-day −3% or worse OR QQQ 20-day vol 26%+) AND gap 1%+; 6:35 close on the gap's side of the open; buy the ~$1.00 0DTE at 6:36 (no IV rule); out on the first 1-min close back across VWAP from 6:40, −35% stop, else 8:56. Skipped if the bell put holds the same side.",
+  "setup": {
+   "on": true,
+   "why": [
+    "20-day -8.9%",
+    "fear market (20-day vol 36%)"
+   ],
+   "gap_pct": -1,
+   "r5": -0.26,
+   "r20": -8.94,
+   "rv20": 35.9
+  },
+  "state": "skip",
+  "note": "SETUP · gap down 1.00%, but skipped: 6:35 went against the gap",
+  "trades": [],
+  "usd": 0
+ }
+}
