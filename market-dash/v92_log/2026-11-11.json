@@ -1,0 +1,208 @@
+{
+ "date": "2026-11-11",
+ "forward": true,
+ "engine": "v9.2 (market-dash/v92_engine.js)",
+ "units": "P&L in dollars at 1 contract, fees out; prices in 0.00",
+ "map": {
+  "yesterday": "red",
+  "last_week": "down",
+  "yday_high": 680.9499,
+  "yday_low": 667.0501,
+  "yday_close": 674.81,
+  "trap": "puts above 681.95",
+  "gap": 12.63,
+  "gap_and_go_armed": "off",
+  "value_area": [
+   669.8,
+   675.3
+  ],
+  "fade_week_value_ok": false,
+  "trap_zone_reached": "6:38"
+ },
+ "trades": [
+  {
+   "side": "put",
+   "setup": "trap",
+   "signal": "7:09",
+   "filled": "7:10",
+   "strike": 684,
+   "paid": 1.39,
+   "exit": "7:27",
+   "sold": 0.78,
+   "why": "stop",
+   "usd": -62.3,
+   "fakeout_line": 688.19,
+   "iv": 0.321
+  },
+  {
+   "side": "put",
+   "setup": "trap",
+   "signal": "7:21",
+   "filled": "7:22",
+   "strike": 684,
+   "paid": 1.24,
+   "exit": "7:28",
+   "sold": 0.62,
+   "why": "stop",
+   "usd": -63.3,
+   "fakeout_line": 688.19,
+   "iv": 0.2856
+  }
+ ],
+ "usd": -125.6,
+ "stops": 2,
+ "generated_utc": "2026-11-12T03:46:44.237Z",
+ "shadow_v93_vix_bounce": {
+  "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
+  "vix_yesterday": 19.46,
+  "bounce_day": true,
+  "trades": [
+   {
+    "side": "put",
+    "setup": "trap",
+    "signal": "7:09",
+    "filled": "7:10",
+    "strike": 684,
+    "paid": 1.39,
+    "exit": "7:27",
+    "sold": 0.78,
+    "why": "stop",
+    "usd": -62.3
+   },
+   {
+    "side": "put",
+    "setup": "trap",
+    "signal": "7:21",
+    "filled": "7:22",
+    "strike": 684,
+    "paid": 1.24,
+    "exit": "7:28",
+    "sold": 0.62,
+    "why": "stop",
+    "usd": -63.3
+   }
+  ],
+  "usd": -125.6,
+  "bounce_usd": 0
+ },
+ "shadow_combo": {
+  "rule": "v9.2 + sell after 3 EMA8 ticks against (not 1) + VIX bounce calls",
+  "trades": [
+   {
+    "side": "put",
+    "setup": "trap",
+    "signal": "7:09",
+    "filled": "7:10",
+    "strike": 684,
+    "paid": 1.39,
+    "exit": "7:27",
+    "sold": 0.78,
+    "why": "stop",
+    "usd": -62.3,
+    "ribbon5": false
+   },
+   {
+    "side": "put",
+    "setup": "trap",
+    "signal": "7:21",
+    "filled": "7:22",
+    "strike": 684,
+    "paid": 1.24,
+    "exit": "7:28",
+    "sold": 0.62,
+    "why": "stop",
+    "usd": -63.3,
+    "ribbon5": false
+   }
+  ],
+  "usd": -125.6,
+  "ribbon_rule": "watch only: 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees with the trade, else 1",
+  "ribbon_x3_usd": -125.6
+ },
+ "shadow_v95": {
+  "rule": "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
+  "trades": [
+   {
+    "side": "put",
+    "setup": "trap",
+    "signal": "7:09",
+    "filled": "7:10",
+    "strike": 684,
+    "paid": 1.39,
+    "exit": "7:27",
+    "sold": 0.78,
+    "why": "stop",
+    "usd": -62.3,
+    "contracts": 3,
+    "fakeout_line": 688.19
+   },
+   {
+    "side": "put",
+    "setup": "trap",
+    "signal": "7:21",
+    "filled": "7:22",
+    "strike": 684,
+    "paid": 1.24,
+    "exit": "7:28",
+    "sold": 0.62,
+    "why": "stop",
+    "usd": -63.3,
+    "contracts": 3,
+    "fakeout_line": 688.19
+   }
+  ],
+  "usd_1ct": -125.6,
+  "usd_sized": -376.8,
+  "htf": {
+   "through": "2026-11-10",
+   "daily": -1,
+   "weekly": -1
+  }
+ },
+ "shadow_options": {
+  "rule": "options (live on the card): box · Playbook home run · Tulip v3.2 · turn entry · sniper · calls checkpoint. Card's latest side = direction; agreeing signals as fired; signals against it flipped to the card's side (card's ladder); before the card's first buy only the box; none after the card's 2nd stop; box + Playbook 2 contracts unless flipped.",
+  "trades": [],
+  "addons_usd": 0,
+  "addons_usd_1ct": 0,
+  "total_usd": -376.8
+ },
+ "shadow_hiv": {
+  "rule": "high-IV layer: POP PUT (after 6:50, QQQ $1.50+ over VWAP and +$1.50 in 15 min, IV over 35% at that minute; 25% stop, sell within 40 min) + BELL PUT (6:00->open down 0.15%+ after a red night, IV over 35% at 6:31; 1 contract, 25% stop, breakeven after +50%, hold to 8:56). Skips a pop while the bot holds a call.",
+  "night": {
+   "night_pct": 1.48,
+   "premarket_pct": 0.37,
+   "last30_pct": -0.08,
+   "gap_pct": 1.86
+  },
+  "lean": "calls — green night kept rising",
+  "odds": {
+   "pct": 11.5,
+   "why": "fear market (20-day volatility 36%) + below the 50-day",
+   "rv": 35.9,
+   "below50": true,
+   "event": null,
+   "base": 3.4
+  },
+  "bell": "no",
+  "trades": [],
+  "usd": 0
+ },
+ "shadow_bigfish": {
+  "rule": "gap vs week (queue #7a): last week down + open $2.50+ above yesterday's close → calls, same entry/exit (big fish wins if both). big fish: setup = (20-day return −8% or worse OR 5-day −3% or worse OR QQQ 20-day vol 26%+) AND gap 1%+; 6:35 close on the gap's side of the open; buy the ~$1.00 0DTE at 6:36 (no IV rule); out on the first 1-min close back across VWAP from 6:40, −35% stop, else 8:56. Skipped if the bell put holds the same side.",
+  "setup": {
+   "on": true,
+   "why": [
+    "20-day -9.3%",
+    "fear market (20-day vol 36%)"
+   ],
+   "gap_pct": 1.86,
+   "r5": -1.54,
+   "r20": -9.25,
+   "rv20": 35.9
+  },
+  "state": "skip",
+  "note": "SETUP · gap up 1.86%, but skipped: 6:35 went against the gap",
+  "trades": [],
+  "usd": 0
+ }
+}
