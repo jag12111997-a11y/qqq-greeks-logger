@@ -55,7 +55,7 @@ export default {
     }
     // Live pull (read-only): the dashboard asks for fresh bars / option quotes / VIX; the Durable Object
     // fetches them from Alpaca (keys stay here) or Cboe at most once per 15 s and everyone shares that copy.
-    const lv = url.pathname.match(/^\/live\/(bars|options|vix|night)$/);
+    const lv = url.pathname.match(/^\/live\/(bars|options|vix|night|hist)$/);
     if (lv) {
       if (req.method !== "GET") return reply(req, 405, "method not allowed");
       const day = url.searchParams.get("day");
@@ -131,6 +131,7 @@ export class Relay extends DurableObject {
   constructor(ctx, env) { super(ctx, env); this.env = env; this.mem = {}; }
 
   async live(kind, day) {
+    if (kind === "hist") return this.fetchLive(kind, day).catch((e) => ({ ok: false, body: JSON.stringify({ error: String(e && e.message || e).slice(0, 200) }) }));   // past days: no cache
     const key = kind + "|" + (day || ""), hit = this.mem[key];
     if (hit && Date.now() - hit.at < PULL_TTL_MS) return hit.out;
     if (hit && hit.pending) return hit.pending;
@@ -163,6 +164,17 @@ export class Relay extends DurableObject {
       token = j.next_page_token; if (!token) break;
     }
     return { session_date: today, candles: out };
+  }
+
+  async hist(day) {
+    const open = openUtcMs(day), end = Math.min(Date.now() - 16 * 60000, open + 389 * 60000 + 59000);
+    const out = []; let token = null;
+    for (let i = 0; i < 4; i++) {
+      const j = await this.alpaca("/v2/stocks/QQQ/bars", { timeframe: "1Min", start: iso(open), end: iso(end), feed: "sip", limit: 10000, adjustment: "split", sort: "asc", page_token: token });
+      for (const b of j.bars || []) out.push({ time: Math.floor(Date.parse(b.t) / 1000), open: b.o, high: b.h, low: b.l, close: b.c, volume: b.v });
+      token = j.next_page_token; if (!token) break;
+    }
+    return { session_date: day, candles: out };
   }
 
   // Night before the open (high-IV layer + info lines): yesterday's close, after-hours / premarket prices (SIP, 15+ min old;
@@ -203,6 +215,12 @@ export class Relay extends DurableObject {
 
   async fetchLive(kind, day) {
     const gen = iso(Date.now());
+    if (kind === "hist") {   // research (Nov 12): one PAST day of 1-min QQQ bars, full market (SIP is free once 15+ min old)
+      const p = nyParts(Date.now()), today = p.year + "-" + p.month + "-" + p.day;
+      if (!day || day >= today) throw new Error("hist needs a past day");
+      const b = await this.hist(day);
+      return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "sip", ...b }) };
+    }
     if (kind === "night") {
       const n = await this.night(day);
       return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "sip (15+ min old)", ...n }) };
