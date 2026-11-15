@@ -7502,10 +7502,14 @@
       var lo = s[0], hi = s[s.length - 1], below = s.filter(function (x) { return x < v; }).length, pr = Math.round(below / s.length * 100);
       if (hi === lo) { hi = lo + 1; }
       var W = 600, X = function (x) { return 8 + (x - lo) / (hi - lo) * (W - 16); };
-      var ext = pr <= 10 || pr >= 90, bad = m[3] === "lo" ? pr <= 20 : m[3] === "hi" ? pr >= 80 : false, good = m[3] === "lo" ? pr >= 80 : m[3] === "hi" ? pr <= 20 : false;
+      var ext = pr <= 10 || pr >= 90, bad, good;
+      if (k === "dv") { bad = v < 0.15; good = v >= 0.35; }            // same lines as the cockpit tile
+      else if (k === "vr") { bad = v > 1.1; good = v < 0.9; }
+      else if (k === "gex") { bad = v < 0; good = v > 0; }
+      else { bad = m[3] === "hi" ? pr >= 80 : m[3] === "lo" ? pr <= 20 : false; good = m[3] === "hi" ? pr <= 20 : m[3] === "lo" ? pr >= 80 : false; }
       var col = bad ? "#ff453a" : good ? "#00e676" : ext ? "#ffd600" : "#e8dede";
-      if (bad || ext) odd++;
-      var word = bad ? "hostile" : good ? "friendly" : ext ? (pr >= 90 ? "unusually high" : "unusually low") : "normal";
+      if (ext) odd++;
+      var word = (ext ? (pr >= 90 ? "unusually high" : "unusually low") : "normal") + (bad ? " · hostile" : good ? " · friendly" : "");
       var g = '<rect x="' + X(q(.1)).toFixed(1) + '" y="7" width="' + Math.max(2, X(q(.9)) - X(q(.1))).toFixed(1) + '" height="14" rx="3" fill="rgba(255,255,255,.07)"/>' +
         '<line x1="' + X(q(.5)).toFixed(1) + '" x2="' + X(q(.5)).toFixed(1) + '" y1="5" y2="23" stroke="rgba(255,255,255,.25)"/>';
       if (lo < 0 && hi > 0) g += '<line x1="' + X(0).toFixed(1) + '" x2="' + X(0).toFixed(1) + '" y1="3" y2="25" stroke="rgba(255,255,255,.18)" stroke-dasharray="2 2"/>';
@@ -7518,7 +7522,12 @@
     });
     if (!rows) return '<div style="color:var(--dim);font-size:12px">Not enough history yet.</div>';
     return '<div style="font-size:14px;margin:2px 0 8px">' + (odd ? '<b style="color:#ffd600">' + odd + " of " + total + "</b> readings are outside their normal range" : "Every reading is inside its normal range") + ' (' + (e.entry_date || "") + ', logger snapshot).</div>' + rows +
-      '<div style="font-size:11px;color:var(--dim);margin-top:6px">Each row: grey dots = every past session, shaded band = the middle 80% (normal), tick = median, big dot = this session. Red = hostile for fades, green = friendly, yellow = extreme either way.</div>';
+      '<div style="font-size:11px;color:var(--dim);margin-top:6px">Each row: grey dots = every past session, shaded band = the middle 80% (normal), tick = median, big dot = this session. Dot colour: red = hostile for fades, green = friendly (√det, VR and GEX use the cockpit lines), yellow = extreme for its history.</div>';
+  }
+  function _orLabels(labs, x, gap) {   // right-edge labels pushed apart so they never sit on top of each other
+    labs.sort(function (a, b) { return a.y - b.y; }); var out = "", prev = -1e9;
+    labs.forEach(function (l) { var y = Math.max(l.y, prev + gap); prev = y; out += '<text x="' + x + '" y="' + (y + 4).toFixed(1) + '" fill="' + l.c + '" font-size="11">' + l.t + '</text>'; });
+    return out;
   }
   function _orDealerMap(e) {
     var latest = idx === FULL.length - 1 && !QQQ_SESSION.past;
@@ -7537,10 +7546,13 @@
       g2 += '<g><title>' + esc(tip) + '</title><rect x="' + (pos ? cx : cx - w).toFixed(1) + '" y="' + (y - rh * .38).toFixed(1) + '" width="' + Math.max(1, w).toFixed(1) + '" height="' + (rh * .76).toFixed(1) + '" fill="' + (pos ? "#00e676" : "#ff453a") + '" opacity=".75"/></g>';
       if (s.strike % 5 === 0) g2 += '<text x="' + (cx - half - 14) + '" y="' + (y + 4).toFixed(1) + '" fill="#8b8ba6" font-size="11" text-anchor="end">' + s.strike + '</text>';
     });
-    var mark = function (k, col, lab, dash) { if (k === null || k > kHi + .5 || k < kLo - .5) return ""; var y = Y(k).toFixed(1);
-      return '<line x1="' + (cx - half - 8) + '" x2="' + (cx + half + 8) + '" y1="' + y + '" y2="' + y + '" stroke="' + col + '" stroke-width="1.5"' + (dash ? ' stroke-dasharray="5 4"' : "") + '/><text x="' + (cx + half + 14) + '" y="' + (+y + 4) + '" fill="' + col + '" font-size="11">' + lab + '</text>'; };
-    g2 += mark(cw, "#5eead4", "call wall " + (cw !== null ? cw.toFixed(0) : ""), true) + mark(pw, "#ff9f0a", "put wall " + (pw !== null ? pw.toFixed(0) : ""), true) +
+    var labs = [];
+    var mark = function (k, col, lab, dash) { if (k === null || k > kHi + .5 || k < kLo - .5) return ""; var y = Y(k); labs.push({ y: y, t: lab, c: col });
+      return '<line x1="' + (cx - half - 8) + '" x2="' + (cx + half + 8) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="' + col + '" stroke-width="1.5"' + (dash ? ' stroke-dasharray="5 4"' : "") + '/>'; };
+    var same = cw !== null && pw !== null && cw === pw;
+    g2 += (same ? mark(cw, "#5eead4", "call + put wall " + cw.toFixed(0), true) : mark(cw, "#5eead4", "call wall " + (cw !== null ? cw.toFixed(0) : ""), true) + mark(pw, "#ff9f0a", "put wall " + (pw !== null ? pw.toFixed(0) : ""), true)) +
       mark(flip, "#ffd600", "flip " + (flip !== null ? flip.toFixed(0) : ""), false) + mark(spot, "#ffffff", "price " + spot.toFixed(2), true);
+    g2 += _orLabels(labs, cx + half + 14, 13);
     g2 += '<text x="' + (cx - 8) + '" y="' + (pt - 1) + '" fill="#ff453a" font-size="10" text-anchor="end">← negative gamma (moves get pushed)</text><text x="' + (cx + 8) + '" y="' + (pt - 1) + '" fill="#00e676" font-size="10">positive gamma (moves get pinned) →</text>';
     var sorted = st.slice().sort(function (a, b) { return b.net_gex - a.net_gex; }), top = sorted[0], bot = sorted[sorted.length - 1];
     var above = st.filter(function (s) { return s.strike > spot; }).reduce(function (a, s) { return a + s.net_gex; }, 0), below = st.filter(function (s) { return s.strike <= spot; }).reduce(function (a, s) { return a + s.net_gex; }, 0);
@@ -7566,14 +7578,16 @@
       opt = opt || {}; var vals = []; series.forEach(function (s) { M.forEach(function (m) { var v = s.get(m); if (v !== null) vals.push(v); }); }); if (opt.zero) vals.push(0);
       if (!vals.length) return "";
       var hi = Math.max.apply(null, vals), lo = Math.min.apply(null, vals), pd = (hi - lo) * .08 || 1; hi += pd; lo -= pd;
-      var pt = 16, pb = 6, Y = function (v) { return pt + (hi - v) / (hi - lo) * (h - pt - pb); }, g = '<text x="' + pl + '" y="11" fill="#8b8ba6" font-size="11">' + title + '</text>';
+      var labs = [], pt = 16, pb = 6, Y = function (v) { return pt + (hi - v) / (hi - lo) * (h - pt - pb); }, g = '<text x="' + pl + '" y="11" fill="#8b8ba6" font-size="11">' + title + '</text>';
       for (var t = 0; t <= 2; t++) { var v = lo + (hi - lo) * t / 2; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="rgba(255,255,255,.05)"/><text x="' + (W - pr + 6) + '" y="' + (Y(v) + 4).toFixed(1) + '" fill="#8b8ba6" font-size="10">' + (opt.fmt ? opt.fmt(v) : v.toFixed(0)) + '</text>'; }
       if (opt.zero && lo < 0 && hi > 0) g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="rgba(255,255,255,.25)"/>';
       series.forEach(function (s) {
         if (s.bars) { M.forEach(function (m, i) { var v = s.get(m); if (v === null) return; var y0 = Y(0), y = Y(v); g += '<rect x="' + (X(i) - step * .34).toFixed(1) + '" y="' + Math.min(y, y0).toFixed(1) + '" width="' + Math.max(1, step * .68).toFixed(1) + '" height="' + Math.max(1, Math.abs(y0 - y)).toFixed(1) + '" fill="' + (v >= 0 ? "#00e676" : "#ff453a") + '" opacity=".7"/>'; }); return; }
         var p = "", last = null; M.forEach(function (m, i) { var v = s.get(m); if (v === null) return; p += (p ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); last = i; });
-        if (p) g += '<path d="' + p + '" fill="none" stroke="' + s.col + '" stroke-width="' + (s.w || 1.7) + '"' + (s.dash ? ' stroke-dasharray="5 4"' : "") + '/>' + (s.lab && last !== null ? '<text x="' + (X(last) + 6).toFixed(1) + '" y="' + (Y(s.get(M[last])) + 4).toFixed(1) + '" fill="' + s.col + '" font-size="10">' + s.lab + '</text>' : "");
+        if (p) g += '<path d="' + p + '" fill="none" stroke="' + s.col + '" stroke-width="' + (s.w || 1.7) + '"' + (s.dash ? ' stroke-dasharray="5 4"' : "") + '/>';
+        if (p && s.lab && last !== null) labs.push({ y: Y(s.get(M[last])), t: s.lab, c: s.col });
       });
+      g += _orLabels(labs, W - pr + 52, 12);
       return '<div class="ors-' + key + '"><svg viewBox="0 0 ' + W + ' ' + h + '" style="width:100%;height:auto;display:block">' + g + '</svg></div>';
     };
     var hov = ""; days.forEach(function (x, i) { var m = M[i]; hov += '<rect x="' + (X(i) - step / 2).toFixed(1) + '" y="0" width="' + step.toFixed(1) + '" height="22" fill="transparent"><title>' + esc(x.entry_date + (m.spot !== null ? " · QQQ " + m.spot.toFixed(2) : "") + (m.flip !== null ? " · flip " + m.flip.toFixed(0) : "") + (m.gex !== null ? " · net GEX " + fmtBig(m.gex) : "") + (m.pc !== null ? " · P/C " + m.pc.toFixed(2) : "")) + '</title></rect>' + ((n <= 25 || i % Math.ceil(n / 20) === 0) ? '<text x="' + X(i).toFixed(1) + '" y="15" fill="#8b8ba6" font-size="10" text-anchor="middle">' + (n <= 25 ? +x.entry_date.slice(8) : x.entry_date.slice(5)) + '</text>' : ""); });
