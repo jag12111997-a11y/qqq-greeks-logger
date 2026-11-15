@@ -7515,7 +7515,7 @@
       if (lo < 0 && hi > 0) g += '<line x1="' + X(0).toFixed(1) + '" x2="' + X(0).toFixed(1) + '" y1="3" y2="25" stroke="rgba(255,255,255,.18)" stroke-dasharray="2 2"/>';
       vals.forEach(function (x) { g += '<circle cx="' + X(x).toFixed(1) + '" cy="14" r="2" fill="#8b8ba6" opacity=".35"/>'; });
       g += '<circle cx="' + X(v).toFixed(1) + '" cy="14" r="6" fill="' + col + '" stroke="#0c0710" stroke-width="2"/>';
-      rows += '<div style="display:grid;grid-template-columns:minmax(96px,150px) 1fr minmax(118px,170px);gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)">' +
+      rows += '<div style="display:grid;grid-template-columns:minmax(96px,150px) 1fr minmax(130px,240px);gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)">' +
         '<span style="font-size:12px;color:var(--dim)">' + m[1] + '</span>' +
         '<svg viewBox="0 0 ' + W + ' 28" preserveAspectRatio="none" style="width:100%;height:28px;display:block"><title>' + esc(m[1] + ": today " + m[2](v) + " · " + pr + "th percentile of " + vals.length + " sessions · normal " + m[2](q(.1)) + " to " + m[2](q(.9))) + '</title>' + g + '</svg>' +
         '<span style="font-size:12px;text-align:right"><b style="color:' + col + '">' + m[2](v) + '</b> <span style="color:var(--dim)">· ' + word + '</span></span></div>';
