@@ -4232,11 +4232,7 @@
   function secQqqPositioning(e) {
     var _tf = get(e, "time_footprint");
     var heat = secOptHeatmap(_tf) || secTimeFootprint(_tf) || "";
-    var sec2 = get(e, "sectors");
-    var sectors = (ok(sec2) && get(sec2, "rows", []).length)
-      ? '<div style="margin-top:14px;font-size:10.5px;color:var(--dim);letter-spacing:1px;' +
-        'text-transform:uppercase;margin-bottom:2px">Sectors</div>' + donut(sec2.rows, true)
-      : "";
+    var sectors = "";   // Nov 15: sectors donut removed here (leaders / laggards are in the header strip)
     if (!heat && !sectors) return "";
     return '<div class="qqq-model-detail-inline">' +
       '<div class="qqq-model-detail-head">' +
@@ -5251,7 +5247,7 @@
       .replace(/<\/section>\s*$/, "</div>");
   }
 
-  function secNasdaqDeepDive(e) {
+  function secNasdaqDeepDive(e, part) {
     var count = 0;
     function deepGroup(label, cards) {
       var inner = cards.map(function (html) {
@@ -5262,16 +5258,17 @@
       return inner ? '<div class="qqq-deep-group"><div class="qqq-deep-group-title">' +
         esc(label) + '</div>' + inner + '</div>' : "";
     }
-    var body =
-      deepGroup("Regime & fade edge", [secGeometry(e), secFadeRegime(e), secRangeUsed(e)]) +
-      deepGroup("Dealer positioning", [secGexLive(e), secVanna(e)]) +
-      deepGroup("Odds & flow", [secTouchFlow(e), secQuant(e)]) +
-      deepGroup("Plan and discipline", [secPlan(e)]) +
-      deepGroup("Options & venue", [secOptions(e), secVenue(e)]);
+    var opt = part === "options";
+    var body = opt
+      ? deepGroup("Dealer positioning", [secGexLive(e), secVanna(e)]) +
+        deepGroup("Odds & flow", [secTouchFlow(e), secQuant(e)]) +
+        deepGroup("Plan and discipline", [secPlan(e)]) +
+        deepGroup("Options & venue", [secOptions(e), secVenue(e)])
+      : deepGroup("Regime & fade edge", [secGeometry(e), secFadeRegime(e), secRangeUsed(e)]);
     if (!body) return "";
-    var k = keyFor("Nasdaq long form deep dive");
+    var k = keyFor(opt ? "Options research deep dive" : "Nasdaq long form deep dive");
     return '<section class="wide qqq-deep-dive"><details open data-k="' + k + '">' +
-      '<summary><h2>Long form · Nasdaq deep dive</h2><span class="qqq-deep-dive-sub">' +
+      '<summary><h2>' + (opt ? "Options research · deep dive" : "Long form · Nasdaq deep dive") + '</h2><span class="qqq-deep-dive-sub">' +
       count + ' full modules · nothing removed</span></summary>' +
       '<div class="qqq-deep-body">' + body + '</div></details></section>';
   }
@@ -6041,7 +6038,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("nasdaq", "Nasdaq") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("replay", "Trade Replay") + tab("dash", "Research") + "</div>";
+      tab("nasdaq", "Nasdaq") + tab("options", "Options Research") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("replay", "Trade Replay") + tab("dash", "Research") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
@@ -7723,17 +7720,18 @@
 
     // VIX history first. The 3× twins move into the compact live meter inside
     // the QQQ card, while their detailed rows remain at the bottom.
-    var _gex = TAB === "nasdaq" ? secGexMain(e) : null;
+    var _gex = (TAB === "nasdaq" || TAB === "options") ? secGexMain(e) : null;
     var _leverageChart = secNasdaqStars(e, "chart");
     var _leverageTable = secNasdaqStars(e, "table");
+    // Nov 15: VIX chart + leverage table removed from Nasdaq (VIX / sectors live in the header strip);
+    // cockpit, options positioning, dealer positioning, odds & flow, plan and options & venue moved to the Options Research tab.
     var _qqqBody =
       (TAB === "nasdaq" && idx === FULL.length - 1 ? secHomeRun() : "") +
-      (_leverageChart ? band("Volatility · VIX") +
-        '<div class="grid qqq-leverage-last">' + _leverageChart + '</div>' : "") +
-      (_gex ? _gex.html + secQqqCockpitSection(_gex.G.entry, _gex.M) : "") +
-      secNasdaqDeepDive(e) +
-      (_leverageTable ? band("Leverage family · data") +
-        '<div class="grid qqq-leverage-last">' + _leverageTable + '</div>' : "");
+      (TAB === "nasdaq" && _gex ? _gex.html : "") +
+      secNasdaqDeepDive(e, "nasdaq");
+    var _optBody =
+      (TAB === "options" && _gex ? secQqqCockpitSection(_gex.G.entry, _gex.M) : "") +
+      secNasdaqDeepDive(e, "options");
 
     // MARKET DASH tab — Pipeline v2 concept: 3-column layout.
     var _stretchWheel = moveWheel(e.watchlist || []);
@@ -7789,7 +7787,8 @@
         ? ('<div class="flow"><iframe src="trading-performance.html" title="Trading Performance" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#160a0e"></iframe></div>')
         : TAB === "journal"
         ? ('<div class="flow"><iframe src="notebook.html" title="Trading Journal" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0d0625"></iframe></div>')
-        : TAB === "nasdaq" ? ('<div class="flow">' + _qqqBody + "</div>") : _dashBody);
+        : TAB === "nasdaq" ? ('<div class="flow">' + _qqqBody + "</div>")
+        : TAB === "options" ? ('<div class="flow">' + _optBody + "</div>") : _dashBody);
 
     // Pipeline layout: expand .wrap to full width for the 3-column grid
     if (TAB === "dash") {
