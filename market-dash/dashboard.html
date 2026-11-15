@@ -134,6 +134,11 @@
   .qqq-leverage-segment.bear { background:#ff453a; }
   .qqq-leverage-segment.balance { background:#66666f; }
   .qqq-leverage-segment.bull { background:#00bfa5; }
+  .qqq-leverage-track.lev-c { position:relative; display:block; overflow:visible; }
+  .lev-c .lev-mid { position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; margin-left:-1px; background:#8b8ba6; }
+  .lev-c .lev-tick { position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,.08); }
+  .lev-c .lev-fill { position:absolute; top:0; bottom:0; background:var(--lev-color); opacity:.85; transition:left .35s ease, width .35s ease; }
+  .lev-c .lev-mark { position:absolute; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--lev-color); box-shadow:0 0 0 2px #111; transition:left .35s ease; }
   .qqq-leverage-meter-scale { display:flex; justify-content:space-between; margin:5px 118px 0;
                               color:var(--faint); font-size:7.5px; letter-spacing:.6px;
                               text-transform:uppercase; }
@@ -3954,25 +3959,42 @@
     var qqqEquivalent = ready ? (tqPct - sqPct) / 6 : 0;
     var vixDay = ready ? vix / Math.sqrt(252) : 0;
     var score = ready && vixDay > 0 ? qqqEquivalent / vixDay : 0;
-    var directional = Math.min(1, Math.abs(score));
-    var bearWeight = ready && score < 0 ? directional : 0;
-    var bullWeight = ready && score > 0 ? directional : 0;
-    var balanceWeight = ready ? 1 - directional : 1;
-    var bearPct = bearWeight * 100, balancePct = balanceWeight * 100, bullPct = bullWeight * 100;
+    // Nov 15 rebuild: a centred gauge. 0σ = balanced; the fill runs from the middle toward SQQQ (left) or TQQQ (right),
+    // scale ±3σ. Tiers: balanced < 0.5σ · leaning 0.5–1.5σ · heavy 1.5–2.5σ · extreme 2.5σ+. Plus where today ranks
+    // among every logged session (end-of-day score from history.js).
+    var az = Math.abs(score), lean = score < 0 ? "SQQQ" : "TQQQ";
     var state = "WAITING FOR LIVE MATH", color = "#6f3c68";
     if (ready) {
-      if (balanceWeight >= Math.max(bearWeight, bullWeight)) {
-        state = "BALANCED · " + Math.abs(score).toFixed(2) + "σ"; color = "#b06fa8";
-      } else if (bullWeight >= .75) {
-        state = "OVERLY BULLISH · +" + score.toFixed(2) + "σ"; color = "#00e676";
-      } else if (bullWeight > 0) {
-        state = "BULLISH LEAN · +" + score.toFixed(2) + "σ"; color = "#00bfa5";
-      } else if (bearWeight >= .75) {
-        state = "OVERLY BEARISH · " + score.toFixed(2) + "σ"; color = "#ff453a";
-      } else {
-        state = "BEARISH LEAN · " + score.toFixed(2) + "σ"; color = "#ff9f0a";
-      }
+      var zs = (score >= 0 ? "+" : "−") + az.toFixed(2) + "σ";
+      if (az < 0.5) { state = "BALANCED · " + zs; color = "#b06fa8"; }
+      else if (az < 1.5) { state = "LEANING " + lean + " · " + zs; color = score < 0 ? "#ff9f0a" : "#00bfa5"; }
+      else if (az < 2.5) { state = "HEAVY " + lean + " · " + zs; color = score < 0 ? "#ff453a" : "#00e676"; }
+      else { state = "EXTREME " + lean + " · " + zs; color = score < 0 ? "#ff1744" : "#69f0ae"; }
     }
+    var hist = [];
+    try {
+      var seen = {};
+      (typeof FULL !== "undefined" ? FULL : []).forEach(function (en) {
+        var d = en && (en.session_date || en.entry_date); if (!d) return;
+        var w = {}; (en.watchlist || []).forEach(function (r) { if (r && r.symbol) w[r.symbol] = r; });
+        var a = Number(w.TQQQ && w.TQQQ.pct_change), b = Number(w.SQQQ && w.SQQQ.pct_change), v = Number(w.VIX && w.VIX.last);
+        if (isFinite(a) && isFinite(b) && isFinite(v) && v > 0) seen[d] = (a - b) / 6 / (v / Math.sqrt(252));
+      });
+      hist = Object.keys(seen).sort().map(function (d) { return { d: d, z: seen[d] }; });
+    } catch (eH) { hist = []; }
+    var histTxt = "";
+    if (ready && hist.length >= 10) {
+      var past = hist.slice(0, -1), n = hist.length;
+      var more = hist.filter(function (h) { return score < 0 ? h.z < score : h.z > score; }).length;
+      var since = null;
+      for (var hi = past.length - 1; hi >= 0; hi--) { if (score < 0 ? past[hi].z <= score : past[hi].z >= score) { since = past[hi].d; break; } }
+      var md = function (d) { var p = d.split("-"); return ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+p[1]] + " " + (+p[2]); };
+      if (az < 0.5) histTxt = "balanced · " + hist.filter(function (h) { return Math.abs(h.z) < 0.5; }).length + " of " + n + " logged sessions were balanced";
+      else if (!since) histTxt = "most " + (score < 0 ? "bearish (SQQQ)" : "bullish (TQQQ)") + " lean in our data · " + n + " sessions since " + md(hist[0].d);
+      else histTxt = "most " + (score < 0 ? "SQQQ" : "TQQQ") + "-heavy since " + md(since) + " · " + (more + 1) + (more === 0 ? "st" : more === 1 ? "nd" : more === 2 ? "rd" : "th") + " of " + n + " logged sessions";
+    }
+    var cap = Math.max(-3, Math.min(3, ready ? score : 0)), half = Math.abs(cap) / 3 * 50;
+    var fillL = cap < 0 ? 50 - half : 50, mark = 50 + cap / 3 * 50;
     var tqTime = Number(tq._live_src_time), sqTime = Number(sq._live_src_time);
     var oldestTwinTime = isFinite(tqTime) && isFinite(sqTime) ? Math.min(tqTime, sqTime) : 0;
     var live = tq._live_quote === true && sq._live_quote === true && oldestTwinTime > 0 &&
@@ -3983,21 +4005,20 @@
         (isFinite(value) ? signed(value, 2, "%") : "&mdash;") + '</b></div>';
     }
     return '<div id="qqq-leverage-meter" class="qqq-leverage-meter" ' +
-      'style="--lev-color:' + color + '" role="img" aria-label="TQQQ versus SQQQ live regime: ' +
-      esc(state) + '; bearish ' + bearPct.toFixed(0) + ' percent, balanced ' + balancePct.toFixed(0) +
-      ' percent, bullish ' + bullPct.toFixed(0) + ' percent">' +
+      'style="--lev-color:' + color + '" role="img" aria-label="TQQQ versus SQQQ: ' + esc(state) + '">' +
       '<div class="qqq-leverage-meter-head"><span class="qqq-leverage-meter-title">3× leverage regime ' +
       '<small>· ' + source + '</small></span>' +
       '<span class="qqq-leverage-meter-state">' + esc(state) + '</span></div>' +
       '<div class="qqq-leverage-meter-row">' + side("SQQQ · bearish", sqPct) +
-      '<div class="qqq-leverage-track" aria-hidden="true">' +
-        '<span class="qqq-leverage-segment bear" style="width:' + bearPct.toFixed(1) + '%"></span>' +
-        '<span class="qqq-leverage-segment balance" style="width:' + balancePct.toFixed(1) + '%"></span>' +
-        '<span class="qqq-leverage-segment bull" style="width:' + bullPct.toFixed(1) + '%"></span>' +
+      '<div class="qqq-leverage-track lev-c" aria-hidden="true">' +
+        '<span class="lev-tick" style="left:16.67%"></span><span class="lev-tick" style="left:33.33%"></span>' +
+        '<span class="lev-mid"></span><span class="lev-tick" style="left:66.67%"></span><span class="lev-tick" style="left:83.33%"></span>' +
+        '<span class="lev-fill" style="left:' + fillL.toFixed(1) + '%;width:' + half.toFixed(1) + '%"></span>' +
+        (ready ? '<span class="lev-mark" style="left:' + mark.toFixed(1) + '%"></span>' : '') +
       '</div>' +
       side("TQQQ · bullish", tqPct) + '</div>' +
-      '<div class="qqq-leverage-meter-scale"><span>bear ' + bearPct.toFixed(0) + '%</span>' +
-      '<span>balanced ' + balancePct.toFixed(0) + '%</span><span>bull ' + bullPct.toFixed(0) + '%</span></div>' +
+      '<div class="qqq-leverage-meter-scale"><span>−3σ SQQQ</span><span>−1.5</span><span>balanced</span><span>+1.5</span><span>TQQQ +3σ</span></div>' +
+      (histTxt ? '<div class="qqq-leverage-meter-math" style="color:var(--dim)">' + esc(histTxt) + '</div>' : '') +
       '<div class="qqq-leverage-meter-math">(TQQQ% − SQQQ%) ÷ 6 ÷ (VIX ÷ √252) · VIX ' +
       (isFinite(vix) ? vix.toFixed(2) : "—") + '</div>' +
       '</div>';
