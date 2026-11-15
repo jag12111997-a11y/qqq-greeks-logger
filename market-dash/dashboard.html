@@ -5336,6 +5336,36 @@
       .replace(/<\/section>\s*$/, "</div>");
   }
 
+  // Nov 15: the three regime modules tracked day by day for the month picked in the daily-candle chart
+  function _deepMonth() {
+    try {
+      var rows = _sdRows(); if (!rows.length) return "";
+      var cur = _gsMonthOf(rows, (_gsLastG && _gsLastG.sdate) || null), MN = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      var lr = [], vr = {}, used = {};
+      rows.forEach(function (r) {
+        if (_sdNum(r.qpct)) lr.push(Math.log(1 + r.qpct / 100));
+        if (lr.length >= 12 && r.date.slice(0, 7) === cur) {
+          var n = lr.length, mu = lr.reduce(function (a, b) { return a + b; }, 0) / n;
+          var vk = function (k) { var m = n - k + 1, acc = 0; for (var i = 0; i < m; i++) { var s2 = 0; for (var j = 0; j < k; j++) s2 += lr[i + j]; acc += (s2 - k * mu) * (s2 - k * mu); } return acc / m; };
+          var v1 = vk(1); if (v1 > 0) vr[r.date] = vk(2) / (2 * v1);
+        }
+        if (_sdNum(r.qpct) && _sdNum(r.vixL) && r.vixL > 0) used[r.date] = Math.abs(r.qpct) / (r.vixL / Math.sqrt(252)) * 100;
+      });
+      var d = rows.filter(function (r) { return r.date.slice(0, 7) === cur; });
+      if (!d.length) return "";
+      var box = function (t, body, note) { return '<div style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:0"><div style="font-size:11px;letter-spacing:.14em;color:var(--dim);margin-bottom:4px">' + t + '</div>' + body + '<div style="font-size:11px;color:var(--dim);margin-top:4px">' + note + '</div></div>'; };
+      var geo = _gsMonthMini(d, [{ get: function (r) { return r.geo; }, col: "#ff2be0", label: "√det(G)", fmt: function (v) { return v.toFixed(3); } }], { refs: [{ v: 0.15, label: "0.15", col: "#ff453a" }, { v: 0.35, label: "0.35", col: "#00e676" }] });
+      var fade = _gsMonthMini(d, [{ get: function (r) { return vr[r.date]; }, col: "#29b6f6", label: "VR(2)", fmt: function (v) { return v.toFixed(2); } }], { refs: [{ v: 1, label: "1.00" }] });
+      var rng = _gsMonthMini(d, [{ bars: true, get: function (r) { return used[r.date]; }, colFn: function (r, v) { return v < 50 ? "#00e676" : v < 100 ? "#ff9f0a" : "#ff453a"; }, fmt: function (v) { return v.toFixed(0) + "%"; } }], { zero: true, refs: [{ v: 100, label: "100%", col: "#ff453a" }] });
+      return '<div class="qqq-deep-group"><div class="qqq-deep-group-title">' + MN[+cur.slice(5)] + ' ' + cur.slice(0, 4) + ' · day by day (follows the month buttons)</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:6px 0 12px">' +
+        box("REGIME GEOMETRY · √det(G)", geo, "Under 0.15 = everything moving as one crowded trade; over 0.35 = spread out.") +
+        box("FADE REGIME · VARIANCE RATIO", fade, "Over 1.00 = moves keep going (trend); under 1.00 = moves snap back (fade).") +
+        box("RANGE USED · % OF PRICED MOVE", rng, "Each day's close-to-close move vs the move VIX priced; past 100% = moved more than expected.") +
+        '</div></div>';
+    } catch (eM) { return ""; }
+  }
+
   function secNasdaqDeepDive(e, part) {
     var count = 0;
     function deepGroup(label, cards) {
@@ -5353,7 +5383,7 @@
         deepGroup("Odds & flow", [secTouchFlow(e), secQuant(e)]) +
         deepGroup("Plan and discipline", [secPlan(e)]) +
         deepGroup("Options & venue", [secOptions(e), secVenue(e)])
-      : deepGroup("Regime & fade edge", [secGeometry(e), secFadeRegime(e), secRangeUsed(e)]);
+      : _deepMonth() + deepGroup("Regime & fade edge", [secGeometry(e), secFadeRegime(e), secRangeUsed(e)]);
     if (!body) return "";
     var k = keyFor(opt ? "Options research deep dive" : "Nasdaq long form deep dive");
     return '<section class="wide qqq-deep-dive"><details open data-k="' + k + '">' +
@@ -6936,6 +6966,9 @@
       r.snap=e.session||'pm';
       r.hv=_sdNum(rv.realized_vol_pct)?rv.realized_vol_pct:q.qqq_realized_vol_21d_pct;r.iv=rv.implied_vol_pct;
       r.flip=g.gamma_flip;r.flipFb=/nearest/i.test(g.gamma_flip_method||'');r.ngex=g.net_gex;r.cw=lv.call_wall;r.pw=lv.put_wall;r.reg=g.regime;
+      var geo=q.geometry||{};r.geo=geo.diversification_volume;r.corr=geo.avg_correlation;
+      var wq=null,wv=null;(e.watchlist||[]).forEach(function(w){if(w&&w.symbol==='QQQ')wq=w;if(w&&w.symbol==='VIX')wv=w;});
+      if(wq&&_sdNum(wq.pct_change))r.qpct=wq.pct_change;if(wv&&_sdNum(wv.last))r.vixL=wv.last;
     });
     return Object.keys(days).sort().map(function(d){
       var r=days[d];
@@ -7099,28 +7132,91 @@
     }else{act='<div style="font-size:12px;color:var(--dim)">No intraday candles for this day (they start Aug 10, 2026).</div>';av='Daily candle only.';ac='#8b8ba6';}
     var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:8px">'
       +_gsCard('PRICE',price,pv,col==='var(--dim)'?'#8b8ba6':col)+_gsCard('VOLATILITY',vol,vv,vc)+_gsCard('DEALER MAP',dealer,dv,dc)+_gsCard('ACTIVITY',act,av,ac)+'</div>';
+    var _rowsAll=_sdRows(),_mc=_gsMonthCards(_rowsAll,_gsMonthOf(_rowsAll,r.date));if(_mc)h=_mc;
     return {head:head,cards:h};
   }
   // Nov 15: the day log is a daily candle chart, one month at a time (month buttons, newest first). Click a candle to load
   // that day on the chart above. The old table stays underneath in a closed "list" fold.
+  function _gsMonthOf(rows,sel){
+    var months=[];rows.forEach(function(r){if(_sdNum(r.o)&&_sdNum(r.c)){var m=r.date.slice(0,7);if(months.indexOf(m)<0)months.push(m);}});months.reverse();
+    return GS.logMonth&&months.indexOf(GS.logMonth)>=0?GS.logMonth:(sel&&months.indexOf(sel.slice(0,7))>=0?sel.slice(0,7):months[0]);
+  }
+  // generic month chart: one value per day (line or bars), optional reference lines, day labels under
+  function _gsMonthMini(days,series,o){
+    o=o||{};var W=300,H=o.h||110,pl=4,pr=40,pt=10,pb=16,vals=[];
+    series.forEach(function(S){days.forEach(function(r){var v=S.get(r);if(_sdNum(v))vals.push(v);});});(o.refs||[]).forEach(function(f){vals.push(f.v);});
+    if(!vals.length)return '<div style="font-size:12px;color:var(--dim)">No data for this month.</div>';
+    var hi=Math.max.apply(null,vals),lo=o.zero?0:Math.min.apply(null,vals),pad=(hi-lo)*.1||Math.abs(hi)*.05||1;hi+=pad;if(!o.zero)lo-=pad;
+    var n=days.length,step=(W-pl-pr)/Math.max(1,n),X=function(i){return pl+step*(i+.5);},Y=function(v){return pt+(hi-v)/(hi-lo)*(H-pt-pb);},g='';
+    (o.refs||[]).forEach(function(f){g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(f.v).toFixed(1)+'" y2="'+Y(f.v).toFixed(1)+'" stroke="'+(f.col||'#8b8ba6')+'" stroke-dasharray="3 3"/><text x="'+(W-pr+3)+'" y="'+(Y(f.v)+3).toFixed(1)+'" fill="'+(f.col||'#8b8ba6')+'" font-size="9">'+f.label+'</text>';});
+    series.forEach(function(S){
+      if(S.bars){days.forEach(function(r,i){var v=S.get(r);if(!_sdNum(v))return;var y0=Y(o.zero?0:Math.max(lo,0)),y=Y(v);g+='<rect x="'+(X(i)-step*.32).toFixed(1)+'" y="'+Math.min(y,y0).toFixed(1)+'" width="'+(step*.64).toFixed(1)+'" height="'+Math.max(1,Math.abs(y0-y)).toFixed(1)+'" fill="'+(S.colFn?S.colFn(r,v):S.col)+'" opacity="'+(S.opFn?S.opFn(r,v):.85)+'"><title>'+_gsNice(r.date)+' · '+(S.fmt?S.fmt(v):v)+'</title></rect>';});return;}
+      var d='';days.forEach(function(r,i){var v=S.get(r);if(!_sdNum(v))return;d+=(d?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);});
+      if(d)g+='<path d="'+d+'" fill="none" stroke="'+S.col+'" stroke-width="1.7"'+(S.dash?' stroke-dasharray="4 3"':'')+'/>';
+      days.forEach(function(r,i){var v=S.get(r);if(_sdNum(v)&&!S.noDots)g+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="2" fill="'+S.col+'"><title>'+_gsNice(r.date)+' · '+(S.label?S.label+' ':'')+(S.fmt?S.fmt(v):v.toFixed(2))+'</title></circle>';});
+      var L=null;for(var k=days.length-1;k>=0;k--){if(_sdNum(S.get(days[k]))){L=k;break;}}
+      if(L!==null&&S.endLabel!==false)g+='<text x="'+(W-pr+3)+'" y="'+(Y(S.get(days[L]))+3).toFixed(1)+'" fill="'+S.col+'" font-size="9">'+(S.fmt?S.fmt(S.get(days[L])):S.get(days[L]).toFixed(2))+'</text>';
+    });
+    days.forEach(function(r,i){if(i%Math.max(1,Math.round(n/8))===0||i===n-1)g+='<text x="'+X(i).toFixed(1)+'" y="'+(H-3)+'" fill="#8b8ba6" font-size="9" text-anchor="middle">'+(+r.date.slice(8))+'</text>';});
+    return _gsSvg(W,H,g);
+  }
+  // month versions of the four cards (follow the month picker)
+  function _gsMonthCards(rows,cur){
+    var UP='#00e676',DN='#ff453a',FL='#ffd600',E9='#29b6f6',E20='#ff9f0a',MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var d=rows.filter(function(r){return r.date.slice(0,7)===cur&&_sdNum(r.o)&&_sdNum(r.c);});if(!d.length)return '';
+    var prev=rows.filter(function(r){return r.date.slice(0,7)<cur&&_sdNum(r.c);}),base=prev.length?prev[prev.length-1].c:d[0].o,last=d[d.length-1];
+    var chg=last.c-base,col=chg>=0?UP:DN,mh=Math.max.apply(null,d.map(function(r){return r.h;})),ml=Math.min.apply(null,d.map(function(r){return r.l;}));
+    var mname=MN[+cur.slice(5)]+' '+cur.slice(0,4),sg=function(x){return (x>=0?'+':'−')+Math.abs(x).toFixed(2);};
+    var price='<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:26px">'+_sdF(last.c)+'</span><span style="font-size:15px;color:'+col+'">'+sg(chg)+' ('+sg(chg/base*100)+'%)</span></div>'
+      +'<div style="font-size:11px;color:var(--dim)">'+mname+' · each day\'s close, range as a thin line · dashed = last month\'s close</div>'
+      +_gsMonthMini(d,[{get:function(r){return r.c;},col:col,label:'close',fmt:function(v){return v.toFixed(2);}}],{refs:[{v:base,label:'start'}],h:120})
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)"><span>Low <span style="color:#e8dede">'+_sdF(ml)+'</span></span><span>Range <span style="color:#e8dede">$'+_sdF(mh-ml)+'</span></span><span>High <span style="color:#e8dede">'+_sdF(mh)+'</span></span></div>';
+    var pv=(chg>=0?'Up':'Down')+' month: '+sg(chg)+' over '+d.length+' days · range $'+(mh-ml).toFixed(2)+'.';
+    var vd=d.filter(function(r){return _sdNum(r.hv)&&_sdNum(r.iv);}),more=vd.filter(function(r){return r.hv>r.iv;}).length,vol,vv,vc;
+    if(vd.length){vol='<div style="font-size:12px;color:var(--dim)"><span style="color:'+E20+'">real moves (21d)</span> vs <span style="color:'+E9+'">options priced</span> · each day of '+mname+'</div>'
+        +_gsMonthMini(d,[{get:function(r){return r.iv;},col:E9,label:'priced',fmt:function(v){return v.toFixed(1);}},{get:function(r){return r.hv;},col:E20,label:'real',fmt:function(v){return v.toFixed(1);}}],{h:120});
+      vv='Moved MORE than priced on '+more+' of '+vd.length+' days'+(more>vd.length/2?': edge to option buyers.':': edge to option sellers.');vc=more>vd.length/2?E20:E9;}
+    else{vol='<div style="font-size:12px;color:var(--dim)">No IV snapshots this month.</div>';vv='IV snapshots start Jul 14, 2026.';vc='#8b8ba6';}
+    var gd=d.filter(function(r){return _sdNum(r.flip);}),above=gd.filter(function(r){return r.c>=r.flip;}).length,dealer,dv,dc;
+    if(gd.length){dealer='<div style="font-size:12px;color:var(--dim)">close (white) vs <span style="color:'+FL+'">gamma flip</span> · <span style="color:#5eead4">call wall</span> · <span style="color:'+E20+'">put wall</span></div>'
+        +_gsMonthMini(d,[{get:function(r){return r.cw;},col:'#5eead4',dash:true,noDots:true,label:'call wall',fmt:function(v){return v.toFixed(0);}},{get:function(r){return r.pw;},col:E20,dash:true,noDots:true,label:'put wall',fmt:function(v){return v.toFixed(0);}},{get:function(r){return r.flip;},col:FL,label:'flip',fmt:function(v){return v.toFixed(0);}},{get:function(r){return r.c;},col:'#e8dede',label:'close',fmt:function(v){return v.toFixed(2);}}],{h:130});
+      dv='Closed above the gamma flip on '+above+' of '+gd.length+' days.';dc=above>=gd.length/2?UP:DN;}
+    else{dealer='<div style="font-size:12px;color:var(--dim)">No GEX snapshots this month.</div>';dv='GEX snapshots start Jul 14, 2026.';dc='#8b8ba6';}
+    var ups=d.filter(function(r){return r.c>=r.o;}).length,dns=d.length-ups,vmax=Math.max.apply(null,d.map(function(r){return _sdNum(r.v)?r.v:0;})),big=d.filter(function(r){return r.v===vmax;})[0];
+    var act='<div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:26px">'+ups+' up</span><span style="font-size:17px;color:var(--dim)">/ '+dns+' down days</span></div>'
+      +'<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line)"><div style="width:'+(ups/d.length*100).toFixed(1)+'%;background:'+UP+'"></div><div style="flex:1;background:'+DN+'"></div></div>'
+      +'<div style="font-size:11px;color:var(--dim)">IEX volume each day of '+mname+' (green = up day)</div>'
+      +_gsMonthMini(d,[{bars:true,get:function(r){return r.v;},colFn:function(r){return r.c>=r.o?UP:DN;},opFn:function(r,v){return v===vmax?1:.45;},fmt:function(v){return (v/1e6).toFixed(2)+'M';}}],{zero:true,h:110});
+    var av=(ups>dns*1.2?'Buyers won more days.':dns>ups*1.2?'Sellers won more days.':'Even month between buyers and sellers.')+(big?' Busiest day: '+_gsNice(big.date)+'.':'');
+    return '<div style="font-size:11px;letter-spacing:.14em;color:var(--dim);margin-top:10px">'+mname.toUpperCase()+' · DAY BY DAY (follows the month buttons below)</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:6px">'
+      +_gsCard('PRICE',price,pv,col)+_gsCard('VOLATILITY',vol,vv,vc)+_gsCard('DEALER MAP',dealer,dv,dc)+_gsCard('ACTIVITY',act,av,'#5eead4')+'</div>';
+  }
   function _gsMonthChart(rows,sel){
     var UP='#00e676',DN='#ff453a',MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     var ok=rows.filter(function(r){return _sdNum(r.o)&&_sdNum(r.c)&&_sdNum(r.h)&&_sdNum(r.l);});
     if(!ok.length)return '';
     var months=[];ok.forEach(function(r){var m=r.date.slice(0,7);if(months.indexOf(m)<0)months.push(m);});months.reverse();
-    var cur=GS.logMonth&&months.indexOf(GS.logMonth)>=0?GS.logMonth:(sel&&months.indexOf(sel.slice(0,7))>=0?sel.slice(0,7):months[0]);
+    var cur=_gsMonthOf(rows,sel);
     var d=ok.filter(function(r){return r.date.slice(0,7)===cur;});
     var prevAll=ok.filter(function(r){return r.date.slice(0,7)<cur;}),base=prevAll.length?prevAll[prevAll.length-1].c:d[0].o;
     var chg=d[d.length-1].c-base;
     var btn=months.slice(0,24).map(function(m){var on=m===cur;return '<button type="button" class="qqq-layer" data-gs-month="'+m+'" style="'+(on?'border-color:var(--accent);color:var(--accent)':'')+'">'+MN[+m.slice(5)]+' '+m.slice(2,4)+'</button>';}).join('');
     // priced range for the day = open ± open × IV × √(1/252) (IV from that day's logger snapshot)
     var E=function(r){return _sdNum(r.iv)&&r.iv>0?r.o*r.iv/100/Math.sqrt(252):null;};
-    var W=1000,H=330,pl=8,pr=60,pt=26,pb=44;
+    var W=1000,H=330,pl=8,pr=150,pt=26,pb=44;
     var hi=Math.max.apply(null,d.map(function(r){var e=E(r);return Math.max(r.h,e?r.o+e:r.h);})),lo=Math.min.apply(null,d.map(function(r){var e=E(r);return Math.min(r.l,e?r.o-e:r.l);}));
     var pad=(hi-lo)*0.06||1;hi+=pad;lo-=pad;
     var Y=function(v){return pt+(hi-v)/(hi-lo)*(H-pt-pb);},step=(W-pl-pr)/d.length,cw=Math.max(3,Math.min(26,step*0.62));
     var g='';
     for(var t=0;t<=4;t++){var v=lo+(hi-lo)*t/4,y=Y(v);g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="rgba(255,255,255,.06)"/><text x="'+(W-pr+6)+'" y="'+(y+4).toFixed(1)+'" fill="#8b8ba6" font-size="11">'+v.toFixed(0)+'</text>';}
+    // month range bracket on the right: month high → low, with the month's start (last month's close) and the latest close
+    var mH=Math.max.apply(null,d.map(function(r){return r.h;})),mL=Math.min.apply(null,d.map(function(r){return r.l;})),bx=W-pr+66,lastC=d[d.length-1].c;
+    g+='<line x1="'+bx+'" x2="'+bx+'" y1="'+Y(mH).toFixed(1)+'" y2="'+Y(mL).toFixed(1)+'" stroke="#ff2be0" stroke-width="3"/>'
+      +'<line x1="'+(bx-6)+'" x2="'+(bx+6)+'" y1="'+Y(mH).toFixed(1)+'" y2="'+Y(mH).toFixed(1)+'" stroke="#ff2be0" stroke-width="2"/><line x1="'+(bx-6)+'" x2="'+(bx+6)+'" y1="'+Y(mL).toFixed(1)+'" y2="'+Y(mL).toFixed(1)+'" stroke="#ff2be0" stroke-width="2"/>'
+      +'<line x1="'+(bx-8)+'" x2="'+bx+'" y1="'+Y(base).toFixed(1)+'" y2="'+Y(base).toFixed(1)+'" stroke="#8b8ba6" stroke-width="2"/><circle cx="'+bx+'" cy="'+Y(lastC).toFixed(1)+'" r="4" fill="'+(chg>=0?UP:DN)+'"/>'
+      +'<text x="'+(bx+10)+'" y="'+(Y(mH)+4).toFixed(1)+'" fill="#e8dede" font-size="11">'+mH.toFixed(2)+'</text><text x="'+(bx+10)+'" y="'+(Y(mL)+4).toFixed(1)+'" fill="#e8dede" font-size="11">'+mL.toFixed(2)+'</text>'
+      +'<text x="'+(bx+10)+'" y="'+((Y(mH)+Y(mL))/2-4).toFixed(1)+'" fill="#ff2be0" font-size="13" font-weight="600">$'+(mH-mL).toFixed(2)+'</text><text x="'+(bx+10)+'" y="'+((Y(mH)+Y(mL))/2+10).toFixed(1)+'" fill="#8b8ba6" font-size="10">month range</text>';
     d.forEach(function(r,i){
       var x=pl+step*(i+.5),col=r.c>=r.o?UP:DN,yo=Y(r.o),yc=Y(r.c),on=r.date===sel;
       var tip=_gsNice(r.date)+' · open '+r.o.toFixed(2)+' → close '+r.c.toFixed(2)+' ('+(r.c-r.o>=0?'+':'−')+Math.abs(r.c-r.o).toFixed(2)+') · range $'+(r.h-r.l).toFixed(2)+(_sdNum(r.flip)?' · gamma flip '+r.flip.toFixed(0):'')+(_sdNum(r.hv)&&_sdNum(r.iv)?' · real '+r.hv.toFixed(1)+' vs priced '+r.iv.toFixed(1):'');
@@ -7135,7 +7231,7 @@
     });
     return '<div style="margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;font-size:11px;letter-spacing:.14em;color:var(--dim)"><span>DAILY CANDLES · '+MN[+cur.slice(5)].toUpperCase()+' '+cur.slice(0,4)+' · CLICK A DAY TO LOAD IT</span>'
-      +'<span style="letter-spacing:0;font-size:13px;color:'+(chg>=0?UP:DN)+'">'+(chg>=0?'+':'−')+'$'+Math.abs(chg).toFixed(2)+' for the month · '+d.length+' days</span></div>'
+      +'<span style="letter-spacing:0;font-size:13px;color:'+(chg>=0?UP:DN)+'">'+(chg>=0?'+':'−')+'$'+Math.abs(chg).toFixed(2)+' for the month · range $'+(Math.max.apply(null,d.map(function(r){return r.h;}))-Math.min.apply(null,d.map(function(r){return r.l;}))).toFixed(2)+' · '+d.length+' days</span></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'+btn+'</div>'
       +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+g+'</svg>'
       +'<div style="font-size:11px;color:var(--dim);margin-top:4px">Above each candle: the day\'s range. Below: open → close. Dashed box: the range options priced in that morning (open ± open × IV ÷ √252); a candle poking out of its box moved more than expected.</div></div>';
