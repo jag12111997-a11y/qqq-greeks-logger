@@ -7132,7 +7132,7 @@
     }else{act='<div style="font-size:12px;color:var(--dim)">No intraday candles for this day (they start Aug 10, 2026).</div>';av='Daily candle only.';ac='#8b8ba6';}
     var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:8px">'
       +_gsCard('PRICE',price,pv,col==='var(--dim)'?'#8b8ba6':col)+_gsCard('VOLATILITY',vol,vv,vc)+_gsCard('DEALER MAP',dealer,dv,dc)+_gsCard('ACTIVITY',act,av,ac)+'</div>';
-    var _rowsAll=_sdRows(),_mc=_gsMonthCards(_rowsAll,_gsMonthOf(_rowsAll,r.date));if(_mc)h=_mc;
+    var _rowsAll=_sdRows(),_mc=_gsMonthOverlay(_rowsAll,_gsMonthOf(_rowsAll,r.date));if(_mc)h=_mc;
     return {head:head,cards:h};
   }
   // Nov 15: the day log is a daily candle chart, one month at a time (month buttons, newest first). Click a candle to load
@@ -7191,6 +7191,57 @@
     return '<div style="font-size:11px;letter-spacing:.14em;color:var(--dim);margin-top:10px">'+mname.toUpperCase()+' · DAY BY DAY (follows the month buttons below)</div>'
       +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:6px">'
       +_gsCard('PRICE',price,pv,col)+_gsCard('VOLATILITY',vol,vv,vc)+_gsCard('DEALER MAP',dealer,dv,dc)+_gsCard('ACTIVITY',act,av,'#5eead4')+'</div>';
+  }
+  // Nov 15: one overlaid month chart (price lines on the left axis, vol % on the right, volume strip at the bottom) with
+  // toggle chips (remembered) and month buttons on top; replaces the four month cards.
+  var GS_OVL=(function(){var o={close:1,range:1,flip:1,cw:1,pw:1,hv:1,iv:1,vol:1};try{var j=JSON.parse(localStorage.getItem('md:ovl')||'null');if(j)for(var k in j)o[k]=j[k];}catch(e){}return o;})();
+  function _gsMonthOverlay(rows,cur){
+    var UP='#00e676',DN='#ff453a',FL='#ffd600',E9='#29b6f6',E20='#ff9f0a',CW='#5eead4',MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var d=rows.filter(function(r){return r.date.slice(0,7)===cur&&_sdNum(r.o)&&_sdNum(r.c);});if(!d.length)return '';
+    var months=[];rows.forEach(function(r){if(_sdNum(r.o)&&_sdNum(r.c)){var m=r.date.slice(0,7);if(months.indexOf(m)<0)months.push(m);}});months.reverse();
+    var prev=rows.filter(function(r){return r.date.slice(0,7)<cur&&_sdNum(r.c);}),base=prev.length?prev[prev.length-1].c:d[0].o,last=d[d.length-1];
+    var chg=last.c-base,mh=Math.max.apply(null,d.map(function(r){return r.h;})),ml=Math.min.apply(null,d.map(function(r){return r.l;})),mname=MN[+cur.slice(5)]+' '+cur.slice(0,4);
+    var O=GS_OVL,S=[['close','Close','#e8dede'],['range','Day range','#8b8ba6'],['flip','Gamma flip',FL],['cw','Call wall',CW],['pw','Put wall',E20],['hv','Real vol',E20],['iv','Priced vol',E9],['vol','Volume',UP]];
+    var chips=S.map(function(x){var on=!!O[x[0]];return '<button type="button" class="qqq-layer" data-gs-ovl="'+x[0]+'" aria-pressed="'+on+'" style="'+(on?'':'opacity:.4;text-decoration:line-through')+'"><span style="display:inline-block;width:10px;height:3px;background:'+x[2]+';vertical-align:middle;margin-right:6px'+(x[0]==='hv'?';border-top:1px dashed '+x[2]:'')+'"></span>'+x[1]+'</button>';}).join('');
+    var mbtn=months.slice(0,24).map(function(m){var on=m===cur;return '<button type="button" class="qqq-layer" data-gs-month="'+m+'" style="'+(on?'border-color:var(--accent);color:var(--accent)':'')+'">'+MN[+m.slice(5)]+' '+m.slice(2,4)+'</button>';}).join('');
+    var W=1000,H=380,pl=8,pr=110,pt=14,pB=H-120,vT=H-100,vB=H-28,n=d.length,step=(W-pl-pr)/n,X=function(i){return pl+step*(i+.5);};
+    var pv=[];d.forEach(function(r){if(O.close)pv.push(r.c);if(O.range){pv.push(r.h,r.l);}if(O.flip&&_sdNum(r.flip))pv.push(r.flip);if(O.cw&&_sdNum(r.cw))pv.push(r.cw);if(O.pw&&_sdNum(r.pw))pv.push(r.pw);});if(O.close)pv.push(base);
+    var vv=[];d.forEach(function(r){if(O.hv&&_sdNum(r.hv))vv.push(r.hv);if(O.iv&&_sdNum(r.iv))vv.push(r.iv);});
+    var g='';
+    if(pv.length){var hi=Math.max.apply(null,pv),lo=Math.min.apply(null,pv),pd=(hi-lo)*.06||1;hi+=pd;lo-=pd;var Y=function(v){return pt+(hi-v)/(hi-lo)*(pB-pt);};
+      for(var t=0;t<=4;t++){var v=lo+(hi-lo)*t/4;g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="rgba(255,255,255,.05)"/><text x="'+(W-pr+6)+'" y="'+(Y(v)+4).toFixed(1)+'" fill="#8b8ba6" font-size="11">'+v.toFixed(0)+'</text>';}
+      var line=function(get,col,dash,w,lab){var p='',L=null;d.forEach(function(r,i){var v=get(r);if(!_sdNum(v))return;p+=(p?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);L=i;});if(!p)return '';
+        return '<path d="'+p+'" fill="none" stroke="'+col+'" stroke-width="'+(w||1.8)+'"'+(dash?' stroke-dasharray="6 4"':'')+'/>'+(lab&&L!==null?'<text x="'+(X(L)+8).toFixed(1)+'" y="'+(Y(get(d[L]))+4).toFixed(1)+'" fill="'+col+'" font-size="10">'+lab+' '+get(d[L]).toFixed(get===undefined?0:(lab==='close'?2:0))+'</text>':'');};
+      if(O.close)g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(base).toFixed(1)+'" y2="'+Y(base).toFixed(1)+'" stroke="#8b8ba6" stroke-dasharray="2 4"/><text x="'+(pl+2)+'" y="'+(Y(base)-4).toFixed(1)+'" fill="#8b8ba6" font-size="10">last month\'s close '+base.toFixed(2)+'</text>';
+      if(O.range)d.forEach(function(r,i){g+='<line x1="'+X(i).toFixed(1)+'" x2="'+X(i).toFixed(1)+'" y1="'+Y(r.h).toFixed(1)+'" y2="'+Y(r.l).toFixed(1)+'" stroke="'+(r.c>=r.o?UP:DN)+'" stroke-width="5" stroke-linecap="round" opacity=".35"/>';});
+      if(O.cw)g+=line(function(r){return r.cw;},CW,true,1.5,'call wall');
+      if(O.pw)g+=line(function(r){return r.pw;},E20,true,1.5,'put wall');
+      if(O.flip)g+=line(function(r){return r.flip;},FL,false,1.8,'flip');
+      if(O.close){g+=line(function(r){return r.c;},'#e8dede',false,2.4,'close');d.forEach(function(r,i){g+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(r.c).toFixed(1)+'" r="3" fill="#e8dede"/>';});}
+    }
+    if(vv.length){var vh=Math.max.apply(null,vv)*1.1,vl=Math.min.apply(null,vv)*.85,YV=function(v){return pt+(vh-v)/(vh-vl)*(pB-pt);};
+      var vline=function(k,col,lab){var p='',L=null;d.forEach(function(r,i){if(!_sdNum(r[k]))return;p+=(p?'L':'M')+X(i).toFixed(1)+' '+YV(r[k]).toFixed(1);L=i;});return p?'<path d="'+p+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-dasharray="2 3" opacity=".9"/><text x="'+(W-pr+46)+'" y="'+(YV(d[L][k])+4).toFixed(1)+'" fill="'+col+'" font-size="10">'+lab+' '+d[L][k].toFixed(1)+'%</text>':'';};
+      if(O.hv)g+=vline('hv',E20,'real');if(O.iv)g+=vline('iv',E9,'priced');}
+    if(O.vol){var vm=Math.max.apply(null,d.map(function(r){return _sdNum(r.v)?r.v:0;}))||1;
+      g+='<text x="'+pl+'" y="'+(vT-4)+'" fill="#8b8ba6" font-size="10">IEX volume</text>';
+      d.forEach(function(r,i){if(!_sdNum(r.v))return;var hgt=Math.max(1,r.v/vm*(vB-vT));g+='<rect x="'+(X(i)-step*.3).toFixed(1)+'" y="'+(vB-hgt).toFixed(1)+'" width="'+(step*.6).toFixed(1)+'" height="'+hgt.toFixed(1)+'" fill="'+(r.c>=r.o?UP:DN)+'" opacity="'+(r.v===vm?.95:.45)+'"/>';});}
+    d.forEach(function(r,i){var tip=_gsNice(r.date)+' · close '+r.c.toFixed(2)+' ('+(r.c-r.o>=0?'+':'−')+Math.abs(r.c-r.o).toFixed(2)+') · range $'+(r.h-r.l).toFixed(2)+(_sdNum(r.flip)?' · flip '+r.flip.toFixed(0):'')+(_sdNum(r.cw)?' · call wall '+r.cw.toFixed(0):'')+(_sdNum(r.pw)?' · put wall '+r.pw.toFixed(0):'')+(_sdNum(r.hv)&&_sdNum(r.iv)?' · real '+r.hv.toFixed(1)+'% vs priced '+r.iv.toFixed(1)+'%':'')+(_sdNum(r.v)?' · vol '+(r.v/1e6).toFixed(2)+'M':'');
+      g+='<g data-gs-day="'+r.date+'" style="cursor:pointer"><title>'+esc(tip)+'</title><rect x="'+(X(i)-step/2).toFixed(1)+'" y="'+pt+'" width="'+step.toFixed(1)+'" height="'+(vB-pt)+'" fill="transparent"/></g>'
+        +'<text x="'+X(i).toFixed(1)+'" y="'+(H-10)+'" fill="#8b8ba6" font-size="11" text-anchor="middle">'+(+r.date.slice(8))+'</text>';});
+    var vd=d.filter(function(r){return _sdNum(r.hv)&&_sdNum(r.iv);}),more=vd.filter(function(r){return r.hv>r.iv;}).length,gd=d.filter(function(r){return _sdNum(r.flip);}),above=gd.filter(function(r){return r.c>=r.flip;}).length,ups=d.filter(function(r){return r.c>=r.o;}).length;
+    var pill=function(t,c){return '<span style="padding:6px 10px;border-radius:6px;background:'+c+'1a;color:'+c+';font-size:12px">'+t+'</span>';};
+    return '<div style="margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;font-size:11px;letter-spacing:.14em;color:var(--dim)"><span>'+mname.toUpperCase()+' · DAY BY DAY · HOVER A DAY, CLICK TO LOAD IT</span>'
+      +'<span style="letter-spacing:0;font-size:13px;color:#e8dede">'+_sdF(last.c)+' <span style="color:'+(chg>=0?UP:DN)+'">'+(chg>=0?'+':'−')+Math.abs(chg).toFixed(2)+'</span> · range $'+(mh-ml).toFixed(2)+' ('+_sdF(ml)+' → '+_sdF(mh)+')</span></div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px">'+mbtn+'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 6px">'+chips+'</div>'
+      +_gsSvg(W,H,g)
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'
+      +pill((chg>=0?'Up':'Down')+' month '+(chg>=0?'+':'−')+Math.abs(chg).toFixed(2)+' over '+d.length+' days',chg>=0?UP:DN)
+      +(vd.length?pill('Moved more than priced on '+more+' of '+vd.length+' days',more>vd.length/2?E20:E9):'')
+      +(gd.length?pill('Above the gamma flip on '+above+' of '+gd.length+' days',above>=gd.length/2?UP:DN):'')
+      +pill(ups+' up / '+(d.length-ups)+' down days','#5eead4')+'</div>'
+      +'<div style="font-size:11px;color:var(--dim);margin-top:6px">Left axis: price lines (close, day range, flip, walls). Right axis: real vs priced vol (dotted). Bottom: volume. Tap a chip to hide it.</div></div>';
   }
   function _gsMonthChart(rows,sel){
     var UP='#00e676',DN='#ff453a',MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -7336,11 +7387,12 @@
     renderAllWidgets(true);
   }
   document.addEventListener('click',function(ev){
-    var b=ev.target.closest&&ev.target.closest('[data-gs-step],[data-gs-go],[data-gs-tf],[data-gs-day],[data-gs-more],[data-gs-month]');if(!b)return;
+    var b=ev.target.closest&&ev.target.closest('[data-gs-step],[data-gs-go],[data-gs-tf],[data-gs-day],[data-gs-more],[data-gs-month],[data-gs-ovl]');if(!b)return;
     var rows=_sdRows();if(!rows.length&&!b.hasAttribute('data-gs-tf'))return;
     if(b.hasAttribute('data-gs-tf')){GS.tf=b.getAttribute('data-gs-tf');gsSave();renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-more')){GS.logN+=30;renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-month')){GS.logMonth=b.getAttribute('data-gs-month');renderAllWidgets(true);return;}
+    if(b.hasAttribute('data-gs-ovl')){var ok2=b.getAttribute('data-gs-ovl');GS_OVL[ok2]=GS_OVL[ok2]?0:1;try{localStorage.setItem('md:ovl',JSON.stringify(GS_OVL));}catch(e9){}renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-day'))return _gsGo(b.getAttribute('data-gs-day'));
     if(b.hasAttribute('data-gs-go'))return _gsGo(b.getAttribute('data-gs-go')==='all'?null:'latest');
     var cur=(_gsLastG&&_gsLastG.sdate)||rows[rows.length-1].date,i=rows.findIndex(function(x){return x.date===cur;});if(i<0)i=rows.length-1;
