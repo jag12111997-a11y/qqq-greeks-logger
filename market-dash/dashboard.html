@@ -138,6 +138,18 @@
   .lev-c .lev-mid { position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; margin-left:-1px; background:#8b8ba6; }
   .lev-c .lev-tick { position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,.08); }
   .lev-c .lev-fill { position:absolute; top:0; bottom:0; background:var(--lev-color); opacity:.85; transition:left .35s ease, width .35s ease; }
+  .lev-c .lev-band { position:absolute; top:0; bottom:0; background:rgba(176,111,168,.22); }
+  .lev-c .lev-ext { position:absolute; top:0; bottom:0; background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 4px,transparent 4px 8px); }
+  .lev-c .lev-p { background:rgba(255,255,255,.22); }
+  .lev-ten { margin:10px 118px 0; }
+  .lev-ten-head { display:flex; gap:10px; align-items:baseline; font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:var(--faint); }
+  .lev-ten-head b { font-size:10px; }
+  .lev-ten-track { position:relative; height:6px; margin-top:4px; background:#202024; }
+  .lev-zone { position:absolute; top:0; bottom:0; }
+  .lev-ten-mark { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; box-shadow:0 0 0 2px #111; }
+  .lev-ten-scale { margin:4px 0 0 !important; }
+  .lev-flag { margin:8px 118px 0; font-size:10px; color:var(--txt); letter-spacing:.2px; }
+  @media (max-width:680px) { .lev-ten, .lev-flag { margin-left:0; margin-right:0; } }
   .lev-c .lev-mark { position:absolute; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--lev-color); box-shadow:0 0 0 2px #111; transition:left .35s ease; }
   .qqq-leverage-meter-scale { display:flex; justify-content:space-between; margin:5px 118px 0;
                               color:var(--faint); font-size:7.5px; letter-spacing:.6px;
@@ -3971,30 +3983,70 @@
       else if (az < 2.5) { state = "HEAVY " + lean + " · " + zs; color = score < 0 ? "#ff453a" : "#00e676"; }
       else { state = "EXTREME " + lean + " · " + zs; color = score < 0 ? "#ff1744" : "#69f0ae"; }
     }
-    var hist = [];
+    // ---- history (Nov 15): 5 years of daily scores (lev_history.json) + later sessions from history.js; today = current score ----
+    window.__levM = M;
+    if (!window.__levReq) {
+      window.__levReq = 1;
+      fetch("lev_history.json?t=" + Math.floor(Date.now() / 3600000), { cache: "no-cache" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { if (!j || !j.days) return; window.__LEVH = j.days; var el = document.getElementById("qqq-leverage-meter"); if (el && window.__levM) el.outerHTML = qqqLeverageMeter(window.__levM); })
+        .catch(function () {});
+    }
+    var series = [], lastD = null;
     try {
-      var seen = {};
+      var byD = {};
+      (window.__LEVH || []).forEach(function (r) { byD[r.d] = r.z; });
+      var stEnd = (window.__LEVH && window.__LEVH.length) ? window.__LEVH[window.__LEVH.length - 1].d : "";
       (typeof FULL !== "undefined" ? FULL : []).forEach(function (en) {
         var d = en && (en.session_date || en.entry_date); if (!d) return;
+        if (!lastD || d > lastD) lastD = d;
+        if (d <= stEnd) return;
         var w = {}; (en.watchlist || []).forEach(function (r) { if (r && r.symbol) w[r.symbol] = r; });
         var a = Number(w.TQQQ && w.TQQQ.pct_change), b = Number(w.SQQQ && w.SQQQ.pct_change), v = Number(w.VIX && w.VIX.last);
-        if (isFinite(a) && isFinite(b) && isFinite(v) && v > 0) seen[d] = (a - b) / 6 / (v / Math.sqrt(252));
+        if (isFinite(a) && isFinite(b) && isFinite(v) && v > 0) byD[d] = (a - b) / 6 / (v / Math.sqrt(252));
       });
-      hist = Object.keys(seen).sort().map(function (d) { return { d: d, z: seen[d] }; });
-    } catch (eH) { hist = []; }
-    var histTxt = "";
-    if (ready && hist.length >= 10) {
-      var past = hist.slice(0, -1), n = hist.length;
-      var more = hist.filter(function (h) { return score < 0 ? h.z < score : h.z > score; }).length;
-      var since = null;
-      for (var hi = past.length - 1; hi >= 0; hi--) { if (score < 0 ? past[hi].z <= score : past[hi].z >= score) { since = past[hi].d; break; } }
-      var md = function (d) { var p = d.split("-"); return ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+p[1]] + " " + (+p[2]); };
-      if (az < 0.5) histTxt = "balanced · " + hist.filter(function (h) { return Math.abs(h.z) < 0.5; }).length + " of " + n + " logged sessions were balanced";
-      else if (!since) histTxt = "most " + (score < 0 ? "bearish (SQQQ)" : "bullish (TQQQ)") + " lean in our data · " + n + " sessions since " + md(hist[0].d);
-      else histTxt = "most " + (score < 0 ? "SQQQ" : "TQQQ") + "-heavy since " + md(since) + " · " + (more + 1) + (more === 0 ? "st" : more === 1 ? "nd" : more === 2 ? "rd" : "th") + " of " + n + " logged sessions";
+      if (ready && lastD) byD[lastD] = score;
+      series = Object.keys(byD).sort().map(function (d) { return { d: d, z: byD[d] }; });
+    } catch (eH) { series = []; }
+    function q(arr, p) { var a = arr.slice().sort(function (x, y) { return x - y; }); return a.length ? a[Math.min(a.length - 1, Math.max(0, Math.floor(p * (a.length - 1))))] : 0; }
+    var md = function (d) { var p = d.split("-"); return ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+p[1]] + " " + (+p[2]); };
+    var R10 = null, regime = null, regSince = null, flag = "", dayBand = null, ten = null;
+    if (ready && series.length >= 60) {
+      var zs = series.map(function (r) { return r.z; }), past = zs.slice(0, -1);
+      dayBand = { p10: q(past, .10), p25: q(past, .25), p75: q(past, .75), p90: q(past, .90) };
+      var R = zs.map(function (_, k) { if (k < 9) return null; var t = 0; for (var u = k - 9; u <= k; u++) t += zs[u]; return t; });
+      var Rp = R.slice(0, -1).filter(function (x) { return x !== null; });
+      ten = { p2: q(Rp, .02), p10: q(Rp, .10), p20: q(Rp, .20), p35: q(Rp, .35), p50: q(Rp, .50), p65: q(Rp, .65), p80: q(Rp, .80), p90: q(Rp, .90), p98: q(Rp, .98) };
+      R10 = R[R.length - 1];
+      // sticky regime: bear starts in the bottom 20%, ends back at the middle; bull mirrors
+      var st = "balanced", since = series[9].d;
+      for (var k = 9; k < R.length; k++) {
+        var nst = st;
+        if (st !== "bear" && R[k] <= ten.p20) nst = "bear"; else if (st === "bear" && R[k] >= ten.p35) nst = "balanced";
+        if (nst !== "bear") { if (st !== "bull" && R[k] >= ten.p80) nst = "bull"; else if (st === "bull" && R[k] <= ten.p65) nst = "balanced"; }
+        if (nst !== st) { since = series[k].d; st = nst; }
+      }
+      regime = st; regSince = since;
+      // turn flags, once per episode (an episode resets when a new extreme is made after the flag)
+      var up = null, upMin = null, dn = null, dnMax = null, lastLow = -99, lastHigh = -99;
+      for (var k2 = 9; k2 < R.length; k2++) {
+        if (R[k2] <= ten.p10) { lastLow = k2; if (up && R[k2] < upMin) up = null; }
+        if (R[k2] >= ten.p90) { lastHigh = k2; if (dn && R[k2] > dnMax) dn = null; }
+        if (!up && k2 - lastLow <= 5 && zs[k2] > 0 && k2 >= 12 && R[k2] > R[k2 - 3]) { up = { k: k2, d: series[k2].d }; upMin = Math.min.apply(null, R.slice(Math.max(9, k2 - 5), k2 + 1)); }
+        if (!dn && k2 - lastHigh <= 5 && zs[k2] < 0 && k2 >= 12 && R[k2] < R[k2 - 3]) { dn = { k: k2, d: series[k2].d }; dnMax = Math.max.apply(null, R.slice(Math.max(9, k2 - 5), k2 + 1)); }
+        if (up && k2 - up.k >= 5) up = null;   // the edge window is 5 days
+        if (dn && k2 - dn.k >= 5) dn = null;
+      }
+      var last = R.length - 1;
+      if (up) flag = up.k === last
+        ? "↑ Turning up off a bear low today · day one usually dips; the edge is the next 5 days (history: up 74% from the next close, 18 turns)"
+        : "↑ Turned up off a bear low " + md(up.d) + " · day " + (last - up.k + 1) + " of 5, no new low since (history: next 5 days up 74%; 5 of 18 failed in deep selloffs)";
+      else if (dn) flag = "↓ Cooling off a bull high " + md(dn.d) + " · day " + (last - dn.k + 1) + " of 5 · not a sell signal (no reliable edge in 5 years)";
     }
+    var extreme = ready && az >= 2.5 ? "Extreme day · QQQ usually gives some back tomorrow (−$0.72 after big down days, −$1.21 after big up days)" : "";
     var cap = Math.max(-3, Math.min(3, ready ? score : 0)), half = Math.abs(cap) / 3 * 50;
     var fillL = cap < 0 ? 50 - half : 50, mark = 50 + cap / 3 * 50;
+    var pos = function (v) { return Math.max(0, Math.min(100, 50 + Math.max(-3, Math.min(3, v)) / 3 * 50)); };
     var tqTime = Number(tq._live_src_time), sqTime = Number(sq._live_src_time);
     var oldestTwinTime = isFinite(tqTime) && isFinite(sqTime) ? Math.min(tqTime, sqTime) : 0;
     var live = tq._live_quote === true && sq._live_quote === true && oldestTwinTime > 0 &&
@@ -4004,23 +4056,39 @@
       return '<div class="qqq-leverage-meter-side"><span>' + label + '</span><b>' +
         (isFinite(value) ? signed(value, 2, "%") : "&mdash;") + '</b></div>';
     }
+    var band = dayBand ? '<span class="lev-band" style="left:' + pos(dayBand.p25).toFixed(1) + '%;width:' + (pos(dayBand.p75) - pos(dayBand.p25)).toFixed(1) + '%"></span>' +
+      '<span class="lev-tick lev-p" style="left:' + pos(dayBand.p10).toFixed(1) + '%"></span><span class="lev-tick lev-p" style="left:' + pos(dayBand.p90).toFixed(1) + '%"></span>' +
+      '<span class="lev-ext" style="left:0;width:' + pos(-2.5).toFixed(1) + '%"></span><span class="lev-ext" style="left:' + pos(2.5).toFixed(1) + '%;right:0"></span>' : "";
+    var tenBar = "";
+    if (ten && R10 !== null) {
+      var lo = Math.min(ten.p2, R10), hi = Math.max(ten.p98, R10), tp = function (v) { return ((v - lo) / (hi - lo) * 100).toFixed(1); };
+      var regTxt = regime === "bear" ? "BEAR REGIME" : regime === "bull" ? "BULL REGIME" : "BALANCED";
+      var regCol = regime === "bear" ? "#ff453a" : regime === "bull" ? "#00e676" : "#b06fa8";
+      tenBar = '<div class="lev-ten"><div class="lev-ten-head"><span>10-day</span><b style="color:' + regCol + '">' + regTxt + ' · ' + (R10 >= 0 ? "+" : "−") + Math.abs(R10).toFixed(2) + '</b>' +
+        '<span>since ' + md(regSince) + '</span></div>' +
+        '<div class="lev-ten-track"><span class="lev-zone" style="left:0;width:' + tp(ten.p20) + '%;background:rgba(255,69,58,.22)"></span>' +
+        '<span class="lev-zone" style="left:' + tp(ten.p80) + '%;right:0;background:rgba(0,230,118,.18)"></span>' +
+        '<span class="lev-ten-mark" style="left:' + tp(R10) + '%;background:' + regCol + '"></span></div>' +
+        '<div class="qqq-leverage-meter-scale lev-ten-scale"><span>bear ≤ ' + ten.p20.toFixed(1) + ' (ends above ' + ten.p35.toFixed(1) + ')</span><span>balanced</span><span>bull ≥ +' + ten.p80.toFixed(1) + ' (ends below +' + ten.p65.toFixed(1) + ')</span></div></div>';
+    }
     return '<div id="qqq-leverage-meter" class="qqq-leverage-meter" ' +
       'style="--lev-color:' + color + '" role="img" aria-label="TQQQ versus SQQQ: ' + esc(state) + '">' +
       '<div class="qqq-leverage-meter-head"><span class="qqq-leverage-meter-title">3× leverage regime ' +
       '<small>· ' + source + '</small></span>' +
       '<span class="qqq-leverage-meter-state">' + esc(state) + '</span></div>' +
       '<div class="qqq-leverage-meter-row">' + side("SQQQ · bearish", sqPct) +
-      '<div class="qqq-leverage-track lev-c" aria-hidden="true">' +
-        '<span class="lev-tick" style="left:16.67%"></span><span class="lev-tick" style="left:33.33%"></span>' +
-        '<span class="lev-mid"></span><span class="lev-tick" style="left:66.67%"></span><span class="lev-tick" style="left:83.33%"></span>' +
+      '<div class="qqq-leverage-track lev-c" aria-hidden="true">' + band +
+        '<span class="lev-mid"></span>' +
         '<span class="lev-fill" style="left:' + fillL.toFixed(1) + '%;width:' + half.toFixed(1) + '%"></span>' +
         (ready ? '<span class="lev-mark" style="left:' + mark.toFixed(1) + '%"></span>' : '') +
       '</div>' +
       side("TQQQ · bullish", tqPct) + '</div>' +
-      '<div class="qqq-leverage-meter-scale"><span>−3σ SQQQ</span><span>−1.5</span><span>balanced</span><span>+1.5</span><span>TQQQ +3σ</span></div>' +
-      (histTxt ? '<div class="qqq-leverage-meter-math" style="color:var(--dim)">' + esc(histTxt) + '</div>' : '') +
+      '<div class="qqq-leverage-meter-scale"><span>−3σ SQQQ</span><span>' + (dayBand ? "normal day " + dayBand.p25.toFixed(2) + " … +" + dayBand.p75.toFixed(2) : "balanced") + '</span><span>TQQQ +3σ</span></div>' +
+      tenBar +
+      (flag ? '<div class="lev-flag">' + esc(flag) + '</div>' : '') +
+      (extreme ? '<div class="lev-flag" style="color:#ff9f0a">' + esc(extreme) + '</div>' : '') +
       '<div class="qqq-leverage-meter-math">(TQQQ% − SQQQ%) ÷ 6 ÷ (VIX ÷ √252) · VIX ' +
-      (isFinite(vix) ? vix.toFixed(2) : "—") + '</div>' +
+      (isFinite(vix) ? vix.toFixed(2) : "—") + (series.length ? ' · ' + series.length + ' days of history' : '') + '</div>' +
       '</div>';
   }
 
