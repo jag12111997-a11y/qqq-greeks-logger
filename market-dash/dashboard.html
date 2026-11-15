@@ -3614,8 +3614,8 @@
   ["wheel", "touchmove", "keydown"].forEach(function (n) { window.addEventListener(n, function () { _lastUserScroll = Date.now(); }, { passive: true, capture: true }); });
   // anchor = the clicked control, else the first heading / control near the top of the screen; after the redraw (and again
   // once charts have mounted) scroll so the same element sits exactly where it was. Safari has no built-in scroll anchoring.
-  var _ANCH = "#app h2, #app [data-gs-month], #app [data-or-month], #app [data-or-ovl], #app [data-gs-ovl], #app [data-dd-ovl], #app [data-gs-day], #app .band";
-  function _anchorKey(el) { return el.tagName + "|" + (el.getAttribute("data-gs-month") || el.getAttribute("data-or-month") || el.getAttribute("data-or-ovl") || el.getAttribute("data-gs-ovl") || el.getAttribute("data-dd-ovl") || el.getAttribute("data-gs-day") || "") + "|" + (el.textContent || "").trim().slice(0, 40); }
+  var _ANCH = "#app h2, #app [data-gs-month], #app [data-or-month], #app [data-or-ovl], #app [data-or-mm], #app [data-gs-ovl], #app [data-dd-ovl], #app [data-gs-day], #app .band";
+  function _anchorKey(el) { return el.tagName + "|" + (el.getAttribute("data-gs-month") || el.getAttribute("data-or-month") || el.getAttribute("data-or-ovl") || el.getAttribute("data-or-mm") || el.getAttribute("data-gs-ovl") || el.getAttribute("data-dd-ovl") || el.getAttribute("data-gs-day") || "") + "|" + (el.textContent || "").trim().slice(0, 40); }
   function _anchorTake(clicked) {
     var L = Array.prototype.slice.call(document.querySelectorAll(_ANCH)), el = null;
     if (clicked && L.indexOf(clicked) >= 0) el = clicked;
@@ -7473,6 +7473,60 @@
       dataHtml: secWide("QQQ data · month by month", gsData(G)) };
   }
 
+  // ===== Nov 15: Where the money sits (replaces the strike × expiry grid as the main view) =====
+  window.__ORMM = (function () { try { var v = localStorage.getItem("md:ormm"); return /^(prem|vol|oi)$/.test(v) ? v : "prem"; } catch (x) { return "prem"; } })();
+  function _orMoney(e) {
+    var tf = get(e, "time_footprint"), gr = tf && tf.grid;
+    if (!gr || !gr.cells || !gr.bands) return '<div style="color:var(--dim);font-size:12px">No positioning snapshot this session.</div>';
+    var mm = window.__ORMM, ML = { prem: "Premium", vol: "Volume", oi: "Open interest" }, fm = function (v) { return mm === "prem" ? fmtBig(v) : (v >= 1e6 ? (v / 1e6).toFixed(2) + "M" : v >= 1e3 ? (v / 1e3).toFixed(0) + "K" : String(Math.round(v))); };
+    var EC = ["#00e676", "#ff2be0", "#ffd600", "#29b6f6", "#5eead4"], B = gr.buckets, nb = B.length, nm = gr.bands.length;
+    var val = {}, rowT = [], colT = [], tot = 0; for (var m = 0; m < nm; m++) rowT[m] = 0; for (var b = 0; b < nb; b++) colT[b] = 0;
+    gr.cells.forEach(function (c) { var v = Number(c[mm]) || 0; val[c.e + ":" + c.m] = v; rowT[c.m] += v; colT[c.e] += v; tot += v; });
+    var useB = []; for (b = 0; b < nb; b++) if (colT[b] > 0) useB.push(b);
+    var mx = Math.max.apply(null, rowT) || 1, rows = "";
+    for (m = nm - 1; m >= 0; m--) {
+      var seg = "", atm = /ATM/.test(gr.bands[m]);
+      useB.forEach(function (b) { var v = val[b + ":" + m] || 0; if (!v) return; seg += '<div title="' + esc(B[b] + " · " + gr.bands[m] + " · " + fm(v)) + '" style="height:100%;width:' + (v / mx * 100).toFixed(2) + '%;background:' + EC[b % EC.length] + ';opacity:.8"></div>'; });
+      rows += '<div style="display:grid;grid-template-columns:minmax(80px,110px) 1fr minmax(70px,100px);gap:10px;align-items:center;padding:3px 0' + (atm ? ';background:rgba(255,43,224,.06)' : '') + '">' +
+        '<span style="font-size:12px;text-align:right;color:' + (atm ? "var(--accent)" : "var(--dim)") + '">' + esc(gr.bands[m]) + '</span>' +
+        '<div style="display:flex;height:18px;background:rgba(255,255,255,.03);border-radius:3px;overflow:hidden">' + seg + '</div>' +
+        '<span style="font-size:12px;text-align:right">' + fm(rowT[m]) + ' <span style="color:var(--dim)">' + (tot ? Math.round(rowT[m] / tot * 100) : 0) + '%</span></span></div>';
+    }
+    var legend = useB.map(function (b) { return '<span style="font-size:11px;color:var(--dim);margin-right:12px"><span style="display:inline-block;width:10px;height:10px;background:' + EC[b % EC.length] + ';vertical-align:middle;margin-right:5px"></span>' + esc(B[b]) + '</span>'; }).join("");
+    var tg = ["prem", "vol", "oi"].map(function (k) { return '<button type="button" class="qqq-layer" data-or-mm="' + k + '" style="' + (k === mm ? "border-color:var(--accent);color:var(--accent)" : "") + '">' + ML[k] + '</button>'; }).join("");
+    var hi = null; gr.cells.forEach(function (c) { var v = Number(c[mm]) || 0; if (!hi || v > hi.v) hi = { v: v, c: c }; });
+    var above = 0, below = 0, mid = Math.floor(nm / 2); for (m = 0; m < nm; m++) { if (m > mid) above += rowT[m]; else if (m < mid) below += rowT[m]; }
+    var ss = tf.short_share || {}, ls = tf.long_share || {}, sv = _orN(ss[mm]), lv = _orN(ls[mm]);
+    var split = (sv !== null && lv !== null) ? '<div style="margin:12px 0 4px;font-size:11px;letter-spacing:.12em;color:var(--dim)">SHORT- VS LONG-DATED · ' + ML[mm].toUpperCase() + '</div>' +
+      '<div style="display:flex;height:18px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.06)"><div title="short-dated" style="width:' + sv + '%;background:#ff2be0;opacity:.8"></div><div style="flex:1"></div><div title="long-dated" style="width:' + lv + '%;background:#29b6f6;opacity:.8"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:3px"><span style="color:#ff2be0">short-dated ' + sv.toFixed(1) + '%</span><span style="color:var(--dim)">' + (100 - sv - lv > 0.5 ? "other " + (100 - sv - lv).toFixed(1) + "%" : "") + '</span><span style="color:#29b6f6">long-dated ' + lv.toFixed(1) + '%</span></div>' : "";
+    // over time: share of the metric at the money and in weeklies, one point per session
+    var by = {}; H.forEach(function (x) { if (x && x.entry_date && get(x, "time_footprint.grid.cells")) by[x.entry_date] = x; });
+    var pts = Object.keys(by).sort().filter(function (d) { return d <= (e.entry_date || "9"); }).map(function (d) {
+      var g2 = by[d].time_footprint.grid, t2 = 0, a2 = 0, w2 = 0, wi = g2.buckets.indexOf("Weeklies"), ai = -1; g2.bands.forEach(function (bb, i) { if (/ATM/.test(bb)) ai = i; });
+      g2.cells.forEach(function (c) { var v = Number(c[mm]) || 0; t2 += v; if (c.m === ai) a2 += v; if (c.e === wi) w2 += v; });
+      return t2 ? { d: d, a: a2 / t2 * 100, w: w2 / t2 * 100 } : null; }).filter(Boolean);
+    var over = "";
+    if (pts.length >= 3) {
+      var W = 1000, Hh = 150, pl = 8, pr = 110, pt = 12, pb = 22, n = pts.length, all = []; pts.forEach(function (p) { all.push(p.a, p.w); });
+      var lo = Math.max(0, Math.min.apply(null, all) - 5), hh = Math.min(100, Math.max.apply(null, all) + 5), X = function (i) { return pl + (W - pl - pr) * (n === 1 ? .5 : i / (n - 1)); }, Y = function (v) { return pt + (hh - v) / (hh - lo) * (Hh - pt - pb); }, g = "";
+      for (var t = 0; t <= 2; t++) { var v = lo + (hh - lo) * t / 2; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="rgba(255,255,255,.05)"/><text x="' + (W - pr + 6) + '" y="' + (Y(v) + 4).toFixed(1) + '" fill="#8b8ba6" font-size="10">' + v.toFixed(0) + '%</text>'; }
+      var path = function (k) { return pts.map(function (p, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[k]).toFixed(1); }).join(""); };
+      g += '<path d="' + path("w") + '" fill="none" stroke="#ff2be0" stroke-width="2"/><path d="' + path("a") + '" fill="none" stroke="#ffd600" stroke-width="2"/>';
+      g += _orLabels([{ y: Y(pts[n - 1].w), t: "weeklies " + pts[n - 1].w.toFixed(0) + "%", c: "#ff2be0" }, { y: Y(pts[n - 1].a), t: "at the money " + pts[n - 1].a.toFixed(0) + "%", c: "#ffd600" }], W - pr + 40, 12);
+      pts.forEach(function (p, i) { var x0 = n === 1 ? pl : X(i) - (W - pl - pr) / (n - 1) / 2; g += '<rect x="' + x0.toFixed(1) + '" y="' + pt + '" width="' + ((W - pl - pr) / Math.max(1, n - 1)).toFixed(1) + '" height="' + (Hh - pt - pb) + '" fill="transparent"><title>' + esc(p.d + " · weeklies " + p.w.toFixed(0) + "% · at the money " + p.a.toFixed(0) + "%") + '</title></rect>'; if (i % Math.ceil(n / 10) === 0 || i === n - 1) g += '<text x="' + X(i).toFixed(1) + '" y="' + (Hh - 6) + '" fill="#8b8ba6" font-size="10" text-anchor="middle">' + p.d.slice(5) + '</text>'; });
+      over = '<div style="margin:14px 0 2px;font-size:11px;letter-spacing:.12em;color:var(--dim)">OVER TIME · SHARE OF ' + ML[mm].toUpperCase() + ' (' + n + ' SESSIONS) · HOVER FOR A DAY</div><svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto;display:block">' + g + '</svg>';
+    }
+    var pill = function (t, c) { return '<span style="padding:6px 10px;border-radius:6px;background:' + c + '1a;color:' + c + ';font-size:12px">' + t + '</span>'; };
+    return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px">' + tg + '</div>' +
+      '<div style="font-size:11px;letter-spacing:.12em;color:var(--dim);margin-bottom:4px">STRIKE BAND VS PRICE (ABOVE PRICE AT TOP) · COLOURS = EXPIRY · HOVER A BLOCK</div>' + rows +
+      '<div style="margin-top:6px">' + legend + '</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+      (hi ? pill("Heaviest: " + B[hi.c.e] + " at " + gr.bands[hi.c.m] + " (" + fm(hi.v) + ")", "#ff2be0") : "") +
+      pill("Above price " + fm(above) + " · below " + fm(below), above >= below ? "#00e676" : "#ff453a") + pill("Total " + fm(tot), "#5eead4") + '</div>' +
+      split + over +
+      '<div style="font-size:11px;color:var(--dim);margin-top:6px">Snapshot ' + esc(tf.generated_utc || "") + ' UTC · near-money ±' + (tf.near_money_pct || 20) + '% · ' + esc(tf.feed || "") + ' feed. 0DTE is left out when empty (the snapshot runs after the close).</div>';
+  }
   // ===== Nov 15: Odds & Flow charts =====
   function _ofBars(rows, o) {   // rows: {l, v, ref, col, t}; horizontal bars, optional ref tick (5-day avg) and guide line
     o = o || {}; var mx = o.max || Math.max.apply(null, rows.map(function (r) { return Math.max(r.v || 0, r.ref || 0); }).concat([o.line || 0])) * 1.08 || 1;
@@ -7642,7 +7696,14 @@
       (top && top.net_gex > 0 ? pill("Biggest pin: $" + top.strike + " (" + fmtBig(top.net_gex) + ")", "#00e676") : "") +
       (bot && bot.net_gex < 0 ? pill("Biggest push zone: $" + bot.strike + " (" + fmtBig(bot.net_gex) + ")", "#ff453a") : "") +
       (flip !== null ? pill("Price is $" + Math.abs(spot - flip).toFixed(2) + (spot >= flip ? " above" : " below") + " the flip", spot >= flip ? "#00e676" : "#ff453a") : "") +
-      pill("Gamma above price " + fmtBig(above) + " · below " + fmtBig(below), "#5eead4") + '</div>' +
+      pill("Gamma above price " + fmtBig(above) + " · below " + fmtBig(below), "#5eead4") +
+      (function () { var lg = e.gex || {}, out = "", pk = function (key) { var w = null, mx2 = -1; (lg.strikes || []).forEach(function (s2) { var a = Math.abs(Number(s2[key]) || 0); if (a > mx2) { mx2 = a; w = s2.strike; } }); return mx2 > 0 ? w : null; };
+        if (has(lg.net_vex)) out += pill("Vega " + fmtBig(lg.net_vex), lg.net_vex >= 0 ? "#00e676" : "#ff453a");
+        if (has(lg.net_tex)) out += pill("Theta " + fmtBig(lg.net_tex), lg.net_tex >= 0 ? "#00e676" : "#ff453a");
+        var vw = has(lg.net_vannaex) ? pk("vannaex") : null, cw2 = has(lg.net_vannaex) ? pk("charmex") : null;
+        if (vw !== null && vw === cw2) out += pill("Vanna & charm concentrated at " + vw, "#29b6f6");
+        else { if (vw !== null) out += pill("Vanna concentrated at " + vw, "#29b6f6"); if (cw2 !== null) out += pill("Charm concentrated at " + cw2, "#ff9f0a"); }
+        return out; })() + '</div>' +
       '<div style="font-size:11px;color:var(--dim);margin-top:6px">Green bars: dealers long gamma there, they sell rallies / buy dips, so price tends to stall. Red bars: dealers short gamma, they chase the move, so price tends to run through.</div>';
   }
   function _orTimeline(e) {
@@ -7689,7 +7750,8 @@
       '<div style="font-size:11px;color:var(--dim);margin-top:6px">One logger snapshot per session. Hover the dates row for that day\'s numbers. Tap a chip to hide a lane.</div>';
   }
   document.addEventListener("click", function (ev) {
-    var b = ev.target.closest && ev.target.closest("[data-orv],[data-or-month],[data-or-ovl]"); if (!b) return;
+    var b = ev.target.closest && ev.target.closest("[data-orv],[data-or-month],[data-or-ovl],[data-or-mm]"); if (!b) return;
+    if (b.hasAttribute("data-or-mm")) { window.__ORMM = b.getAttribute("data-or-mm"); try { localStorage.setItem("md:ormm", window.__ORMM); } catch (x) {} renderAllWidgets(true, b); return; }
     if (b.hasAttribute("data-orv")) { var v = b.getAttribute("data-orv"); if (v === window.ORV) return; window.ORV = v; try { localStorage.setItem("md:orv", v); } catch (x) {}
       renderAllWidgets(true); var t = document.getElementById("ortabs"); if (t) { var y = t.getBoundingClientRect().top + window.scrollY - 8; if (window.scrollY > y) window.scrollTo(0, Math.max(0, y)); _lastUserScroll = Date.now() + 1; } return; }
     if (b.hasAttribute("data-or-month")) { window.__ORM = b.getAttribute("data-or-month"); renderAllWidgets(true, b); return; }
@@ -8394,8 +8456,8 @@
       var v = window.ORV;
       if (v === "pos") return secWide("Dealer map · gamma by strike", _orDealerMap(e)) +
         secWide("Positioning over time", _orTimeline(e)) +
-        (secQqqPositioning(e) ? secWide("Options positioning · strike × expiry", secQqqPositioning(e)) : "") +
-        secNasdaqDeepDive(e, "options:pos");
+        secWide("Where the money sits", _orMoney(e) + (secQqqPositioning(e) ? '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">OLD GRID</summary>' + secQqqPositioning(e) + "</details>" : ""));
+        // Nov 15: "Dealer positioning · full modules" box removed (already graphed); vega / theta / concentration moved to dealer-map pills
       if (v === "flow") return secNasdaqDeepDive(e, "options:flow");
       // Nov 15: cockpit and Plan removed from this tab (asked)
       return secWide("Today vs its normal range", _orStrips(e));
