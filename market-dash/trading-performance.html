@@ -449,7 +449,7 @@ function _progress(){
   if(!MYT)return '<div class="tp-empty">Loading your trade log…</div>';
   var D=_decisions();if(!D.length)return '';
   var MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var keyOf=PROG==='month'?function(d){return d.date.slice(0,7);}:_wkKey, keys=[],by={};
+  var keyOf=PROG==='month'?function(d){return d.date.slice(0,7);}:function(d){return _wkKey(d.date);}, keys=[],by={};
   D.forEach(function(d){var k=keyOf(d);if(!by[k]){by[k]=[];keys.push(k);}by[k].push(d);});
   var lab=function(k){return PROG==='month'?MN[+k.slice(5)]+' '+k.slice(2,4):'wk '+(+k.slice(5,7))+'/'+(+k.slice(8));};
   // points: per period (week / month) or running all-time after each week (all)
