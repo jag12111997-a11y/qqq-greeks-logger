@@ -6,10 +6,15 @@
 <style>
   html,body{margin:0;background:#160a0e;color:#e6c8c8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
   #root{padding:14px 16px;}
+  #ptabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px 0;}
+  #ptabs button{font:600 12px ui-monospace,Menlo,monospace;letter-spacing:0.06em;padding:7px 14px;border-radius:8px;cursor:pointer;background:rgba(140,20,20,0.08);color:rgba(200,160,160,0.6);border:1px solid rgba(140,20,20,0.25);}
+  #ptabs button.on{background:rgba(0,229,204,0.14);color:#00e5cc;border-color:rgba(0,229,204,0.35);}
   .tp-empty{color:rgba(200,160,160,0.4);font-size:11px;text-align:center;padding:26px 10px;letter-spacing:0.04em;}
 </style>
 </head><body>
+<div id="ptabs"></div>
 <div id="root"></div>
+<div id="journal-wrap" style="display:none;padding:12px 16px 0"></div>
 <script>
 // ===== BLANK dataset — official data starts September; no practice data carried over =====
 var BLANK_PERF = {equity:[],winrate:{total:0,wins:0,losses:0,be:0,net_pnl:0,expectancy:0,by_type:[]},edges:[],heatmap:[],revenge:[],streaks:[],current_streak:{},max_win_streak:0,max_loss_streak:0,r_dist:[],hold_time:[],monthly:[],rules:[]};
@@ -418,43 +423,64 @@ function _budget2w(D) {
   return _box(h);
 }
 
+// Sub-tabs (Nov 15): Performance · Stats · My trades · Journal. Same panels as before, just split up; the choice is remembered.
+var PVIEW = 'perf'; try { var _pv = localStorage.getItem('tp:view'); if (['perf', 'stats', 'trades', 'journal'].indexOf(_pv) >= 0) PVIEW = _pv; } catch (e) {}
 function renderCombinedWidget(){
+  if (PVIEW === 'trades' || PVIEW === 'journal') return '';
   var D=_getPerfData('perf-combined');
   var css='font-family:ui-monospace,monospace;font-size:10px;display:grid;gap:7px;grid-template-columns:1fr 1fr;';
   var html='<div style="'+css+'">';
   html+='<div style="grid-column:1/-1">'+_filterBar('perf-combined')+'</div>';
-  html+='<div style="grid-column:1/-1">'+_combinedHero(D)+'</div>';
-  html+='<div style="grid-column:1/-1">'+_botPaperPanel()+'</div>';
+  if (PVIEW === 'perf') {
+    html+='<div style="grid-column:1/-1">'+_combinedHero(D)+'</div>';
+    html+='<div style="grid-column:1/-1">'+_botPaperPanel()+'</div>';
+  }
   var hasData=(D.winrate&&D.winrate.total)||(D.equity&&D.equity.length);
   if(!hasData){
     html+='<div style="grid-column:1/-1" class="tp-empty">No trades yet — official data starts September.<br>This fills in once trade data is loaded.</div>';
     html+='</div>';return html;
   }
-  html+='<div style="grid-column:1/-1">'+_miniEquity(D)+'</div>';
-  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('BUDGET · $150 PER 2 WEEKS')+_budget2w(D)+'</div>';
-  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('P&L CALENDAR')+_pnlCalendar(D)+'</div>';
-  if(D.alpha){
-    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('STRIKE ZONE')+_strikeZone(D)+'</div>';
-    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('AFTER A LOSS')+_afterLoss(D)+'</div>';
-    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('TIMING')+_timing(D)+'</div>';
+  if (PVIEW === 'perf') {
+    html+='<div style="grid-column:1/-1">'+_miniEquity(D)+'</div>';
+    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('BUDGET · $150 PER 2 WEEKS')+_budget2w(D)+'</div>';
+    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('P&L CALENDAR')+_pnlCalendar(D)+'</div>';
+    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('MONTHLY')+_compactMonthly(D)+'</div>';
+  } else {
+    if(D.alpha){
+      html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('STRIKE ZONE')+_strikeZone(D)+'</div>';
+      html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('AFTER A LOSS')+_afterLoss(D)+'</div>';
+      html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('TIMING')+_timing(D)+'</div>';
+    }
+    html+='<div style="padding:2px">'+perfLabel('EDGES & LEAKS')+_compactEdgesAll(D)+'</div>';
+    html+='<div style="padding:2px">'+perfLabel('HOLD TIME')+_compactHoldTime(D)+perfLabel('R DISTRIBUTION')+_compactRDist(D)+'</div>';
+    html+='<div style="grid-column:1/-1">'+_pnlConcentration(D)+'</div>';
+    html+='<div style="grid-column:1/-1;padding:2px">'+_compactRules(D)+'</div>';
+    html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('SESSION HEATMAP')+_compactHeatmap(D)+'</div>';
   }
-  html+='<div style="padding:2px">'+perfLabel('EDGES & LEAKS')+_compactEdgesAll(D)+'</div>';
-  html+='<div style="padding:2px">'+perfLabel('HOLD TIME')+_compactHoldTime(D)+perfLabel('R DISTRIBUTION')+_compactRDist(D)+'</div>';
-  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('MONTHLY')+_compactMonthly(D)+'</div>';
-  html+='<div style="grid-column:1/-1">'+_pnlConcentration(D)+'</div>';
-  html+='<div style="grid-column:1/-1;padding:2px">'+_compactRules(D)+'</div>';
-  html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('SESSION HEATMAP')+_compactHeatmap(D)+'</div>';
   html+='</div>';
   return html;
 }
-(function(){var s=document.createElement('script');s.src='trading_performance_data.js?t='+Date.now();s.onload=s.onerror=function(){document.getElementById('root').innerHTML=renderCombinedWidget();};document.head.appendChild(s);})();
+function tpView(v){
+  PVIEW = v; try { localStorage.setItem('tp:view', v); } catch (e) {}
+  var T = [['perf', 'Performance'], ['stats', 'Stats'], ['trades', 'My trades'], ['journal', 'Journal']];
+  document.getElementById('ptabs').innerHTML = T.map(function (t) { return '<button type="button" class="' + (t[0] === v ? 'on' : '') + '" onclick="tpView(\'' + t[0] + '\')">' + t[1] + '</button>'; }).join('');
+  var root = document.getElementById('root'), mt = document.getElementById('my-trades'), jw = document.getElementById('journal-wrap');
+  root.style.display = (v === 'perf' || v === 'stats') ? '' : 'none';
+  if (mt) mt.style.display = v === 'trades' ? '' : 'none';
+  jw.style.display = v === 'journal' ? '' : 'none';
+  if (v === 'journal' && !jw.firstChild) jw.innerHTML = '<iframe src="notebook.html" title="Trading Journal" style="width:100%;height:calc(100vh - 70px);border:1px solid rgba(140,20,20,0.25);border-radius:10px;display:block;background:#0d0625"></iframe>';
+  if (v === 'perf' || v === 'stats') root.innerHTML = renderCombinedWidget();
+  window.scrollTo(0, 0);
+}
+(function(){var s=document.createElement('script');s.src='trading_performance_data.js?t='+Date.now();s.onload=s.onerror=function(){tpView(PVIEW);};document.head.appendChild(s);})();
 </script>
 <!-- MY TRADES: look back at every one of your own trades (same viewer as the bot's Trade Replay, this page's colors) -->
-<div id="my-trades" style="margin:14px 0 0;border-top:1px solid rgba(140,20,20,0.25);padding-top:10px">
+<div id="my-trades" style="margin:14px 0 0;padding:0 16px">
   <div style="color:#b0408f;font-size:8px;letter-spacing:0.15em;padding:0 2px 6px">MY TRADES · LOOK BACK BY MONTH</div>
   <iframe id="my-replay" src="my-replay.html" title="My trades" scrolling="no" style="width:100%;height:1500px;border:0;display:block;background:#160a0e"></iframe>
 </div>
 <script>
+(function(){var mt=document.getElementById('my-trades');if(mt&&PVIEW!=='trades')mt.style.display='none';})();
 window.addEventListener('message',function(e){var h=e&&e.data&&e.data.myReplayHeight;if(h>200){var f=document.getElementById('my-replay');if(f&&Math.abs(f.offsetHeight-h)>4)f.style.height=(h+4)+'px';}});
 </script>
 </body></html>
