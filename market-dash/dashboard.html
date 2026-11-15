@@ -5368,15 +5368,51 @@
       mods = mods || [];
       var box = function (t, body, note, mod) { return '<div style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:0"><div style="font-size:11px;letter-spacing:.14em;color:var(--dim);margin-bottom:4px">' + t + '</div>' + body + '<div style="font-size:11px;color:var(--dim);margin-top:4px">' + note + '</div>' +
         (mod ? '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">DETAILS · today\'s numbers</summary>' + qqqDeepItem(mod) + '</details>' : '') + '</div>'; };
-      var geo = _gsMonthMini(d, [{ get: function (r) { return r.geo; }, col: "#ff2be0", label: "√det(G)", fmt: function (v) { return v.toFixed(3); } }], { refs: [{ v: 0.15, label: "0.15", col: "#ff453a" }, { v: 0.35, label: "0.35", col: "#00e676" }] });
-      var fade = _gsMonthMini(d, [{ get: function (r) { return vr[r.date]; }, col: "#29b6f6", label: "VR(2)", fmt: function (v) { return v.toFixed(2); } }], { refs: [{ v: 1, label: "1.00" }] });
-      var rng = _gsMonthMini(d, [{ bars: true, get: function (r) { return used[r.date]; }, colFn: function (r, v) { return v < 50 ? "#00e676" : v < 100 ? "#ff9f0a" : "#ff453a"; }, fmt: function (v) { return v.toFixed(0) + "%"; } }], { zero: true, refs: [{ v: 100, label: "100%", col: "#ff453a" }] });
-      return '<div class="qqq-deep-group"><div class="qqq-deep-group-title">' + MN[+cur.slice(5)] + ' ' + cur.slice(0, 4) + ' · day by day (follows the month buttons)</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin:6px 0 12px;align-items:start">' +
-        box("REGIME GEOMETRY · √det(G)", geo, "Under 0.15 = everything moving as one crowded trade; over 0.35 = spread out.", mods[0]) +
-        box("FADE REGIME · VARIANCE RATIO", fade, "Over 1.00 = moves keep going (trend); under 1.00 = moves snap back (fade).", mods[1]) +
-        box("RANGE USED · % OF PRICED MOVE", rng, "Each day's close-to-close move vs the move VIX priced; past 100% = moved more than expected.", mods[2]) +
-        '</div></div>';
+      // Nov 15: one overlaid chart — range used as bars (left axis, %), variance ratio and √det(G) as lines, each on its own
+      // right-hand scale; toggle chips (remembered) + month buttons; the three modules fold under DETAILS below.
+      var O = window.__DDOV || (window.__DDOV = (function () { var o = { rng: 1, vr: 1, geo: 1, refs: 1 }; try { var j = JSON.parse(localStorage.getItem("md:ddov") || "null"); if (j) for (var k in j) o[k] = j[k]; } catch (eO) {} return o; })());
+      var months = []; rows.forEach(function (r) { if (_sdNum(r.o) && _sdNum(r.c)) { var m = r.date.slice(0, 7); if (months.indexOf(m) < 0) months.push(m); } }); months.reverse();
+      var mbtn = months.slice(0, 24).map(function (m) { var on = m === cur; return '<button type="button" class="qqq-layer" data-gs-month="' + m + '" style="' + (on ? 'border-color:var(--accent);color:var(--accent)' : '') + '">' + MN[+m.slice(5)] + ' ' + m.slice(2, 4) + '</button>'; }).join("");
+      var CH = [["rng", "Range used %", "#ff9f0a"], ["vr", "Variance ratio", "#29b6f6"], ["geo", "√det(G)", "#ff2be0"], ["refs", "Guide lines", "#8b8ba6"]];
+      var chips = CH.map(function (x) { var on = !!O[x[0]]; return '<button type="button" class="qqq-layer" data-dd-ovl="' + x[0] + '" aria-pressed="' + on + '" style="' + (on ? '' : 'opacity:.4;text-decoration:line-through') + '"><span style="display:inline-block;width:10px;height:3px;background:' + x[2] + ';vertical-align:middle;margin-right:6px"></span>' + x[1] + '</button>'; }).join("");
+      var W = 1000, H = 300, pl = 44, pr = 120, pt = 14, pB = H - 28, n = d.length, step = (W - pl - pr) / n, X = function (k) { return pl + step * (k + .5); }, g = "";
+      var uv = d.map(function (r) { return used[r.date]; }).filter(_sdNum), umax = Math.max(120, uv.length ? Math.max.apply(null, uv) * 1.08 : 120), YU = function (v) { return pt + (umax - v) / umax * (pB - pt); };
+      if (O.rng) {
+        for (var t = 0; t <= 4; t++) { var v = umax * t / 4; g += '<text x="' + (pl - 6) + '" y="' + (YU(v) + 4).toFixed(1) + '" fill="#8b8ba6" font-size="10" text-anchor="end">' + v.toFixed(0) + '%</text><line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + YU(v).toFixed(1) + '" y2="' + YU(v).toFixed(1) + '" stroke="rgba(255,255,255,.04)"/>'; }
+        if (O.refs) g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + YU(100).toFixed(1) + '" y2="' + YU(100).toFixed(1) + '" stroke="#ff453a" stroke-dasharray="3 3" opacity=".7"/><text x="' + (pl + 4) + '" y="' + (YU(100) - 4).toFixed(1) + '" fill="#ff453a" font-size="10">100% of priced move</text>';
+        d.forEach(function (r, k) { var v = used[r.date]; if (!_sdNum(v)) return; var y = YU(v); g += '<rect x="' + (X(k) - step * .3).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (step * .6).toFixed(1) + '" height="' + Math.max(1, pB - y).toFixed(1) + '" fill="' + (v < 50 ? "#00e676" : v < 100 ? "#ff9f0a" : "#ff453a") + '" opacity=".55"/>'; });
+      }
+      var lineOn = function (get, lo, hi, col, fmt, axisX, ref) {
+        var vals = d.map(get).filter(_sdNum); if (!vals.length) return "";
+        lo = Math.min(lo, Math.min.apply(null, vals)); hi = Math.max(hi, Math.max.apply(null, vals)); var pd = (hi - lo) * .08; lo -= pd; hi += pd;
+        var Y = function (v) { return pt + (hi - v) / (hi - lo) * (pB - pt); }, p = "", L = null, out = "";
+        (O.refs ? ref : []).forEach(function (f) { out += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(f.v).toFixed(1) + '" y2="' + Y(f.v).toFixed(1) + '" stroke="' + col + '" stroke-dasharray="2 5" opacity=".6"/><text x="' + (axisX + 4) + '" y="' + (Y(f.v) + 3).toFixed(1) + '" fill="' + col + '" font-size="9" opacity=".8">' + f.label + '</text>'; });
+        d.forEach(function (r, k) { var v = get(r); if (!_sdNum(v)) return; p += (p ? "L" : "M") + X(k).toFixed(1) + " " + Y(v).toFixed(1); L = k; });
+        out += '<path d="' + p + '" fill="none" stroke="' + col + '" stroke-width="2.2"/>';
+        d.forEach(function (r, k) { var v = get(r); if (_sdNum(v)) out += '<circle cx="' + X(k).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="3" fill="' + col + '"/>'; });
+        if (L !== null) out += '<text x="' + axisX + '" y="' + (Y(get(d[L])) + 4).toFixed(1) + '" fill="' + col + '" font-size="11" font-weight="600">' + fmt(get(d[L])) + '</text>';
+        return out;
+      };
+      if (O.vr) g += lineOn(function (r) { return vr[r.date]; }, 0.9, 1.1, "#29b6f6", function (v) { return "VR " + v.toFixed(2); }, W - pr + 8, [{ v: 1, label: "VR 1.00" }]);
+      if (O.geo) g += lineOn(function (r) { return r.geo; }, 0, 0.2, "#ff2be0", function (v) { return "√det " + v.toFixed(3); }, W - pr + 8, [{ v: 0.15, label: "crowded 0.15" }]);
+      d.forEach(function (r, k) { var tip = _gsNice(r.date) + (_sdNum(used[r.date]) ? " · range used " + used[r.date].toFixed(0) + "%" : "") + (_sdNum(vr[r.date]) ? " · VR(2) " + vr[r.date].toFixed(3) : "") + (_sdNum(r.geo) ? " · √det(G) " + r.geo.toFixed(4) : "") + (_sdNum(r.corr) ? " · avg corr " + r.corr.toFixed(3) : "");
+        g += '<g data-gs-day="' + r.date + '" style="cursor:pointer"><title>' + esc(tip) + '</title><rect x="' + (X(k) - step / 2).toFixed(1) + '" y="' + pt + '" width="' + step.toFixed(1) + '" height="' + (pB - pt) + '" fill="transparent"/></g><text x="' + X(k).toFixed(1) + '" y="' + (H - 8) + '" fill="#8b8ba6" font-size="11" text-anchor="middle">' + (+r.date.slice(8)) + '</text>'; });
+      var fold = function (t, mod) { return mod ? '<details style="min-width:0"><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">' + t + ' · details</summary>' + qqqDeepItem(mod) + '</details>' : ""; };
+      var gdays = d.filter(function (r) { return _sdNum(r.geo); }), crowd = gdays.filter(function (r) { return r.geo < 0.15; }).length;
+      var vdays = d.filter(function (r) { return _sdNum(vr[r.date]); }), trend = vdays.filter(function (r) { return vr[r.date] > 1; }).length;
+      var udays = d.filter(function (r) { return _sdNum(used[r.date]); }), over = udays.filter(function (r) { return used[r.date] >= 100; }).length;
+      var pill = function (t, c) { return '<span style="padding:6px 10px;border-radius:6px;background:' + c + '1a;color:' + c + ';font-size:12px">' + t + '</span>'; };
+      return '<div class="qqq-deep-group"><div class="qqq-deep-group-title">' + MN[+cur.slice(5)] + ' ' + cur.slice(0, 4) + ' · regime, fade and range used, day by day · hover a day, click to load it</div>' +
+        '<div style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin:6px 0 12px">' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">' + mbtn + '</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 6px">' + chips + '</div>' + _gsSvg(W, H, g) +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">' +
+        (gdays.length ? pill("Crowded (√det under 0.15) on " + crowd + " of " + gdays.length + " days", crowd > gdays.length / 2 ? "#ff453a" : "#00e676") : "") +
+        (vdays.length ? pill("Trending (VR over 1.00) on " + trend + " of " + vdays.length + " days", "#29b6f6") : "") +
+        (udays.length ? pill("Moved past the priced range on " + over + " of " + udays.length + " days", over > udays.length / 2 ? "#ff453a" : "#ff9f0a") : "") + '</div>' +
+        '<div style="font-size:11px;color:var(--dim);margin-top:6px">Bars: each day\'s move as % of what VIX priced (left axis). Lines: variance ratio (over 1.00 = moves keep going) and √det(G) (under 0.15 = everything moving as one crowded trade), each on its own scale. Tap a chip to hide it.</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:10px;align-items:start">' +
+        fold("Regime geometry", mods[0]) + fold("Fade regime", mods[1]) + fold("Range used", mods[2]) + '</div></div></div>';
     } catch (eM) { return ""; }
   }
 
@@ -7401,11 +7437,12 @@
     renderAllWidgets(true);
   }
   document.addEventListener('click',function(ev){
-    var b=ev.target.closest&&ev.target.closest('[data-gs-step],[data-gs-go],[data-gs-tf],[data-gs-day],[data-gs-more],[data-gs-month],[data-gs-ovl]');if(!b)return;
+    var b=ev.target.closest&&ev.target.closest('[data-gs-step],[data-gs-go],[data-gs-tf],[data-gs-day],[data-gs-more],[data-gs-month],[data-gs-ovl],[data-dd-ovl]');if(!b)return;
     var rows=_sdRows();if(!rows.length&&!b.hasAttribute('data-gs-tf'))return;
     if(b.hasAttribute('data-gs-tf')){GS.tf=b.getAttribute('data-gs-tf');gsSave();renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-more')){GS.logN+=30;renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-month')){GS.logMonth=b.getAttribute('data-gs-month');renderAllWidgets(true);return;}
+    if(b.hasAttribute('data-dd-ovl')){var kk=b.getAttribute('data-dd-ovl'),OO=window.__DDOV||{};OO[kk]=OO[kk]?0:1;window.__DDOV=OO;try{localStorage.setItem('md:ddov',JSON.stringify(OO));}catch(e8){}renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-ovl')){var ok2=b.getAttribute('data-gs-ovl');GS_OVL[ok2]=GS_OVL[ok2]?0:1;try{localStorage.setItem('md:ovl',JSON.stringify(GS_OVL));}catch(e9){}renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-day'))return _gsGo(b.getAttribute('data-gs-day'));
     if(b.hasAttribute('data-gs-go'))return _gsGo(b.getAttribute('data-gs-go')==='all'?null:'latest');
