@@ -478,7 +478,7 @@ function _progress(){
   var table='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:9px;letter-spacing:.12em;color:rgba(200,160,160,0.6)">TABLE</summary><table style="width:100%;border-collapse:collapse;font-size:10px;margin-top:6px"><tr style="color:rgba(200,160,160,0.5);text-align:left"><th>'+(PROG==='all'?'All-time after':PROG==='month'?'Month':'Week of')+'</th><th>Decisions</th><th>Win rate</th><th>W/L</th><th>Payoff</th><th>Streaks</th><th>Net</th><th>Money used</th><th>Return</th></tr>'+rows+'</table></details>';
   // wins + money for the current period
   var plabel=PROG==='all'?'all time':PROG==='month'?lab(keys[keys.length-1]):'week of '+lab(keys[keys.length-1]).slice(3);
-  var cmp=function(a,b,good,f){if(a===null||a===undefined)return '—';var t=f(a);if(PROG==='all'||b===null||b===undefined)return t;var d=(a-b)*good;return t+' <span style="font-size:9px;color:'+(d>0?'#00e5cc':d<0?'#cc1111':'rgba(200,160,160,0.5)')+'">'+(d>0?'▲':d<0?'▼':'=')+' was '+f(b)+'</span>';};
+  var cmp=function(a,b,good,f){if(a===null||a===undefined)return '—';var t=f(a);if(PROG==='all'||b===null||b===undefined)return t;var d=(a-b)*good;return t+' <span style="font-size:9px;color:'+(d>0?'#00e5cc':d<0?'#cc1111':'rgba(200,160,160,0.5)')+'">'+(good===0?'·':d>0?'▲':d<0?'▼':'=')+' was '+f(b)+'</span>';};
   var tile=function(k,v){return '<div style="background:rgba(140,20,20,0.06);border:1px solid rgba(140,20,20,0.18);border-radius:8px;padding:8px 10px"><div style="font-size:9px;letter-spacing:.1em;color:rgba(200,160,160,0.55)">'+k+'</div><div style="font-size:14px;margin-top:3px">'+v+'</div></div>';};
   var money=function(v){return '$'+Math.round(v).toLocaleString();},mins=function(v){return v.toFixed(1)+' min';};
   var c=cur,pv2=prev||{};
