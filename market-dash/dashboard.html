@@ -1626,7 +1626,11 @@
         '<div style="color:var(--faint);font-size:11px;margin-top:8px">Check debug_cboe_raw.html</div>' +
         read(na()));
     }
-    var body = "";
+    var pcc = function (v) { return v >= 1 ? "#ff453a" : v < 0.75 ? "#00e676" : "#ffd600"; };
+    var body = _ofBars([["Total", o.total_pc], ["Index", o.index_pc], ["ETP", o.etp_pc], ["Equity", o.equity_pc], ["VIX", o.vix_pc], ["SPX + SPXW", o.spx_spxw_pc]]
+        .filter(function (x) { return has(x[1]); }).map(function (x) { return { l: x[0] + " P/C", v: Number(x[1]), col: pcc(Number(x[1])), t: Number(x[1]).toFixed(2) }; }),
+        { line: 1, note: "Dashed line = 1.00 (as many puts as calls). Red = put-heavy, yellow = balanced to call-leaning, green = very call-heavy." });
+    body += '<details><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">NUMBERS</summary>';
     body += row("Total P/C", num(o.total_pc, 2));
     body += row("Index P/C", num(o.index_pc, 2));
     body += row("ETP P/C", num(o.etp_pc, 2));
@@ -1636,6 +1640,7 @@
     body += row("Volume", commas(o.total_volume));
     body += row("Open interest", commas(o.total_open_interest));
     if (has(o.session_date)) body += row("Session", fmtDate(o.session_date));
+    body += "</details>";
     body += staleStamp(e);
 
     var t = o.total_pc;
@@ -1672,8 +1677,10 @@
       return h;
     }
 
-    var body = tbl("Volume share", v.volume_share);
-    body += tbl("Premium share", v.premium_share);
+    var vb = function (rows) { return _ofBars((rows || []).map(function (r) { return { l: r.venue, v: _orN(r.today), ref: _orN(r.avg5), col: "#29b6f6", t: num(r.today, 1, "%") + (has(r.avg5) ? ' <span style="color:var(--dim)">(' + signed(r.today - r.avg5, 1) + ')</span>' : "") }; })); };
+    var body = '<h2 style="margin:10px 0 6px">Volume share</h2>' + vb(v.volume_share) + '<h2 style="margin:10px 0 6px">Premium share</h2>' + vb(v.premium_share) +
+      '<div style="font-size:11px;color:var(--dim)">White tick = 5-day average; number in brackets = today minus 5-day.</div>';
+    body += '<details><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">TABLES</summary>' + tbl("Volume share", v.volume_share) + tbl("Premium share", v.premium_share) + "</details>";
     if (has(v.total_volume)) body += row("Total matched volume", commas(v.total_volume));
     if (has(v.total_premium)) body += row("Total premium", "$" + commas(v.total_premium));
     if (has(v.session_date)) body += row("Session", fmtDate(v.session_date));
@@ -3001,8 +3008,11 @@
     // Session anchors in PACIFIC. US cash session is 6:30 AM - 1:00 PM PT.
     var marks = [["6:30 AM open", 6.5], ["8:00 AM", 5.0], ["10:00 AM", 3.0],
                  ["12:00 PM", 1.0], ["12:55 PM", 0.08]];
+    var _lvq = get(e, "gex.levels", {}) || {}, _gq = e.gex || {};
     body += '<div style="margin-top:12px"><h2 style="margin-bottom:6px">' +
             "Implied range into the close</h2>" +
+            _ofCone(spot, sig, [["flip", _gq.gamma_flip_method === "zero crossing" ? _gq.gamma_flip : null, "#ffd600", false], ["call wall", _lvq.call_wall, "#5eead4", true], ["put wall", _lvq.put_wall, "#ff9f0a", true]].filter(function (x) { return has(x[1]); })) +
+            '<details><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">TABLE</summary>' +
             "<table><tr><th>Time (PT)</th><th style='text-align:right'>&sigma; left</th>" +
             "<th style='text-align:right'>68% band</th>" +
             "<th class='smhide' style='text-align:right'>95% band</th></tr>";
@@ -3014,7 +3024,7 @@
         '<td class="num smhide" style="color:var(--dim)">' + (spot * (1 - 2 * sr)).toFixed(2) +
         " – " + (spot * (1 + 2 * sr)).toFixed(2) + "</td></tr>";
     });
-    body += "</table></div>";
+    body += "</table></details></div>";
 
     // ---- regime-conditioned vol (GARCH) — the fix for assuming normality ----
     var g11 = get(e, "quant.garch");
@@ -3023,6 +3033,11 @@
       var csig = cvol / Math.sqrt(252) / 100;
       body += '<div style="margin-top:14px"><h2 style="margin-bottom:6px">' +
         "Vol regime — GARCH(1,1)</h2>" +
+        (function () { var tl = _orN(g11.tercile_low_pct), th = _orN(g11.tercile_high_pct), uc = _orN(g11.unconditional_vol_pct), vv = [cvol, vix]; if (tl !== null) vv.push(tl); if (th !== null) vv.push(th); if (uc !== null) vv.push(uc);
+          var lo = Math.max(0, Math.min.apply(null, vv) * .75), hi = Math.max.apply(null, vv) * 1.15, cc = g11.regime === "HIGH VOL" ? "#ff453a" : g11.regime === "LOW VOL" ? "#00e676" : "#e8dede";
+          return _ofMeter(lo, hi, [[lo, tl !== null ? tl : lo, "rgba(0,230,118,.25)"], [tl !== null ? tl : lo, th !== null ? th : hi, "rgba(255,255,255,.10)"], [th !== null ? th : hi, hi, "rgba(255,69,58,.25)"]],
+            [[uc, "normal " + (uc !== null ? uc.toFixed(1) : "") + "%", "#8b8ba6"], [vix, "VIX " + vix.toFixed(1), "#29b6f6"]].filter(function (t) { return t[0] !== null; }), cvol, cc, "GARCH " + cvol.toFixed(1) + "% · " + String(g11.regime).toLowerCase()); })() +
+        '<details><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">NUMBERS</summary>' +
         row("Regime", '<span style="color:' +
             (g11.regime === "HIGH VOL" ? "var(--down)" :
              g11.regime === "LOW VOL" ? "var(--up)" : "var(--dim)") + '">' +
@@ -3034,7 +3049,7 @@
             "  <span class=k>±$" + (spot * csig).toFixed(2) + "</span>") +
         row("68% band (GARCH)", (spot * (1 - csig)).toFixed(2) + " – " +
             (spot * (1 + csig)).toFixed(2)) +
-        "</div>";
+        "</details></div>";
     }
 
     // ---- realized vs implied: the gamma-scalping number ----
@@ -3042,9 +3057,12 @@
     if (ok(rvi)) {
       body += '<div style="margin-top:14px"><h2 style="margin-bottom:6px">' +
         "Realized vs implied</h2>" +
+        _ofBars([{ l: "Realized (" + rvi.window_days + "d)", v: _orN(rvi.realized_vol_pct), col: "#ff9f0a", t: num(rvi.realized_vol_pct, 1, "%") }, { l: "Implied (VIX)", v: _orN(rvi.implied_vol_pct), col: "#29b6f6", t: num(rvi.implied_vol_pct, 1, "%") }],
+          { note: "Spread " + signed(rvi.spread_pct, 1, "pp") + (rvi.spread_pct > 0 ? " · moving more than priced (good for a long-0DTE buyer)" : " · moving less than priced (premium is expensive)") }) +
+        '<details><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">NUMBERS</summary>' +
         row("Realized (" + rvi.window_days + "d)", num(rvi.realized_vol_pct, 2, "%")) +
         row("Implied (VIX)", num(rvi.implied_vol_pct, 2, "%")) +
-        row("Spread", signed(rvi.spread_pct, 2, "pp")) + "</div>";
+        row("Spread", signed(rvi.spread_pct, 2, "pp")) + "</details></div>";
     }
 
     // skew from the options tape
@@ -3312,10 +3330,11 @@
     });
     if (!rows) return "";
 
-    var body =
+    var body = _ofTouchChart(spot, sig, levels.filter(function (lv) { return touch(lv[1]) !== null; })) +
+      '<details><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">TABLE</summary>' +
       '<table><tr><th>Level</th><th style="text-align:right">Strike</th>' +
       '<th style="text-align:right">vs spot</th>' +
-      '<th style="text-align:right">touch odds</th></tr>' + rows + "</table>";
+      '<th style="text-align:right">touch odds</th></tr>' + rows + "</table></details>";
 
     var pos = g.regime === "POSITIVE GAMMA";
     var lines = [];
@@ -5452,7 +5471,7 @@
     var body = opt
       ? (!sub || sub === "pos" ? deepGroup("Dealer positioning", [secGexLive(e), secVanna(e)]) : "") +
         (!sub || sub === "flow" ? deepGroup("Odds & flow", [secTouchFlow(e), secQuant(e)]) : "") +
-        (!sub || sub === "plan" ? deepGroup("Plan and discipline", [secPlan(e)]) : "") +
+        (!sub ? deepGroup("Plan and discipline", [secPlan(e)]) : "") +
         (!sub || sub === "flow" ? deepGroup("Options & venue", [secOptions(e), secVenue(e)]) : "")
       : (function () { var mods = [secGeometry(e), secFadeRegime(e), secRangeUsed(e)], m = _deepMonth(mods); if (m) { count += mods.filter(Boolean).length; return m; } return deepGroup("Regime & fade edge", mods); })();
     if (!body) return "";
@@ -7454,8 +7473,68 @@
       dataHtml: secWide("QQQ data · month by month", gsData(G)) };
   }
 
+  // ===== Nov 15: Odds & Flow charts =====
+  function _ofBars(rows, o) {   // rows: {l, v, ref, col, t}; horizontal bars, optional ref tick (5-day avg) and guide line
+    o = o || {}; var mx = o.max || Math.max.apply(null, rows.map(function (r) { return Math.max(r.v || 0, r.ref || 0); }).concat([o.line || 0])) * 1.08 || 1;
+    var h = "";
+    rows.forEach(function (r) {
+      if (!(r.v >= 0)) return;
+      h += '<div style="display:grid;grid-template-columns:minmax(90px,170px) 1fr minmax(70px,120px);gap:10px;align-items:center;padding:3px 0">' +
+        '<span style="font-size:12px;color:var(--dim)">' + esc(r.l) + '</span>' +
+        '<div style="position:relative;height:16px;background:rgba(255,255,255,.04);border-radius:3px">' +
+        '<div style="position:absolute;left:0;top:0;bottom:0;width:' + (r.v / mx * 100).toFixed(1) + '%;background:' + (r.col || "#ff2be0") + ';opacity:.75;border-radius:3px"></div>' +
+        (r.ref >= 0 ? '<div title="5-day average" style="position:absolute;top:-3px;bottom:-3px;width:2px;left:' + (r.ref / mx * 100).toFixed(1) + '%;background:#fff;opacity:.8"></div>' : "") +
+        (o.line ? '<div style="position:absolute;top:-4px;bottom:-4px;border-left:1px dashed rgba(255,255,255,.5);left:' + (o.line / mx * 100).toFixed(1) + '%"></div>' : "") +
+        '</div><span style="font-size:12px;text-align:right">' + (r.t || r.v.toFixed(2)) + '</span></div>';
+    });
+    return '<div style="margin:6px 0 10px">' + h + (o.note ? '<div style="font-size:11px;color:var(--dim);margin-top:4px">' + o.note + '</div>' : "") + '</div>';
+  }
+  function _ofTouchChart(spot, sig, levels) {
+    var P = function (K) { return Math.min(1, 2 * cdf(-Math.abs(Math.log(K / spot)) / sig)); };
+    var ks = levels.map(function (l) { return l[1]; }), lo = Math.min.apply(null, ks.concat([spot * (1 - 2.6 * sig)])), hi = Math.max.apply(null, ks.concat([spot * (1 + 2.6 * sig)]));
+    var pad = (hi - lo) * .04; lo -= pad; hi += pad;
+    var W = 1000, H = 230, pl = 40, pr = 20, pt = 24, pb = 30, X = function (k) { return pl + (k - lo) / (hi - lo) * (W - pl - pr); }, Y = function (p) { return pt + (1 - p) * (H - pt - pb); };
+    var g = "", d = "", N = 120;
+    for (var t = 0; t <= 4; t++) { var p = t / 4; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(p).toFixed(1) + '" y2="' + Y(p).toFixed(1) + '" stroke="rgba(255,255,255,.05)"/><text x="' + (pl - 6) + '" y="' + (Y(p) + 4).toFixed(1) + '" fill="#8b8ba6" font-size="10" text-anchor="end">' + (p * 100) + '%</text>'; }
+    for (var i = 0; i <= N; i++) { var k = lo + (hi - lo) * i / N; d += (i ? "L" : "M") + X(k).toFixed(1) + " " + Y(P(k)).toFixed(1); }
+    g += '<path d="' + d + "L" + X(hi).toFixed(1) + " " + Y(0) + "L" + X(lo).toFixed(1) + " " + Y(0) + 'Z" fill="rgba(255,43,224,.10)"/><path d="' + d + '" fill="none" stroke="#ff2be0" stroke-width="2"/>';
+    var step = (hi - lo) > 60 ? 10 : 5; for (var x = Math.ceil(lo / step) * step; x <= hi; x += step) g += '<text x="' + X(x).toFixed(1) + '" y="' + (H - 10) + '" fill="#8b8ba6" font-size="10" text-anchor="middle">' + x + '</text>';
+    g += '<line x1="' + X(spot).toFixed(1) + '" x2="' + X(spot).toFixed(1) + '" y1="' + pt + '" y2="' + Y(0) + '" stroke="#fff" stroke-dasharray="4 4"/><text x="' + X(spot).toFixed(1) + '" y="' + (pt - 8) + '" fill="#fff" font-size="11" text-anchor="middle">price ' + spot.toFixed(2) + '</text>';
+    var by = {}; levels.forEach(function (l) { var key = l[1].toFixed(2); (by[key] = by[key] || { k: l[1], n: [] }).n.push(l[0]); });
+    var cols = { "Gamma flip": "#ffd600", "Call wall": "#5eead4", "Put wall": "#ff9f0a", "OI magnet": "#29b6f6" }, row = 0;
+    Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return a.k - b.k; }).forEach(function (L) {
+      var c = cols[L.n[0]] || "#e8dede", px = X(L.k), py = Y(P(L.k)), anchor = px > W - 160 ? "end" : px < 160 ? "start" : "middle", ly = Math.max(pt + 12, py - 10 - (row++ % 2) * 14);
+      g += '<line x1="' + px.toFixed(1) + '" x2="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" y2="' + Y(0) + '" stroke="' + c + '" stroke-width="2"/><circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="5" fill="' + c + '"/>' +
+        '<text x="' + px.toFixed(1) + '" y="' + ly.toFixed(1) + '" fill="' + c + '" font-size="11" text-anchor="' + anchor + '">' + esc(L.n.join(" + ")) + ' ' + L.k.toFixed(0) + ' · ' + Math.round(P(L.k) * 100) + '%</text>';
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;margin:4px 0 8px">' + g + '</svg>' +
+      '<div style="font-size:11px;color:var(--dim);margin-bottom:8px">Pink curve: the chance price tags each price at some point today (VIX 1-day σ ' + (sig * 100).toFixed(2) + '%). Dots: your levels.</div>';
+  }
+  function _ofCone(spot, sig, lv) {
+    var W = 1000, H = 260, pl = 10, pr = 120, pt = 14, pb = 28, T0 = 6.5, N = 60;
+    var top = spot * (1 + 2 * sig), bot = spot * (1 - 2 * sig), lo = bot - (top - bot) * .05, hi = top + (top - bot) * .05;
+    var X = function (hLeft) { return pl + (T0 - hLeft) / T0 * (W - pl - pr); }, Y = function (v) { return pt + (hi - v) / (hi - lo) * (H - pt - pb); };
+    var band = function (m) { var up = "", dn = ""; for (var i = 0; i <= N; i++) { var hl = T0 * (1 - i / N), s = sig * Math.sqrt(hl / T0); up += (i ? "L" : "M") + X(hl).toFixed(1) + " " + Y(spot * (1 + m * s)).toFixed(1); dn = "L" + X(hl).toFixed(1) + " " + Y(spot * (1 - m * s)).toFixed(1) + dn; } return up + dn + "Z"; };
+    var g = '<path d="' + band(2) + '" fill="rgba(255,43,224,.10)"/><path d="' + band(1) + '" fill="rgba(255,43,224,.25)"/>';
+    [["8:00", 5], ["10:00", 3], ["12:00", 1]].forEach(function (m) { g += '<line x1="' + X(m[1]).toFixed(1) + '" x2="' + X(m[1]).toFixed(1) + '" y1="' + pt + '" y2="' + (H - pb) + '" stroke="rgba(255,255,255,.12)" stroke-dasharray="3 4"/>'; });
+    [["6:30", 6.5], ["8:00", 5], ["10:00", 3], ["12:00", 1], ["1:00", 0]].forEach(function (m) { g += '<text x="' + X(m[1]).toFixed(1) + '" y="' + (H - 8) + '" fill="#8b8ba6" font-size="10" text-anchor="' + (m[1] === 6.5 ? "start" : m[1] === 0 ? "end" : "middle") + '">' + m[0] + '</text>'; });
+    var labs = [{ y: Y(spot), t: "price " + spot.toFixed(2), c: "#fff" }];
+    g += '<line x1="' + pl + '" x2="' + X(0) + '" y1="' + Y(spot).toFixed(1) + '" y2="' + Y(spot).toFixed(1) + '" stroke="#fff" stroke-dasharray="4 4"/>';
+    (lv || []).forEach(function (l) { if (!(l[1] > lo && l[1] < hi)) return; g += '<line x1="' + pl + '" x2="' + X(0) + '" y1="' + Y(l[1]).toFixed(1) + '" y2="' + Y(l[1]).toFixed(1) + '" stroke="' + l[2] + '" stroke-width="1.3"' + (l[3] ? ' stroke-dasharray="6 4"' : "") + '/>'; labs.push({ y: Y(l[1]), t: l[0] + " " + l[1].toFixed(0), c: l[2] }); });
+    labs.push({ y: Y(spot * (1 + sig)), t: "68% " + (spot * (1 + sig)).toFixed(2), c: "#ff8af0" }, { y: Y(spot * (1 - sig)), t: "68% " + (spot * (1 - sig)).toFixed(2), c: "#ff8af0" }, { y: Y(top), t: "95% " + top.toFixed(2), c: "#a35d9b" }, { y: Y(bot), t: "95% " + bot.toFixed(2), c: "#a35d9b" });
+    g += _orLabels(labs, X(0) + 8, 12);
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;margin:4px 0 6px">' + g + '</svg>' +
+      '<div style="font-size:11px;color:var(--dim);margin-bottom:8px">Where QQQ should be by each time if implied vol is right: dark band = 68% of days, light = 95%. It narrows as the day runs out.</div>';
+  }
+  function _ofMeter(lo, hi, zones, ticks, dotV, dotC, dotLab) {   // zones: [from,to,col]; ticks: [v,label,col]
+    var X = function (v) { return Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)); }, h = "";
+    zones.forEach(function (z) { h += '<div style="position:absolute;top:0;bottom:0;left:' + X(z[0]).toFixed(1) + '%;width:' + (X(z[1]) - X(z[0])).toFixed(1) + '%;background:' + z[2] + '"></div>'; });
+    ticks.forEach(function (t) { h += '<div style="position:absolute;top:-4px;bottom:-4px;left:' + X(t[0]).toFixed(1) + '%;border-left:2px solid ' + t[2] + '"></div><div style="position:absolute;top:20px;left:' + X(t[0]).toFixed(1) + '%;transform:translateX(-50%);font-size:10px;color:' + t[2] + ';white-space:nowrap">' + t[1] + '</div>'; });
+    h += '<div style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:' + dotC + ';border:2px solid #0c0710;left:calc(' + X(dotV).toFixed(1) + '% - 7px)"></div><div style="position:absolute;top:-20px;left:' + X(dotV).toFixed(1) + '%;transform:translateX(-50%);font-size:11px;font-weight:600;color:' + dotC + ';white-space:nowrap">' + dotLab + '</div>';
+    return '<div style="position:relative;height:6px;margin:26px 8px 30px;background:rgba(255,255,255,.06);border-radius:3px">' + h + '</div>';
+  }
   // ===== Nov 15: Options Research visuals (sub-tabs, dealer map, normal-range strips, positioning over time) =====
-  window.ORV = (function () { try { var v = localStorage.getItem("md:orv"); return /^(cockpit|pos|flow|plan)$/.test(v) ? v : "cockpit"; } catch (x) { return "cockpit"; } })();
+  window.ORV = (function () { try { var v = localStorage.getItem("md:orv"); return /^(cockpit|pos|flow)$/.test(v) ? v : "cockpit"; } catch (x) { return "cockpit"; } })();
   window.__ORM = window.__ORM || "all";
   window.__OROV = (function () { var o = { px: 1, gex: 1, pc: 1, vc: 1 }; try { var j = JSON.parse(localStorage.getItem("md:orov") || "null"); if (j) for (var k in j) o[k] = j[k]; } catch (x) {} return o; })();
   function _orN(v) { v = Number(v); return isFinite(v) ? v : null; }
@@ -8309,7 +8388,7 @@
       ? ((TAB === "nasdaq" && _gex ? _gex.dataHtml : "") + secNasdaqDeepDive(e, "nasdaq"))
       : ((TAB === "nasdaq" && idx === FULL.length - 1 ? secHomeRun() : "") +
          (TAB === "nasdaq" && _gex ? _gex.html : "")));
-    var _orTabs = '<div id="ortabs">' + [["cockpit", "Cockpit"], ["pos", "Positioning"], ["flow", "Odds & Flow"], ["plan", "Plan"]].map(function (t) {
+    var _orTabs = '<div id="ortabs">' + [["cockpit", "Normal range"], ["pos", "Positioning"], ["flow", "Odds & Flow"]].map(function (t) {
       return '<button type="button" data-orv="' + t[0] + '" class="' + (window.ORV === t[0] ? "on" : "") + '">' + t[1] + "</button>"; }).join("") + "</div>";
     var _optBody = TAB !== "options" ? "" : _orTabs + (function () {
       var v = window.ORV;
@@ -8318,9 +8397,8 @@
         (secQqqPositioning(e) ? secWide("Options positioning · strike × expiry", secQqqPositioning(e)) : "") +
         secNasdaqDeepDive(e, "options:pos");
       if (v === "flow") return secNasdaqDeepDive(e, "options:flow");
-      if (v === "plan") return secNasdaqDeepDive(e, "options:plan");
-      return (_gex ? secWide("QQQ · cockpit", '<div id="qqq-cockpit-block" class="qqq-call-strip">' + secQuadrantCockpit(_gex.G.entry, _gex.M) + '</div>').replace('<section class="wide">', '<section class="wide qqq-market-card">') : "") +
-        secWide("Today vs its normal range", _orStrips(e));
+      // Nov 15: cockpit and Plan removed from this tab (asked)
+      return secWide("Today vs its normal range", _orStrips(e));
     })();
 
     // MARKET DASH tab — Pipeline v2 concept: 3-column layout.
