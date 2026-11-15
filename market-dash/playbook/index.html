@@ -102,13 +102,13 @@ window.dash=(function(){
 <div class="pb">
   <header style="display:flex;flex-direction:column;gap:var(--cds-gap-xs)">
     <h1 id="top">3v3 Playbook</h1>
-    <p class="lede">QQQ 0DTE mornings, 6:30–9:00 PT. <b>v9.5 + options is the live model</b> (the card on the Nasdaq tab). Its tab refreshes every night from the paper log; v9.2 and the older tabs are kept as history.</p>
+    <p class="lede">QQQ 0DTE mornings, 6:30–9:00 PT. <b>v9.5 + options + high-IV layer + big fish is the live model</b> (the card on the Nasdaq tab). The first tab refreshes every night from the paper log; the other tabs were rebuilt Nov 14 with data through Nov 13 (v9.2 is kept as history).</p>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button role="tab" data-tab="live" aria-selected="true">v9.5 + options (live)</button>
+    <button role="tab" data-tab="live" aria-selected="true">Live model</button>
     <button role="tab" data-tab="v92" aria-selected="false">v9.2 (history)</button>
-    <button role="tab" data-tab="overview" aria-selected="false">Overview (v7)</button>
+    <button role="tab" data-tab="overview" aria-selected="false">Overview</button>
     <button role="tab" data-tab="model" aria-selected="false">The model</button>
     <button role="tab" data-tab="stress" aria-selected="false">Stress test</button>
     <button role="tab" data-tab="regimes" aria-selected="false">Regimes</button>
@@ -123,20 +123,20 @@ window.dash=(function(){
   <!-- V9.5 + OPTIONS (LIVE) — numbers refresh from the nightly paper log (../v92_log/index.json) and the bot's trades (../bot_replay.js) -->
   <section id="live" data-page="live">
     <div class="card">
-      <h2 id="live-top">v9.5 + options is the live model</h2>
-      <p class="note">Every number on this tab is recomputed each time the page opens, from the nightly paper log and every bot trade. 68 backfilled mornings (Jul 20 – Nov 3) plus every live morning since Nov 2. Dollars at the bot's size, fees out; option prices in 0.00.</p>
+      <h2 id="live-top">v9.5 + options + high-IV layer + big fish is the live model</h2>
+      <p class="note">Every number on this tab is recomputed each time the page opens, from the nightly paper log and every bot trade. 68 backfilled mornings (Jul 20 – Nov 3) plus every live morning since Nov 2. The high-IV layer (live since Nov 9) and big fish / gap vs week (live since Nov 10) are included; their earlier trades are replayed. Dollars at the bot's size, fees out; option prices in 0.00.</p>
       <div class="tiles" id="lv-kpis"><div class="tile"><span class="lab">Loading…</span><span class="big">—</span></div></div>
     </div>
     <div class="card">
       <h2 id="live-equity">Running total</h2>
-      <div class="legend"><span style="--sw:var(--color-ok)">Card + options</span><span style="--sw:var(--cds-chart-series-1,#60a5fa)">Card (as sized)</span><span style="--sw:var(--cds-chart-series-3,#e0ab45)">Card at 1 contract</span><span style="--sw:var(--cds-chart-muted,#888)">live mornings start (Nov 2)</span></div>
+      <div class="legend"><span style="--sw:var(--color-ok)">Everything (card + options + layers)</span><span style="--sw:var(--cds-chart-series-1,#60a5fa)">Card (as sized)</span><span style="--sw:var(--cds-chart-series-3,#e0ab45)">Card at 1 contract</span><span style="--sw:var(--cds-chart-muted,#888)">live mornings start (Nov 2)</span></div>
       <div class="chart tall" id="lv-eq"></div>
     </div>
     <div class="card">
       <h2 id="live-forward">Live mornings (never seen by the research)</h2>
       <p class="note">Promotion bar for anything new: after 10 live mornings it must have made more, with no bigger drawdown and zero glitches. Options stay on while they stay positive.</p>
       <div class="tiles" id="lv-fwd"></div>
-      <div class="tbox"><table><thead><tr><th>Morning</th><th class="n">Card</th><th class="n">Options</th><th class="n">Total</th><th>Trades</th></tr></thead><tbody id="lv-fwd-rows"></tbody></table></div>
+      <div class="tbox"><table><thead><tr><th>Morning</th><th class="n">Card</th><th class="n">Options</th><th class="n">Layers</th><th class="n">Total</th><th>Trades</th></tr></thead><tbody id="lv-fwd-rows"></tbody></table></div>
     </div>
     <div class="card">
       <h2 id="live-rules">The rules (what the card does)</h2>
@@ -151,6 +151,8 @@ window.dash=(function(){
         <tr><td>Size</td><td class="wrap">3 contracts when your lines agree (green 8 vs red 304 on the trade's side; traps: all 3 stacks fanned against, spread ≥ 5); else 1.</td><td class="wrap">Random 3× bets beat it 0.6% of 2,000 tries.</td></tr>
         <tr><td>Options (6 extra setups)</td><td class="wrap">Box · Playbook home run · Tulip · turn entry · sniper · calls checkpoint. The card's latest side is the direction: a signal on that side is taken with its own exits; a signal against it is flipped to the card's side with the card's ladder; before the card's first buy only the box trades; nothing after the card's 2nd stop.</td><td class="wrap">Add-ons +$4,113 on 53 trades (74% won); against the card they lost 33% → flipped they won 57%.</td></tr>
         <tr><td>Options size</td><td class="wrap">Box and Playbook 2 contracts unless flipped; the rest 1.</td><td class="wrap">Ranked by their own SQN; sizing by rank paid, blocking by rank did not.</td></tr>
+        <tr><td>High-IV layer</td><td class="wrap">Pop put (after 6:50, QQQ $1.50+ over VWAP and +$1.50 in 15 min) and bell put (red night, 6:00→open down 0.15%+), only when option IV is over 35% at that minute. 1 contract, 25% stop; pop out within 40 min, bell holds to 8:56 with breakeven after +50%. Skips a pop while the card holds a call.</td><td class="wrap">Live since Nov 9. 13 trades, +$1,645 (Oct 15 on, earlier ones replayed).</td></tr>
+        <tr><td>Big fish / gap vs week</td><td class="wrap">Big fish: fear market (20-day return −8% or 5-day −3% or 20-day vol 26%+) AND a 1% gap, 6:35 close on the gap's side → ~$1.00 0DTE at 6:36, out on the first 1-min close back across VWAP from 6:40. Gap vs week: last week down + open $2.50+ above yesterday's close → calls, same entry and exit. No IV rule.</td><td class="wrap">Live since Nov 10. 6 trades, +$494.</td></tr>
       </tbody></table></div>
     </div>
     <div class="card">
@@ -164,7 +166,7 @@ window.dash=(function(){
       <div class="tbox"><table><thead><tr><th>Setup</th><th class="n">Trades</th><th class="n">Won</th><th class="n">P&amp;L</th><th class="n">Avg</th><th class="n">PF</th><th class="n">SQN</th></tr></thead><tbody id="lv-score"></tbody></table></div>
     </div>
     <div class="card">
-      <h2 id="live-stress">Stress test (Nov 3, 68 mornings)</h2>
+      <h2 id="live-stress">Stress test (Nov 3, 68 mornings, before the layers)</h2>
       <div class="tbox"><table><thead><tr><th>Test</th><th class="n">Card + options</th><th class="n">Card alone</th></tr></thead><tbody>
         <tr><td>As tested (card sized)</td><td class="n">+$15,969 · dd $186</td><td class="n">+$11,856 · dd $163</td></tr>
         <tr><td>Fills $10 a contract worse on the options</td><td class="n">+$15,680 · dd $228</td><td class="n">—</td></tr>
@@ -175,7 +177,7 @@ window.dash=(function(){
         <tr><td>Live replay, every minute, 10,268 snapshots</td><td class="n">0 crashes · signals on time · exits 1,734 / 1,734</td><td class="n">—</td></tr>
         <tr><td>Bad data (16 cases × 10,744 snapshots)</td><td class="n">0 crashes · 0 errors</td><td class="n">—</td></tr>
       </tbody></table></div>
-      <p class="note">Honest limits: the options and the ranking were found on these same 68 mornings, so the live mornings are the real test. Up to 9 contracts can be open at once (Oct 26, 8:30).</p>
+      <p class="note">Honest limits: the options and the ranking were found on these same 68 mornings, so the live mornings are the real test. Up to 9 contracts can be open at once (Oct 26, 8:30). The Stress test tab has the Nov 14 rerun with the layers.</p>
     </div>
   </section>
 
@@ -295,31 +297,31 @@ window.dash=(function(){
 
   <!-- OVERVIEW -->
   <section id="overview" data-page="overview" hidden>
-    <p>The model made <b data-draw="kpi" data-source="kpi" data-where="metric=model_total" data-field="value">—</b> at 7/3 contracts on <b data-draw="kpi" data-source="kpi" data-where="metric=model_n" data-field="value">—</b> trades across <b data-draw="kpi" data-source="kpi" data-where="metric=model_days" data-field="value">—</b> replayed mornings. You made <b data-draw="kpi" data-source="kpi" data-where="metric=you_total" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=you_n" data-field="value">—</b> trades. You both trade the same idea, buying the turn after a drop. The model waits for the first candle out of the dip, gives the trade room, and sits out days with no setup.</p>
+    <p>The model as it runs now (card, options, layers) made <b data-draw="kpi" data-source="kpi" data-where="metric=model_total" data-field="value">—</b> as sized on <b data-draw="kpi" data-source="kpi" data-where="metric=model_n" data-field="value">—</b> trades across <b data-draw="kpi" data-source="kpi" data-where="metric=model_days" data-field="value">—</b> mornings. You made <b data-draw="kpi" data-source="kpi" data-where="metric=you_total" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=you_n" data-field="value">—</b> trades. You both trade the same idea, buying the turn after a drop. The model waits for the first candle out of the dip, gives the trade room, and sits out days with no setup.</p>
     <div class="tiles">
-      <div class="tile"><span class="lab">Model total, 7/3 contracts</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_total" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Model total, as sized</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_total" data-field="value">—</span></div>
       <div class="tile"><span class="lab">Model total, 1 contract</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_total1" data-field="value">—</span></div>
       <div class="tile"><span class="lab">Profit factor</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_pf" data-field="value">—</span></div>
-      <div class="tile"><span class="lab">Max drawdown, 7/3</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_dd" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Max drawdown, as sized</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_dd" data-field="value">—</span></div>
       <div class="tile"><span class="lab">Green trading days</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_green" data-field="value">—</span></div>
-      <div class="tile"><span class="lab">Your total (mostly 1 contract)</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_total" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Your total</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=you_total" data-field="value">—</span></div>
     </div>
     <div class="card">
       <h2 id="race">Running total: model at 1 contract vs you</h2>
-      <p class="note">Every morning in the data, Jul 20 – Oct 30. Your trades start Aug 26. Both lines in dollars per contract (you rarely traded more than 1).</p>
+      <p class="note">Every morning in the paper log, 07-30 – 11-13. Your trades start Aug 26. Model at 1 contract per trade; your line is your actual P&amp;L.</p>
       <div class="legend"><span style="--sw:var(--color-ok)">Model, 1 contract</span><span style="--sw:var(--cds-chart-muted)">You</span></div>
       <div class="chart tall" data-draw="race" data-source="daily"></div>
     </div>
     <div class="grid">
       <div class="card">
-        <h2>Last two weeks, Oct 19–30</h2>
-        <p class="note">Model <b data-draw="kpi" data-source="kpi" data-where="metric=tw_model1" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=tw_model_n" data-field="value">—</b> trades at 1 contract (<b data-draw="kpi" data-source="kpi" data-where="metric=tw_model_sized" data-field="value">—</b> at 7/3). You <b data-draw="kpi" data-source="kpi" data-where="metric=tw_you" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=tw_you_n" data-field="value">—</b> trades.</p>
+        <h2>Live mornings, Nov 2–13</h2>
+        <p class="note">Model <b data-draw="kpi" data-source="kpi" data-where="metric=tw_model1" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=tw_model_n" data-field="value">—</b> trades at 1 contract (<b data-draw="kpi" data-source="kpi" data-where="metric=tw_model_sized" data-field="value">—</b> as sized; layer trades before Nov 9 / 10 are replayed). You <b data-draw="kpi" data-source="kpi" data-where="metric=tw_you" data-field="value">—</b> on <b data-draw="kpi" data-source="kpi" data-where="metric=tw_you_n" data-field="value">—</b> trades.</p>
         <div class="legend"><span style="--sw:var(--color-ok)">Model, 1 contract</span><span style="--sw:var(--cds-chart-muted)">You</span></div>
         <div class="chart" data-draw="twoweeks" data-source="two_weeks"></div>
       </div>
       <div class="card">
         <h2>Same entries, different exits</h2>
-        <p class="note">All your trades that had option quotes, 1 contract each. Only the exit changes.</p>
+        <p class="note">All your trades that had option quotes, 1 contract each. Only the exit changes. Model exits = the card's: stop moves to −0.15 at +0.30, trail from +0.50 (3 EMA 8 ticks against), out by 90 min / 8:56.</p>
         <div class="hb" data-draw="cfbars" data-source="kpi"></div>
       </div>
     </div>
@@ -331,9 +333,9 @@ window.dash=(function(){
       <div class="tile"><span class="lab">Trades</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_n" data-field="value">—</span></div>
       <div class="tile"><span class="lab">Mornings with a trade</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_days_traded" data-field="value">—</span></div>
       <div class="tile"><span class="lab">Winning trades %</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_win" data-field="value">—</span></div>
-      <div class="tile"><span class="lab">Average win, 7/3</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_avg_win" data-field="value">—</span></div>
-      <div class="tile"><span class="lab">Average loss, 7/3</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_avg_loss" data-field="value">—</span></div>
-      <div class="tile"><span class="lab">Forward test Oct 27–30, 7/3</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=fwd_sized" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Average win, as sized</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_avg_win" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Average loss, as sized</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=model_avg_loss" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Since Nov 2, as sized</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=fwd_sized" data-field="value">—</span></div>
     </div>
     <div class="card">
       <h2 id="model-rules">The rules, exactly as replayed</h2>
@@ -341,19 +343,20 @@ window.dash=(function(){
       <div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Rule</th><th data-field="detail">What it does</th><th data-field="evidence">Evidence</th></tr></thead><tbody data-draw="rules" data-group="model"></tbody></table></div>
     </div>
     <div class="card">
-      <h2 id="equity">Equity curve, 7/3 contracts</h2>
+      <h2 id="equity">Equity curve, as sized</h2>
       <p class="note">Cumulative dollars by morning. Flat stretches are mornings with no setup.</p>
       <div class="chart tall" data-draw="equity" data-source="daily"></div>
     </div>
     <div class="grid">
-      <div class="card"><h2>How trades exit</h2><p class="note">7/3 contracts. Right column: trades and winners.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="why" data-val="sized"></div></div>
-      <div class="card"><h2>By month</h2><p class="note">7/3 contracts. Forward test = mornings never used in research.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="month" data-val="sized"></div></div>
-      <div class="card"><h2>By setup</h2><p class="note">7/3 contracts.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="kind" data-val="sized"></div></div>
-      <div class="card"><h2>By size</h2><p class="note">7 = clear of levels, 3 = crowded.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="size" data-val="sized"></div></div>
+      <div class="card"><h2>How trades exit</h2><p class="note">As sized. Right column: trades and winners.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="why" data-val="sized"></div></div>
+      <div class="card"><h2>By month</h2><p class="note">As sized. Live = Nov 2 on.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="month" data-val="sized"></div></div>
+      <div class="card"><h2>By setup</h2><p class="note">As sized.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="kind" data-val="sized"></div></div>
+      <div class="card"><h2>By size</h2><p class="note">3 = your lines agree · 2 = box / Playbook options · 1 = everything else.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="size" data-val="sized"></div></div>
+      <div class="card"><h2>Card, options or layer</h2><p class="note">As sized.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="layer" data-val="sized"></div></div>
     </div>
     <div class="card">
       <h2 id="model-log">Every model trade</h2>
-      <p class="note">P&amp;L at the model's size and at 1 contract. Exit: q8 = EMA 8 sell, stop, time.</p>
+      <p class="note">Card, options and layers. P&amp;L at the model's size and at 1 contract.</p>
       <div class="tbox"><table data-source="model_trades" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="kind">Setup</th><th data-field="side">Side</th><th data-field="K" class="n">Strike</th><th data-field="ct" class="n">Size</th><th data-field="tin">In</th><th data-field="a" class="n">Paid</th><th data-field="tout">Out</th><th data-field="px" class="n">Sold</th><th data-field="why">Exit</th><th data-field="usd" class="n">P&amp;L</th><th data-field="usd1" class="n">P&amp;L 1 ct</th></tr></thead><tbody data-draw="mtrades"></tbody></table></div>
     </div>
   </section>
@@ -361,16 +364,16 @@ window.dash=(function(){
   <!-- STRESS -->
   <section id="stress" data-page="stress" hidden>
     <div class="card">
-      <h2 id="stress-v95">v9.5 + options (Nov 3)</h2>
-      <p class="note">Positive in every test: as sized +$15,969 (dd $186) · fills $10 worse on options +$15,680 · everything late and worse at 1 contract +$6,131 (card alone +$3,653) · without the best 5 mornings +$8,368 · 10,000 random months 0.0% losing · any one option removed still SQN &gt; 5 · 0 crashes in 10,268 live-replay and 171,904 bad-data snapshots. Full table on the first tab. Everything below is the v7 / v9.2 history.</p>
+      <h2 id="stress-v95">v9.5 + options + high-IV layer + big fish (rebuilt Nov 14)</h2>
+      <p class="note">76 mornings (07-30 – 11-13), everything the card trades now. Positive in every test: as sized +$17,731 (dd $475) · 5¢ worse fills each side +$14,971 · miss 30% of signals, worst of 12 runs +$10,495 · without the best 5 mornings +$9,482 · 20,000 random months 0% losing. The luck test and walk-forward further down are from the Oct study (v7).</p>
     </div>
     <div class="card">
-      <h2 id="stress-ladder">Stress ladder (v7 history)</h2>
-      <p class="note">Every row reruns the same live engine on all mornings at 7/3 contracts. Missed-signal rows with random runs show the median.</p>
+      <h2 id="stress-ladder">Stress ladder (current model)</h2>
+      <p class="note">Every row changes the current model's trades one way, as sized unless the row says otherwise. Missed-signal rows with random runs show the median.</p>
       <div class="hb" data-draw="stressbars" data-source="stress"></div>
     </div>
     <div class="tiles">
-      <div class="tile"><span class="lab">Without the best day (Oct 20)</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_no_best1" data-field="value">—</span></div>
+      <div class="tile"><span class="lab">Without the best day (09/14)</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_no_best1" data-field="value">—</span></div>
       <div class="tile"><span class="lab">Without the best 3 days</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_no_best3" data-field="value">—</span></div>
       <div class="tile"><span class="lab">Without the best 5 days</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_no_best5" data-field="value">—</span></div>
       <div class="tile"><span class="lab">5c worse fills and no best 5</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=frag_bad5" data-field="value">—</span></div>
@@ -378,7 +381,7 @@ window.dash=(function(){
     </div>
     <div class="card">
       <h2 id="montecarlo">20,000 random months</h2>
-      <p class="note">Each month draws 21 mornings at random from the replay, no-trade mornings included, 7/3 contracts. Losing months: <b data-draw="kpi" data-source="kpi" data-where="metric=mc_losing" data-field="value">—</b>.</p>
+      <p class="note">Each month draws 21 mornings at random from the replay, no-trade mornings included, as sized. Losing months: <b data-draw="kpi" data-source="kpi" data-where="metric=mc_losing" data-field="value">—</b>.</p>
       <div class="chart" data-draw="mc" data-source="mc_hist"></div>
       <div class="tiles">
         <div class="tile"><span class="lab">Unlucky month (5th pct)</span><span class="big" data-draw="kpi" data-source="kpi" data-where="metric=mc_p5" data-field="value">—</span></div>
@@ -392,7 +395,7 @@ window.dash=(function(){
       <div class="tbox"><table data-source="stress" data-row-key="scenario"><thead><tr><th data-field="scenario">Scenario</th><th data-field="total" class="n">Total</th><th data-field="pf" class="n">Profit factor</th><th data-field="dd" class="n">Max drawdown</th><th data-field="green" class="n">Green days %</th><th data-field="win" class="n">Win %</th><th data-field="n" class="n">Trades</th><th data-field="worst" class="n">Worst run</th><th data-field="best" class="n">Best run</th></tr></thead><tbody data-draw="stresstbl"></tbody></table></div>
     </div>
     <div class="card">
-      <h2 id="luck">Is it luck?</h2>
+      <h2 id="luck">Is it luck? (Oct study, v7)</h2>
       <p class="note">300 random runs on the same mornings with the same exits and the same number of trades, 1 contract. Grey: same side as the model, random time. Red: random side and random time. Dashed line: the model.</p>
       <div class="legend"><span style="--sw:var(--cds-chart-muted)">Same side, random time</span><span style="--sw:var(--cds-chart-status-critical)">Random side and time</span><span style="--sw:var(--color-ok)">Model</span></div>
       <div class="chart" data-draw="luckh" data-source="luck_hist robust"></div>
@@ -413,7 +416,7 @@ window.dash=(function(){
 
   <!-- REGIMES -->
   <section id="regimes" data-page="regimes" hidden>
-    <p>The model sat out <b data-draw="kpi" data-source="kpi" data-where="metric=sat_out" data-field="value">—</b> of <b data-draw="kpi" data-source="kpi" data-where="metric=model_days" data-field="value">—</b> mornings. Each chart below is the model's P&amp;L at 7/3 contracts, split one way. Right column: trades and winners.</p>
+    <p>The model sat out <b data-draw="kpi" data-source="kpi" data-where="metric=sat_out" data-field="value">—</b> of <b data-draw="kpi" data-source="kpi" data-where="metric=model_days" data-field="value">—</b> mornings. Each chart below is the model's P&amp;L as sized (card, options, layers), split one way. Right column: trades and winners.</p>
     <div class="grid">
       <div class="card"><h2 id="works">Where it works</h2><div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Regime</th><th data-field="evidence">Evidence</th></tr></thead><tbody data-draw="rules" data-group="works" data-cols="title,evidence"></tbody></table></div></div>
       <div class="card"><h2 id="weak">Where it is weak</h2><div class="tbox"><table class="rules" data-source="rules" data-row-key="id"><thead><tr><th data-field="title">Regime</th><th data-field="evidence">Evidence</th></tr></thead><tbody data-draw="rules" data-group="weak" data-cols="title,evidence"></tbody></table></div></div>
@@ -435,14 +438,14 @@ window.dash=(function(){
       <div class="card"><h3>Trap zone reached by 8:30</h3><p class="note">1 contract. Right column: mornings.</p><div class="hb" data-draw="bars" data-source="regimes" data-group="zone" data-val="usd1" data-sub="mornings"></div></div>
     </div>
     <div class="card">
-      <h2 id="news-days">Release mornings, Jul–Oct</h2>
+      <h2 id="news-days">Release mornings, Jul–Nov</h2>
       <p class="note">Sources: BLS, BEA and Federal Reserve calendars. Fed decisions land at 11:00 PT, after the window.</p>
       <div class="tbox"><table data-source="news_days" data-row-key="date"><thead><tr><th data-field="date">Date</th><th data-field="event">Release</th><th data-field="model_n" class="n">Model trades</th><th data-field="model_usd1" class="n">Model, 1 ct</th><th data-field="you_n" class="n">Your trades</th><th data-field="you_usd" class="n">You</th></tr></thead><tbody data-draw="newstbl"></tbody></table></div>
     </div>
     <div class="card">
-      <h2 id="high-iv">Setups the 35% IV cap skipped</h2>
-      <p class="note">Rerun with no IV cap. <b data-draw="rob" data-source="robust" data-where="metric=iv_extra_n" data-field="value">—</b> extra trades, worth <b data-draw="rob" data-source="robust" data-where="metric=iv_extra_1ct" data-field="value">—</b> at 1 contract (<b data-draw="rob" data-source="robust" data-where="metric=iv_extra_sized" data-field="value">—</b> at 7/3).</p>
-      <div class="tbox"><table data-source="highiv" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="time">In</th><th data-field="kind">Setup</th><th data-field="side">Side</th><th data-field="K" class="n">Strike</th><th data-field="iv" class="n">IV %</th><th data-field="a" class="n">Paid</th><th data-field="px" class="n">Sold</th><th data-field="why">Exit</th><th data-field="usd1" class="n">1 ct</th><th data-field="usd" class="n">7/3</th></tr></thead><tbody data-draw="hivtbl"></tbody></table></div>
+      <h2 id="high-iv">The layers: high-IV and big fish trades</h2>
+      <p class="note">High-IV layer (live since Nov 9) and big fish / gap vs week (live since Nov 10); earlier trades are replayed. <b data-draw="rob" data-source="robust" data-where="metric=iv_extra_n" data-field="value">—</b> trades, worth <b data-draw="rob" data-source="robust" data-where="metric=iv_extra_1ct" data-field="value">—</b> at 1 contract.</p>
+      <div class="tbox"><table data-source="highiv" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="time">In</th><th data-field="kind">Setup</th><th data-field="side">Side</th><th data-field="K" class="n">Strike</th><th data-field="iv" class="n">IV %</th><th data-field="a" class="n">Paid</th><th data-field="px" class="n">Sold</th><th data-field="why">Exit</th><th data-field="usd1" class="n">1 ct</th><th data-field="usd" class="n">As traded</th></tr></thead><tbody data-draw="hivtbl"></tbody></table></div>
     </div>
   </section>
 
@@ -467,7 +470,7 @@ window.dash=(function(){
       <div class="card"><h3>Trades in the day</h3><p class="note">Right column: days, and the share that were green.</p><div class="hb" data-draw="bars" data-source="you_buckets" data-group="daycount" data-val="usd" data-sub="days"></div></div>
       <div class="card"><h3>Hold time</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="hold" data-val="usd"></div></div>
       <div class="card"><h3>Stop width below your fill</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="stopw" data-val="usd"></div></div>
-      <div class="card"><h3>Your 0.15 stop in QQQ dollars</h3><p class="note">Option stop divided by delta. QQQ typically moves 0.15–0.28 against you in the 5 minutes after a buy.</p><div class="hb" data-draw="bars" data-source="you_buckets" data-group="stop_qqq" data-val="q" data-sub="q"></div></div>
+      <div class="card"><h3>Your stop in QQQ dollars</h3><p class="note">Option stop divided by delta. QQQ typically moves 0.15–0.28 against you in the 5 minutes after a buy.</p><div class="hb" data-draw="bars" data-source="you_buckets" data-group="stop_qqq" data-val="q" data-sub="q"></div></div>
       <div class="card"><h3>Distance to nearest level</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="level" data-val="usd"></div></div>
       <div class="card"><h3>Last closed candle</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="lastbar" data-val="usd"></div></div>
       <div class="card"><h3>EMA 8/35/120 at your buy</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="stack" data-val="usd"></div></div>
@@ -482,15 +485,15 @@ window.dash=(function(){
       <div class="card"><h3>Release that morning</h3><div class="hb" data-draw="bars" data-source="you_buckets" data-group="news" data-val="usd"></div></div>
     </div>
     <div class="card">
-      <h2 id="oct30">Oct 30, trade by trade</h2>
-      <p class="note">13 of 14 trades on the right side. Dollars per contract: what you got vs the same entry with the model's stop and exits.</p>
+      <h2 id="oct30">11/13, trade by trade</h2>
+      <p class="note">8 of 11 trades went +0.30 or more within 60 min. Dollars per contract: what you got vs the same entry with a wider stop and the card's exits.</p>
       <div class="legend"><span style="--sw:var(--cds-chart-muted)">You</span><span style="--sw:var(--color-ok)">Stop −0.85 + model exits</span></div>
       <div class="chart" data-draw="oct30chart" data-source="oct30"></div>
       <div class="tbox"><table data-source="oct30" data-row-key="n"><thead><tr><th data-field="n" class="n">#</th><th data-field="time">Time</th><th data-field="contract">Contract</th><th data-field="inp" class="n">Paid</th><th data-field="outp" class="n">Sold</th><th data-field="you" class="n">You</th><th data-field="peak" class="n">Peak in 60 min</th><th data-field="peak_at">Peak at</th><th data-field="dip" class="n">Dip before peak</th><th data-field="s30" class="n">Stop −0.30</th><th data-field="s50" class="n">Stop −0.50</th><th data-field="s85" class="n">Stop −0.85</th></tr></thead><tbody data-draw="oct30tbl"></tbody></table></div>
     </div>
     <div class="card">
       <h2 id="your-log">All your trades</h2>
-      <p class="note">Aug 26 – Oct 30, from Webull. "Wide" = same entry with stop −0.85 and model exits, 1 contract.</p>
+      <p class="note">Aug 26 – 11/13, from Webull. Stop = your final stop under the fill (negative = moved above it). "Wide" = same entry with the card's exits (stop −0.50, −0.15 at +0.30, trail from +0.50), at your size.</p>
       <div class="tbox"><table data-source="you_trades" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="time">Time</th><th data-field="side">Side</th><th data-field="K" class="n">Strike</th><th data-field="inp" class="n">Paid</th><th data-field="outp" class="n">Sold</th><th data-field="how">Exit</th><th data-field="hold" class="n">Min</th><th data-field="stop" class="n">Stop</th><th data-field="usd" class="n">P&amp;L</th><th data-field="peak60" class="n">Peak</th><th data-field="wide" class="n">Wide</th><th data-field="vs_model">Vs model</th></tr></thead><tbody data-draw="ytrades"></tbody></table></div>
     </div>
   </section>
@@ -499,7 +502,7 @@ window.dash=(function(){
   <section id="vs" data-page="vs" hidden>
     <div class="card">
       <h2 id="paths">Same idea, one candle apart</h2>
-      <p class="note">Median QQQ path around every buy, in dollars in the trade's direction (0 = the buy). The model buys the first candle out of the dip. You buy into it.</p>
+      <p class="note">Median QQQ path around every buy, in dollars in the trade's direction (0 = the buy). The model buys the first candle out of the dip. You buy into it. Your trades Aug 26 – 11/13 vs every model trade (card, options, layers) 07/30 – 11/13.</p>
       <div class="legend"><span style="--sw:var(--color-ok)">Model</span><span style="--sw:var(--cds-chart-muted)">You, all buys</span><span style="--sw:var(--cds-chart-status-critical)">You, into a hard push</span><span style="--sw:var(--color-warn)">You, small pullback</span></div>
       <div class="chart tall" data-draw="paths" data-source="paths"></div>
     </div>
@@ -511,7 +514,7 @@ window.dash=(function(){
       </div>
       <div class="card">
         <h2>Your trades sorted by the model</h2>
-        <p class="note">1 contract. "Wide" = same entries with stop −0.85 and model exits. "Right" = option rose 0.30+ within 60 min.</p>
+        <p class="note">"You" = your actual P&amp;L. "Wide" = same entries, 1 contract, with the card's exits (stop −0.50, −0.15 at +0.30, trail from +0.50). "Right" = option rose 0.30+ within 60 min.</p>
         <div class="tbox"><table data-source="vs_model" data-row-key="k"><thead><tr><th data-field="k">Your trade was</th><th data-field="n" class="n">Trades</th><th data-field="you" class="n">You</th><th data-field="wide" class="n">Wide</th><th data-field="right" class="n">Right %</th></tr></thead><tbody data-draw="vstbl"></tbody></table></div>
       </div>
     </div>
@@ -525,8 +528,8 @@ window.dash=(function(){
   <!-- DAY REPLAY -->
   <section id="replay" data-page="replay" hidden>
     <div class="card">
-      <h2 id="replay-now">Every v9.5 + options trade is on the Trade Replay tab</h2>
-      <p class="note">The dashboard's Trade Replay tab shows every bot trade (card and options) with its chart, all your lines, the contract and the rules it followed. New trades appear live during the morning. This tab keeps the v9.2 replay as history.</p>
+      <h2 id="replay-now">Every bot trade is also on the Trade Replay tab</h2>
+      <p class="note">The dashboard's Trade Replay tab shows every bot trade (card and options) with its chart, all your lines, the contract and the rules it followed. New trades appear live during the morning. This tab shows the current model (card, options, layers) and your trades, 07/30 – 11/13.</p>
     </div>
     <div class="card">
       <h2 id="replay-day">Pick a morning</h2>
@@ -534,7 +537,7 @@ window.dash=(function(){
       <select class="daypick" id="daypick" data-draw="daypick" data-source="days" aria-label="Morning"></select>
     </div>
     <div class="card">
-      <h2 id="losers">The model's 17 losing trades</h2>
+      <h2 id="losers">The model's 58 losing trades</h2>
       <p class="note">Click a row to load that morning in the charts below. Best/worst: how far the option got above and below the entry mid before the exit.</p>
       <div class="tbox"><table class="losers" data-source="losers" data-row-key="id"><thead><tr><th data-field="date">Date</th><th data-field="time">In</th><th data-field="kind">Setup</th><th data-field="side">Side</th><th data-field="a" class="n">Paid</th><th data-field="px" class="n">Sold</th><th data-field="best" class="n">Best</th><th data-field="worst" class="n">Worst</th><th data-field="usd1" class="n">1 ct</th><th data-field="what">What went wrong</th></tr></thead><tbody data-draw="losetbl"></tbody></table></div>
     </div>
@@ -556,7 +559,7 @@ window.dash=(function(){
     </div>
     <div class="card">
       <h2 id="replay-opt">The option, minute by minute</h2>
-      <p class="note">Pick a trade from this morning. The chart shows that contract for the whole morning: bid–ask band, mid, its own EMA 8, EMA 35 and VWAP (from traded volume), and every buy and sell anyone made in it. For a model trade, the dashed lines are its levels: entry, −0.85 stop, +0.30 lock (stop moves to −0.15) and +0.50 sell line. For your trades, your own stop.</p>
+      <p class="note">Pick a trade from this morning. The chart shows that contract for the whole morning: bid–ask band, mid, its own EMA 8, EMA 35 and VWAP (from traded volume), and every buy and sell anyone made in it. For a model trade, the dashed lines are the card's levels: entry, −0.50 stop, +0.30 lock (stop moves to −0.15) and +0.50 trail line. For your trades, your own stop.</p>
       <select class="daypick" id="tradepick" data-draw="tradepick" data-source="day_marks" aria-label="Trade"></select>
       <div class="legend">
         <span style="--sw:var(--color-fg)">Mid</span>
@@ -583,29 +586,29 @@ window.dash=(function(){
   <!-- ACCOUNT -->
   <section id="account" data-page="account" hidden>
     <div class="card">
-      <h2 id="acct-now">Your budget now: $150 per 2 weeks · v9.5 + options</h2>
+      <h2 id="acct-now">Your budget now: $150 per 2 weeks · live model</h2>
       <p class="note">Recomputed from the paper log each time this page opens. A "2-week stretch" is 10 mornings in a row; the dip is the deepest drop inside it. Sizing is the card's (3× when your lines agree, options 1–2×), so dips are bigger than at 1 contract. Your size is your call.</p>
       <div class="tiles" id="acct-v95"><div class="tile"><span class="lab">Loading…</span><span class="big">—</span></div></div>
     </div>
-    <h2>History: v9.2 at 1 contract ($120 limit at the time)</h2>
-    <p>With a $600–1,000 account and a limit of $120 lost per two weeks, the model runs at 1 contract per signal. At that size it made <b data-draw="bud" data-source="budget" data-where="id=base" data-field="total">—</b> over 66 mornings. Its worst drop inside any two weeks was <b data-draw="bud" data-source="budget" data-where="id=base" data-field="worst_dip_2wk">—</b>. In the pessimistic case it still made <b data-draw="bud" data-source="budget" data-where="id=pess" data-field="total">—</b>, and <b data-draw="bud" data-source="budget" data-where="id=pess" data-field="p_over120">—</b> of two-week stretches lost more than $120.</p>
+    <h2>The live model at 1 contract ($150 per 2 weeks)</h2>
+    <p>With a $600–1,000 account and a limit of $150 lost per two weeks, the model runs at 1 contract per signal. At that size it made <b data-draw="bud" data-source="budget" data-where="id=base" data-field="total">—</b> over 76 mornings. Its worst drop inside any two weeks was <b data-draw="bud" data-source="budget" data-where="id=base" data-field="worst_dip_2wk">—</b>. In the pessimistic case it still made <b data-draw="bud" data-source="budget" data-where="id=pess" data-field="total">—</b>, and <b data-draw="bud" data-source="budget" data-where="id=pess" data-field="p_over120">—</b> of two-week stretches dropped more than $150.</p>
     <div class="tiles">
       <div class="tile"><span class="lab">Total at 1 contract</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="total">—</span></div>
       <div class="tile"><span class="lab">Worst single trade</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="worst_trade">—</span></div>
       <div class="tile"><span class="lab">Worst drop in 2 weeks</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="worst_dip_2wk">—</span></div>
       <div class="tile"><span class="lab">Max drawdown, % of $600</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="dd_600">—</span></div>
       <div class="tile"><span class="lab">Max drawdown, % of $1,000</span><span class="big" data-draw="bud" data-source="budget" data-where="id=base" data-field="dd_1000">—</span></div>
-      <div class="tile"><span class="lab">2 weeks losing over $120 (pessimistic)</span><span class="big" data-draw="bud" data-source="budget" data-where="id=pess" data-field="p_over120">—</span></div>
+      <div class="tile"><span class="lab">2 weeks dropping over $150 (pessimistic)</span><span class="big" data-draw="bud" data-source="budget" data-where="id=pess" data-field="p_over120">—</span></div>
     </div>
     <div class="card">
       <h2 id="roll2w">Every 2-week stretch at 1 contract</h2>
-      <p class="note">Each bar is the P&amp;L of 10 mornings in a row, labelled by the last morning. The line is the deepest drop inside those 10 mornings. Red dashed line: your −$120 limit.</p>
+      <p class="note">Each bar is the P&amp;L of 10 mornings in a row, labelled by the last morning. The line is the deepest drop inside those 10 mornings. Red dashed line: your −$150 limit.</p>
       <div class="legend"><span style="--sw:var(--color-ok)">2-week P&amp;L</span><span style="--sw:var(--cds-chart-status-critical)">Deepest drop inside it</span></div>
       <div class="chart tall" data-draw="roll" data-source="roll2w"></div>
     </div>
     <div class="card">
       <h2 id="acct-curve">Your balance, simulated</h2>
-      <p class="note">Starting at $600 or $1,000, 1 contract per signal, fees taken out, with the −$120 per 2-week breaker on. Pessimistic = 5¢ worse fills on every trade.</p>
+      <p class="note">Starting at $600 or $1,000, 1 contract per signal, fees taken out, with the −$150 per 2-week breaker on. Pessimistic = 5¢ worse fills each side on every trade.</p>
       <div class="legend"><span style="--sw:var(--color-ok)">Replay, start $1,000</span><span class="sw" data-sw="0">Replay, start $600</span><span style="--sw:var(--cds-chart-muted)">Pessimistic, start $1,000</span><span style="--sw:var(--cds-chart-status-critical)">Pessimistic, start $600</span></div>
       <div class="chart tall" data-draw="acct" data-source="acct"></div>
       <div class="tbox"><table data-source="acct_sum" data-row-key="id"><thead><tr><th data-field="label">Run</th><th data-field="start" class="n">Start</th><th data-field="end" class="n">End</th><th data-field="low" class="n">Lowest</th><th data-field="ret" class="n">Return %</th><th data-field="trades" class="n">Trades</th><th data-field="breaker_hits" class="n">Breaker hits</th></tr></thead><tbody data-draw="acctsum"></tbody></table></div>
@@ -613,7 +616,7 @@ window.dash=(function(){
     <div class="card">
       <h2 id="budget-table">Scenarios at 1 contract</h2>
       <p class="note">Fees included ($0.65 per contract each way). Random months and random 2-week stretches are drawn from the replayed mornings.</p>
-      <div class="tbox"><table data-source="budget" data-row-key="id"><thead><tr><th data-field="scenario">Scenario</th><th data-field="total" class="n">Total</th><th data-field="trades" class="n">Trades</th><th data-field="worst_trade" class="n">Worst trade</th><th data-field="worst_day" class="n">Worst day</th><th data-field="max_dd" class="n">Max drawdown</th><th data-field="worst_dip_2wk" class="n">Worst 2-wk drop</th><th data-field="p_over120" class="n">2 wks over −$120</th><th data-field="month_median" class="n">Typical month</th><th data-field="month_p5" class="n">Unlucky month</th><th data-field="losing_months" class="n">Losing months</th></tr></thead><tbody data-draw="budtbl"></tbody></table></div>
+      <div class="tbox"><table data-source="budget" data-row-key="id"><thead><tr><th data-field="scenario">Scenario</th><th data-field="total" class="n">Total</th><th data-field="trades" class="n">Trades</th><th data-field="worst_trade" class="n">Worst trade</th><th data-field="worst_day" class="n">Worst day</th><th data-field="max_dd" class="n">Max drawdown</th><th data-field="worst_dip_2wk" class="n">Worst 2-wk drop</th><th data-field="p_over120" class="n">2 wks over −$150</th><th data-field="month_median" class="n">Typical month</th><th data-field="month_p5" class="n">Unlucky month</th><th data-field="losing_months" class="n">Losing months</th></tr></thead><tbody data-draw="budtbl"></tbody></table></div>
     </div>
     <div class="card">
       <h2 id="budget-rules">Rules for this account</h2>
@@ -629,8 +632,8 @@ window.dash=(function(){
       <div class="tiles" id="pre-v95"><div class="tile"><span class="lab">Loading…</span><span class="big">—</span></div></div>
     </div>
     <div class="card">
-      <h2 id="monday">Monday, Nov 2 (history)</h2>
-      <p class="note">From Friday Oct 30 (live IEX bars) and the week of Oct 26–30. The gap is only known at the open.</p>
+      <h2 id="monday">Monday, Nov 16</h2>
+      <p class="note">From Friday Nov 13 (official bars) and the week of Nov 9–13. The gap is only known at the open.</p>
       <div class="tiles">
         <div class="tile"><span class="lab">Yesterday's candle</span><span class="big" data-draw="mon" data-source="monday" data-row="0" data-field="yday">—</span></div>
         <div class="tile"><span class="lab">Last week's candle</span><span class="big" data-draw="mon" data-source="monday" data-row="0" data-field="week">—</span></div>
@@ -640,7 +643,7 @@ window.dash=(function(){
       </div>
       <p>Armed: <b data-draw="mon" data-source="monday" data-row="0" data-field="armed">—</b>.</p>
       <p>Also possible: <b data-draw="mon" data-source="monday" data-row="0" data-field="gapgo">—</b>, with the nearest GEX level at least $1 away.</p>
-      <p class="note">Anything else, such as calls, has no setup on Monday.</p>
+      <p class="note">Fade the week, VIX bounce, failed poke, options and the layers are decided live on the card from 6:00 PT.</p>
     </div>
     <div class="card">
       <h2 id="precheck-how">The 10-second read before 6:30</h2>
@@ -656,7 +659,7 @@ window.dash=(function(){
   <!-- RULES -->
   <section id="rules" data-page="rules" hidden>
     <div class="card">
-      <h2 id="rules-v95">v9.5 + options: the rules and the open risks</h2>
+      <h2 id="rules-v95">v9.5 + options + high-IV layer + big fish: the rules and the open risks</h2>
       <div class="tbox"><table class="rules"><thead><tr><th>Rule / risk</th><th>What it is</th><th>Status</th></tr></thead><tbody>
         <tr><td>Follow the card's side</td><td class="wrap">Options never trade against the card: a signal against it is flipped to the card's side.</td><td class="wrap">Built in.</td></tr>
         <tr><td>2 stops = done</td><td class="wrap">After the card's 2nd stop, no more card or option trades that morning.</td><td class="wrap">Built in (Nov 3).</td></tr>
@@ -664,10 +667,12 @@ window.dash=(function(){
         <tr><td>Same-research risk</td><td class="wrap">Options and the ranking were found on the same 68 mornings.</td><td class="wrap">Watching the live mornings; options stay on while positive.</td></tr>
         <tr><td>Live feed vs official</td><td class="wrap">The card runs on the IEX feed; the paper log uses official bars, so a signal can come at a different minute (Nov 3: 8:15 live vs 8:30 official).</td><td class="wrap">Known; the paper log is the record.</td></tr>
         <tr><td>Size</td><td class="wrap">3× card trades plus 2× options can stack (up to 9 contracts at once in the backtest).</td><td class="wrap">Your call.</td></tr>
-        <tr><td>High VIX</td><td class="wrap">This week's VIX (~21) sits at the top of what the backtest has seen (14–21).</td><td class="wrap">Watching.</td></tr>
+        <tr><td>High-IV layer</td><td class="wrap">Pop put and bell put trade only when option IV is over 35%; the card itself still skips those minutes.</td><td class="wrap">Live since Nov 9.</td></tr>
+        <tr><td>Big fish / gap vs week</td><td class="wrap">Opening-gap calls or puts on fear-market days, out on the VWAP cross; no IV rule.</td><td class="wrap">Live since Nov 10.</td></tr>
+        <tr><td>High volatility</td><td class="wrap">QQQ 20-day vol is 36.7 (Nov 13), well above the calm months the card was built on; VIX 17–20 this week.</td><td class="wrap">Watching. Version B (skip the card's own setups in high vol after 6:45) is approved, not built.</td></tr>
       </tbody></table></div>
     </div>
-    <h2>History: the v9.2-era checklist</h2>
+    <h2>Checklist and risks (rebuilt Nov 14 from your trades through Nov 13)</h2>
     <div class="card">
       <h2 id="checklist">Before every buy</h2>
       <p class="note">Your checklist, built from your own losses and the model's rules.</p>
@@ -703,34 +708,35 @@ window.dash=(function(){
   var LAB={trap:'Trap',gap:'Gap-and-go',fw:'Fade the week',vb:'VIX bounce','failed poke (B)':'Failed poke',flip:'Flip','box scalp':'Box','Playbook home run':'Playbook home run','Tulip v3.2':'Tulip','turn entry':'Turn entry',sniper:'Sniper','calls checkpoint':'Calls checkpoint'};
   function go(IX,BR){
     var rows=(IX&&IX.days)||[],acc=0,acc1=0,accC=0,dd=0,pk=0;
-    var eq=rows.map(function(r){var c=r.v95_sized_usd||0,o=r.opt_addons_usd||0,c1=r.v95_usd||0;accC+=c;acc+=c+o;acc1+=c1;pk=Math.max(pk,acc);dd=Math.max(dd,pk-acc);return {date:r.date,forward:r.forward,all:acc,card:accC,c1:acc1,day:c+o,c:c,o:o,n:(r.v95_n!=null?r.v95_n:null),on:r.opt_addons_n||0};});
+    var eq=rows.map(function(r){var c=r.v95_sized_usd||0,o=r.opt_addons_usd||0,l=(r.hiv_usd||0)+(r.bf_usd||0),c1=r.v95_usd||0;accC+=c;acc+=c+o+l;acc1+=c1;pk=Math.max(pk,acc);dd=Math.max(dd,pk-acc);return {date:r.date,forward:r.forward,all:acc,card:accC,c1:acc1,day:c+o+l,c:c,o:o,l:l,ln:(r.hiv_n||0)+(r.bf_n||0),n:(r.v95_n!=null?r.v95_n:null),on:r.opt_addons_n||0};});
     var T=IX&&IX.totals||{},O=T.shadow_options&&T.shadow_options.all||{},V=T.shadow_v95&&T.shadow_v95.all||{};
     var fw=eq.filter(function(r){return r.forward;}),fwT=fw.reduce(function(a,r){return a+r.day;},0);
     var cards=(BR&&BR.cards)||[],won=cards.filter(function(c){return c.pnl>0;}).length;
-    set('lv-kpis',tile('Card + options',usd(acc),cards.length+' trades · '+Math.round(100*won/Math.max(1,cards.length))+'% won',cls(acc))+tile('Card (as sized)',usd(accC),'3× when your lines agree',cls(accC))+
-      tile('Options',usd(O.addons_usd),(O.addons||0)+' extra trades · '+(O.contracts||0)+' contracts',cls(O.addons_usd))+tile('Worst drawdown',usd(-dd),'by morning, card + options','dn')+tile('Live since Nov 2',usd(fwT),fw.length+' morning'+(fw.length===1?'':'s'),cls(fwT)));
+    var LT=eq.reduce(function(a,r){return a+r.l;},0),LN=eq.reduce(function(a,r){return a+r.ln;},0);
+    set('lv-kpis',tile('Everything',usd(acc),(cards.length+LN)+' trades · card + options + layers',cls(acc))+tile('Card (as sized)',usd(accC),'3× when your lines agree',cls(accC))+
+      tile('Options',usd(O.addons_usd),(O.addons||0)+' extra trades · '+(O.contracts||0)+' contracts',cls(O.addons_usd))+tile('Layers',usd(LT),LN+' trades · high-IV + big fish',cls(LT))+tile('Worst drawdown',usd(-dd),'by morning, everything','dn')+tile('Live since Nov 2',usd(fwT),fw.length+' morning'+(fw.length===1?'':'s'),cls(fwT)));
     svgLines(document.getElementById('lv-eq'),eq,[{k:'all',c:'var(--color-ok)'},{k:'card',c:'var(--cds-chart-series-1,#60a5fa)'},{k:'c1',c:'var(--cds-chart-series-3,#e0ab45)',dash:1}]);
     var fpk=0,fac=0,fdd=0;fw.forEach(function(r){fac+=r.day;fpk=Math.max(fpk,fac);fdd=Math.max(fdd,fpk-fac);});
     var fo=fw.reduce(function(a,r){return a+r.o;},0);
-    set('lv-fwd',tile('Live mornings',fw.length+' / 10','10 needed before any new promotion','')+tile('Card + options',usd(fwT),'',cls(fwT))+tile('Options only',usd(fo),fo>=0?'staying positive':'below zero — review','')+tile('Worst dip',usd(-fdd),'live mornings only','dn'));
+    set('lv-fwd',tile('Live mornings',fw.length+' / 10','10 needed before any new promotion','')+tile('Everything',usd(fwT),'layers replayed before Nov 9 / 10',cls(fwT))+tile('Options only',usd(fo),fo>=0?'staying positive':'below zero — review','')+tile('Worst dip',usd(-fdd),'live mornings only','dn'));
     var bc={};cards.forEach(function(c){(bc[c.date]=bc[c.date]||[]).push(c);});
-    set('lv-fwd-rows',fw.slice().reverse().map(function(r){var L=bc[r.date]||[];return '<tr><td>'+mmdd(r.date)+'</td><td class="n '+cls(r.c)+'">'+usd(r.c)+'</td><td class="n '+cls(r.o)+'">'+(r.on?usd(r.o):'—')+'</td><td class="n '+cls(r.day)+'"><b>'+usd(r.day)+'</b></td><td class="wrap">'+(L.length?L.map(function(c){return esc((c.src==='option'?'option ':'')+(LAB[c.setup]||c.setup)+' '+c.side+' '+c.strike+(c.ct>1?' ×'+c.ct:'')+' '+usd(c.pnl));}).join(' · '):'sat out')+'</td></tr>';}).join('')||'<tr><td colspan="5">No live mornings yet.</td></tr>');
+    set('lv-fwd-rows',fw.slice().reverse().map(function(r){var L=bc[r.date]||[];return '<tr><td>'+mmdd(r.date)+'</td><td class="n '+cls(r.c)+'">'+usd(r.c)+'</td><td class="n '+cls(r.o)+'">'+(r.on?usd(r.o):'—')+'</td><td class="n '+cls(r.l)+'">'+(r.ln?usd(r.l):'—')+'</td><td class="n '+cls(r.day)+'"><b>'+usd(r.day)+'</b></td><td class="wrap">'+((L.length||r.ln)?L.map(function(c){return esc((c.src==='option'?'option ':'')+(LAB[c.setup]||c.setup)+' '+c.side+' '+c.strike+(c.ct>1?' ×'+c.ct:'')+' '+usd(c.pnl));}).concat(r.ln?[esc('layers: '+r.ln+' trade'+(r.ln>1?'s':'')+' '+usd(r.l))]:[]).join(' · '):'sat out')+'</td></tr>';}).join('')||'<tr><td colspan="6">No live mornings yet.</td></tr>');
     var by={};cards.forEach(function(c){var k=(c.src==='option'?'Option · ':'')+(c.setup&&c.setup.indexOf('re-')===0?'Re-entry':(LAB[c.setup]||c.setup));(by[k]=by[k]||[]).push(c.pnl);});
     set('lv-score',Object.keys(by).map(function(k){var u=by[k],t=u.reduce(function(a,b){return a+b;},0),W=u.filter(function(x){return x>0;}).reduce(function(a,b){return a+b;},0),Lx=-u.filter(function(x){return x<=0;}).reduce(function(a,b){return a+b;},0);return {k:k,u:u,t:t,pf:Lx?W/Lx:null,s:sqn(u)};})
       .sort(function(a,b){return b.s-a.s;}).map(function(z){return '<tr><td>'+esc(z.k)+'</td><td class="n">'+z.u.length+'</td><td class="n">'+Math.round(100*z.u.filter(function(x){return x>0;}).length/z.u.length)+'%</td><td class="n '+cls(z.t)+'">'+usd(z.t)+'</td><td class="n">'+usd(z.t/z.u.length)+'</td><td class="n">'+(z.pf==null?'∞':z.pf.toFixed(2))+'</td><td class="n"><b>'+z.s.toFixed(2)+'</b></td></tr>';}).join(''));
     // ---- SQN by version (paper log index.sqn) ----
-    var SQ=IX&&IX.sqn, VN=[['v92','v9.2 (locked Nov 1, OLD)'],['v93_vix_bounce','v9.3 + VIX bounce (OLD)'],['combo','v9.4 combo (OLD)'],['v95_1ct','v9.5 card at 1 contract'],['v95_sized','v9.5 card as sized'],['options_sized','Options (as sized)'],['card_plus_options_sized','v9.5 + options (CURRENT)']];
+    var SQ=IX&&IX.sqn, VN=[['v92','v9.2 (locked Nov 1, OLD)'],['v93_vix_bounce','v9.3 + VIX bounce (OLD)'],['combo','v9.4 combo (OLD)'],['v95_1ct','v9.5 card at 1 contract'],['v95_sized','v9.5 card as sized'],['options_sized','Options (as sized)'],['card_plus_options_sized','v9.5 + options (CURRENT card side)'],['hiv_layer','High-IV layer (CURRENT)'],['big_fish','Big fish / gap vs week (CURRENT)']];
     set('lv-sqn',SQ?VN.map(function(v){var a=SQ.all[v[0]]||{},f=(SQ.forward&&SQ.forward[v[0]])||{};var cur=v[0]==='card_plus_options_sized';return '<tr><td>'+(cur?'<b>'+esc(v[1])+'</b>':esc(v[1]))+'</td><td class="n">'+(a.trades||0)+'</td><td class="n">'+(cur?'<b>':'')+(a.sqn==null?'—':a.sqn.toFixed(2))+(cur?'</b>':'')+'</td><td class="n">'+(f.trades||0)+'</td><td class="n">'+(f.sqn==null?'—':f.sqn.toFixed(2))+'</td></tr>';}).join(''):'<tr><td colspan="5">SQN appears after the next nightly paper-log run.</td></tr>');
     // ---- Your account: the $150 per 2 weeks budget with v9.5 + options ----
     var roll=function(key){var out=[];for(var i=9;i<eq.length;i++){var s=0,pk=0,run=0,dd=0;for(var j=i-9;j<=i;j++){var v=key==='all'?eq[j].day:key==='card'?eq[j].c:(rows[j].v95_usd||0);s+=v;run+=v;pk=Math.max(pk,run);dd=Math.max(dd,pk-run);}out.push({s:s,dip:-dd});}return out;};
     var ra=roll('all'),rc=roll('card'),r1=roll('c1');var worst=function(R){return Math.min.apply(null,R.map(function(x){return x.dip;}));},over=function(R){return R.filter(function(x){return x.dip<-150;}).length;};
     var worstDay=Math.min.apply(null,eq.map(function(r){return r.day;}));
-    set('acct-v95',tile('Worst 2-week dip · card + options (as sized)',usd(worst(ra)),over(ra)+' of '+ra.length+' two-week stretches went past −$150','dn')+tile('Worst 2-week dip · card as sized',usd(worst(rc)),over(rc)+' of '+rc.length+' past −$150','dn')+
-      tile('Worst 2-week dip · card at 1 contract',usd(worst(r1)),over(r1)+' of '+r1.length+' past −$150','dn')+tile('Worst single morning',usd(worstDay),'card + options as sized','dn')+tile('Most contracts open at once','9','Oct 26 8:30 (3× card trades + options)',''));
+    set('acct-v95',tile('Worst 2-week dip · everything (as sized)',usd(worst(ra)),over(ra)+' of '+ra.length+' two-week stretches went past −$150','dn')+tile('Worst 2-week dip · card as sized',usd(worst(rc)),over(rc)+' of '+rc.length+' past −$150','dn')+
+      tile('Worst 2-week dip · card at 1 contract',usd(worst(r1)),over(r1)+' of '+r1.length+' past −$150','dn')+tile('Worst single morning',usd(worstDay),'everything as sized','dn')+tile('Most contracts open at once','9','Oct 26 8:30 (3× card trades + options)',''));
     // ---- Morning check: next morning ----
     var H=IX&&IX.htf_next,tw=function(v){return v>0?'up':v<0?'down':'mixed';};
     set('pre-v95',tile('Daily trend (next morning)',H?tw(H.daily):'—',H?'close vs daily MA17 + its slope, through '+H.through:'',H&&H.daily<0?'dn':H&&H.daily>0?'up':'')+tile('Weekly trend',H?tw(H.weekly):'—','weekly close vs weekly MA17 + slope',H&&H.weekly<0?'dn':H&&H.weekly>0?'up':'')+
-      tile('Bounce calls',H&&H.daily===-1&&H.weekly===-1?'1× only':'normal size',H&&H.daily===-1&&H.weekly===-1?'daily and weekly both down':'3× allowed when your lines agree','')+tile('Last 10 mornings',usd(eq.slice(-10).reduce(function(a,r){return a+r.day;},0)),'card + options as sized',''));
+      tile('Bounce calls',H&&H.daily===-1&&H.weekly===-1?'1× only':'normal size',H&&H.daily===-1&&H.weekly===-1?'daily and weekly both down':'3× allowed when your lines agree','')+tile('Last 10 mornings',usd(eq.slice(-10).reduce(function(a,r){return a+r.day;},0)),'everything as sized',''));
   }
   var IX=null,BR=null,left=2,done=function(){if(--left===0){try{go(IX,BR);}catch(e){console.error('v9.5 live tab',e);}}};
   fetch('../v92_log/index.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(j){IX=j;}).catch(function(){}).then(done);
@@ -891,7 +897,7 @@ window.dash=(function(){
   dash.draw('race',(el)=>{const d=dash.data('daily');if(d.status!=='ok'){el.replaceChildren();return;}
     lines(el,d.data,{x:'date',series:[{key:'model1_cum',label:'Model, 1 ct',color:OK},{key:'you_cum',label:'You',color:MUT}]});});
   dash.draw('equity',(el)=>{const d=dash.data('daily');if(d.status!=='ok'){el.replaceChildren();return;}
-    lines(el,d.data,{x:'date',series:[{key:'model_sized_cum',label:'Model, 7/3',color:OK}]});});
+    lines(el,d.data,{x:'date',series:[{key:'model_sized_cum',label:'Model, as sized',color:OK}]});});
   dash.draw('paths',(el)=>{const d=dash.data('paths');if(d.status!=='ok'){el.replaceChildren();return;}
     lines(el,d.data,{x:'min',xType:'num',yFmt:(v)=>signed(v,2),xLabel:(m)=>(m>0?'+':'')+m+' min',vline:0,
       series:[{key:'model',label:'Model',color:OK,w:2.5},{key:'you',label:'You, all',color:MUT,w:2.5},{key:'you_push',label:'You, into a hard push',color:BAD,w:1.5},{key:'you_pull',label:'You, small pullback',color:WARN,w:1.5}]});});
@@ -1096,7 +1102,7 @@ window.dash=(function(){
   });
   dash.draw('roll',(el)=>{
     el.replaceChildren();el.style.position='relative';const d=dash.data('roll2w');if(d.status!=='ok')return;
-    const rows=d.data;const W=Math.max(300,el.clientWidth||700),H=300,mb=24,mt=10;const LIMIT=-120;
+    const rows=d.data;const W=Math.max(300,el.clientWidth||700),H=300,mb=24,mt=10;const LIMIT=-150;
     const vals=[0,LIMIT];rows.forEach(r=>{vals.push(r.sum,-r.dip);});
     const svg=d3.select(el).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Rolling 2-week P&L at 1 contract');
     const y=d3.scaleLinear(d3.extent(vals),[H-mb,mt]).nice();const ticks=y.ticks(6);const ml=yAxis(svg,y,ticks,money),mr=10;
