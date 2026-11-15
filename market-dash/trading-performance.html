@@ -433,7 +433,7 @@ function renderCombinedWidget(){
   html+='<div style="grid-column:1/-1">'+_filterBar('perf-combined')+'</div>';
   if (PVIEW === 'perf') {
     html+='<div style="grid-column:1/-1">'+_combinedHero(D)+'</div>';
-    html+='<div style="grid-column:1/-1">'+_botPaperPanel()+'</div>';
+    // bot paper test panel removed Nov 15 (your page is your trades only; the bot lives on Trading Strategy + Trade Replay)
   }
   var hasData=(D.winrate&&D.winrate.total)||(D.equity&&D.equity.length);
   if(!hasData){
