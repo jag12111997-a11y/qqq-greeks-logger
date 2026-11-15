@@ -7059,7 +7059,10 @@
     var prevAll=ok.filter(function(r){return r.date.slice(0,7)<cur;}),base=prevAll.length?prevAll[prevAll.length-1].c:d[0].o;
     var chg=d[d.length-1].c-base;
     var btn=months.slice(0,24).map(function(m){var on=m===cur;return '<button type="button" class="qqq-layer" data-gs-month="'+m+'" style="'+(on?'border-color:var(--accent);color:var(--accent)':'')+'">'+MN[+m.slice(5)]+' '+m.slice(2,4)+'</button>';}).join('');
-    var W=1000,H=300,pl=8,pr=60,pt=12,pb=26,hi=Math.max.apply(null,d.map(function(r){return r.h;})),lo=Math.min.apply(null,d.map(function(r){return r.l;}));
+    // priced range for the day = open ± open × IV × √(1/252) (IV from that day's logger snapshot)
+    var E=function(r){return _sdNum(r.iv)&&r.iv>0?r.o*r.iv/100/Math.sqrt(252):null;};
+    var W=1000,H=330,pl=8,pr=60,pt=26,pb=44;
+    var hi=Math.max.apply(null,d.map(function(r){var e=E(r);return Math.max(r.h,e?r.o+e:r.h);})),lo=Math.min.apply(null,d.map(function(r){var e=E(r);return Math.min(r.l,e?r.o-e:r.l);}));
     var pad=(hi-lo)*0.06||1;hi+=pad;lo-=pad;
     var Y=function(v){return pt+(hi-v)/(hi-lo)*(H-pt-pb);},step=(W-pl-pr)/d.length,cw=Math.max(3,Math.min(26,step*0.62));
     var g='';
@@ -7069,15 +7072,19 @@
       var tip=_gsNice(r.date)+' · open '+r.o.toFixed(2)+' → close '+r.c.toFixed(2)+' ('+(r.c-r.o>=0?'+':'−')+Math.abs(r.c-r.o).toFixed(2)+') · range $'+(r.h-r.l).toFixed(2)+(_sdNum(r.flip)?' · gamma flip '+r.flip.toFixed(0):'')+(_sdNum(r.hv)&&_sdNum(r.iv)?' · real '+r.hv.toFixed(1)+' vs priced '+r.iv.toFixed(1):'');
       g+='<g data-gs-day="'+r.date+'" style="cursor:pointer"><title>'+esc(tip)+'</title>'
         +'<rect x="'+(x-step/2).toFixed(1)+'" y="'+pt+'" width="'+step.toFixed(1)+'" height="'+(H-pt-pb)+'" fill="'+(on?'rgba(255,43,224,.12)':'transparent')+'"/>'
+        +(E(r)?'<rect x="'+(x-cw*0.85).toFixed(1)+'" y="'+Y(r.o+E(r)).toFixed(1)+'" width="'+(cw*1.7).toFixed(1)+'" height="'+(Y(r.o-E(r))-Y(r.o+E(r))).toFixed(1)+'" fill="rgba(176,111,168,.13)" stroke="rgba(176,111,168,.45)" stroke-dasharray="3 3"/>':'')
         +'<line x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+Y(r.h).toFixed(1)+'" y2="'+Y(r.l).toFixed(1)+'" stroke="'+col+'" stroke-width="1.5"/>'
         +'<rect x="'+(x-cw/2).toFixed(1)+'" y="'+Math.min(yo,yc).toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+Math.max(1.5,Math.abs(yc-yo)).toFixed(1)+'" fill="'+col+'"/>'
+        +(d.length<=23?'<text x="'+x.toFixed(1)+'" y="'+(Math.min(Y(r.h),E(r)?Y(r.o+E(r)):1e9)-6).toFixed(1)+'" fill="#e8dede" font-size="11" text-anchor="middle">$'+(r.h-r.l).toFixed(2)+'</text>'
+          +'<text x="'+x.toFixed(1)+'" y="'+(Math.max(Y(r.l),E(r)?Y(r.o-E(r)):-1e9)+14).toFixed(1)+'" fill="'+col+'" font-size="11" text-anchor="middle">'+(r.c-r.o>=0?'+':'−')+Math.abs(r.c-r.o).toFixed(2)+'</text>':'')
         +((i%Math.max(1,Math.round(d.length/11))===0||i===d.length-1)?'<text x="'+x.toFixed(1)+'" y="'+(H-8)+'" fill="#8b8ba6" font-size="11" text-anchor="middle">'+(+r.date.slice(8))+'</text>':'')+'</g>';
     });
     return '<div style="margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;font-size:11px;letter-spacing:.14em;color:var(--dim)"><span>DAILY CANDLES · '+MN[+cur.slice(5)].toUpperCase()+' '+cur.slice(0,4)+' · CLICK A DAY TO LOAD IT</span>'
       +'<span style="letter-spacing:0;font-size:13px;color:'+(chg>=0?UP:DN)+'">'+(chg>=0?'+':'−')+'$'+Math.abs(chg).toFixed(2)+' for the month · '+d.length+' days</span></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'+btn+'</div>'
-      +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+g+'</svg></div>';
+      +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+g+'</svg>'
+      +'<div style="font-size:11px;color:var(--dim);margin-top:4px">Above each candle: the day\'s range. Below: open → close. Dashed box: the range options priced in that morning (open ± open × IV ÷ √252); a candle poking out of its box moved more than expected.</div></div>';
   }
   function _gsLog(rows,sel,n){
     var list=rows.slice().reverse(),shown=list.slice(0,n),UP='#00e676',DN='#ff453a',FL='#ffd600';
