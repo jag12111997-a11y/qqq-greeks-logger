@@ -7681,12 +7681,39 @@
       return band(label) + '<div class="grid">' + html + "</div>";
     }
 
+    // Header quotes: VIX (Cboe) and DXY (ICE dollar index via Yahoo) from the relay, both ~15 min delayed.
+    // Fetched once on load and every 30 s; the last values survive re-renders.
+    if (!window.__hdrqT) {
+      window.__hdrq = {};
+      window.__hdrqHtml = function () {
+        return ["vix", "dxy"].map(function (k) {
+          var j = window.__hdrq[k], lab = k.toUpperCase();
+          if (!j) return lab + " —";
+          var p = typeof j.pct === "number" ? j.pct : null;
+          return lab + ' <b style="color:var(--txt)">' + j.last.toFixed(2) + "</b>" +
+            (p == null ? "" : ' <span style="color:var(' + (p > 0 ? "--up" : p < 0 ? "--down" : "--flat") + ')">' + (p > 0 ? "+" : "") + p.toFixed(2) + "%</span>");
+        }).join("  ·  ");
+      };
+      var hdrqPull = function () {
+        ["vix", "dxy"].forEach(function (k) {
+          fetch("https://gex-relay.jag12111997.workers.dev/live/" + k, { cache: "no-store" })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (j) {
+              if (!j || !(j.last > 0)) return;
+              window.__hdrq[k] = j;
+              var el = document.getElementById("hdrq"); if (el) el.innerHTML = window.__hdrqHtml();
+            }).catch(function () {});
+        });
+      };
+      hdrqPull(); window.__hdrqT = setInterval(hdrqPull, 30000);
+    }
     var _header =
       "<header><h1>ༀ</h1>" +
       '<span class="stamp">session ' + fmtDate(e.session_date || e.entry_date) +
       (e.session ? '  <span style="color:var(--accent)">' +
                    esc(String(e.session).toUpperCase()) + "</span>" : "") +
       "  ·  fetched " + fmtDateTime(e.fetched_utc) + "</span>" +
+      '<span id="hdrq" class="stamp" style="margin-left:14px">' + window.__hdrqHtml() + "</span>" +
       '<span style="flex:1"></span>' +
       '<select id="pick">' + opts + "</select>" +
       "</header>";

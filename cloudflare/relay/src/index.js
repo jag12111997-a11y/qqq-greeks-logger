@@ -55,7 +55,7 @@ export default {
     }
     // Live pull (read-only): the dashboard asks for fresh bars / option quotes / VIX; the Durable Object
     // fetches them from Alpaca (keys stay here) or Cboe at most once per 15 s and everyone shares that copy.
-    const lv = url.pathname.match(/^\/live\/(bars|options|vix|night|hist)$/);
+    const lv = url.pathname.match(/^\/live\/(bars|options|vix|dxy|night|hist)$/);
     if (lv) {
       if (req.method !== "GET") return reply(req, 405, "method not allowed");
       const day = url.searchParams.get("day");
@@ -231,6 +231,14 @@ export class Relay extends DurableObject {
       const d = ((await r.json()) || {}).data || {};
       if (!(d.current_price > 0)) throw new Error("no vix");
       return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "VIX", last: d.current_price, pct: d.price_change_percent, src_time: d.last_trade_time, source: "Cboe delayed quote (~15 min)" }) };
+    }
+    if (kind === "dxy") {   // US dollar index (ICE DX-Y.NYB) from Yahoo's public chart endpoint, read-only, shared 15 s copy
+      const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?interval=1m&range=1d", { headers: { "User-Agent": "Mozilla/5.0 (qqq-greeks-logger relay)" } });
+      if (!r.ok) throw new Error("yahoo " + r.status);
+      const mt = ((((await r.json()) || {}).chart || {}).result || [])[0];
+      const m = (mt && mt.meta) || {}, last = m.regularMarketPrice, prev = m.chartPreviousClose || m.previousClose;
+      if (!(last > 0)) throw new Error("no dxy");
+      return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "DXY", last, pct: prev > 0 ? (last / prev - 1) * 100 : null, src_time: m.regularMarketTime ? iso(m.regularMarketTime * 1000) : null, delayed_min: m.exchangeDataDelayedBy != null ? m.exchangeDataDelayedBy : null, source: "Yahoo (ICE dollar index)" }) };
     }
     if (kind === "bars") {
       const b = await this.bars(day);
