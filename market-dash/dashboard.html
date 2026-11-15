@@ -138,7 +138,7 @@
   .lev-c .lev-mid { position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; margin-left:-1px; background:#8b8ba6; }
   .lev-c .lev-tick { position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,.08); }
   .lev-c .lev-fill { position:absolute; top:0; bottom:0; background:var(--lev-color); opacity:.85; transition:left .35s ease, width .35s ease; }
-  .ovw.off-close .ovs-close{display:none}.ovw.off-range .ovs-range{display:none}.ovw.off-flip .ovs-flip{display:none}.ovw.off-cw .ovs-cw{display:none}.ovw.off-pw .ovs-pw{display:none}.ovw.off-hv .ovs-hv{display:none}.ovw.off-iv .ovs-iv{display:none}.ovw.off-vol .ovs-vol{display:none}.ddw.off-rng .dds-rng{display:none}.ddw.off-vr .dds-vr{display:none}.ddw.off-geo .dds-geo{display:none}.ddw.off-refs .dds-refs{display:none}
+  #nqtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}#nqtabs button{font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.06em;padding:7px 14px;border-radius:8px;cursor:pointer;background:rgba(140,20,20,.08);color:rgba(200,160,160,.6);border:1px solid rgba(140,20,20,.25)}#nqtabs button.on{background:rgba(0,229,204,.14);color:#00e5cc;border-color:rgba(0,229,204,.35)}.ovw.off-close .ovs-close{display:none}.ovw.off-range .ovs-range{display:none}.ovw.off-flip .ovs-flip{display:none}.ovw.off-cw .ovs-cw{display:none}.ovw.off-pw .ovs-pw{display:none}.ovw.off-hv .ovs-hv{display:none}.ovw.off-iv .ovs-iv{display:none}.ovw.off-vol .ovs-vol{display:none}.ddw.off-rng .dds-rng{display:none}.ddw.off-vr .dds-vr{display:none}.ddw.off-geo .dds-geo{display:none}.ddw.off-refs .dds-refs{display:none}
   .lev-c .lev-band { position:absolute; top:0; bottom:0; background:rgba(176,111,168,.22); }
   .lev-c .lev-ext { position:absolute; top:0; bottom:0; background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 4px,transparent 4px 8px); }
   .lev-c .lev-p { background:rgba(255,255,255,.22); }
@@ -7272,23 +7272,20 @@
     var months=[];rows.forEach(function(r){if(_sdNum(r.o)&&_sdNum(r.c)){var m=r.date.slice(0,7);if(months.indexOf(m)<0)months.push(m);}});months.reverse();
     var prev=rows.filter(function(r){return r.date.slice(0,7)<cur&&_sdNum(r.c);}),base=prev.length?prev[prev.length-1].c:d[0].o,last=d[d.length-1];
     var chg=last.c-base,mh=Math.max.apply(null,d.map(function(r){return r.h;})),ml=Math.min.apply(null,d.map(function(r){return r.l;})),mname=MN[+cur.slice(5)]+' '+cur.slice(0,4);
-    var O=GS_OVL,S=[['close','Close','#e8dede'],['range','Day range','#8b8ba6'],['flip','Gamma flip',FL],['cw','Call wall',CW],['pw','Put wall',E20],['hv','Real vol',E20],['iv','Priced vol',E9],['vol','Volume',UP]];
+    var O=GS_OVL,S=[['flip','Gamma flip',FL],['cw','Call wall',CW],['pw','Put wall',E20],['hv','Real vol',E20],['iv','Priced vol',E9],['vol','Volume',UP]];
     var chips=S.map(function(x){var on=!!O[x[0]];return '<button type="button" class="qqq-layer" data-gs-ovl="'+x[0]+'" aria-pressed="'+on+'" style="'+(on?'':'opacity:.4;text-decoration:line-through')+'"><span style="display:inline-block;width:10px;height:3px;background:'+x[2]+';vertical-align:middle;margin-right:6px'+(x[0]==='hv'?';border-top:1px dashed '+x[2]:'')+'"></span>'+x[1]+'</button>';}).join('');
     var mbtn=months.slice(0,24).map(function(m){var on=m===cur;return '<button type="button" class="qqq-layer" data-gs-month="'+m+'" style="'+(on?'border-color:var(--accent);color:var(--accent)':'')+'">'+MN[+m.slice(5)]+' '+m.slice(2,4)+'</button>';}).join('');
     var W=1000,H=380,pl=8,pr=110,pt=14,pB=H-120,vT=H-100,vB=H-28,n=d.length,step=(W-pl-pr)/n,X=function(i){return pl+step*(i+.5);};
-    var pv=[];d.forEach(function(r){pv.push(r.c,r.h,r.l);if(_sdNum(r.flip))pv.push(r.flip);if(_sdNum(r.cw))pv.push(r.cw);if(_sdNum(r.pw))pv.push(r.pw);});pv.push(base);
+    var pv=[];d.forEach(function(r){if(_sdNum(r.flip))pv.push(r.flip);if(_sdNum(r.cw))pv.push(r.cw);if(_sdNum(r.pw))pv.push(r.pw);});
     var vv=[];d.forEach(function(r){if(_sdNum(r.hv))vv.push(r.hv);if(_sdNum(r.iv))vv.push(r.iv);});
     var g='',seg=function(k,f){var b=g.length;f();g=g.slice(0,b)+'<g class="ovs-'+k+'">'+g.slice(b)+'</g>';};
     if(pv.length){var hi=Math.max.apply(null,pv),lo=Math.min.apply(null,pv),pd=(hi-lo)*.06||1;hi+=pd;lo-=pd;var Y=function(v){return pt+(hi-v)/(hi-lo)*(pB-pt);};
       for(var t=0;t<=4;t++){var v=lo+(hi-lo)*t/4;g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="rgba(255,255,255,.05)"/><text x="'+(W-pr+6)+'" y="'+(Y(v)+4).toFixed(1)+'" fill="#8b8ba6" font-size="11">'+v.toFixed(0)+'</text>';}
       var line=function(get,col,dash,w,lab){var p='',L=null;d.forEach(function(r,i){var v=get(r);if(!_sdNum(v))return;p+=(p?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);L=i;});if(!p)return '';
         return '<path d="'+p+'" fill="none" stroke="'+col+'" stroke-width="'+(w||1.8)+'"'+(dash?' stroke-dasharray="6 4"':'')+'/>'+(lab&&L!==null?'<text x="'+(X(L)+8).toFixed(1)+'" y="'+(Y(get(d[L]))+4).toFixed(1)+'" fill="'+col+'" font-size="10">'+lab+' '+get(d[L]).toFixed(get===undefined?0:(lab==='close'?2:0))+'</text>':'');};
-      seg('close',function(){g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(base).toFixed(1)+'" y2="'+Y(base).toFixed(1)+'" stroke="#8b8ba6" stroke-dasharray="2 4"/><text x="'+(pl+2)+'" y="'+(Y(base)-4).toFixed(1)+'" fill="#8b8ba6" font-size="10">last month\'s close '+base.toFixed(2)+'</text>';});
-      seg('range',function(){d.forEach(function(r,i){g+='<line x1="'+X(i).toFixed(1)+'" x2="'+X(i).toFixed(1)+'" y1="'+Y(r.h).toFixed(1)+'" y2="'+Y(r.l).toFixed(1)+'" stroke="'+(r.c>=r.o?UP:DN)+'" stroke-width="5" stroke-linecap="round" opacity=".35"/>';});});
       seg('cw',function(){g+=line(function(r){return r.cw;},CW,true,1.5,'call wall');});
       seg('pw',function(){g+=line(function(r){return r.pw;},E20,true,1.5,'put wall');});
       seg('flip',function(){g+=line(function(r){return r.flip;},FL,false,1.8,'flip');});
-      seg('close',function(){g+=line(function(r){return r.c;},'#e8dede',false,2.4,'close');d.forEach(function(r,i){g+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(r.c).toFixed(1)+'" r="3" fill="#e8dede"/>';});});
     }
     if(vv.length){var vh=Math.max.apply(null,vv)*1.1,vl=Math.min.apply(null,vv)*.85,YV=function(v){return pt+(vh-v)/(vh-vl)*(pB-pt);};
       var vline=function(k,col,lab){var p='',L=null;d.forEach(function(r,i){if(!_sdNum(r[k]))return;p+=(p?'L':'M')+X(i).toFixed(1)+' '+YV(r[k]).toFixed(1);L=i;});return p?'<path d="'+p+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-dasharray="2 3" opacity=".9"/><text x="'+(W-pr+46)+'" y="'+(YV(d[L][k])+4).toFixed(1)+'" fill="'+col+'" font-size="10">'+lab+' '+d[L][k].toFixed(1)+'%</text>':'';};
@@ -7312,7 +7309,7 @@
       +(vd.length?pill('Moved more than priced on '+more+' of '+vd.length+' days',more>vd.length/2?E20:E9):'')
       +(gd.length?pill('Above the gamma flip on '+above+' of '+gd.length+' days',above>=gd.length/2?UP:DN):'')
       +pill(ups+' up / '+(d.length-ups)+' down days','#5eead4')+'</div>'
-      +'<div style="font-size:11px;color:var(--dim);margin-top:6px">Left axis: price lines (close, day range, flip, walls). Right axis: real vs priced vol (dotted). Bottom: volume. Tap a chip to hide it.</div></div>';
+      +'<div style="font-size:11px;color:var(--dim);margin-top:6px">Left axis: flip and walls. Right axis: real vs priced vol (dotted). Bottom: volume. Tap a chip to hide it.</div></div>';
   }
   function _gsMonthChart(rows,sel){
     var UP='#00e676',DN='#ff453a',MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -7427,12 +7424,19 @@
   function gsBelow(G){
     if(!SD.candles&&!SD.err)return '<div style="padding:8px;color:var(--dim);font-size:12px">Loading day stats…</div>';
     if(SD.err)return '<div style="padding:8px;color:#ff453a;font-size:12px">'+SD.err+'</div>';
-    var h='',P=_gsPanelFor(G);
-    if(P)h+=P.cards;
-    else h+='<div style="margin-top:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--dim)">Showing all history. Pick a day (◀ ▶, Today, or the day log) to lock the chart to that session and see its numbers.</div>';
+    var h='';
+    if(!G.sdate)h+='<div style="margin-top:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--dim)">Showing all history. Pick a day (◀ ▶, Today, or QQQ Data) to lock the chart to that session.</div>';
+    return h?'<div style="position:relative;z-index:2;padding-top:4px;clear:both">'+h+'</div>':'';
+  }
+  // Nov 15: QQQ Data sub-tab: month candles, month day-by-day overlay (deep dive is added in render).
+  function gsData(G){
+    if(!SD.candles&&!SD.err)return '<div style="padding:8px;color:var(--dim);font-size:12px">Loading day stats…</div>';
+    if(SD.err)return '<div style="padding:8px;color:#ff453a;font-size:12px">'+SD.err+'</div>';
+    var rows=_sdRows(),h='';
     h+=_gsMonthChart(G.rows,G.sdate)+'<details style="margin-top:6px"><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">LIST VIEW</summary>'+_gsLog(G.rows,G.sdate,GS.logN)+'</details>';
     h+='<div style="font-size:11px;color:var(--dim);padding:6px 2px">Prices: IEX feed (match full market within cents). Volume: IEX only, ~1–2% of total, so use it for shape, not size. IV &amp; GEX: logger snapshot for that day.</div>';
-    return '<div style="position:relative;z-index:2;padding-top:4px;clear:both">'+h+'</div>';
+    var ov=rows.length?_gsMonthOverlay(rows,_gsMonthOf(rows,G.sdate||rows[rows.length-1].date)):'';
+    return '<div style="position:relative;z-index:2;padding-top:4px;clear:both">'+h+ov+'</div>';
   }
 
   // The GEX Chart card: session controls, the chart, then the day cards and log.
@@ -7446,9 +7450,15 @@
       : qqqOpeningChart(G.entry, M);
     return { G: G, M: M, html: secWide("QQQ · live price + synchronized GEX",
       gsControls(G) + gsHeadline(G) + chart + gsBelow(G))
-      .replace('<section class="wide">', '<section class="wide qqq-market-card">') };
+      .replace('<section class="wide">', '<section class="wide qqq-market-card">'),
+      dataHtml: secWide("QQQ data · month by month", gsData(G)) };
   }
 
+  // Nov 15: Nasdaq sub-tabs (Today · QQQ Data), remembered.
+  window.NQV=(function(){try{return localStorage.getItem('md:nqv')==='data'?'data':'today';}catch(e){return 'today';}})();
+  function _nqTop(){var t=document.getElementById('nqtabs');if(!t)return;var y=t.getBoundingClientRect().top+window.scrollY-8;if(window.scrollY>y)window.scrollTo(0,Math.max(0,y));_lastUserScroll=Date.now()+1;}
+  document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-nqv]');if(!b)return;var v=b.getAttribute('data-nqv');if(v===window.NQV)return;
+    window.NQV=v;try{localStorage.setItem('md:nqv',v);}catch(e){}renderAllWidgets(true);_nqTop();});
   function _gsGo(date){
     if (date !== null && date !== "latest") {
       var rows = _sdRows();
@@ -7468,7 +7478,7 @@
       _chipFlip(b,!!OO[kk]);document.querySelectorAll('.ddw').forEach(function(w){w.classList.toggle('off-'+kk,!OO[kk]);});return;}
     if(b.hasAttribute('data-gs-ovl')){var ok2=b.getAttribute('data-gs-ovl');GS_OVL[ok2]=GS_OVL[ok2]?0:1;try{localStorage.setItem('md:ovl',JSON.stringify(GS_OVL));}catch(e9){}
       _chipFlip(b,!!GS_OVL[ok2]);document.querySelectorAll('.ovw').forEach(function(w){w.classList.toggle('off-'+ok2,!GS_OVL[ok2]);});return;}
-    if(b.hasAttribute('data-gs-day'))return _gsGo(b.getAttribute('data-gs-day'));
+    if(b.hasAttribute('data-gs-day')){if(window.NQV==='data'){window.NQV='today';try{localStorage.setItem('md:nqv','today');}catch(e7){}_gsGo(b.getAttribute('data-gs-day'));return _nqTop();}return _gsGo(b.getAttribute('data-gs-day'));}
     if(b.hasAttribute('data-gs-go'))return _gsGo(b.getAttribute('data-gs-go')==='all'?null:'latest');
     var cur=(_gsLastG&&_gsLastG.sdate)||rows[rows.length-1].date,i=rows.findIndex(function(x){return x.date===cur;});if(i<0)i=rows.length-1;
     i=Math.max(0,Math.min(rows.length-1,i+(+b.getAttribute('data-gs-step'))));
@@ -8095,8 +8105,7 @@
         var p = Q.pulse;
         if (p && p.fear != null) out.push("Fear " + '<b style="color:var(' + (p.fear < 45 ? "--down" : p.fear > 55 ? "--up" : "--flat") + ')">' + p.fear + "</b>");
         if (p && p.qqq_vol) out.push("QQQ vol " + b((p.qqq_vol / 1e6).toFixed(1) + "M"));
-        if (p && p.leaders && p.leaders.length) out.push("leaders " + p.leaders.map(function (x) { return b(x.s) + pc(x.pct); }).join(" "));
-        if (p && p.laggards && p.laggards.length) out.push("laggards " + p.laggards.map(function (x) { return b(x.s) + pc(x.pct); }).join(" "));
+        // Nov 15: sector leaders / laggards removed from the strip (asked)
         var g = Q.gex; if (g && g.regime) out.push("GEX " + '<b style="color:var(' + (/NEG/i.test(g.regime) ? "--down" : "--up") + ')">' + (/NEG/i.test(g.regime) ? "neg" : "pos") + "</b>");
         return out.join("  ·  ");
       };
@@ -8131,10 +8140,12 @@
     var _leverageTable = secNasdaqStars(e, "table");
     // Nov 15: VIX chart + leverage table removed from Nasdaq (VIX / sectors live in the header strip);
     // cockpit, options positioning, dealer positioning, odds & flow, plan and options & venue moved to the Options Research tab.
-    var _qqqBody =
-      (TAB === "nasdaq" && idx === FULL.length - 1 ? secHomeRun() : "") +
-      (TAB === "nasdaq" && _gex ? _gex.html : "") +
-      secNasdaqDeepDive(e, "nasdaq");
+    var _nqTabs = '<div id="nqtabs">' + [["today", "Today"], ["data", "QQQ Data"]].map(function (t) {
+      return '<button type="button" data-nqv="' + t[0] + '" class="' + (window.NQV === t[0] ? "on" : "") + '">' + t[1] + "</button>"; }).join("") + "</div>";
+    var _qqqBody = _nqTabs + (window.NQV === "data"
+      ? ((TAB === "nasdaq" && _gex ? _gex.dataHtml : "") + secNasdaqDeepDive(e, "nasdaq"))
+      : ((TAB === "nasdaq" && idx === FULL.length - 1 ? secHomeRun() : "") +
+         (TAB === "nasdaq" && _gex ? _gex.html : "")));
     var _optBody =
       (TAB === "options" && _gex ? secQqqCockpitSection(_gex.G.entry, _gex.M) : "") +
       secNasdaqDeepDive(e, "options");
