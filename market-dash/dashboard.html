@@ -138,7 +138,7 @@
   .lev-c .lev-mid { position:absolute; left:50%; top:-4px; bottom:-4px; width:2px; margin-left:-1px; background:#8b8ba6; }
   .lev-c .lev-tick { position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,.08); }
   .lev-c .lev-fill { position:absolute; top:0; bottom:0; background:var(--lev-color); opacity:.85; transition:left .35s ease, width .35s ease; }
-  #nqtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}#nqtabs button{font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.06em;padding:7px 14px;border-radius:8px;cursor:pointer;background:rgba(140,20,20,.08);color:rgba(200,160,160,.6);border:1px solid rgba(140,20,20,.25)}#nqtabs button.on{background:rgba(0,229,204,.14);color:#00e5cc;border-color:rgba(0,229,204,.35)}.ovw.off-close .ovs-close{display:none}.ovw.off-range .ovs-range{display:none}.ovw.off-flip .ovs-flip{display:none}.ovw.off-cw .ovs-cw{display:none}.ovw.off-pw .ovs-pw{display:none}.ovw.off-hv .ovs-hv{display:none}.ovw.off-iv .ovs-iv{display:none}.ovw.off-vol .ovs-vol{display:none}.ddw.off-rng .dds-rng{display:none}.ddw.off-vr .dds-vr{display:none}.ddw.off-geo .dds-geo{display:none}.ddw.off-refs .dds-refs{display:none}
+  #ortabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}#ortabs button{font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.06em;padding:7px 14px;border-radius:8px;cursor:pointer;background:rgba(140,20,20,.08);color:rgba(200,160,160,.6);border:1px solid rgba(140,20,20,.25)}#ortabs button.on{background:rgba(0,229,204,.14);color:#00e5cc;border-color:rgba(0,229,204,.35)}.orw.off-px .ors-px,.orw.off-gex .ors-gex,.orw.off-pc .ors-pc,.orw.off-vc .ors-vc{display:none}#nqtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}#nqtabs button{font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.06em;padding:7px 14px;border-radius:8px;cursor:pointer;background:rgba(140,20,20,.08);color:rgba(200,160,160,.6);border:1px solid rgba(140,20,20,.25)}#nqtabs button.on{background:rgba(0,229,204,.14);color:#00e5cc;border-color:rgba(0,229,204,.35)}.ovw.off-close .ovs-close{display:none}.ovw.off-range .ovs-range{display:none}.ovw.off-flip .ovs-flip{display:none}.ovw.off-cw .ovs-cw{display:none}.ovw.off-pw .ovs-pw{display:none}.ovw.off-hv .ovs-hv{display:none}.ovw.off-iv .ovs-iv{display:none}.ovw.off-vol .ovs-vol{display:none}.ddw.off-rng .dds-rng{display:none}.ddw.off-vr .dds-vr{display:none}.ddw.off-geo .dds-geo{display:none}.ddw.off-refs .dds-refs{display:none}
   .lev-c .lev-band { position:absolute; top:0; bottom:0; background:rgba(176,111,168,.22); }
   .lev-c .lev-ext { position:absolute; top:0; bottom:0; background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 4px,transparent 4px 8px); }
   .lev-c .lev-p { background:rgba(255,255,255,.22); }
@@ -3595,8 +3595,8 @@
   ["wheel", "touchmove", "keydown"].forEach(function (n) { window.addEventListener(n, function () { _lastUserScroll = Date.now(); }, { passive: true, capture: true }); });
   // anchor = the clicked control, else the first heading / control near the top of the screen; after the redraw (and again
   // once charts have mounted) scroll so the same element sits exactly where it was. Safari has no built-in scroll anchoring.
-  var _ANCH = "#app h2, #app [data-gs-month], #app [data-gs-ovl], #app [data-dd-ovl], #app [data-gs-day], #app .band";
-  function _anchorKey(el) { return el.tagName + "|" + (el.getAttribute("data-gs-month") || el.getAttribute("data-gs-ovl") || el.getAttribute("data-dd-ovl") || el.getAttribute("data-gs-day") || "") + "|" + (el.textContent || "").trim().slice(0, 40); }
+  var _ANCH = "#app h2, #app [data-gs-month], #app [data-or-month], #app [data-or-ovl], #app [data-gs-ovl], #app [data-dd-ovl], #app [data-gs-day], #app .band";
+  function _anchorKey(el) { return el.tagName + "|" + (el.getAttribute("data-gs-month") || el.getAttribute("data-or-month") || el.getAttribute("data-or-ovl") || el.getAttribute("data-gs-ovl") || el.getAttribute("data-dd-ovl") || el.getAttribute("data-gs-day") || "") + "|" + (el.textContent || "").trim().slice(0, 40); }
   function _anchorTake(clicked) {
     var L = Array.prototype.slice.call(document.querySelectorAll(_ANCH)), el = null;
     if (clicked && L.indexOf(clicked) >= 0) el = clicked;
@@ -5448,17 +5448,17 @@
       return inner ? '<div class="qqq-deep-group"><div class="qqq-deep-group-title">' +
         esc(label) + '</div>' + inner + '</div>' : "";
     }
-    var opt = part === "options";
+    var opt = part.indexOf("options") === 0, sub = part.split(":")[1] || "";
     var body = opt
-      ? deepGroup("Dealer positioning", [secGexLive(e), secVanna(e)]) +
-        deepGroup("Odds & flow", [secTouchFlow(e), secQuant(e)]) +
-        deepGroup("Plan and discipline", [secPlan(e)]) +
-        deepGroup("Options & venue", [secOptions(e), secVenue(e)])
+      ? (!sub || sub === "pos" ? deepGroup("Dealer positioning", [secGexLive(e), secVanna(e)]) : "") +
+        (!sub || sub === "flow" ? deepGroup("Odds & flow", [secTouchFlow(e), secQuant(e)]) : "") +
+        (!sub || sub === "plan" ? deepGroup("Plan and discipline", [secPlan(e)]) : "") +
+        (!sub || sub === "flow" ? deepGroup("Options & venue", [secOptions(e), secVenue(e)]) : "")
       : (function () { var mods = [secGeometry(e), secFadeRegime(e), secRangeUsed(e)], m = _deepMonth(mods); if (m) { count += mods.filter(Boolean).length; return m; } return deepGroup("Regime & fade edge", mods); })();
     if (!body) return "";
-    var k = keyFor(opt ? "Options research deep dive" : "Nasdaq long form deep dive");
+    var k = keyFor(opt ? "Options research deep dive" + (sub ? " " + sub : "") : "Nasdaq long form deep dive");
     return '<section class="wide qqq-deep-dive"><details open data-k="' + k + '">' +
-      '<summary><h2>' + (opt ? "Options research · deep dive" : "Long form · Nasdaq deep dive") + '</h2><span class="qqq-deep-dive-sub">' +
+      '<summary><h2>' + (opt ? ({ pos: "Dealer positioning · full modules", flow: "Odds, flow & venue · full modules", plan: "Plan & discipline" }[sub] || "Options research · deep dive") : "Long form · Nasdaq deep dive") + '</h2><span class="qqq-deep-dive-sub">' +
       count + ' full modules · nothing removed</span></summary>' +
       '<div class="qqq-deep-body">' + body + '</div></details></section>';
   }
@@ -7454,6 +7454,155 @@
       dataHtml: secWide("QQQ data · month by month", gsData(G)) };
   }
 
+  // ===== Nov 15: Options Research visuals (sub-tabs, dealer map, normal-range strips, positioning over time) =====
+  window.ORV = (function () { try { var v = localStorage.getItem("md:orv"); return /^(cockpit|pos|flow|plan)$/.test(v) ? v : "cockpit"; } catch (x) { return "cockpit"; } })();
+  window.__ORM = window.__ORM || "all";
+  window.__OROV = (function () { var o = { px: 1, gex: 1, pc: 1, vc: 1 }; try { var j = JSON.parse(localStorage.getItem("md:orov") || "null"); if (j) for (var k in j) o[k] = j[k]; } catch (x) {} return o; })();
+  function _orN(v) { v = Number(v); return isFinite(v) ? v : null; }
+  function _orDays() {   // one snapshot per date (the last one logged that day)
+    var by = {}; H.forEach(function (x) { if (x && x.entry_date && !x.partial) by[x.entry_date] = x; });
+    return Object.keys(by).sort().map(function (d) { return by[d]; });
+  }
+  function _orMetric(x) {
+    var g = x.gex || {}, w = {}; (x.watchlist || []).forEach(function (r) { w[r.symbol] = r; });
+    var T = w.TQQQ, S = w.SQQQ, vr = null; try { vr = cockpitVR(x); } catch (er) {}
+    return {
+      dv: _orN(get(x, "quant.geometry.diversification_volume")), vr: _orN(vr), gex: _orN(g.net_gex), gr: _orN(g.gamma_ratio),
+      flipd: _orN(g.distance_to_flip_pct), edge: _orN(get(x, "quant.realized_vs_implied.spread_pct")),
+      z: _orN(w.QQQ && w.QQQ.z20), lev: (T && S && _orN(T.z20) !== null && _orN(S.z20) !== null) ? (T.z20 - S.z20) / 2 : null,
+      pc: _orN(get(x, "options.total_pc")), garch: _orN(get(x, "quant.garch.conditional_vol_pct")),
+      vanna: _orN(g.net_vannaex), charm: _orN(g.net_charmex), dex: _orN(g.net_dex),
+      spot: _orN(g.spot) || _orN(w.QQQ && w.QQQ.last), flip: _orN(g.gamma_flip), cw: _orN(get(x, "gex.levels.call_wall")), pw: _orN(get(x, "gex.levels.put_wall"))
+    };
+  }
+  var _OR_M = [   // [key, label, format, which side is bad for fades: "lo" | "hi" | null (just flag extremes)]
+    ["dv", "√det(G)", function (v) { return v.toFixed(3); }, "lo"],
+    ["vr", "VR(2)", function (v) { return v.toFixed(2); }, "hi"],
+    ["gex", "Net GEX", function (v) { return fmtBig(v); }, "lo"],
+    ["gr", "Gamma ratio", function (v) { return v.toFixed(3); }, null],
+    ["flipd", "Distance to flip", function (v) { return (v > 0 ? "+" : "") + v.toFixed(2) + "%"; }, null],
+    ["edge", "Edge (real − priced)", function (v) { return (v > 0 ? "+" : "") + v.toFixed(1) + "pp"; }, null],
+    ["z", "Stretch z", function (v) { return (v > 0 ? "+" : "") + v.toFixed(2); }, null],
+    ["lev", "Leverage lean", function (v) { return (v > 0 ? "+" : "") + v.toFixed(2); }, null],
+    ["pc", "Put / call", function (v) { return v.toFixed(2); }, null],
+    ["garch", "GARCH vol", function (v) { return v.toFixed(1) + "%"; }, "hi"],
+    ["vanna", "Vanna", function (v) { return fmtBig(v); }, null],
+    ["charm", "Charm", function (v) { return fmtBig(v); }, null],
+    ["dex", "Net DEX", function (v) { return fmtBig(v); }, null]
+  ];
+  function _orStrips(e) {
+    var days = _orDays(), cut = e && e.entry_date ? e.entry_date : null;
+    var hist = days.filter(function (x) { return !cut || x.entry_date <= cut; }).map(_orMetric);
+    var today = _orMetric(e), rows = "", odd = 0, total = 0;
+    _OR_M.forEach(function (m) {
+      var k = m[0], v = today[k], vals = hist.map(function (h) { return h[k]; }).filter(function (x) { return x !== null; });
+      if (v === null || vals.length < 10) return;
+      total++;
+      var s = vals.slice().sort(function (a, b) { return a - b; }), q = function (p) { return s[Math.min(s.length - 1, Math.max(0, Math.round(p * (s.length - 1))))]; };
+      var lo = s[0], hi = s[s.length - 1], below = s.filter(function (x) { return x < v; }).length, pr = Math.round(below / s.length * 100);
+      if (hi === lo) { hi = lo + 1; }
+      var W = 600, X = function (x) { return 8 + (x - lo) / (hi - lo) * (W - 16); };
+      var ext = pr <= 10 || pr >= 90, bad = m[3] === "lo" ? pr <= 20 : m[3] === "hi" ? pr >= 80 : false, good = m[3] === "lo" ? pr >= 80 : m[3] === "hi" ? pr <= 20 : false;
+      var col = bad ? "#ff453a" : good ? "#00e676" : ext ? "#ffd600" : "#e8dede";
+      if (bad || ext) odd++;
+      var word = bad ? "hostile" : good ? "friendly" : ext ? (pr >= 90 ? "unusually high" : "unusually low") : "normal";
+      var g = '<rect x="' + X(q(.1)).toFixed(1) + '" y="7" width="' + Math.max(2, X(q(.9)) - X(q(.1))).toFixed(1) + '" height="14" rx="3" fill="rgba(255,255,255,.07)"/>' +
+        '<line x1="' + X(q(.5)).toFixed(1) + '" x2="' + X(q(.5)).toFixed(1) + '" y1="5" y2="23" stroke="rgba(255,255,255,.25)"/>';
+      if (lo < 0 && hi > 0) g += '<line x1="' + X(0).toFixed(1) + '" x2="' + X(0).toFixed(1) + '" y1="3" y2="25" stroke="rgba(255,255,255,.18)" stroke-dasharray="2 2"/>';
+      vals.forEach(function (x) { g += '<circle cx="' + X(x).toFixed(1) + '" cy="14" r="2" fill="#8b8ba6" opacity=".35"/>'; });
+      g += '<circle cx="' + X(v).toFixed(1) + '" cy="14" r="6" fill="' + col + '" stroke="#0c0710" stroke-width="2"/>';
+      rows += '<div style="display:grid;grid-template-columns:minmax(96px,150px) 1fr minmax(118px,170px);gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)">' +
+        '<span style="font-size:12px;color:var(--dim)">' + m[1] + '</span>' +
+        '<svg viewBox="0 0 ' + W + ' 28" preserveAspectRatio="none" style="width:100%;height:28px;display:block"><title>' + esc(m[1] + ": today " + m[2](v) + " · " + pr + "th percentile of " + vals.length + " sessions · normal " + m[2](q(.1)) + " to " + m[2](q(.9))) + '</title>' + g + '</svg>' +
+        '<span style="font-size:12px;text-align:right"><b style="color:' + col + '">' + m[2](v) + '</b> <span style="color:var(--dim)">· ' + word + '</span></span></div>';
+    });
+    if (!rows) return '<div style="color:var(--dim);font-size:12px">Not enough history yet.</div>';
+    return '<div style="font-size:14px;margin:2px 0 8px">' + (odd ? '<b style="color:#ffd600">' + odd + " of " + total + "</b> readings are outside their normal range" : "Every reading is inside its normal range") + ' (' + (e.entry_date || "") + ', logger snapshot).</div>' + rows +
+      '<div style="font-size:11px;color:var(--dim);margin-top:6px">Each row: grey dots = every past session, shaded band = the middle 80% (normal), tick = median, big dot = this session. Red = hostile for fades, green = friendly, yellow = extreme either way.</div>';
+  }
+  function _orDealerMap(e) {
+    var latest = idx === FULL.length - 1 && !QQQ_SESSION.past;
+    var g = (latest && LIVE_GEX && LIVE_GEX.strikes && LIVE_GEX.strikes.length) ? LIVE_GEX : (e.gex || {});
+    var st = (g.strikes || []).filter(function (s) { return _orN(s.strike) !== null && _orN(s.net_gex) !== null; });
+    var spot = _orN(g.spot); if (!st.length || spot === null) return '<div style="color:var(--dim);font-size:12px">No strike data for this session.</div>';
+    st = st.slice().sort(function (a, b) { return Math.abs(a.strike - spot) - Math.abs(b.strike - spot); }).slice(0, 41).sort(function (a, b) { return b.strike - a.strike; });
+    var L = g.levels || {}, flip = _orN(g.gamma_flip), cw = _orN(L.call_wall), pw = _orN(L.put_wall);
+    var rh = 13, pt = 10, W = 1000, cx = 520, half = 380, Hh = pt * 2 + st.length * rh, kHi = st[0].strike, kLo = st[st.length - 1].strike;
+    var Y = function (k) { return pt + (kHi - k) / ((kHi - kLo) || 1) * (st.length - 1) * rh + rh / 2; };
+    var mx = Math.max.apply(null, st.map(function (s) { return Math.abs(s.net_gex); })) || 1, g2 = "";
+    g2 += '<line x1="' + cx + '" x2="' + cx + '" y1="' + pt + '" y2="' + (Hh - pt) + '" stroke="rgba(255,255,255,.2)"/>';
+    st.forEach(function (s) {
+      var y = Y(s.strike), w = Math.abs(s.net_gex) / mx * half, pos = s.net_gex >= 0;
+      var tip = "$" + s.strike + " · net " + fmtBig(s.net_gex) + " · calls " + fmtBig(s.call_gex || 0) + " (" + (s.call_oi || 0) + " OI) · puts " + fmtBig(s.put_gex || 0) + " (" + (s.put_oi || 0) + " OI)";
+      g2 += '<g><title>' + esc(tip) + '</title><rect x="' + (pos ? cx : cx - w).toFixed(1) + '" y="' + (y - rh * .38).toFixed(1) + '" width="' + Math.max(1, w).toFixed(1) + '" height="' + (rh * .76).toFixed(1) + '" fill="' + (pos ? "#00e676" : "#ff453a") + '" opacity=".75"/></g>';
+      if (s.strike % 5 === 0) g2 += '<text x="' + (cx - half - 14) + '" y="' + (y + 4).toFixed(1) + '" fill="#8b8ba6" font-size="11" text-anchor="end">' + s.strike + '</text>';
+    });
+    var mark = function (k, col, lab, dash) { if (k === null || k > kHi + .5 || k < kLo - .5) return ""; var y = Y(k).toFixed(1);
+      return '<line x1="' + (cx - half - 8) + '" x2="' + (cx + half + 8) + '" y1="' + y + '" y2="' + y + '" stroke="' + col + '" stroke-width="1.5"' + (dash ? ' stroke-dasharray="5 4"' : "") + '/><text x="' + (cx + half + 14) + '" y="' + (+y + 4) + '" fill="' + col + '" font-size="11">' + lab + '</text>'; };
+    g2 += mark(cw, "#5eead4", "call wall " + (cw !== null ? cw.toFixed(0) : ""), true) + mark(pw, "#ff9f0a", "put wall " + (pw !== null ? pw.toFixed(0) : ""), true) +
+      mark(flip, "#ffd600", "flip " + (flip !== null ? flip.toFixed(0) : ""), false) + mark(spot, "#ffffff", "price " + spot.toFixed(2), true);
+    g2 += '<text x="' + (cx - 8) + '" y="' + (pt - 1) + '" fill="#ff453a" font-size="10" text-anchor="end">← negative gamma (moves get pushed)</text><text x="' + (cx + 8) + '" y="' + (pt - 1) + '" fill="#00e676" font-size="10">positive gamma (moves get pinned) →</text>';
+    var sorted = st.slice().sort(function (a, b) { return b.net_gex - a.net_gex; }), top = sorted[0], bot = sorted[sorted.length - 1];
+    var above = st.filter(function (s) { return s.strike > spot; }).reduce(function (a, s) { return a + s.net_gex; }, 0), below = st.filter(function (s) { return s.strike <= spot; }).reduce(function (a, s) { return a + s.net_gex; }, 0);
+    var pill = function (t, c) { return '<span style="padding:6px 10px;border-radius:6px;background:' + c + '1a;color:' + c + ';font-size:12px">' + t + '</span>'; };
+    return '<div style="font-size:11px;letter-spacing:.14em;color:var(--dim);margin-bottom:6px">' + (g === LIVE_GEX ? "LIVE" : esc(e.entry_date || "")) + ' · ' + st.length + ' STRIKES NEAREST PRICE · HOVER A BAR FOR CALLS / PUTS / OI</div>' +
+      '<svg viewBox="-20 -6 ' + (W + 40) + ' ' + (Hh + 10) + '" style="width:100%;height:auto;display:block">' + g2 + '</svg>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+      (top && top.net_gex > 0 ? pill("Biggest pin: $" + top.strike + " (" + fmtBig(top.net_gex) + ")", "#00e676") : "") +
+      (bot && bot.net_gex < 0 ? pill("Biggest push zone: $" + bot.strike + " (" + fmtBig(bot.net_gex) + ")", "#ff453a") : "") +
+      (flip !== null ? pill("Price is $" + Math.abs(spot - flip).toFixed(2) + (spot >= flip ? " above" : " below") + " the flip", spot >= flip ? "#00e676" : "#ff453a") : "") +
+      pill("Gamma above price " + fmtBig(above) + " · below " + fmtBig(below), "#5eead4") + '</div>' +
+      '<div style="font-size:11px;color:var(--dim);margin-top:6px">Green bars: dealers long gamma there, they sell rallies / buy dips, so price tends to stall. Red bars: dealers short gamma, they chase the move, so price tends to run through.</div>';
+  }
+  function _orTimeline(e) {
+    var all = _orDays().filter(function (x) { return x.gex && _orN(x.gex.net_gex) !== null; });
+    if (all.length < 3) return '<div style="color:var(--dim);font-size:12px">Not enough history yet.</div>';
+    var MN = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], months = [];
+    all.forEach(function (x) { var m = x.entry_date.slice(0, 7); if (months.indexOf(m) < 0) months.push(m); }); months.reverse();
+    var cur = window.__ORM === "all" || months.indexOf(window.__ORM) >= 0 ? window.__ORM : "all";
+    var days = cur === "all" ? all : all.filter(function (x) { return x.entry_date.slice(0, 7) === cur; }), M = days.map(_orMetric), n = days.length;
+    var O = window.__OROV, W = 1000, pl = 8, pr = 110, step = (W - pl - pr) / n, X = function (i) { return pl + step * (i + .5); };
+    var lane = function (key, title, h, series, opt) {
+      opt = opt || {}; var vals = []; series.forEach(function (s) { M.forEach(function (m) { var v = s.get(m); if (v !== null) vals.push(v); }); }); if (opt.zero) vals.push(0);
+      if (!vals.length) return "";
+      var hi = Math.max.apply(null, vals), lo = Math.min.apply(null, vals), pd = (hi - lo) * .08 || 1; hi += pd; lo -= pd;
+      var pt = 16, pb = 6, Y = function (v) { return pt + (hi - v) / (hi - lo) * (h - pt - pb); }, g = '<text x="' + pl + '" y="11" fill="#8b8ba6" font-size="11">' + title + '</text>';
+      for (var t = 0; t <= 2; t++) { var v = lo + (hi - lo) * t / 2; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="rgba(255,255,255,.05)"/><text x="' + (W - pr + 6) + '" y="' + (Y(v) + 4).toFixed(1) + '" fill="#8b8ba6" font-size="10">' + (opt.fmt ? opt.fmt(v) : v.toFixed(0)) + '</text>'; }
+      if (opt.zero && lo < 0 && hi > 0) g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="rgba(255,255,255,.25)"/>';
+      series.forEach(function (s) {
+        if (s.bars) { M.forEach(function (m, i) { var v = s.get(m); if (v === null) return; var y0 = Y(0), y = Y(v); g += '<rect x="' + (X(i) - step * .34).toFixed(1) + '" y="' + Math.min(y, y0).toFixed(1) + '" width="' + Math.max(1, step * .68).toFixed(1) + '" height="' + Math.max(1, Math.abs(y0 - y)).toFixed(1) + '" fill="' + (v >= 0 ? "#00e676" : "#ff453a") + '" opacity=".7"/>'; }); return; }
+        var p = "", last = null; M.forEach(function (m, i) { var v = s.get(m); if (v === null) return; p += (p ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); last = i; });
+        if (p) g += '<path d="' + p + '" fill="none" stroke="' + s.col + '" stroke-width="' + (s.w || 1.7) + '"' + (s.dash ? ' stroke-dasharray="5 4"' : "") + '/>' + (s.lab && last !== null ? '<text x="' + (X(last) + 6).toFixed(1) + '" y="' + (Y(s.get(M[last])) + 4).toFixed(1) + '" fill="' + s.col + '" font-size="10">' + s.lab + '</text>' : "");
+      });
+      return '<div class="ors-' + key + '"><svg viewBox="0 0 ' + W + ' ' + h + '" style="width:100%;height:auto;display:block">' + g + '</svg></div>';
+    };
+    var hov = ""; days.forEach(function (x, i) { var m = M[i]; hov += '<rect x="' + (X(i) - step / 2).toFixed(1) + '" y="0" width="' + step.toFixed(1) + '" height="22" fill="transparent"><title>' + esc(x.entry_date + (m.spot !== null ? " · QQQ " + m.spot.toFixed(2) : "") + (m.flip !== null ? " · flip " + m.flip.toFixed(0) : "") + (m.gex !== null ? " · net GEX " + fmtBig(m.gex) : "") + (m.pc !== null ? " · P/C " + m.pc.toFixed(2) : "")) + '</title></rect>' + ((n <= 25 || i % Math.ceil(n / 20) === 0) ? '<text x="' + X(i).toFixed(1) + '" y="15" fill="#8b8ba6" font-size="10" text-anchor="middle">' + (n <= 25 ? +x.entry_date.slice(8) : x.entry_date.slice(5)) + '</text>' : ""); });
+    var S = [["px", "Price vs flip & walls", "#e8dede"], ["gex", "Net GEX", "#00e676"], ["pc", "Put / call", "#ff2be0"], ["vc", "Vanna & charm", "#29b6f6"]];
+    var chips = S.map(function (x) { var on = !!O[x[0]]; return '<button type="button" class="qqq-layer" data-or-ovl="' + x[0] + '" aria-pressed="' + on + '" style="' + (on ? "" : "opacity:.4;text-decoration:line-through") + '"><span style="display:inline-block;width:10px;height:3px;background:' + x[2] + ';vertical-align:middle;margin-right:6px"></span>' + x[1] + '</button>'; }).join("");
+    var mb = '<button type="button" class="qqq-layer" data-or-month="all" style="' + (cur === "all" ? "border-color:var(--accent);color:var(--accent)" : "") + '">All</button>' + months.map(function (m) { return '<button type="button" class="qqq-layer" data-or-month="' + m + '" style="' + (m === cur ? "border-color:var(--accent);color:var(--accent)" : "") + '">' + MN[+m.slice(5)] + " " + m.slice(2, 4) + '</button>'; }).join("");
+    var body = lane("px", "QQQ close with gamma flip (yellow) and walls (dashed)", 190, [
+        { get: function (m) { return m.cw; }, col: "#5eead4", dash: true, w: 1.3, lab: "call wall" },
+        { get: function (m) { return m.pw; }, col: "#ff9f0a", dash: true, w: 1.3, lab: "put wall" },
+        { get: function (m) { return m.flip; }, col: "#ffd600", lab: "flip" },
+        { get: function (m) { return m.spot; }, col: "#e8dede", w: 2.3, lab: "QQQ" }]) +
+      lane("gex", "Net GEX (green = dealers long gamma, red = short)", 120, [{ bars: true, get: function (m) { return m.gex; } }], { zero: true, fmt: function (v) { return fmtBig(v); } }) +
+      lane("pc", "Put / call ratio (all options)", 100, [{ get: function (m) { return m.pc; }, col: "#ff2be0", lab: "P/C" }], { fmt: function (v) { return v.toFixed(2); } }) +
+      lane("vc", "Vanna (blue) and charm (orange) exposure", 120, [{ get: function (m) { return m.vanna; }, col: "#29b6f6", lab: "vanna" }, { get: function (m) { return m.charm; }, col: "#ff9f0a", lab: "charm" }], { zero: true, fmt: function (v) { return fmtBig(v); } });
+    var neg = M.filter(function (m) { return m.gex !== null && m.gex < 0; }).length, abv = M.filter(function (m) { return m.spot !== null && m.flip !== null && m.spot >= m.flip; }).length, fl = M.filter(function (m) { return m.spot !== null && m.flip !== null; }).length;
+    var pill = function (t, c) { return '<span style="padding:6px 10px;border-radius:6px;background:' + c + '1a;color:' + c + ';font-size:12px">' + t + '</span>'; };
+    return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 4px">' + mb + '</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 6px">' + chips + '</div>' +
+      '<div class="orw' + S.map(function (x) { return O[x[0]] ? "" : " off-" + x[0]; }).join("") + '">' + body + '<svg viewBox="0 0 ' + W + ' 22" style="width:100%;height:auto;display:block">' + hov + '</svg></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">' + pill("Negative gamma on " + neg + " of " + n + " sessions", neg > n / 2 ? "#ff453a" : "#00e676") + (fl ? pill("Above the flip on " + abv + " of " + fl, abv >= fl / 2 ? "#00e676" : "#ff453a") : "") + pill(n + " sessions · " + days[0].entry_date + " → " + days[n - 1].entry_date, "#5eead4") + '</div>' +
+      '<div style="font-size:11px;color:var(--dim);margin-top:6px">One logger snapshot per session. Hover the dates row for that day\'s numbers. Tap a chip to hide a lane.</div>';
+  }
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest && ev.target.closest("[data-orv],[data-or-month],[data-or-ovl]"); if (!b) return;
+    if (b.hasAttribute("data-orv")) { var v = b.getAttribute("data-orv"); if (v === window.ORV) return; window.ORV = v; try { localStorage.setItem("md:orv", v); } catch (x) {}
+      renderAllWidgets(true); var t = document.getElementById("ortabs"); if (t) { var y = t.getBoundingClientRect().top + window.scrollY - 8; if (window.scrollY > y) window.scrollTo(0, Math.max(0, y)); _lastUserScroll = Date.now() + 1; } return; }
+    if (b.hasAttribute("data-or-month")) { window.__ORM = b.getAttribute("data-or-month"); renderAllWidgets(true, b); return; }
+    var k = b.getAttribute("data-or-ovl"), O = window.__OROV; O[k] = O[k] ? 0 : 1; try { localStorage.setItem("md:orov", JSON.stringify(O)); } catch (x) {}
+    _chipFlip(b, !!O[k]); document.querySelectorAll(".orw").forEach(function (w) { w.classList.toggle("off-" + k, !O[k]); });
+  });
   // Nov 15: Nasdaq sub-tabs (Today · QQQ Data), remembered.
   window.NQV=(function(){try{return localStorage.getItem('md:nqv')==='data'?'data':'today';}catch(e){return 'today';}})();
   function _nqTop(){var t=document.getElementById('nqtabs');if(!t)return;var y=t.getBoundingClientRect().top+window.scrollY-8;if(window.scrollY>y)window.scrollTo(0,Math.max(0,y));_lastUserScroll=Date.now()+1;}
@@ -8146,9 +8295,19 @@
       ? ((TAB === "nasdaq" && _gex ? _gex.dataHtml : "") + secNasdaqDeepDive(e, "nasdaq"))
       : ((TAB === "nasdaq" && idx === FULL.length - 1 ? secHomeRun() : "") +
          (TAB === "nasdaq" && _gex ? _gex.html : "")));
-    var _optBody =
-      (TAB === "options" && _gex ? secQqqCockpitSection(_gex.G.entry, _gex.M) : "") +
-      secNasdaqDeepDive(e, "options");
+    var _orTabs = '<div id="ortabs">' + [["cockpit", "Cockpit"], ["pos", "Positioning"], ["flow", "Odds & Flow"], ["plan", "Plan"]].map(function (t) {
+      return '<button type="button" data-orv="' + t[0] + '" class="' + (window.ORV === t[0] ? "on" : "") + '">' + t[1] + "</button>"; }).join("") + "</div>";
+    var _optBody = TAB !== "options" ? "" : _orTabs + (function () {
+      var v = window.ORV;
+      if (v === "pos") return secWide("Dealer map · gamma by strike", _orDealerMap(e)) +
+        secWide("Positioning over time", _orTimeline(e)) +
+        (secQqqPositioning(e) ? secWide("Options positioning · strike × expiry", secQqqPositioning(e)) : "") +
+        secNasdaqDeepDive(e, "options:pos");
+      if (v === "flow") return secNasdaqDeepDive(e, "options:flow");
+      if (v === "plan") return secNasdaqDeepDive(e, "options:plan");
+      return (_gex ? secWide("QQQ · cockpit", '<div id="qqq-cockpit-block" class="qqq-call-strip">' + secQuadrantCockpit(_gex.G.entry, _gex.M) + '</div>').replace('<section class="wide">', '<section class="wide qqq-market-card">') : "") +
+        secWide("Today vs its normal range", _orStrips(e));
+    })();
 
     // MARKET DASH tab — Pipeline v2 concept: 3-column layout.
     var _stretchWheel = moveWheel(e.watchlist || []);
