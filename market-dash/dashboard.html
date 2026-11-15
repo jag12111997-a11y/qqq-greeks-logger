@@ -863,7 +863,7 @@
   // Overlay-chart UI state. mode: "dxy" (everything vs the dollar) or "rebase".
   // hidden: symbols toggled off. big: fullscreen. Survives the 60s live redraw.
   var CHART = { mode: "dxy", hidden: {}, big: false, height: 240 };
-  var TAB = "dash";   // in-page tab: broad Market Dash or unified Nasdaq workspace
+  var TAB = "nasdaq";   // in-page tab: opens on Nasdaq (Nov 15 order: Nasdaq · Performance · Strategy · Replay · Research)
   try {
     var _st = localStorage.getItem("md:tab");
     // The old cockpit tab now lives inside Nasdaq. Migrate that saved choice
@@ -6041,7 +6041,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("dash", "Market Dash") + tab("nasdaq", "Nasdaq") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("replay", "Trade Replay") + "</div>";
+      tab("nasdaq", "Nasdaq") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("replay", "Trade Replay") + tab("dash", "Research") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
