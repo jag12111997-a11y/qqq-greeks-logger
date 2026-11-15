@@ -6881,7 +6881,7 @@
   // ===== GEX CHART · SESSION MODE =====
   // Day picker, plain-English headline, four day cards and a day log around the
   // GEX Chart. Opens on the latest day; "All history" shows the continuous chart.
-  var GS = { date: "latest", tf: "1m", logN: 30 };
+  var GS = { date: "latest", tf: "1m", logN: 30, logMonth: null };
   var GS_TF_MIN = { "1m": 1, "5m": 5, "15m": 15, "1H": 60, "4H": 240 };
   try {
     var _gsStored = JSON.parse(localStorage.getItem("md:gex-session") || "{}");
@@ -7047,6 +7047,38 @@
       +_gsCard('PRICE',price,pv,col==='var(--dim)'?'#8b8ba6':col)+_gsCard('VOLATILITY',vol,vv,vc)+_gsCard('DEALER MAP',dealer,dv,dc)+_gsCard('ACTIVITY',act,av,ac)+'</div>';
     return {head:head,cards:h};
   }
+  // Nov 15: the day log is a daily candle chart, one month at a time (month buttons, newest first). Click a candle to load
+  // that day on the chart above. The old table stays underneath in a closed "list" fold.
+  function _gsMonthChart(rows,sel){
+    var UP='#00e676',DN='#ff453a',MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var ok=rows.filter(function(r){return _sdNum(r.o)&&_sdNum(r.c)&&_sdNum(r.h)&&_sdNum(r.l);});
+    if(!ok.length)return '';
+    var months=[];ok.forEach(function(r){var m=r.date.slice(0,7);if(months.indexOf(m)<0)months.push(m);});months.reverse();
+    var cur=GS.logMonth&&months.indexOf(GS.logMonth)>=0?GS.logMonth:(sel&&months.indexOf(sel.slice(0,7))>=0?sel.slice(0,7):months[0]);
+    var d=ok.filter(function(r){return r.date.slice(0,7)===cur;});
+    var prevAll=ok.filter(function(r){return r.date.slice(0,7)<cur;}),base=prevAll.length?prevAll[prevAll.length-1].c:d[0].o;
+    var chg=d[d.length-1].c-base;
+    var btn=months.slice(0,24).map(function(m){var on=m===cur;return '<button type="button" class="qqq-layer" data-gs-month="'+m+'" style="'+(on?'border-color:var(--accent);color:var(--accent)':'')+'">'+MN[+m.slice(5)]+' '+m.slice(2,4)+'</button>';}).join('');
+    var W=1000,H=300,pl=8,pr=60,pt=12,pb=26,hi=Math.max.apply(null,d.map(function(r){return r.h;})),lo=Math.min.apply(null,d.map(function(r){return r.l;}));
+    var pad=(hi-lo)*0.06||1;hi+=pad;lo-=pad;
+    var Y=function(v){return pt+(hi-v)/(hi-lo)*(H-pt-pb);},step=(W-pl-pr)/d.length,cw=Math.max(3,Math.min(26,step*0.62));
+    var g='';
+    for(var t=0;t<=4;t++){var v=lo+(hi-lo)*t/4,y=Y(v);g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="rgba(255,255,255,.06)"/><text x="'+(W-pr+6)+'" y="'+(y+4).toFixed(1)+'" fill="#8b8ba6" font-size="11">'+v.toFixed(0)+'</text>';}
+    d.forEach(function(r,i){
+      var x=pl+step*(i+.5),col=r.c>=r.o?UP:DN,yo=Y(r.o),yc=Y(r.c),on=r.date===sel;
+      var tip=_gsNice(r.date)+' · open '+r.o.toFixed(2)+' → close '+r.c.toFixed(2)+' ('+(r.c-r.o>=0?'+':'−')+Math.abs(r.c-r.o).toFixed(2)+') · range $'+(r.h-r.l).toFixed(2)+(_sdNum(r.flip)?' · gamma flip '+r.flip.toFixed(0):'')+(_sdNum(r.hv)&&_sdNum(r.iv)?' · real '+r.hv.toFixed(1)+' vs priced '+r.iv.toFixed(1):'');
+      g+='<g data-gs-day="'+r.date+'" style="cursor:pointer"><title>'+esc(tip)+'</title>'
+        +'<rect x="'+(x-step/2).toFixed(1)+'" y="'+pt+'" width="'+step.toFixed(1)+'" height="'+(H-pt-pb)+'" fill="'+(on?'rgba(255,43,224,.12)':'transparent')+'"/>'
+        +'<line x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+Y(r.h).toFixed(1)+'" y2="'+Y(r.l).toFixed(1)+'" stroke="'+col+'" stroke-width="1.5"/>'
+        +'<rect x="'+(x-cw/2).toFixed(1)+'" y="'+Math.min(yo,yc).toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+Math.max(1.5,Math.abs(yc-yo)).toFixed(1)+'" fill="'+col+'"/>'
+        +((i%Math.max(1,Math.round(d.length/11))===0||i===d.length-1)?'<text x="'+x.toFixed(1)+'" y="'+(H-8)+'" fill="#8b8ba6" font-size="11" text-anchor="middle">'+(+r.date.slice(8))+'</text>':'')+'</g>';
+    });
+    return '<div style="margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;font-size:11px;letter-spacing:.14em;color:var(--dim)"><span>DAILY CANDLES · '+MN[+cur.slice(5)].toUpperCase()+' '+cur.slice(0,4)+' · CLICK A DAY TO LOAD IT</span>'
+      +'<span style="letter-spacing:0;font-size:13px;color:'+(chg>=0?UP:DN)+'">'+(chg>=0?'+':'−')+'$'+Math.abs(chg).toFixed(2)+' for the month · '+d.length+' days</span></div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'+btn+'</div>'
+      +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+g+'</svg></div>';
+  }
   function _gsLog(rows,sel,n){
     var list=rows.slice().reverse(),shown=list.slice(0,n),UP='#00e676',DN='#ff453a',FL='#ffd600';
     var cols='grid-template-columns:118px 150px 80px 150px minmax(150px,1fr) 150px';
@@ -7119,7 +7151,7 @@
     var h='',P=_gsPanelFor(G);
     if(P)h+=P.cards;
     else h+='<div style="margin-top:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--dim)">Showing all history. Pick a day (◀ ▶, Today, or the day log) to lock the chart to that session and see its numbers.</div>';
-    h+=_gsLog(G.rows,G.sdate,GS.logN);
+    h+=_gsMonthChart(G.rows,G.sdate)+'<details style="margin-top:6px"><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">LIST VIEW</summary>'+_gsLog(G.rows,G.sdate,GS.logN)+'</details>';
     h+='<div style="font-size:11px;color:var(--dim);padding:6px 2px">Prices: IEX feed (match full market within cents). Volume: IEX only, ~1–2% of total, so use it for shape, not size. IV &amp; GEX: logger snapshot for that day.</div>';
     return '<div style="position:relative;z-index:2;padding-top:4px;clear:both">'+h+'</div>';
   }
@@ -7147,10 +7179,11 @@
     renderAllWidgets(true);
   }
   document.addEventListener('click',function(ev){
-    var b=ev.target.closest&&ev.target.closest('[data-gs-step],[data-gs-go],[data-gs-tf],[data-gs-day],[data-gs-more]');if(!b)return;
+    var b=ev.target.closest&&ev.target.closest('[data-gs-step],[data-gs-go],[data-gs-tf],[data-gs-day],[data-gs-more],[data-gs-month]');if(!b)return;
     var rows=_sdRows();if(!rows.length&&!b.hasAttribute('data-gs-tf'))return;
     if(b.hasAttribute('data-gs-tf')){GS.tf=b.getAttribute('data-gs-tf');gsSave();renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-more')){GS.logN+=30;renderAllWidgets(true);return;}
+    if(b.hasAttribute('data-gs-month')){GS.logMonth=b.getAttribute('data-gs-month');renderAllWidgets(true);return;}
     if(b.hasAttribute('data-gs-day'))return _gsGo(b.getAttribute('data-gs-day'));
     if(b.hasAttribute('data-gs-go'))return _gsGo(b.getAttribute('data-gs-go')==='all'?null:'latest');
     var cur=(_gsLastG&&_gsLastG.sdate)||rows[rows.length-1].date,i=rows.findIndex(function(x){return x.date===cur;});if(i<0)i=rows.length-1;
