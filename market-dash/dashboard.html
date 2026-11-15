@@ -7681,26 +7681,29 @@
       return band(label) + '<div class="grid">' + html + "</div>";
     }
 
-    // Header quotes: VIX (Cboe) and DXY (ICE dollar index via Yahoo) from the relay, both ~15 min delayed.
-    // Fetched once on load and every 30 s; the last values survive re-renders.
+    // Header market strip (row 2): VIX (Cboe) · DXY (ICE via Yahoo) · Fear & Greed (CNN) · QQQ full-tape volume and sector
+    // leaders / laggards (Alpaca daily bars) · GEX sign (logger). All from the relay, ~15 min delayed; pulled on load and every 30 s.
     if (!window.__hdrqT) {
       window.__hdrq = {};
       window.__hdrqHtml = function () {
-        return ["vix", "dxy"].map(function (k) {
-          var j = window.__hdrq[k], lab = k.toUpperCase();
-          if (!j) return lab + " —";
-          var p = typeof j.pct === "number" ? j.pct : null;
-          return lab + ' <b style="color:var(--txt)">' + j.last.toFixed(2) + "</b>" +
-            (p == null ? "" : ' <span style="color:var(' + (p > 0 ? "--up" : p < 0 ? "--down" : "--flat") + ')">' + (p > 0 ? "+" : "") + p.toFixed(2) + "%</span>");
-        }).join("  ·  ");
+        var Q = window.__hdrq, out = [], b = function (t) { return '<b style="color:var(--txt)">' + t + "</b>"; },
+            pc = function (p) { return p == null ? "" : ' <span style="color:var(' + (p > 0 ? "--up" : p < 0 ? "--down" : "--flat") + ')">' + (p > 0 ? "+" : "") + p.toFixed(2) + "%</span>"; };
+        ["vix", "dxy"].forEach(function (k) { var j = Q[k]; out.push(k.toUpperCase() + " " + (j ? b(j.last.toFixed(2)) + pc(typeof j.pct === "number" ? j.pct : null) : "—")); });
+        var p = Q.pulse;
+        if (p && p.fear != null) out.push("Fear " + '<b style="color:var(' + (p.fear < 45 ? "--down" : p.fear > 55 ? "--up" : "--flat") + ')">' + p.fear + "</b>");
+        if (p && p.qqq_vol) out.push("QQQ vol " + b((p.qqq_vol / 1e6).toFixed(1) + "M"));
+        if (p && p.leaders && p.leaders.length) out.push("leaders " + p.leaders.map(function (x) { return b(x.s) + pc(x.pct); }).join(" "));
+        if (p && p.laggards && p.laggards.length) out.push("laggards " + p.laggards.map(function (x) { return b(x.s) + pc(x.pct); }).join(" "));
+        var g = Q.gex; if (g && g.regime) out.push("GEX " + '<b style="color:var(' + (/NEG/i.test(g.regime) ? "--down" : "--up") + ')">' + (/NEG/i.test(g.regime) ? "neg" : "pos") + "</b>");
+        return out.join("  ·  ");
       };
       var hdrqPull = function () {
-        ["vix", "dxy"].forEach(function (k) {
-          fetch("https://gex-relay.jag12111997.workers.dev/live/" + k, { cache: "no-store" })
+        [["vix", "live/vix"], ["dxy", "live/dxy"], ["pulse", "live/pulse"], ["gex", "v1/gex_live.json"]].forEach(function (k) {
+          fetch("https://gex-relay.jag12111997.workers.dev/" + k[1], { cache: "no-store" })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (j) {
-              if (!j || !(j.last > 0)) return;
-              window.__hdrq[k] = j;
+              if (!j || j.error) return;
+              window.__hdrq[k[0]] = j;
               var el = document.getElementById("hdrq"); if (el) el.innerHTML = window.__hdrqHtml();
             }).catch(function () {});
         });
@@ -7713,9 +7716,9 @@
       (e.session ? '  <span style="color:var(--accent)">' +
                    esc(String(e.session).toUpperCase()) + "</span>" : "") +
       "  ·  fetched " + fmtDateTime(e.fetched_utc) + "</span>" +
-      '<span id="hdrq" class="stamp" style="margin-left:14px">' + window.__hdrqHtml() + "</span>" +
       '<span style="flex:1"></span>' +
       '<select id="pick">' + opts + "</select>" +
+      '<div id="hdrq" class="stamp" style="flex-basis:100%;width:100%;margin-top:-6px">' + window.__hdrqHtml() + "</div>" +
       "</header>";
 
     // VIX history first. The 3× twins move into the compact live meter inside
@@ -8114,6 +8117,7 @@
   var BASE = (typeof LIVE_DATA_BASE !== "undefined") ? LIVE_DATA_BASE : new URL("./", location.href).href;
   var box = document.getElementById("webull-live");
   if (!box) return;
+  return;   // Nov 15: the Webull Live box moved into the header strip (fresh data from the relay); this stale panel is off.
   function esc(x){return String(x==null?"":x).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
   function col(v){return v>0?"#00e676":v<0?"#ff453a":"#8b8ba6";}
   function sign(v,dp){return (v>0?"+":"")+Number(v).toFixed(dp==null?2:dp);}

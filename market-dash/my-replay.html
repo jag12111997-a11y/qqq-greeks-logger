@@ -452,7 +452,7 @@
       document.querySelectorAll('#rp-strip .card').forEach(function (b) { var on = C[+b.dataset.i] === card; b.setAttribute('aria-current', on ? 'true' : 'false');
         if (on && b.parentNode) { var s = b.parentNode; if (b.offsetLeft < s.scrollLeft || b.offsetLeft + b.offsetWidth > s.scrollLeft + s.clientWidth) s.scrollLeft = b.offsetLeft - 8; } });
       drawMain(); drawOpt(); side();
-      if (scroll) document.getElementById('rp-desk').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (scroll) { var dk = document.getElementById('rp-desk'); window.scrollTo({ top: dk.getBoundingClientRect().top + window.pageYOffset - 8, behavior: 'smooth' }); }   // scroll this frame only, never the dashboard around it
     }
 
     // ---------- summary ----------

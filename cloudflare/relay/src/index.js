@@ -55,7 +55,7 @@ export default {
     }
     // Live pull (read-only): the dashboard asks for fresh bars / option quotes / VIX; the Durable Object
     // fetches them from Alpaca (keys stay here) or Cboe at most once per 15 s and everyone shares that copy.
-    const lv = url.pathname.match(/^\/live\/(bars|options|vix|dxy|night|hist)$/);
+    const lv = url.pathname.match(/^\/live\/(bars|options|vix|dxy|pulse|night|hist)$/);
     if (lv) {
       if (req.method !== "GET") return reply(req, 405, "method not allowed");
       const day = url.searchParams.get("day");
@@ -232,13 +232,26 @@ export class Relay extends DurableObject {
       if (!(d.current_price > 0)) throw new Error("no vix");
       return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "VIX", last: d.current_price, pct: d.price_change_percent, src_time: d.last_trade_time, source: "Cboe delayed quote (~15 min)" }) };
     }
-    if (kind === "dxy") {   // US dollar index (ICE DX-Y.NYB) from Yahoo's public chart endpoint, read-only, shared 15 s copy
-      const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?interval=1m&range=1d", { headers: { "User-Agent": "Mozilla/5.0 (qqq-greeks-logger relay)" } });
+    if (kind === "dxy") {   // US dollar index (ICE DX-Y.NYB) from Yahoo's public chart endpoint, read-only. % = last vs the previous daily close.
+      const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?interval=1d&range=5d", { headers: { "User-Agent": "Mozilla/5.0 (qqq-greeks-logger relay)" } });
       if (!r.ok) throw new Error("yahoo " + r.status);
-      const mt = ((((await r.json()) || {}).chart || {}).result || [])[0];
-      const m = (mt && mt.meta) || {}, last = m.regularMarketPrice, prev = m.chartPreviousClose || m.previousClose;
+      const mt = ((((await r.json()) || {}).chart || {}).result || [])[0] || {};
+      const m = mt.meta || {}, closes = ((((mt.indicators || {}).quote || [])[0] || {}).close || []).filter((v) => v > 0);
+      const last = m.regularMarketPrice || closes[closes.length - 1], prev = closes.length >= 2 ? closes[closes.length - 2] : null;
       if (!(last > 0)) throw new Error("no dxy");
-      return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "DXY", last, pct: prev > 0 ? (last / prev - 1) * 100 : null, src_time: m.regularMarketTime ? iso(m.regularMarketTime * 1000) : null, delayed_min: m.exchangeDataDelayedBy != null ? m.exchangeDataDelayedBy : null, source: "Yahoo (ICE dollar index)" }) };
+      return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "DXY", last, pct: prev > 0 ? (last / prev - 1) * 100 : null, prev_close: prev, src_time: m.regularMarketTime ? iso(m.regularMarketTime * 1000) : null, source: "Yahoo (ICE dollar index)" }) };
+    }
+    if (kind === "pulse") {   // header strip: CNN Fear & Greed + QQQ full-tape volume + sector leaders/laggards (Alpaca SIP daily bars, 15+ min old)
+      const SEC = ["XLK", "XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLB", "XLRE", "XLU"];
+      const [fg, bars] = await Promise.all([
+        fetch("https://production.dataviz.cnn.io/index/fearandgreed/graphdata", { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } }).then((r) => r.ok ? r.json() : null).catch(() => null),
+        this.alpaca("/v2/stocks/bars", { symbols: ["QQQ"].concat(SEC).join(","), timeframe: "1Day", start: iso(Date.now() - 10 * 86400000), end: iso(Date.now() - 16 * 60000), feed: "sip", adjustment: "raw", limit: 1000 }).catch(() => null)
+      ]);
+      const B = (bars && bars.bars) || {}, chg = (k) => { const a = B[k] || []; return a.length >= 2 ? (a[a.length - 1].c / a[a.length - 2].c - 1) * 100 : null; };
+      const secs = SEC.map((k) => ({ s: k, pct: chg(k) })).filter((x) => x.pct != null).sort((a, b) => b.pct - a.pct);
+      const q = (B.QQQ || []).slice(-1)[0] || null, f = (fg && fg.fear_and_greed) || null;
+      return { ok: true, body: JSON.stringify({ generated_utc: gen, fear: f && f.score != null ? Math.round(f.score) : null, fear_label: f ? f.rating : null,
+        qqq_vol: q ? q.v : null, qqq_day: q ? q.t : null, leaders: secs.slice(0, 2), laggards: secs.slice(-2).reverse(), source: "CNN Fear & Greed · Alpaca SIP daily bars (15+ min old)" }) };
     }
     if (kind === "bars") {
       const b = await this.bars(day);
