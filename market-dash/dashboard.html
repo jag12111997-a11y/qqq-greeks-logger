@@ -5349,7 +5349,7 @@
   }
 
   // Nov 15: the three regime modules tracked day by day for the month picked in the daily-candle chart
-  function _deepMonth() {
+  function _deepMonth(mods) {
     try {
       var rows = _sdRows(); if (!rows.length) return "";
       var cur = _gsMonthOf(rows, (_gsLastG && _gsLastG.sdate) || null), MN = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -5365,15 +5365,17 @@
       });
       var d = rows.filter(function (r) { return r.date.slice(0, 7) === cur; });
       if (!d.length) return "";
-      var box = function (t, body, note) { return '<div style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:0"><div style="font-size:11px;letter-spacing:.14em;color:var(--dim);margin-bottom:4px">' + t + '</div>' + body + '<div style="font-size:11px;color:var(--dim);margin-top:4px">' + note + '</div></div>'; };
+      mods = mods || [];
+      var box = function (t, body, note, mod) { return '<div style="padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:0"><div style="font-size:11px;letter-spacing:.14em;color:var(--dim);margin-bottom:4px">' + t + '</div>' + body + '<div style="font-size:11px;color:var(--dim);margin-top:4px">' + note + '</div>' +
+        (mod ? '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">DETAILS · today\'s numbers</summary>' + qqqDeepItem(mod) + '</details>' : '') + '</div>'; };
       var geo = _gsMonthMini(d, [{ get: function (r) { return r.geo; }, col: "#ff2be0", label: "√det(G)", fmt: function (v) { return v.toFixed(3); } }], { refs: [{ v: 0.15, label: "0.15", col: "#ff453a" }, { v: 0.35, label: "0.35", col: "#00e676" }] });
       var fade = _gsMonthMini(d, [{ get: function (r) { return vr[r.date]; }, col: "#29b6f6", label: "VR(2)", fmt: function (v) { return v.toFixed(2); } }], { refs: [{ v: 1, label: "1.00" }] });
       var rng = _gsMonthMini(d, [{ bars: true, get: function (r) { return used[r.date]; }, colFn: function (r, v) { return v < 50 ? "#00e676" : v < 100 ? "#ff9f0a" : "#ff453a"; }, fmt: function (v) { return v.toFixed(0) + "%"; } }], { zero: true, refs: [{ v: 100, label: "100%", col: "#ff453a" }] });
       return '<div class="qqq-deep-group"><div class="qqq-deep-group-title">' + MN[+cur.slice(5)] + ' ' + cur.slice(0, 4) + ' · day by day (follows the month buttons)</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:6px 0 12px">' +
-        box("REGIME GEOMETRY · √det(G)", geo, "Under 0.15 = everything moving as one crowded trade; over 0.35 = spread out.") +
-        box("FADE REGIME · VARIANCE RATIO", fade, "Over 1.00 = moves keep going (trend); under 1.00 = moves snap back (fade).") +
-        box("RANGE USED · % OF PRICED MOVE", rng, "Each day's close-to-close move vs the move VIX priced; past 100% = moved more than expected.") +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin:6px 0 12px;align-items:start">' +
+        box("REGIME GEOMETRY · √det(G)", geo, "Under 0.15 = everything moving as one crowded trade; over 0.35 = spread out.", mods[0]) +
+        box("FADE REGIME · VARIANCE RATIO", fade, "Over 1.00 = moves keep going (trend); under 1.00 = moves snap back (fade).", mods[1]) +
+        box("RANGE USED · % OF PRICED MOVE", rng, "Each day's close-to-close move vs the move VIX priced; past 100% = moved more than expected.", mods[2]) +
         '</div></div>';
     } catch (eM) { return ""; }
   }
@@ -5395,7 +5397,7 @@
         deepGroup("Odds & flow", [secTouchFlow(e), secQuant(e)]) +
         deepGroup("Plan and discipline", [secPlan(e)]) +
         deepGroup("Options & venue", [secOptions(e), secVenue(e)])
-      : _deepMonth() + deepGroup("Regime & fade edge", [secGeometry(e), secFadeRegime(e), secRangeUsed(e)]);
+      : (function () { var mods = [secGeometry(e), secFadeRegime(e), secRangeUsed(e)], m = _deepMonth(mods); if (m) { count += mods.filter(Boolean).length; return m; } return deepGroup("Regime & fade edge", mods); })();
     if (!body) return "";
     var k = keyFor(opt ? "Options research deep dive" : "Nasdaq long form deep dive");
     return '<section class="wide qqq-deep-dive"><details open data-k="' + k + '">' +
