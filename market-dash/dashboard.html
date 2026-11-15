@@ -6985,6 +6985,57 @@
   function _gsSessionOpen(d){var pt=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
     var ds=pt.getFullYear()+'-'+String(pt.getMonth()+1).padStart(2,'0')+'-'+String(pt.getDate()).padStart(2,'0');
     return ds===String(d||'').slice(0,10)&&pt.getHours()*60+pt.getMinutes()<13*60+5;}
+  // Nov 15: small SVG charts for the four day cards (price line, vol history, dealer ladder, volume by half hour)
+  function _gsSvg(W,H,inner){return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;overflow:visible">'+inner+'</svg>';}
+  function _gsPriceSpark(r,col){
+    var m=(r.mins||[]).filter(function(x){return x&&x.k&&_sdNum(x.k.close);});if(m.length<5)return '';
+    var W=300,H=96,hi=r.h,lo=r.l,pad=(hi-lo)*.08||.5,t0=m[0].m,t1=Math.max(m[m.length-1].m,t0+1);
+    var X=function(t){return 4+(t-t0)/(t1-t0)*(W-58);},Y=function(v){return 6+(hi+pad-v)/(hi-lo+2*pad)*(H-12);};
+    var d=m.map(function(x,i){return (i?'L':'M')+X(x.m).toFixed(1)+' '+Y(x.k.close).toFixed(1);}).join(''),last=m[m.length-1];
+    var hiM=m.reduce(function(a,x){return x.k.high>a.k.high?x:a;}),loM=m.reduce(function(a,x){return x.k.low<a.k.low?x:a;});
+    return _gsSvg(W,H,'<line x1="4" x2="'+(W-54)+'" y1="'+Y(r.o).toFixed(1)+'" y2="'+Y(r.o).toFixed(1)+'" stroke="#8b8ba6" stroke-dasharray="3 3"/>'
+      +'<text x="'+(W-50)+'" y="'+(Y(r.o)+4).toFixed(1)+'" fill="#8b8ba6" font-size="10">open</text>'
+      +'<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="1.6"/>'
+      +'<circle cx="'+X(hiM.m).toFixed(1)+'" cy="'+Y(hiM.k.high).toFixed(1)+'" r="2.5" fill="#00e676"/><text x="'+(W-50)+'" y="'+(Y(r.h)+4).toFixed(1)+'" fill="#00e676" font-size="10">'+r.h.toFixed(2)+'</text>'
+      +'<circle cx="'+X(loM.m).toFixed(1)+'" cy="'+Y(loM.k.low).toFixed(1)+'" r="2.5" fill="#ff453a"/><text x="'+(W-50)+'" y="'+(Y(r.l)+4).toFixed(1)+'" fill="#ff453a" font-size="10">'+r.l.toFixed(2)+'</text>'
+      +'<circle cx="'+X(last.m).toFixed(1)+'" cy="'+Y(last.k.close).toFixed(1)+'" r="3.5" fill="#e8dede"/>');
+  }
+  function _gsVolSpark(r){
+    var rows=_sdRows().filter(function(x){return x.date<=r.date&&_sdNum(x.hv)&&_sdNum(x.iv);}).slice(-60);if(rows.length<5)return '';
+    var W=300,H=96,vals=[];rows.forEach(function(x){vals.push(x.hv,x.iv);});var hi=Math.max.apply(null,vals)*1.08,lo=Math.min.apply(null,vals)*0.9;
+    var X=function(i){return 4+i/(rows.length-1)*(W-40);},Y=function(v){return 6+(hi-v)/(hi-lo)*(H-20);};
+    var line=function(k,c){return '<path d="'+rows.map(function(x,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(x[k]).toFixed(1);}).join('')+'" fill="none" stroke="'+c+'" stroke-width="1.6"/>';};
+    var shade='';rows.forEach(function(x,i){if(!i)return;var p=rows[i-1],c=x.hv>x.iv?'rgba(255,159,10,.18)':'rgba(41,182,246,.18)';
+      shade+='<path d="M'+X(i-1).toFixed(1)+' '+Y(p.hv).toFixed(1)+'L'+X(i).toFixed(1)+' '+Y(x.hv).toFixed(1)+'L'+X(i).toFixed(1)+' '+Y(x.iv).toFixed(1)+'L'+X(i-1).toFixed(1)+' '+Y(p.iv).toFixed(1)+'Z" fill="'+c+'"/>';});
+    var L=rows[rows.length-1];
+    return _gsSvg(W,H,shade+line('iv','#29b6f6')+line('hv','#ff9f0a')
+      +'<text x="'+(W-34)+'" y="'+(Y(L.hv)+4).toFixed(1)+'" fill="#ff9f0a" font-size="10">'+L.hv.toFixed(1)+'</text><text x="'+(W-34)+'" y="'+(Y(L.iv)+4).toFixed(1)+'" fill="#29b6f6" font-size="10">'+L.iv.toFixed(1)+'</text>'
+      +'<text x="4" y="'+(H-2)+'" fill="#8b8ba6" font-size="10">'+_gsNice(rows[0].date).slice(4)+'</text><text x="'+(W-40)+'" y="'+(H-2)+'" fill="#8b8ba6" font-size="10" text-anchor="end">'+_gsNice(L.date).slice(4)+'</text>');
+  }
+  function _gsLadder(lad,close){
+    if(lad.length<2)return '';
+    var W=300,H=150,vs=lad.map(function(x){return x[1];}),hi=Math.max.apply(null,vs),lo=Math.min.apply(null,vs),pad=(hi-lo)*.12||1;
+    var Y=function(v){return 8+(hi+pad-v)/(hi-lo+2*pad)*(H-16);},g='';
+    var fl=lad.filter(function(x){return x[0]==='Gamma flip';})[0];
+    if(fl)g+='<rect x="70" y="'+Math.min(Y(fl[1]),Y(close)).toFixed(1)+'" width="150" height="'+Math.abs(Y(fl[1])-Y(close)).toFixed(1)+'" fill="rgba(255,214,0,.08)"/>';
+    var used=[];
+    lad.forEach(function(x){var y=Y(x[1]),bold=!!x[4];var ty=y;used.forEach(function(u){if(Math.abs(u-ty)<11)ty=u+11;});used.push(ty);
+      g+='<line x1="70" x2="220" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+x[2]+'" stroke-width="'+(bold?2.5:1.5)+'"'+(bold?'':' stroke-dasharray="5 3"')+'/>'
+        +'<text x="64" y="'+(ty+4).toFixed(1)+'" fill="'+(bold?'#e8dede':x[2])+'" font-size="11" text-anchor="end">'+x[0]+'</text>'
+        +'<text x="226" y="'+(ty+4).toFixed(1)+'" fill="'+(bold?'#e8dede':x[2])+'" font-size="11">'+x[3]+(bold?'':' ('+(x[1]>=close?'+':'−')+Math.abs(x[1]-close).toFixed(1)+')')+'</text>';});
+    return _gsSvg(W,H,g);
+  }
+  function _gsVolBars(r){
+    var m=(r.mins||[]).filter(function(x){return x&&x.k;});if(m.length<10)return '';
+    var b={};m.forEach(function(x){var s=570+Math.floor((x.m-570)/30)*30;var q=b[s]||(b[s]={m:s,o:x.k.open,c:x.k.close,v:0});q.c=x.k.close;q.v+=x.k.volume||0;});
+    var B=Object.keys(b).map(function(k){return b[k];}).sort(function(x,y){return x.m-y.m;});var mx=Math.max.apply(null,B.map(function(q){return q.v;}))||1;
+    var W=300,H=96,bw=(W-8)/B.length,g='';
+    B.forEach(function(q,i){var h=Math.max(2,q.v/mx*(H-24)),top=q.v===mx,c=q.c>=q.o?'#00e676':'#ff453a';
+      g+='<rect x="'+(4+i*bw+1).toFixed(1)+'" y="'+(H-16-h).toFixed(1)+'" width="'+(bw-2).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+c+'" opacity="'+(top?1:.45)+'"><title>'+_sdHM(q.m)+' · vol '+Math.round(q.v/1e3)+'K</title></rect>'
+        +(top?'<text x="'+(4+i*bw+bw/2).toFixed(1)+'" y="'+(H-20-h).toFixed(1)+'" fill="#e8dede" font-size="10" text-anchor="middle">'+_sdHM(q.m)+'</text>':'')
+        +(i%3===0?'<text x="'+(4+i*bw+bw/2).toFixed(1)+'" y="'+(H-3)+'" fill="#8b8ba6" font-size="9" text-anchor="middle">'+_sdHM(q.m)+'</text>':'');});
+    return _gsSvg(W,H,g);
+  }
   function _gsDayPanel(r0,tf,isToday){
     var r=_sdAgg(r0,GS_TF_MIN[tf]||1),UP='#00e676',DN='#ff453a',FL='#ffd600',E9='#29b6f6',E20='#ff9f0a';
     var mv=_sdNum(r.mv)?r.mv:NaN,pct=_sdNum(mv)&&r.o?mv/r.o*100:NaN,col=mv>0?UP:mv<0?DN:'var(--dim)';
@@ -7004,17 +7055,19 @@
     var a=Math.min(pos(r.o),pos(r.c)),w=Math.abs(pos(r.c)-pos(r.o));
     var price='<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:26px">'+_sdF(r.c)+'</span><span style="font-size:15px;color:'+col+'">'+(_sdNum(mv)?sign(mv)+' ('+sign(pct)+'%)':'')+'</span></div>'
       +'<div style="font-size:11px;color:var(--dim)">'+(isToday?'last':'close')+' · change from the 9:30 open</div>'
-      +'<div style="position:relative;height:30px"><div style="position:absolute;left:0;right:0;top:12px;height:6px;border-radius:3px;background:var(--line)"></div>'
+      +(_gsPriceSpark(r,col)||('<div style="position:relative;height:30px"><div style="position:absolute;left:0;right:0;top:12px;height:6px;border-radius:3px;background:var(--line)"></div>'
       +'<div style="position:absolute;left:'+a.toFixed(1)+'%;width:'+Math.max(1,w).toFixed(1)+'%;top:12px;height:6px;border-radius:3px;background:'+col+'"></div>'
       +'<div style="position:absolute;left:'+pos(r.o).toFixed(1)+'%;top:0;font-size:10px;color:var(--dim);transform:translateX(-50%)">open</div>'
-      +'<div style="position:absolute;left:'+pos(r.c).toFixed(1)+'%;top:19px;font-size:10px;transform:translateX(-50%)">'+(isToday?'now':'close')+'</div></div>'
+      +'<div style="position:absolute;left:'+pos(r.c).toFixed(1)+'%;top:19px;font-size:10px;transform:translateX(-50%)">'+(isToday?'now':'close')+'</div></div>'))
       +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)"><span>Low <b style="color:inherit;font-weight:400;color:#e8dede">'+_sdF(r.l)+'</b></span><span>Range <span style="color:#e8dede">$'+_sdF(r.rng)+'</span></span><span>High <span style="color:#e8dede">'+_sdF(r.h)+'</span></span></div>';
     var pv=r.trend==='Up'?'Up day: closed $'+Math.abs(mv).toFixed(2)+' above the open.':r.trend==='Down'?'Down day: closed $'+Math.abs(mv).toFixed(2)+' below the open.':'Balanced day: open and close ended close together.';
     if(isToday)pv=pv.replace('closed','is trading');
     // VOLATILITY card
     var vol,vv,vc;
     if(_sdNum(r.hv)&&_sdNum(r.iv)){
-      vol=_gsIvBar('Real moves (21d)',r.hv,E20)+_gsIvBar('Options priced in',r.iv,E9)+'<div style="font-size:11px;color:var(--dim)">Gap '+(r.hv-r.iv>=0?'+':'')+(r.hv-r.iv).toFixed(2)+' pts · Hist IV vs Actual IV'+(r.ivFrom?' · from the '+_gsNice(r.ivFrom)+' snapshot':'')+'</div>';
+      var vs=_gsVolSpark(r);
+      vol=(vs?'<div style="display:flex;gap:14px;font-size:12px"><span style="color:'+E20+'">Real moves (21d) <b style="font-size:15px">'+r.hv.toFixed(1)+'%</b></span><span style="color:'+E9+'">Options priced <b style="font-size:15px">'+r.iv.toFixed(1)+'%</b></span></div>'+vs
+          :_gsIvBar('Real moves (21d)',r.hv,E20)+_gsIvBar('Options priced in',r.iv,E9))+'<div style="font-size:11px;color:var(--dim)">'+(vs?'Last 60 days · orange shade = moved more than priced · ':'')+'Gap '+(r.hv-r.iv>=0?'+':'')+(r.hv-r.iv).toFixed(2)+' pts · Hist IV vs Actual IV'+(r.ivFrom?' · from the '+_gsNice(r.ivFrom)+' snapshot':'')+'</div>';
       vv=r.hv>r.iv?'Market moved MORE than options priced in: edge to option buyers.':'Market moved LESS than options priced in: edge to option sellers.';vc=r.hv>r.iv?E20:E9;
     }else{vol='<div style="font-size:12px;color:var(--dim)">No logger snapshot for this day.</div>';vv='IV snapshots start Jul 14, 2026.';vc='#8b8ba6';}
     // DEALER MAP card
@@ -7026,7 +7079,7 @@
       if(_sdNum(r.pw))lad.push(['Put wall',r.pw,E20,r.pw.toFixed(0)]);
       lad.push([isToday?'Last':'Close',r.c,'#e8dede',_sdF(r.c),true]);
       lad.sort(function(x,y){return y[1]-x[1];});
-      dealer=lad.map(function(x){return _gsRung(x[0],x[3],x[2],r.c,!!x[4],x[1]);}).join('')
+      dealer=(_gsLadder(lad,r.c)||lad.map(function(x){return _gsRung(x[0],x[3],x[2],r.c,!!x[4],x[1]);}).join(''))
         +'<div style="font-size:11px;color:var(--dim)">Net GEX '+_sdBig(r.ngex)+(r.reg?' · '+r.reg.toLowerCase():'')+(r.gexLive?' · live logger':'')+' · sorted high → low</div>';
       if(r.flipFb){dv='No true flip found that day (≈ nearest strike), so treat the regime with caution.';dc='#8b8ba6';}
       else if(_sdNum(r.flip)){var below=r.c<r.flip,pos=r.reg?/POS/i.test(r.reg):!below;dv=(pos?'Positive':'Negative')+' gamma: moves tend to '+(pos?'get absorbed.':'run.');if(Math.abs(r.c-r.flip)/r.c<0.002)dv+=' Price is sitting right at the flip ('+r.flip.toFixed(2)+'), so this can switch fast.';else dv+=' Price is '+(below?'below':'above')+' the flip.';dc=pos?UP:DN;}
@@ -7039,6 +7092,7 @@
       act='<div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:26px">'+r.up+' up</span><span style="font-size:17px;color:var(--dim)">/ '+r.dn+' down</span></div>'
         +'<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line)"><div style="width:'+upP.toFixed(1)+'%;background:'+UP+'"></div><div style="flex:1"></div><div style="width:'+dnP.toFixed(1)+'%;background:'+DN+'"></div></div>'
         +'<div style="font-size:11px;color:var(--dim)">'+tf+' candles · '+r.bars+' total · follows your candle size</div>'
+        +(_gsVolBars(r0)?'<div style="font-size:11px;color:var(--dim)">Volume by half hour (green = that half hour closed up)</div>'+_gsVolBars(r0):'')
         +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim)"><span>Busiest bar <span style="color:#e8dede">'+(r.big?_sdHM(r.big.m):'—')+'</span></span><span>IEX vol <span style="color:#e8dede">'+(_sdNum(r.v)?(r.v>=1e6?(r.v/1e6).toFixed(2)+'M':Math.round(r.v/1e3)+'K'):'—')+'</span></span></div>';
       av=r.up>r.dn*1.2?'Buyers won more candles.':r.dn>r.up*1.2?'Sellers won more candles.':'Even tug-of-war between buyers and sellers.';
       if(r.big)av+=' Heaviest volume at '+_sdHM(r.big.m)+'.';
