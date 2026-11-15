@@ -6247,7 +6247,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("nasdaq", "Nasdaq") + tab("options", "Options Research") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("replay", "Trade Replay") + tab("dash", "Research") + "</div>";
+      tab("nasdaq", "Nasdaq") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("replay", "Trade Replay") + tab("dash", "Research") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
@@ -7759,7 +7759,7 @@
     _chipFlip(b, !!O[k]); document.querySelectorAll(".orw").forEach(function (w) { w.classList.toggle("off-" + k, !O[k]); });
   });
   // Nov 15: Nasdaq sub-tabs (Today · QQQ Data), remembered.
-  window.NQV=(function(){try{return localStorage.getItem('md:nqv')==='data'?'data':'today';}catch(e){return 'today';}})();
+  window.NQV=(function(){try{var v=localStorage.getItem('md:nqv');return v==='data'||v==='opt'?v:'today';}catch(e){return 'today';}})();
   function _nqTop(){var t=document.getElementById('nqtabs');if(!t)return;var y=t.getBoundingClientRect().top+window.scrollY-8;if(window.scrollY>y)window.scrollTo(0,Math.max(0,y));_lastUserScroll=Date.now()+1;}
   document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-nqv]');if(!b)return;var v=b.getAttribute('data-nqv');if(v===window.NQV)return;
     window.NQV=v;try{localStorage.setItem('md:nqv',v);}catch(e){}renderAllWidgets(true);_nqTop();});
@@ -8444,9 +8444,16 @@
     var _leverageTable = secNasdaqStars(e, "table");
     // Nov 15: VIX chart + leverage table removed from Nasdaq (VIX / sectors live in the header strip);
     // cockpit, options positioning, dealer positioning, odds & flow, plan and options & venue moved to the Options Research tab.
-    var _nqTabs = '<div id="nqtabs">' + [["today", "Today"], ["data", "QQQ Data"]].map(function (t) {
+    var _nqTabs = '<div id="nqtabs">' + [["today", "Today"], ["data", "QQQ Data"], ["opt", "Options"]].map(function (t) {
       return '<button type="button" data-nqv="' + t[0] + '" class="' + (window.NQV === t[0] ? "on" : "") + '">' + t[1] + "</button>"; }).join("") + "</div>";
-    var _qqqBody = _nqTabs + (window.NQV === "data"
+    // Nov 15: Options Research tab folded into Nasdaq → Options, all on one page.
+    var _qqqBody = _nqTabs + (window.NQV === "opt"
+      ? (secWide("Today vs its normal range", _orStrips(e)) +
+         secWide("Dealer map · gamma by strike", _orDealerMap(e)) +
+         secWide("Positioning over time", _orTimeline(e)) +
+         secWide("Where the money sits", _orMoney(e) + (secQqqPositioning(e) ? '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">OLD GRID</summary>' + secQqqPositioning(e) + "</details>" : "")) +
+         secNasdaqDeepDive(e, "options:flow"))
+      : window.NQV === "data"
       ? ((TAB === "nasdaq" && _gex ? _gex.dataHtml : "") + secNasdaqDeepDive(e, "nasdaq"))
       : ((TAB === "nasdaq" && idx === FULL.length - 1 ? secHomeRun() : "") +
          (TAB === "nasdaq" && _gex ? _gex.html : "")));
