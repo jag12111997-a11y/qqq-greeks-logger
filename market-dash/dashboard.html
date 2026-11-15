@@ -3588,13 +3588,25 @@
   // Repaint after live data changes (debounced; keeps the scroll position).
   // The Journal and Performance tabs are iframes, so they are never repainted.
   var _raT = 0;
+  // Nov 15 scroll fix: (1) background refreshes wait until you stop scrolling; (2) the page keeps its full height while it
+  // redraws (charts mount a moment later), so the browser can't clamp you to the bottom of a briefly-short page.
+  var _lastUserScroll = 0;
+  ["wheel", "touchmove", "keydown"].forEach(function (n) { window.addEventListener(n, function () { _lastUserScroll = Date.now(); }, { passive: true, capture: true }); });
+  window.addEventListener("scroll", function () { _lastUserScroll = Date.now(); }, { passive: true });
   function renderAllWidgets(now) {
     if (TAB === "journal" || TAB === "perf" || TAB === "strategy" || TAB === "replay") return;
     clearTimeout(_raT);
     _raT = setTimeout(function () {
       var a = document.activeElement;
       if (!now && a && a.matches && a.matches("input,select,textarea")) return;
-      var y = window.scrollY; render(); window.scrollTo(0, y);
+      if (!now && Date.now() - _lastUserScroll < 1500) { renderAllWidgets(false); return; }   // you're scrolling: try again shortly
+      var app = document.getElementById("app"), y = window.scrollY;
+      if (app) app.style.minHeight = app.offsetHeight + "px";
+      render(); window.scrollTo(0, y);
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        if (Math.abs(window.scrollY - y) > 2 && Date.now() - _lastUserScroll > 300) window.scrollTo(0, y);
+        setTimeout(function () { if (app) app.style.minHeight = ""; }, 400);
+      }); });
     }, now ? 0 : 250);
   }
 
