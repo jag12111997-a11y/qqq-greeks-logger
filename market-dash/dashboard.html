@@ -7291,11 +7291,11 @@
     var months=[];rows.forEach(function(r){if(_sdNum(r.o)&&_sdNum(r.c)){var m=r.date.slice(0,7);if(months.indexOf(m)<0)months.push(m);}});months.reverse();
     var prev=rows.filter(function(r){return r.date.slice(0,7)<cur&&_sdNum(r.c);}),base=prev.length?prev[prev.length-1].c:d[0].o,last=d[d.length-1];
     var chg=last.c-base,mh=Math.max.apply(null,d.map(function(r){return r.h;})),ml=Math.min.apply(null,d.map(function(r){return r.l;})),mname=MN[+cur.slice(5)]+' '+cur.slice(0,4);
-    var O=GS_OVL,S=[['flip','Gamma flip',FL],['cw','Call wall',CW],['pw','Put wall',E20],['hv','Real vol',E20],['iv','Priced vol',E9],['vol','Volume',UP]];
+    var O=GS_OVL,S=[['hv','Real vol',E20],['iv','Priced vol',E9],['vol','Volume',UP]];   // Nov 16: flip / walls removed (duplicate of Options → Positioning over time)
     var chips=S.map(function(x){var on=!!O[x[0]];return '<button type="button" class="qqq-layer" data-gs-ovl="'+x[0]+'" aria-pressed="'+on+'" style="'+(on?'':'opacity:.4;text-decoration:line-through')+'"><span style="display:inline-block;width:10px;height:3px;background:'+x[2]+';vertical-align:middle;margin-right:6px'+(x[0]==='hv'?';border-top:1px dashed '+x[2]:'')+'"></span>'+x[1]+'</button>';}).join('');
     var mbtn=months.slice(0,24).map(function(m){var on=m===cur;return '<button type="button" class="qqq-layer" data-gs-month="'+m+'" style="'+(on?'border-color:var(--accent);color:var(--accent)':'')+'">'+MN[+m.slice(5)]+' '+m.slice(2,4)+'</button>';}).join('');
     var W=1000,H=380,pl=8,pr=110,pt=14,pB=H-120,vT=H-100,vB=H-28,n=d.length,step=(W-pl-pr)/n,X=function(i){return pl+step*(i+.5);};
-    var pv=[];d.forEach(function(r){if(_sdNum(r.flip))pv.push(r.flip);if(_sdNum(r.cw))pv.push(r.cw);if(_sdNum(r.pw))pv.push(r.pw);});
+    var pv=[];
     var vv=[];d.forEach(function(r){if(_sdNum(r.hv))vv.push(r.hv);if(_sdNum(r.iv))vv.push(r.iv);});
     var g='',seg=function(k,f){var b=g.length;f();g=g.slice(0,b)+'<g class="ovs-'+k+'">'+g.slice(b)+'</g>';};
     if(pv.length){var hi=Math.max.apply(null,pv),lo=Math.min.apply(null,pv),pd=(hi-lo)*.06||1;hi+=pd;lo-=pd;var Y=function(v){return pt+(hi-v)/(hi-lo)*(pB-pt);};
@@ -7307,6 +7307,7 @@
       seg('flip',function(){g+=line(function(r){return r.flip;},FL,false,1.8,'flip');});
     }
     if(vv.length){var vh=Math.max.apply(null,vv)*1.1,vl=Math.min.apply(null,vv)*.85,YV=function(v){return pt+(vh-v)/(vh-vl)*(pB-pt);};
+      for(var t2=0;t2<=4;t2++){var v2=vl+(vh-vl)*t2/4;g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+YV(v2).toFixed(1)+'" y2="'+YV(v2).toFixed(1)+'" stroke="rgba(255,255,255,.05)"/><text x="'+(W-pr+6)+'" y="'+(YV(v2)+4).toFixed(1)+'" fill="#8b8ba6" font-size="11">'+v2.toFixed(0)+'%</text>';}
       var vline=function(k,col,lab){var p='',L=null;d.forEach(function(r,i){if(!_sdNum(r[k]))return;p+=(p?'L':'M')+X(i).toFixed(1)+' '+YV(r[k]).toFixed(1);L=i;});return p?'<path d="'+p+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-dasharray="2 3" opacity=".9"/><text x="'+(W-pr+46)+'" y="'+(YV(d[L][k])+4).toFixed(1)+'" fill="'+col+'" font-size="10">'+lab+' '+d[L][k].toFixed(1)+'%</text>':'';};
       seg('hv',function(){g+=vline('hv',E20,'real');});seg('iv',function(){g+=vline('iv',E9,'priced');});}
     seg('vol',function(){var vm=Math.max.apply(null,d.map(function(r){return _sdNum(r.v)?r.v:0;}))||1;
@@ -7326,9 +7327,8 @@
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'
       +pill((chg>=0?'Up':'Down')+' month '+(chg>=0?'+':'−')+Math.abs(chg).toFixed(2)+' over '+d.length+' days',chg>=0?UP:DN)
       +(vd.length?pill('Moved more than priced on '+more+' of '+vd.length+' days',more>vd.length/2?E20:E9):'')
-      +(gd.length?pill('Above the gamma flip on '+above+' of '+gd.length+' days',above>=gd.length/2?UP:DN):'')
       +pill(ups+' up / '+(d.length-ups)+' down days','#5eead4')+'</div>'
-      +'<div style="font-size:11px;color:var(--dim);margin-top:6px">Left axis: flip and walls. Right axis: real vs priced vol (dotted). Bottom: volume. Tap a chip to hide it.</div></div>';
+      +'<div style="font-size:11px;color:var(--dim);margin-top:6px">Top: real vs priced vol (dotted, % per year). Bottom: volume. Tap a chip to hide it. Flip and walls live in Options → Positioning over time.</div></div>';
   }
   function _gsMonthChart(rows,sel){
     var UP='#00e676',DN='#ff453a',MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -7671,14 +7671,33 @@
     var L = g.levels || {}, flip = _orN(g.gamma_flip), cw = _orN(L.call_wall), pw = _orN(L.put_wall);
     var rh = 13, pt = 10, W = 1000, cx = 520, half = 380, Hh = pt * 2 + st.length * rh, kHi = st[0].strike, kLo = st[st.length - 1].strike;
     var Y = function (k) { return pt + (kHi - k) / ((kHi - kLo) || 1) * (st.length - 1) * rh + rh / 2; };
-    var mx = Math.max.apply(null, st.map(function (s) { return Math.abs(s.net_gex); })) || 1, g2 = "";
+    // Nov 16: GEX profile — call gamma right (green), put gamma left (red), net as a dot, running total (low → high strike) as a line
+    var cg = function (s) { return Math.abs(Number(s.call_gex) || 0); }, pg = function (s) { return Math.abs(Number(s.put_gex) || 0); };
+    var hasSplit = st.some(function (s) { return s.call_gex !== undefined || s.put_gex !== undefined; });
+    var mx = Math.max.apply(null, st.map(function (s) { return hasSplit ? Math.max(cg(s), pg(s), Math.abs(s.net_gex)) : Math.abs(s.net_gex); })) || 1, g2 = "";
     g2 += '<line x1="' + cx + '" x2="' + cx + '" y1="' + pt + '" y2="' + (Hh - pt) + '" stroke="rgba(255,255,255,.2)"/>';
     st.forEach(function (s) {
-      var y = Y(s.strike), w = Math.abs(s.net_gex) / mx * half, pos = s.net_gex >= 0;
+      var y = Y(s.strike), bh = (rh * .76).toFixed(1), by = (y - rh * .38).toFixed(1);
       var tip = "$" + s.strike + " · net " + fmtBig(s.net_gex) + " · calls " + fmtBig(s.call_gex || 0) + " (" + (s.call_oi || 0) + " OI) · puts " + fmtBig(s.put_gex || 0) + " (" + (s.put_oi || 0) + " OI)";
-      g2 += '<g><title>' + esc(tip) + '</title><rect x="' + (pos ? cx : cx - w).toFixed(1) + '" y="' + (y - rh * .38).toFixed(1) + '" width="' + Math.max(1, w).toFixed(1) + '" height="' + (rh * .76).toFixed(1) + '" fill="' + (pos ? "#00e676" : "#ff453a") + '" opacity=".75"/></g>';
+      g2 += '<g><title>' + esc(tip) + '</title>';
+      if (hasSplit) {
+        var wc = cg(s) / mx * half, wp = pg(s) / mx * half;
+        g2 += '<rect x="' + cx + '" y="' + by + '" width="' + Math.max(.5, wc).toFixed(1) + '" height="' + bh + '" fill="#00e676" opacity=".55"/>' +
+          '<rect x="' + (cx - wp).toFixed(1) + '" y="' + by + '" width="' + Math.max(.5, wp).toFixed(1) + '" height="' + bh + '" fill="#ff453a" opacity=".55"/>' +
+          '<circle cx="' + (cx + s.net_gex / mx * half).toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.2" fill="#fff" stroke="#0c0710" stroke-width="1"/>';
+      } else {
+        var w = Math.abs(s.net_gex) / mx * half, pos = s.net_gex >= 0;
+        g2 += '<rect x="' + (pos ? cx : cx - w).toFixed(1) + '" y="' + by + '" width="' + Math.max(1, w).toFixed(1) + '" height="' + bh + '" fill="' + (pos ? "#00e676" : "#ff453a") + '" opacity=".75"/>';
+      }
+      g2 += '</g>';
       if (s.strike % 5 === 0) g2 += '<text x="' + (cx - half - 14) + '" y="' + (y + 4).toFixed(1) + '" fill="#8b8ba6" font-size="11" text-anchor="end">' + s.strike + '</text>';
     });
+    (function () {   // running total of net gamma from the lowest strike up (purple); where it crosses the middle line is the local flip
+      var asc = st.slice().sort(function (a, b) { return a.strike - b.strike; }), c = 0, cum = asc.map(function (s) { c += s.net_gex; return { k: s.strike, v: c }; });
+      var cm = Math.max.apply(null, cum.map(function (x) { return Math.abs(x.v); })) || 1, d = "";
+      cum.forEach(function (x, i) { d += (i ? "L" : "M") + (cx + x.v / cm * half).toFixed(1) + " " + Y(x.k).toFixed(1); });
+      g2 += '<path d="' + d + '" fill="none" stroke="#b388ff" stroke-width="1.6" opacity=".9"/>';
+    })();
     var labs = [];
     var mark = function (k, col, lab, dash) { if (k === null || k > kHi + .5 || k < kLo - .5) return ""; var y = Y(k); labs.push({ y: y, t: lab, c: col });
       return '<line x1="' + (cx - half - 8) + '" x2="' + (cx + half + 8) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="' + col + '" stroke-width="1.5"' + (dash ? ' stroke-dasharray="5 4"' : "") + '/>'; };
@@ -7686,7 +7705,7 @@
     g2 += (same ? mark(cw, "#5eead4", "call + put wall " + cw.toFixed(0), true) : mark(cw, "#5eead4", "call wall " + (cw !== null ? cw.toFixed(0) : ""), true) + mark(pw, "#ff9f0a", "put wall " + (pw !== null ? pw.toFixed(0) : ""), true)) +
       mark(flip, "#ffd600", "flip " + (flip !== null ? flip.toFixed(0) : ""), false) + mark(spot, "#ffffff", "price " + spot.toFixed(2), true);
     g2 += _orLabels(labs, cx + half + 14, 13);
-    g2 += '<text x="' + (cx - 8) + '" y="' + (pt - 1) + '" fill="#ff453a" font-size="10" text-anchor="end">← negative gamma (moves get pushed)</text><text x="' + (cx + 8) + '" y="' + (pt - 1) + '" fill="#00e676" font-size="10">positive gamma (moves get pinned) →</text>';
+    g2 += '<text x="' + (cx - 8) + '" y="' + (pt - 1) + '" fill="#ff453a" font-size="10" text-anchor="end">← put gamma</text><text x="' + (cx + 8) + '" y="' + (pt - 1) + '" fill="#00e676" font-size="10">call gamma →</text>';
     var sorted = st.slice().sort(function (a, b) { return b.net_gex - a.net_gex; }), top = sorted[0], bot = sorted[sorted.length - 1];
     var above = st.filter(function (s) { return s.strike > spot; }).reduce(function (a, s) { return a + s.net_gex; }, 0), below = st.filter(function (s) { return s.strike <= spot; }).reduce(function (a, s) { return a + s.net_gex; }, 0);
     var pill = function (t, c) { return '<span style="padding:6px 10px;border-radius:6px;background:' + c + '1a;color:' + c + ';font-size:12px">' + t + '</span>'; };
@@ -7704,7 +7723,7 @@
         if (vw !== null && vw === cw2) out += pill("Vanna & charm concentrated at " + vw, "#29b6f6");
         else { if (vw !== null) out += pill("Vanna concentrated at " + vw, "#29b6f6"); if (cw2 !== null) out += pill("Charm concentrated at " + cw2, "#ff9f0a"); }
         return out; })() + '</div>' +
-      '<div style="font-size:11px;color:var(--dim);margin-top:6px">Green bars: dealers long gamma there, they sell rallies / buy dips, so price tends to stall. Red bars: dealers short gamma, they chase the move, so price tends to run through.</div>';
+      '<div style="font-size:11px;color:var(--dim);margin-top:6px">Green = call gamma, red = put gamma at each strike. White dot = net (right of the middle line = dealers long gamma, price tends to stall; left = short gamma, price tends to run). Purple line = net gamma added up from the lowest strike: where it crosses the middle line is where the flip sits.</div>';
   }
   function _orTimeline(e) {
     var all = _orDays().filter(function (x) { return x.gex && _orN(x.gex.net_gex) !== null; });
