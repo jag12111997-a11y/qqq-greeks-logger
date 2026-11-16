@@ -3623,8 +3623,8 @@
   ["wheel", "touchmove", "keydown"].forEach(function (n) { window.addEventListener(n, function () { _lastUserScroll = Date.now(); }, { passive: true, capture: true }); });
   // anchor = the clicked control, else the first heading / control near the top of the screen; after the redraw (and again
   // once charts have mounted) scroll so the same element sits exactly where it was. Safari has no built-in scroll anchoring.
-  var _ANCH = "#app h2, #app [data-gs-month], #app [data-or-month], #app [data-or-ovl], #app [data-or-mm], #app [data-gs-ovl], #app [data-dd-ovl], #app [data-gs-day], #app .band";
-  function _anchorKey(el) { return el.tagName + "|" + (el.getAttribute("data-gs-month") || el.getAttribute("data-or-month") || el.getAttribute("data-or-ovl") || el.getAttribute("data-or-mm") || el.getAttribute("data-gs-ovl") || el.getAttribute("data-dd-ovl") || el.getAttribute("data-gs-day") || "") + "|" + (el.textContent || "").trim().slice(0, 40); }
+  var _ANCH = "#app h2, #app [data-gs-month], #app [data-or-month], #app [data-or-ovl], #app [data-or-mm], #app [data-mxp], #app [data-mxr], #app [data-gs-ovl], #app [data-dd-ovl], #app [data-gs-day], #app .band";
+  function _anchorKey(el) { return el.tagName + "|" + (el.getAttribute("data-gs-month") || el.getAttribute("data-or-month") || el.getAttribute("data-or-ovl") || el.getAttribute("data-or-mm") || el.getAttribute("data-mxp") || el.getAttribute("data-mxr") || el.getAttribute("data-gs-ovl") || el.getAttribute("data-dd-ovl") || el.getAttribute("data-gs-day") || "") + "|" + (el.textContent || "").trim().slice(0, 40); }
   function _anchorTake(clicked) {
     var L = Array.prototype.slice.call(document.querySelectorAll(_ANCH)), el = null;
     if (clicked && L.indexOf(clicked) >= 0) el = clicked;
@@ -7498,6 +7498,8 @@
     var W = 600, Hh = o.h || 150, pl = 6, pr = o.bare ? 8 : 124, pt = o.bare ? 4 : 10, pb = o.bare ? 4 : 18, hi = Math.max.apply(null, all), lo = Math.min.apply(null, all), pd = (hi - lo) * .08 || 1; hi += pd; lo -= pd;
     var n = dates.length, X = function (d) { var i = dates.indexOf(d); return pl + (n < 2 ? .5 : i / (n - 1)) * (W - pl - pr); }, Y = function (v) { return pt + (hi - v) / (hi - lo) * (Hh - pt - pb); };
     var fmt = o.fmt || function (v) { return v.toFixed(2); }, g = "";
+    if (o.sigma && series[0] && series[0].pts.length > 4) { var st0 = _mxStats(series[0].pts.map(function (p) { return p.v; })), yA = Y(Math.min(hi, st0.m + st0.s)), yB = Y(Math.max(lo, st0.m - st0.s));
+      g += '<rect x="' + pl + '" y="' + yA.toFixed(1) + '" width="' + (W - pl - pr) + '" height="' + Math.max(0, yB - yA).toFixed(1) + '" fill="rgba(255,255,255,.045)"/><line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(st0.m).toFixed(1) + '" y2="' + Y(st0.m).toFixed(1) + '" stroke="rgba(255,255,255,.18)" stroke-dasharray="2 4"/>'; }
     if (o.band) g += '<rect x="' + pl + '" y="' + Y(Math.min(hi, o.band[1])).toFixed(1) + '" width="' + (W - pl - pr) + '" height="' + Math.max(0, Y(Math.max(lo, o.band[0])) - Y(Math.min(hi, o.band[1]))).toFixed(1) + '" fill="' + o.band[2] + '"/>';
     for (var t = 0; t <= 3 && !o.bare; t++) { var v = lo + (hi - lo) * t / 3; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="' + _MX.grid + '"/><text x="' + (W - pr + 4) + '" y="' + (Y(v) + 3).toFixed(1) + '" fill="' + _MX.dim + '" font-size="9">' + fmt(v) + '</text>'; }
     if (o.zero && lo < 0 && hi > 0) g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="rgba(255,255,255,.22)" stroke-dasharray="3 3"/>';
@@ -7509,57 +7511,79 @@
       else g += '<path d="' + d + '" fill="none" stroke="' + s.col + '" stroke-width="' + (s.w || 1.6) + '"' + (s.dash ? ' stroke-dasharray="4 3"' : "") + '/><circle cx="' + X(L.d).toFixed(1) + '" cy="' + Y(L.v).toFixed(1) + '" r="2.4" fill="' + s.col + '"/>';
       labs.push({ y: Y(L.v), t: (s.name ? s.name + " " : "") + fmt(L.v), c: s.bars ? _MX.txt : s.col }); });
     if (!o.bare) { labs.sort(function (a, b) { return a.y - b.y; }); var prev = -99; labs.forEach(function (l) { var y = Math.max(l.y, prev + 11); prev = y; g += '<text x="' + (W - pr + 46) + '" y="' + (y + 3).toFixed(1) + '" fill="' + l.c + '" font-size="9.5" font-weight="600">' + esc(l.t) + '</text>'; });
-      g += '<text x="' + pl + '" y="' + (Hh - 4) + '" fill="' + _MX.dim + '" font-size="9">' + _mxD(dates[0]) + '</text><text x="' + (W - pr) + '" y="' + (Hh - 4) + '" fill="' + _MX.dim + '" font-size="9" text-anchor="end">' + _mxD(dates[n - 1]) + '</text>'; }
+      var longSpan = (Date.parse(dates[n - 1]) - Date.parse(dates[0])) > 300 * 864e5, fd = function (d) { return longSpan ? _MXN[+d.slice(5, 7)] + " " + d.slice(0, 4) : _mxD(d); };
+      g += '<text x="' + pl + '" y="' + (Hh - 4) + '" fill="' + _MX.dim + '" font-size="9">' + fd(dates[0]) + '</text><text x="' + (W - pr) + '" y="' + (Hh - 4) + '" fill="' + _MX.dim + '" font-size="9" text-anchor="end">' + fd(dates[n - 1]) + '</text>'; }
     var cw = (W - pl - pr) / Math.max(1, n - 1); dates.forEach(function (d) { var tip = _mxD(d) + series.map(function (s) { var p = s.pts.filter(function (q) { return q.d === d; })[0]; return p ? " · " + (s.name || "value") + " " + fmt(p.v) : ""; }).join(""); g += '<rect x="' + (X(d) - cw / 2).toFixed(1) + '" y="' + pt + '" width="' + cw.toFixed(1) + '" height="' + (Hh - pt - pb) + '" fill="transparent"><title>' + esc(tip) + '</title></rect>'; });
     return '<svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto;display:block;margin:2px 0 4px">' + g + '</svg>';
   }
   function _mxTile(title, big, sub, chart) { return '<div style="background:#10132A;border:1px solid #1F2440;border-radius:8px;padding:8px 10px;min-width:0"><div style="font-size:9.5px;letter-spacing:.12em;color:' + _MX.dim + ';text-transform:uppercase">' + title + '</div><div style="font-size:16px;color:' + _MX.txt + ';margin:2px 0">' + big + '</div><div style="font-size:10px;color:' + _MX.dim + ';line-height:1.45">' + sub + '</div>' + (chart || "") + '</div>'; }
   function _mxNote(t) { return '<div class="p-val-sm p-dim" style="font-size:10px;margin:2px 0 6px">' + t + '</div>'; }
 
-  // 2 · Economy scoreboard
+  // 2 · Economy scoreboard — Month / Quarter / Year views from 10 years of FRED history (+ jobs)
   function _mxScore(e) {
-    var m = e.macro || {}, out = '<div class="p-lbl"><span class="p-num">01</span> Economy scoreboard</div>';
-    var pace = function (key, months) {   // annualised pace between the latest print and the print ~N months earlier (from logged history)
-      var L = get(e, "macro." + key); if (!ok(L)) return null; var t = new Date(L.latest_date + "T00:00:00Z"); t.setUTCMonth(t.getUTCMonth() - months); var cut = t.toISOString().slice(0, 10), best = null;
-      _ptDays().forEach(function (x) { var q = get(x, "macro." + key); if (ok(q) && q.latest_date && q.latest_date <= cut && (!best || q.latest_date > best.latest_date)) best = q; });
-      if (!best || !best.latest) return null; var mo = (new Date(L.latest_date) - new Date(best.latest_date)) / 2.63e9; return { p: (Math.pow(L.latest / best.latest, 12 / mo) - 1) * 100, from: best.latest_date, mo: Math.round(mo) };
-    };
-    var mini = function (key) { var s = _mxSer(function (x) { return get(x, "macro." + key + ".latest"); }); return _mxChart([{ pts: s, col: _MX.blu, w: 2.2 }], { h: 120, bare: true, fmt: function (v) { return v >= 100 ? v.toFixed(0) : v.toFixed(2); } }); };
-    var tiles = "";
-    var gdp = m.real_gdp; if (ok(gdp)) { var q = (Math.pow(gdp.latest / gdp.prior, 4) - 1) * 100; tiles += _mxTile("Growth (real GDP)", '<span style="color:' + (q >= 0 ? _MX.up : _MX.dn) + '">' + (q >= 0 ? "+" : "") + q.toFixed(1) + '%</span> <span style="font-size:10px;color:' + _MX.dim + '">annualised q/q</span>', "level " + num(gdp.latest, 0) + " · quarter of " + _mxD(gdp.latest_date) + " · " + _ptStreak(_mxSer(function (x) { return get(x, "macro.real_gdp.latest"); }), "release").t, mini("real_gdp")); }
-    var cpi = m.cpi; if (ok(cpi)) { var m1 = (cpi.latest / cpi.prior - 1) * 100, p3 = pace("cpi", 3); tiles += _mxTile("Inflation (CPI)", '<span style="color:' + (m1 > .25 ? _MX.dn : m1 < .15 ? _MX.up : _MX.warn) + '">' + (m1 >= 0 ? "+" : "") + m1.toFixed(2) + '% m/m</span>', (p3 ? (p3.mo + "-mo pace <b style='color:" + (p3.p > 3 ? _MX.dn : _MX.txt) + "'>" + p3.p.toFixed(1) + "%/yr</b> · ") : "") + "print for " + _mxD(cpi.latest_date) + " · Fed target 2%/yr", mini("cpi")); }
-    var pce = m.core_pce; if (ok(pce)) { var c1 = (pce.latest / pce.prior - 1) * 100, c3 = pace("core_pce", 3); tiles += _mxTile("Core PCE (Fed's gauge)", '<span style="color:' + (c1 > .25 ? _MX.dn : c1 < .15 ? _MX.up : _MX.warn) + '">' + (c1 >= 0 ? "+" : "") + c1.toFixed(2) + '% m/m</span>', (c3 ? (c3.mo + "-mo pace <b style='color:" + (c3.p > 3 ? _MX.dn : _MX.txt) + "'>" + c3.p.toFixed(1) + "%/yr</b> · ") : "") + "print for " + _mxD(pce.latest_date), mini("core_pce")); }
-    var ff = m.fed_funds; if (ok(ff)) { var fs = _mxSer(function (x) { return get(x, "macro.fed_funds.latest"); }), f0 = fs.length ? fs[0].v : ff.latest, real = (cpi && ok(cpi) && pace("cpi", 3)) ? ff.latest - pace("cpi", 3).p : null;
-      tiles += _mxTile("Fed funds", num(ff.latest, 2, "%") + ' <span style="font-size:10px;color:' + _MX.dim + '">' + (ff.latest - f0 === 0 ? "no change since " + _mxD(fs[0] ? fs[0].d : ff.latest_date) : signed((ff.latest - f0) * 100, 0) + " bp since " + _mxD(fs[0].d)) + '</span>', (real !== null ? "real rate (minus CPI pace) <b style='color:" + (real > 1 ? _MX.warn : _MX.txt) + "'>" + (real >= 0 ? "+" : "") + real.toFixed(2) + "%</b> · " : "") + _ptStreak(fs, "change").t, mini("fed_funds")); }
-    out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px">' + tiles + '</div>';
-    out += _mxNote("Pace = annualised change between the latest print and the one ~3 months earlier in your logged history. Colours: red = hot for inflation, green = cool.");
-    return out;
+    var P = window.__MXP, mh = window.__MH && window.__MH.series, m = e.macro || {};
+    var head = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px"><div class="p-lbl" style="margin:0"><span class="p-num">01</span> Economy scoreboard</div>' + _mxSeg("data-mxp", P, [["M", "Month"], ["Q", "Quarter"], ["Y", "Year"]]) + '</div>';
+    if (!mh) return head + '<div class="p-val-sm p-dim">Loading 10 years of history…</div>';
+    var lastOf = function (a) { return a && a.length ? a[a.length - 1] : null; }, sg = function (v, d, u) { return (v >= 0 ? "+" : "") + v.toFixed(d) + (u || ""); };
+    var mon = {}; ["real_gdp", "cpi", "core_pce", "fed_funds", "unrate", "payrolls"].forEach(function (k) { mon[k] = _mhMonthly(k); });
+    var pace3 = function (k) { var a = mon[k]; if (!a || a.length < 4) return null; return (Math.pow(a[a.length - 1].v / a[a.length - 4].v, 4) - 1) * 100; };
+    var yoy = function (k) { var a = mon[k]; if (!a || a.length < 13) return null; return (a[a.length - 1].v / a[a.length - 13].v - 1) * 100; };
+    var lbl = { M: "per month", Q: "per quarter", Y: "per year" }, tiles = "";
+    var T = function (title, big, sub, chart) { tiles += _mxTile(title, big, sub, chart); };
+    // Growth (quarterly data → Month view shows quarters)
+    if (mon.real_gdp) { var gm = P === "M" ? "Q" : P, gi = _mhAgg(mon.real_gdp, gm, "pct"), gl = lastOf(gi);
+      T("Growth (real GDP)", gl ? '<span style="color:' + (gl.v >= 0 ? _MX.up : _MX.dn) + '">' + sg(gl.v, 1, "%") + '</span> <span style="font-size:10px;color:' + _MX.dim + '">' + (gm === "Q" ? "annualised, " + gl.lab : "year " + gl.lab + (gl.partial ? " so far" : "")) + '</span>' : "—",
+        (P === "M" ? "GDP is quarterly, so Month shows quarters. " : "") + "10-yr average " + sg(_mxStats(_mhAgg(mon.real_gdp, "Q", "pct").map(function (x) { return x.v; })).m, 1, "%") + " annualised.",
+        _mxBars(gi, { fmt: function (v) { return sg(v, 1, "%"); }, good: "high" })); }
+    // CPI + core PCE
+    [["cpi", "Inflation (CPI)"], ["core_pce", "Core PCE (Fed's gauge)"]].forEach(function (c) { var a = mon[c[0]]; if (!a) return;
+      var it = _mhAgg(a, P, "pct"), L = lastOf(it), tgt = P === "M" ? 2 / 12 : 2, unit = { M: "% m/m", Q: "% q/q annualised", Y: "% y/y" }[P];
+      T(c[1], L ? '<span style="color:' + (L.v > tgt * 1.5 ? _MX.dn : L.v > tgt ? _MX.warn : _MX.up) + '">' + sg(L.v, 2) + unit + '</span> <span style="font-size:10px;color:' + _MX.dim + '">' + L.lab + (L.partial ? " so far" : "") + '</span>' : "—",
+        "3-mo pace <b style='color:" + (pace3(c[0]) > 3 ? _MX.dn : _MX.txt) + "'>" + sg(pace3(c[0]), 1, "%/yr") + "</b> · y/y <b>" + sg(yoy(c[0]), 1, "%") + "</b> · dashed = Fed's 2% target",
+        _mxBars(it, { fmt: function (v) { return sg(v, P === "M" ? 2 : 1, "%"); }, good: "low", target: tgt, targetLab: P === "M" ? "2%/yr pace" : "2% target" })); });
+    // Fed funds
+    if (mon.fed_funds) { var fi = _mhAgg(mon.fed_funds, P, "avg"), fp = _mhPts("fed_funds"), fl = fp[fp.length - 1], yc = yoy("cpi"), yr = fp.filter(function (q) { return q[0] <= new Date(Date.parse(fl[0]) - 365 * 864e5).toISOString().slice(0, 10); }).pop();
+      T("Fed funds", fl[1].toFixed(2) + '% <span style="font-size:10px;color:' + _MX.dim + '">' + (yr ? sg((fl[1] - yr[1]) * 100, 0, " bp vs a year ago") : "") + '</span>',
+        (yc !== null ? "real rate (minus CPI y/y) <b style='color:" + (fl[1] - yc > 1 ? _MX.warn : _MX.txt) + "'>" + sg(fl[1] - yc, 2, "%") + "</b> · " : "") + "average " + lbl[P],
+        _mxBars(fi, { fmt: function (v) { return v.toFixed(2) + "%"; }, line: true })); }
+    // Jobs: unemployment + payrolls
+    if (mon.unrate) { var ui = _mhAgg(mon.unrate, P, "avg"), ul = lastOf(mon.unrate), u12 = mon.unrate.length > 12 ? mon.unrate[mon.unrate.length - 13].v : null;
+      T("Jobs · unemployment rate", ul.v.toFixed(1) + '% <span style="font-size:10px;color:' + _MX.dim + '">' + _MXN[+ul.k.slice(5)] + " " + ul.k.slice(0, 4) + '</span>', (u12 !== null ? "a year ago " + u12.toFixed(1) + "% (" + sg(ul.v - u12, 1, " pts") + ") · " : "") + "average " + lbl[P] + " · rising = cooling economy",
+        _mxBars(ui, { fmt: function (v) { return v.toFixed(1) + "%"; }, line: true })); }
+    if (mon.payrolls) { var pi = _mhAgg(mon.payrolls, P, "diff"), pl2 = lastOf(pi), a3 = mon.payrolls.length > 3 ? (mon.payrolls[mon.payrolls.length - 1].v - mon.payrolls[mon.payrolls.length - 4].v) / 3 : null;
+      T("Jobs · payrolls", pl2 ? '<span style="color:' + (pl2.v >= 0 ? _MX.up : _MX.dn) + '">' + sg(pl2.v, 0, "k") + '</span> <span style="font-size:10px;color:' + _MX.dim + '">' + (P === "M" ? "jobs in " + pl2.lab : "avg per month, " + pl2.lab) + '</span>' : "—", (a3 !== null ? "3-month average " + sg(a3, 0, "k") + "/month · " : "") + "≈100k/month keeps unemployment steady",
+        _mxBars(pi, { fmt: function (v) { return sg(v, 0, "k"); }, good: "high" })); }
+    return head + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:8px">' + tiles + '</div>' +
+      _mxNote("10 years of FRED data (refreshed nightly). Month = change each month (last 24), Quarter = annualised change each quarter (last 12), Year = change each year (last 10). Faded bar = period not finished yet. Hover a bar for the exact number.");
   }
-  // 1 · Rates & dollar
+  // 1 · Rates & dollar — long history with 1M / 3M / 1Y / 5Y windows
   function _mxRates(e) {
-    var y10 = _mxSer(function (x) { return get(x, "macro.yield_10y.latest"); }), y2 = _mxSer(function (x) { return get(x, "macro.yield_2y.latest"); }), dx = _mxSer(function (x) { return get(x, "macro.dollar_index.latest"); });
-    if (y10.length < 5) return "";
-    var out = '<div class="p-sep"></div><div class="p-lbl">Rates &amp; dollar</div>';
-    var sp = (y10[y10.length - 1].v - (y2.length ? y2[y2.length - 1].v : y10[y10.length - 1].v));
-    out += '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;margin:2px 0 2px">' +
-      '<span>10y <b style="color:' + _MX.warn + '">' + y10[y10.length - 1].v.toFixed(2) + '%</b> ' + _mxZtag(_mxZ(y10)) + '</span>' +
-      (y2.length ? '<span>2y <b style="color:' + _MX.blu + '">' + y2[y2.length - 1].v.toFixed(2) + '%</b> ' + _mxZtag(_mxZ(y2)) + '</span>' : "") +
-      '<span>2s10s <b style="color:' + (sp < 0 ? _MX.dn : _MX.up) + '">' + (sp >= 0 ? "+" : "") + sp.toFixed(2) + '</b> ' + (sp < 0 ? "inverted" : "normal") + '</span></div>';
-    out += _mxChart([{ name: "10y", pts: y10, col: _MX.warn }, { name: "2y", pts: y2, col: _MX.blu }], { h: 150, fmt: function (v) { return v.toFixed(2) + "%"; }, fillBetween: [0, 1] });
-    out += _mxNote("Shaded gap = 2s10s curve (green = normal, red = inverted).");
-    // QQQ vs rates: rolling 20-session correlation of QQQ daily % with the 10y's daily change
-    var by = {}; _ptDays().forEach(function (x) { by[x.entry_date] = x; }); var rows = [];
-    for (var i = 1; i < y10.length; i++) { var q = get(by[y10[i].d], "markets.QQQ.pct_change"); if (q !== null && q !== undefined && y10[i].v !== y10[i - 1].v) rows.push({ d: y10[i].d, q: Number(q), r: (y10[i].v - y10[i - 1].v) * 100 }); }
-    var roll = []; for (var j = 19; j < rows.length; j++) { var w = rows.slice(j - 19, j + 1), c = _mxCorr(w.map(function (r) { return r.q; }), w.map(function (r) { return r.r; })); if (c !== null) roll.push({ d: rows[j].d, v: c }); }
-    if (roll.length >= 2) {
-      var cn = roll[roll.length - 1].v, word = cn <= -.5 ? "trading on rates — yields up = QQQ down" : cn <= -.25 ? "some rate sensitivity" : cn >= .25 ? "moving with yields (growth story)" : "not trading on rates right now";
-      out += '<div style="font-size:11px;margin:8px 0 0">Is QQQ trading on rates? <b style="color:' + (cn <= -.5 ? _MX.dn : cn <= -.25 ? _MX.warn : _MX.txt) + '">' + cn.toFixed(2) + '</b> <span style="color:' + _MX.dim + '">' + word + '</span></div>';
-      out += _mxChart([{ name: "corr", pts: roll, col: "#B388FF" }], { h: 90, zero: true, fmt: function (v) { return v.toFixed(2); }, band: [-1, -0.5, "rgba(255,82,82,.07)"] });
-      out += _mxNote("20-session correlation of QQQ's daily % with the 10y's daily change (bp). Below −0.5 (red band) = rates are driving QQQ.");
-    }
-    if (dx.length >= 5) { out += '<div style="font-size:11px;margin:6px 0 0">Dollar index <b>' + dx[dx.length - 1].v.toFixed(2) + '</b> ' + _mxZtag(_mxZ(dx)) + ' <span style="color:' + _MX.dim + '">· ' + _ptStreak(dx, "print").t + '</span></div>' + _mxChart([{ name: "DXY", pts: dx, col: "#26C6DA" }], { h: 80, fmt: function (v) { return v.toFixed(1); } }); }
+    var R = window.__MXR, days = { "1M": 31, "3M": 92, "1Y": 366, "5Y": 1830 }[R], mhp = function (k) { var p = _mhPts(k); return p ? p.map(function (q) { return { d: q[0], v: q[1] }; }) : null; };
+    var y10a = mhp("yield_10y") || _mxSer(function (x) { return get(x, "macro.yield_10y.latest"); }), y2a = mhp("yield_2y") || _mxSer(function (x) { return get(x, "macro.yield_2y.latest"); }), dxa = mhp("dollar") || _mxSer(function (x) { return get(x, "macro.dollar_index.latest"); });
+    if (y10a.length < 5) return "";
+    var cut = function (a) { if (!a.length) return a; var c = new Date(Date.parse(a[a.length - 1].d) - days * 864e5).toISOString().slice(0, 10); return a.filter(function (p) { return p.d >= c; }); };
+    var y10 = cut(y10a), y2 = cut(y2a), dx = cut(dxa), L10 = y10a[y10a.length - 1].v, L2 = y2a.length ? y2a[y2a.length - 1].v : L10, sp = L10 - L2;
+    var inv = 0; for (var i = 0; i < y10.length; i++) { var m2 = y2.filter(function (p) { return p.d === y10[i].d; })[0]; if (m2 && y10[i].v < m2.v) inv++; }
+    var chg = function (a) { return a.length > 1 ? a[a.length - 1].v - a[0].v : 0; };
+    var out = '<div class="p-sep"></div><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div class="p-lbl" style="margin:0">Rates &amp; dollar</div>' + _mxSeg("data-mxr", R, [["1M", "1M"], ["3M", "3M"], ["1Y", "1Y"], ["5Y", "5Y"]]) + '</div>';
+    out += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 2px">' +
+      _mxTile("10-year", '<span style="color:' + _MX.warn + '">' + L10.toFixed(2) + '%</span>', sg2(chg(y10) * 100, 0, " bp over " + R) + " · " + _mxZtag(_mxZ(y10a))) +
+      _mxTile("2-year", '<span style="color:' + _MX.blu + '">' + L2.toFixed(2) + '%</span>', sg2(chg(y2) * 100, 0, " bp over " + R) + " · " + _mxZtag(_mxZ(y2a))) +
+      _mxTile("2s10s curve", '<span style="color:' + (sp < 0 ? _MX.dn : _MX.up) + '">' + sg2(sp * 100, 0, " bp") + '</span>', (sp < 0 ? "inverted" : "normal") + (inv ? " · inverted " + inv + " of " + y10.length + " days in this window" : "")) + '</div>';
+    out += _mxChart([{ name: "10y", pts: y10, col: _MX.warn }, { name: "2y", pts: y2, col: _MX.blu }], { h: 170, fmt: function (v) { return v.toFixed(2) + "%"; }, fillBetween: [0, 1] });
+    out += _mxNote("Shaded gap = the curve: green when 10y is above 2y (normal), red when it's below (inverted — historically a slowdown warning). σ = how far today sits from the 10-year average.");
+    // QQQ vs rates (logged sessions only — QQQ history lives in the logger)
+    var by = {}; _ptDays().forEach(function (x) { by[x.entry_date] = x; }); var lg = _mxSer(function (x) { return get(x, "macro.yield_10y.latest"); }), rows = [];
+    for (var j = 1; j < lg.length; j++) { var q = get(by[lg[j].d], "markets.QQQ.pct_change"); if (q !== null && q !== undefined && lg[j].v !== lg[j - 1].v) rows.push({ d: lg[j].d, q: Number(q), r: (lg[j].v - lg[j - 1].v) * 100 }); }
+    var roll = []; for (var k = 19; k < rows.length; k++) { var w = rows.slice(k - 19, k + 1), c = _mxCorr(w.map(function (r) { return r.q; }), w.map(function (r) { return r.r; })); if (c !== null) roll.push({ d: rows[k].d, v: c }); }
+    if (roll.length >= 2) { var cn = roll[roll.length - 1].v, word = cn <= -.5 ? "trading on rates — yields up = QQQ down" : cn <= -.25 ? "some rate sensitivity" : cn >= .25 ? "moving with yields (growth story)" : "not trading on rates right now";
+      out += '<div style="font-size:11px;margin:10px 0 0">Is QQQ trading on rates? <b style="color:' + (cn <= -.5 ? _MX.dn : cn <= -.25 ? _MX.warn : _MX.txt) + '">' + cn.toFixed(2) + '</b> <span style="color:' + _MX.dim + '">' + word + '</span></div>' +
+        _mxChart([{ name: "corr", pts: roll, col: "#B388FF" }], { h: 100, zero: true, fmt: function (v) { return v.toFixed(2); }, band: [-1, -0.5, "rgba(255,82,82,.08)"], sigma: true }) +
+        _mxNote("20-session correlation of QQQ's daily % with the 10y's daily change. Red band (below −0.5) = rates driving QQQ. Grey band = its usual range."); }
+    if (dx.length >= 5) out += '<div style="font-size:11px;margin:8px 0 0">Dollar (broad index) <b>' + dxa[dxa.length - 1].v.toFixed(2) + '</b> <span style="color:' + _MX.dim + '">' + sg2(chg(dx) / dx[0].v * 100, 1, "% over " + R) + '</span> · ' + _mxZtag(_mxZ(dxa)) + '</div>' + _mxChart([{ name: "USD", pts: dx, col: "#26C6DA" }], { h: 100, fmt: function (v) { return v.toFixed(1); }, sigma: true });
     return out;
   }
+  function sg2(v, d, u) { return (v >= 0 ? "+" : "") + v.toFixed(d) + (u || ""); }
   function _mxCatalyst(e) {
     var hi = get(e, "calendar.us_high_impact", []); if (!hi || !hi.length) return "";
     var out = '<div class="p-sep"></div><div class="p-lbl"><span class="p-blu">Catalyst</span></div>';
@@ -7572,9 +7596,9 @@
     var dv = _mxSer(function (x) { return get(x, "quant.geometry.diversification_volume"); }), ac = _mxSer(function (x) { return get(x, "quant.geometry.avg_correlation"); }), ts = _mxSer(function (x) { return get(x, "quant.geometry.top_eigen_share_pct"); });
     var gm = get(e, "quant.geometry"); if (dv.length < 3 || !ok(gm)) return "";
     var out = '<div class="p-sep"></div><div class="p-lbl">Crowding · are sectors moving as one?</div>';
-    out += _mxChart([{ name: "√det", pts: dv, col: "#FF4FD8", w: 2 }], { h: 100, fmt: function (v) { return v.toFixed(3); }, band: [0, 0.15, "rgba(255,82,82,.08)"] });
+    out += _mxChart([{ name: "√det", pts: dv, col: "#FF4FD8", w: 2 }], { h: 120, fmt: function (v) { return v.toFixed(3); }, band: [0, 0.15, "rgba(255,82,82,.08)"], sigma: true });
     out += _mxNote("√det(G): 1 = sectors independent, 0 = one crowded trade. Red band (&lt;0.15) = collapsed. " + _ptStreak(dv, "session").t + ".");
-    out += _mxChart([{ name: "avg corr", pts: ac, col: _MX.warn }, { name: "top factor %", pts: ts.map(function (p) { return { d: p.d, v: p.v / 100 }; }), col: _MX.blu }], { h: 100, fmt: function (v) { return v.toFixed(2); } });
+    out += _mxChart([{ name: "avg corr", pts: ac, col: _MX.warn }, { name: "top factor %", pts: ts.map(function (p) { return { d: p.d, v: p.v / 100 }; }), col: _MX.blu }], { h: 120, fmt: function (v) { return v.toFixed(2); }, sigma: true });
     out += _mxNote("Average correlation between sectors, and the share of all movement explained by the single biggest driver (0.39 = 39%).");
     var ev = gm.eigenvalues || [], mp = gm.mp_lambda_plus;
     if (ev.length) { var W = 600, Hh = 90, mx = Math.max.apply(null, ev.concat([mp || 0])), bw = (W - 20) / ev.length, g = "", Y = function (v) { return 8 + (1 - v / mx) * (Hh - 24); };
@@ -7593,7 +7617,7 @@
       Object.keys(wk).map(function (r) { return wk[r]; }).sort(function (a, b) { return a.d < b.d ? -1 : 1; }).forEach(function (o) { pts.push(o); });
       var vals = pts.map(function (q) { return q.v; }), pr = vals.length ? Math.round(vals.filter(function (v) { return v < c.nonCommercialNet; }).length / vals.length * 100) : null, po = c.percentOpenInterest || {};
       out += '<div style="font-size:11.5px;color:' + _MX.txt + ';margin:6px 0 2px">' + esc(k.replace(/_/g, " ")) + ' · net <b style="color:' + (c.nonCommercialNet >= 0 ? _MX.up : _MX.dn) + '">' + signed(c.nonCommercialNet, 0) + '</b> <span style="color:' + _MX.dim + '">Δ ' + signed(c.nonCommercialNetChange, 0) + (pr !== null ? " · " + pr + "th percentile of " + vals.length + " weeks" : "") + '</span></div>';
-      if (pts.length >= 2) out += _mxChart([{ pts: pts, bars: true, name: "net" }], { h: 80, zero: true, fmt: function (v) { return Math.abs(v) >= 1000 ? (v / 1000).toFixed(0) + "k" : v.toFixed(0); } });
+      if (pts.length >= 2) out += _mxChart([{ pts: pts, bars: true, name: "net" }], { h: 110, zero: true, sigma: true, fmt: function (v) { return Math.abs(v) >= 1000 ? (v / 1000).toFixed(0) + "k" : v.toFixed(0); } });
       if (has(po.nonCommercialLong) && has(po.nonCommercialShort)) { var L = po.nonCommercialLong, S = po.nonCommercialShort;
         out += '<div style="display:flex;height:10px;border-radius:2px;overflow:hidden;margin:2px 0"><div style="width:' + L + '%;background:' + _MX.up + ';opacity:.7"></div><div style="flex:1;background:#1A1E36"></div><div style="width:' + S + '%;background:' + _MX.dn + ';opacity:.7"></div></div><div style="display:flex;justify-content:space-between;font-size:9.5px;color:' + _MX.dim + '"><span>specs long ' + L + '% of OI</span><span>' + esc(c.read || "") + '</span><span>short ' + S + '%</span></div>'; }
     });
@@ -7607,7 +7631,10 @@
     var rel = function (nm, end, len) { var s = 0, n = 0; for (var i = Math.max(0, end - len + 1); i <= end; i++) { var r = days[i].sectors.rows, avg = r.reduce(function (t, q) { return t + q.pct_change; }, 0) / r.length, q = r.filter(function (z) { return z.sector === nm; })[0]; if (q) { s += q.pct_change - avg; n++; } } return n ? s : null; };
     var E = days.length - 1, P = names.map(function (nm) { var tr = []; for (var k = 4; k >= 0; k--) tr.push({ x: rel(nm, E - k, 20), y: rel(nm, E - k, 5) }); return { nm: nm, tr: tr }; });
     var short = function (nm) { return nm.replace("Communication Services", "Comm Svcs").replace("Consumer Discretionary", "Cons Disc").replace("Consumer Staples", "Staples").replace("Information Technology", "Tech").replace("Real Estate", "Real Est").replace("Health Care", "Health"); };
-    var out = '<div class="p-lbl">Sector rotation map</div>' + _qmap(P.map(function (p) { return { nm: p.nm, lab: short(p.nm), tr: p.tr }; }), { h: 420, xName: "20-day vs avg sector", yName: "5-day vs avg sector" });
+    var out = '<div class="p-lbl">Sector rotation map</div>' + _qmap(P.map(function (p) { return { nm: p.nm, lab: short(p.nm), tr: p.tr }; }), { h: 480, xName: "20-day vs avg sector", yName: "5-day vs avg sector" });
+    out += '<table style="width:100%;border-collapse:collapse;font-size:10.5px;margin:2px 0 8px"><tr style="color:' + _MX.dim + '"><th style="text-align:left;font-weight:400">sector</th><th style="text-align:right;font-weight:400">20 days vs avg</th><th style="text-align:right;font-weight:400">5 days vs avg</th><th style="text-align:right;font-weight:400">5 days ago → now</th></tr>' +
+      P.map(function (p) { var a = p.tr[p.tr.length - 1], b0 = p.tr[0]; return a && a.x !== null ? { p: p, a: a, b0: b0 } : null; }).filter(Boolean).sort(function (x, y) { return y.a.x - x.a.x; }).map(function (o) { var f = function (v) { return '<span style="color:' + (v >= 0 ? _MX.up : _MX.dn) + '">' + (v >= 0 ? "+" : "") + v.toFixed(2) + '%</span>'; };
+        var dir = o.b0 && o.b0.x !== null ? (o.a.y > o.b0.y ? "▲ gaining" : "▼ fading") : ""; return '<tr style="border-top:1px solid #1A1E36"><td style="padding:3px 0;color:' + _MX.txt + '">' + esc(short(o.p.nm)) + '</td><td style="text-align:right">' + f(o.a.x) + '</td><td style="text-align:right">' + f(o.a.y) + '</td><td style="text-align:right;color:' + (dir.charAt(0) === "▲" ? _MX.up : _MX.dn) + '">' + dir + '</td></tr>'; }).join("") + '</table>';
     out += _mxNote("Right = beating the average sector over 20 sessions; up = beating it over the last 5. The tail shows the last 5 days of travel: sectors usually rotate clockwise (improving → leading → weakening → lagging).");
     var rows = days[E].sectors.rows.slice().sort(function (a, b) { return b.pct_change - a.pct_change; }), mm = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.pct_change); })) || 1;
     out += '<div class="p-lbl" style="margin-top:8px">Today by sector</div>' + rows.map(function (r) { var w = Math.abs(r.pct_change) / mm * 50, up = r.pct_change >= 0;
@@ -7631,6 +7658,57 @@
     return '<div class="p-sep"></div><div class="p-lbl">Event days · QQQ\'s average move</div>' + out.map(function (o) { return bar(o.t, o.a, o.n, o.x >= 1.3 ? _MX.warn : o.x >= 1 ? _MX.txt : _MX.blu, o.x); }).join("") + bar("Normal days", nAvg, norm.length, _MX.dim) +
       _mxNote("Average size of QQQ's close-to-close move (up or down) on days with that US release, vs days with no big release, across " + Object.keys(qm).length + " logged sessions. Small samples — treat as a guide.");
   }
+  // ===== Nov 16: 10-year macro history (FRED) — Month / Quarter / Year views =====
+  window.__MH = window.__MH || null;
+  fetch("macro_history.json?t=" + Date.now()).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j && j.series) { window.__MH = j; if (TAB === "dash") renderAllWidgets(true); } }).catch(function () {});
+  window.__MXP = (function () { try { var v = localStorage.getItem("md:mxp"); return /^[MQY]$/.test(v) ? v : "M"; } catch (x) { return "M"; } })();
+  window.__MXR = (function () { try { var v = localStorage.getItem("md:mxr"); return /^(1M|3M|1Y|5Y)$/.test(v) ? v : "1Y"; } catch (x) { return "1Y"; } })();
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest && ev.target.closest("[data-mxp],[data-mxr]"); if (!b) return;
+    if (b.hasAttribute("data-mxp")) { window.__MXP = b.getAttribute("data-mxp"); try { localStorage.setItem("md:mxp", window.__MXP); } catch (x) {} }
+    else { window.__MXR = b.getAttribute("data-mxr"); try { localStorage.setItem("md:mxr", window.__MXR); } catch (x) {} }
+    renderAllWidgets(true, b);
+  });
+  function _mhPts(key) { var s = window.__MH && window.__MH.series && window.__MH.series[key]; return s ? s.points : null; }
+  function _mhMonthly(key) {   // month → value (last obs of the month; daily series averaged)
+    var p = _mhPts(key); if (!p) return null; var by = {}, cnt = {};
+    p.forEach(function (q) { var m = q[0].slice(0, 7); by[m] = (by[m] || 0) + q[1]; cnt[m] = (cnt[m] || 0) + 1; });
+    return Object.keys(by).sort().map(function (m) { return { k: m, v: by[m] / cnt[m] }; });
+  }
+  function _mhAgg(mon, mode, how) {   // how: "pct" (price index change), "diff" (level change, e.g. payrolls), "avg" (level)
+    var lab = function (k) { var y = k.slice(2, 4); if (mode === "Y") return k.slice(0, 4); if (mode === "Q") return k.slice(5) + " " + y; return _MXN[+k.slice(5, 7)] + " " + y; };
+    var out = [];
+    if (mode === "M") { for (var i = Math.max(1, mon.length - 24); i < mon.length; i++) { var a = mon[i - 1].v, b = mon[i].v; out.push({ k: mon[i].k, lab: lab(mon[i].k), v: how === "pct" ? (b / a - 1) * 100 : how === "diff" ? b - a : b }); } return out; }
+    var bucket = function (k) { return mode === "Q" ? k.slice(0, 4) + "-Q" + (Math.floor((+k.slice(5, 7) - 1) / 3) + 1) : k.slice(0, 4); };
+    var g = {}, order = []; mon.forEach(function (m) { var bk = bucket(m.k); if (!g[bk]) { g[bk] = []; order.push(bk); } g[bk].push(m); });
+    for (var j = 1; j < order.length; j++) { var cur = g[order[j]], prev = g[order[j - 1]], v;
+      if (how === "pct") { var c = cur[cur.length - 1].v, pv = prev[prev.length - 1].v; v = mode === "Q" ? (Math.pow(c / pv, 4) - 1) * 100 : (c / pv - 1) * 100; }
+      else if (how === "diff") v = (cur[cur.length - 1].v - prev[prev.length - 1].v) / cur.length;   // average monthly change in the period
+      else v = cur.reduce(function (s, m) { return s + m.v; }, 0) / cur.length;
+      out.push({ k: order[j], lab: lab(order[j]), v: v, partial: mode === "Q" ? cur.length < 3 : cur.length < 12 }); }
+    return out.slice(mode === "Q" ? -12 : -10);
+  }
+  // bar chart with value labels, zero line, optional target line; o: fmt, target, targetLab, good: "low"|"high"|null, line (draw as line instead of bars)
+  function _mxBars(items, o) {
+    o = o || {}; if (!items || !items.length) return '<div class="p-val-sm p-dim" style="font-size:10px">loading history…</div>';
+    var W = 600, Hh = o.h || 170, pl = 6, pr = 52, pt = 18, pb = 22, vals = items.map(function (i) { return i.v; }).concat(o.line ? [] : [0]); if (o.target !== undefined) vals.push(o.target);
+    var hi = Math.max.apply(null, vals), lo = Math.min.apply(null, vals), pd = (hi - lo) * .12 || 1; hi += pd; lo -= o.line ? pd : (lo < 0 ? pd : 0);
+    var n = items.length, step = (W - pl - pr) / n, X = function (i) { return pl + step * (i + .5); }, Y = function (v) { return pt + (hi - v) / (hi - lo) * (Hh - pt - pb); }, fmt = o.fmt || function (v) { return v.toFixed(2); }, g = "";
+    for (var t = 0; t <= 2; t++) { var v = lo + (hi - lo) * t / 2; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="' + _MX.grid + '"/><text x="' + (W - pr + 4) + '" y="' + (Y(v) + 3).toFixed(1) + '" fill="' + _MX.dim + '" font-size="9">' + fmt(v) + '</text>'; }
+    if (!o.line && lo < 0) g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="rgba(255,255,255,.25)"/>';
+    var col = function (v) { if (o.good === "low") return o.target !== undefined ? (v > o.target * 1.5 ? _MX.dn : v > o.target ? _MX.warn : _MX.up) : (v > 0 ? _MX.dn : _MX.up); if (o.good === "high") return v >= 0 ? _MX.up : _MX.dn; return _MX.blu; };
+    var showAll = n <= 14;
+    if (o.line) { g += '<path d="' + items.map(function (it, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(it.v).toFixed(1); }).join("") + '" fill="none" stroke="' + _MX.blu + '" stroke-width="2"/>'; }
+    items.forEach(function (it, i) { var y = Y(it.v), c = col(it.v);
+      if (o.line) g += '<circle cx="' + X(i).toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.6" fill="' + c + '"/>';
+      else { var y0 = Y(Math.max(lo, 0)); g += '<rect x="' + (X(i) - step * .36).toFixed(1) + '" y="' + Math.min(y, y0).toFixed(1) + '" width="' + (step * .72).toFixed(1) + '" height="' + Math.max(1, Math.abs(y0 - y)).toFixed(1) + '" rx="1.5" fill="' + c + '" opacity="' + (it.partial ? .35 : .75) + '"/>'; }
+      g += '<rect x="' + (X(i) - step / 2).toFixed(1) + '" y="' + pt + '" width="' + step.toFixed(1) + '" height="' + (Hh - pt - pb) + '" fill="transparent"><title>' + esc(it.lab + " · " + fmt(it.v) + (it.partial ? " (period not finished)" : "")) + '</title></rect>';
+      if (showAll || i === n - 1) g += '<text x="' + X(i).toFixed(1) + '" y="' + (it.v >= 0 || o.line ? y - 5 : y + 11).toFixed(1) + '" fill="' + c + '" font-size="' + (n > 10 ? 8.5 : 10) + '" text-anchor="middle" font-weight="600">' + fmt(it.v) + '</text>';
+      if (showAll || i % Math.ceil(n / 8) === 0 || i === n - 1) g += '<text x="' + X(i).toFixed(1) + '" y="' + (Hh - 6) + '" fill="' + _MX.dim + '" font-size="9" text-anchor="middle">' + esc(it.lab) + '</text>'; });
+    if (o.target !== undefined) g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(o.target).toFixed(1) + '" y2="' + Y(o.target).toFixed(1) + '" stroke="' + _MX.warn + '" stroke-dasharray="5 4"/><text x="' + (pl + 4) + '" y="' + (Y(o.target) - 4).toFixed(1) + '" fill="' + _MX.warn + '" font-size="9">' + esc(o.targetLab || "target") + '</text>';
+    return '<svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto;display:block;margin-top:6px">' + g + '</svg>';
+  }
+  function _mxSeg(attr, cur, opts) { return '<div style="display:inline-flex;border:1px solid #262C4D;border-radius:7px;overflow:hidden">' + opts.map(function (o) { var on = o[0] === cur; return '<button type="button" ' + attr + '="' + o[0] + '" style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.06em;padding:5px 12px;border:0;cursor:pointer;background:' + (on ? "rgba(255,79,216,.16)" : "transparent") + ';color:' + (on ? "#FF4FD8" : "#7A82AA") + '">' + o[1] + '</button>'; }).join("") + '</div>'; }
   // ===== Nov 16: Watchlist deep view =====
   var _WL_SKIP = ["QQQM", "NDX", "UUP", "SCHX"];   // near-copies of QQQ / DXY / SPY — left out of the comparison charts
   function _wlSeries() {   // per ticker: [{d, last, pct}] one per session

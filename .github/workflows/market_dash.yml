@@ -56,11 +56,16 @@ jobs:
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET }}
         run: python market_dash_fetch.py
 
+      - name: Refresh 10-year macro history (FRED public CSV, no key)
+        working-directory: market-dash
+        continue-on-error: true
+        run: python macro_history.py
+
       - name: Commit new data back to repo
         run: |
           git config user.name "market-dash-bot"
           git config user.email "actions@github.com"
-          git add market-dash/data market-dash/history.js yama-dashboard/dist/history_data.json
+          git add market-dash/data market-dash/history.js yama-dashboard/dist/history_data.json market-dash/macro_history.json
           git commit -m "Market dash $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
           # Abort any stuck rebase left over from a previous attempt
           git rebase --abort 2>/dev/null || true
