@@ -886,7 +886,7 @@
   // Overlay-chart UI state. mode: "dxy" (everything vs the dollar) or "rebase".
   // hidden: symbols toggled off. big: fullscreen. Survives the 60s live redraw.
   window.DASHV = (function () { try { return localStorage.getItem("md:dashv") === "watch" ? "watch" : "macro"; } catch (x) { return "macro"; } })();
-  var CHART = { mode: "dxy", hidden: {}, big: false, height: 480 };   // Nov 16: taller default (the chart sits in a narrow column)
+  var CHART = { mode: "dxy", hidden: {}, big: false, height: 300 };   // Nov 16: Watchlist page is full width, so a moderate default
   var TAB = "nasdaq";   // in-page tab: opens on Nasdaq (Nov 15 order: Nasdaq · Performance · Strategy · Replay · Research)
   try {
     var _st = localStorage.getItem("md:tab");
