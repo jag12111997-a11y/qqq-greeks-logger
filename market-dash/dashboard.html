@@ -556,6 +556,9 @@
   }
 
   .p-panel.p-wide { grid-column:1 / -1; }
+  .p-page.p-two { grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); }
+  .p-page.p-one { grid-template-columns:minmax(0,1fr); }
+  @media (max-width:620px) { .p-page.p-two { grid-template-columns:1fr; } }
   .p-panel.p-wide td, .p-panel.p-wide th { white-space:nowrap; }
   .p-panel {
     background:#0B0D17;
@@ -882,6 +885,7 @@
 
   // Overlay-chart UI state. mode: "dxy" (everything vs the dollar) or "rebase".
   // hidden: symbols toggled off. big: fullscreen. Survives the 60s live redraw.
+  window.DASHV = (function () { try { return localStorage.getItem("md:dashv") === "watch" ? "watch" : "macro"; } catch (x) { return "macro"; } })();
   var CHART = { mode: "dxy", hidden: {}, big: false, height: 480 };   // Nov 16: taller default (the chart sits in a narrow column)
   var TAB = "nasdaq";   // in-page tab: opens on Nasdaq (Nov 15 order: Nasdaq · Performance · Strategy · Replay · Research)
   try {
@@ -6242,7 +6246,7 @@
   // In-page tab bar. The former cockpit tab is now part of Nasdaq itself.
   function tabBar() {
     function tab(id, label) {
-      var on = TAB === id;
+      var on = id === "watch" ? (TAB === "dash" && window.DASHV === "watch") : id === "dash" ? (TAB === "dash" && window.DASHV !== "watch") : TAB === id;
       return '<span data-tab="' + id + '" role="button" style="cursor:pointer;' +
         'padding:8px 18px;margin-right:6px;border:1px solid var(--line);border-bottom:none;' +
         'border-radius:9px 9px 0 0;font:600 13px ui-monospace,Menlo,monospace;' +
@@ -6252,7 +6256,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("nasdaq", "QQQ") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("dash", "Research") + "</div>";
+      tab("nasdaq", "QQQ") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("dash", "Macro Outlook") + tab("watch", "Watchlist") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
@@ -8582,9 +8586,12 @@
     // Nov 16: watchlist moved out of the right column to full width under all three (it made that column 3× longer and crushed the table)
     var _wlRow = (function () { var w = secWatchlist(e); return w ? '<div class="p-panel p-wide">' + w + '</div>' : ""; })();
 
-    var _dashBody = '<div class="p-page">' + _pipeHeader +
-      _leftCol + _centerCol + _rightCol + _wlRow +
-      _pipeFooter + '</div>';
+    // Nov 16: Macro Outlook = economy, regime, Fed, COT, sectors, news (two columns); Watchlist = every ticker section
+    var _dashBody = window.DASHV === "watch"
+      ? '<div class="p-page p-one">' + _pipeHeader.replace("Cross-Asset Research · <em>Pipeline v2</em>", "Watchlist · <em>tickers, rotation, correlations</em>") +
+        _centerCol + _wlRow + _pipeFooter + '</div>'
+      : '<div class="p-page p-two">' + _pipeHeader.replace("Cross-Asset Research · <em>Pipeline v2</em>", "Macro Outlook · <em>economy, regime, Fed, sectors</em>") +
+        _leftCol + _rightCol + _pipeFooter + '</div>';
 
     app.innerHTML = _header + tabBar() +
       (TAB === "replay"
@@ -8656,6 +8663,8 @@
     var t = (ev.target && ev.target.closest) ? ev.target.closest("[data-tab]") : null;
     if (!t) return;
     var id = t.getAttribute("data-tab");
+    // Nov 16: Research split → Macro Outlook ("dash") + Watchlist ("watch"); both live on the pipeline page
+    if (id === "watch" || id === "dash") { var dv = id === "watch" ? "watch" : "macro"; if (TAB === "dash" && window.DASHV === dv) return; window.DASHV = dv; try { localStorage.setItem("md:dashv", dv); } catch (e6) {} id = "dash"; TAB = ""; }
     if (id && id !== TAB) {
       TAB = id;
       try { localStorage.setItem("md:tab", id); } catch (e5) {}
