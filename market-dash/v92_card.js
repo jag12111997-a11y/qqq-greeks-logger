@@ -220,6 +220,7 @@
     var weekSide = c.week > 0 ? "C" : "P", fwSide = c.week > 0 ? "P" : "C";
     var name = function (s) { return s === "C" ? "calls" : "puts"; };
     vm.map = { yday: c.day > 0 ? "green" : "red", week: c.week > 0 ? "up" : "down", trapSide: sideDay, trapLine: trapLine, fwSide: fwSide, va: D.va };
+    vm.lv = { PDH: c.PDH, PDL: c.PDL, PDC: c.PDC, sideDay: sideDay, weekSide: weekSide, fwSide: fwSide, gapLvl: weekSide === "C" ? c.PDC + 2.5 : c.PDC - 2.5, now: null };
     if (X.vix != null) {
       vm.vix = X.vix;
       if (c.day < 0 && X.vix >= 16.5) vm.vixNote = "VIX " + p2(X.vix) + " after a red day: in the backtest QQQ was up by 9:00 on 9 of 12 such mornings (bounce). Observation, not a rule.";
@@ -238,6 +239,7 @@
     if (hasBars) { try { R = V92.runDay(D, opt); } catch (e) { R = null; vm.err = String(e); } }
     vm.blocked = (R && R.skipped) || [];
     var lastBar = D.st.length - 1, close = hasBars ? D.st[lastBar][0] : null;
+    vm.lv.now = close; vm.lv.vbDay = vbDay;
     var vbTxt = vbDay ? "calls after 7:30 (red yesterday · VIX " + p2(X.vix) + ")" : "off";
     var fpTxt = (sideDay === "C" ? "calls if QQQ pokes below " + p2(c.PDL) : "puts if QQQ pokes above " + p2(c.PDH)) + " and fails (1×)";
     // ---- the map lines (fixed for the day) ----
@@ -548,6 +550,72 @@
     if (vm.hivErr) h += '<div class="warn">High-IV layer error: ' + esc(vm.hivErr) + "</div>";
     return h;
   }
+  // ===== Nov 16: visual details (chips, price ladder, time strip, high-IV gauge, paper-log tiles) =====
+  var VC = { up: "#2fbf6d", dn: "#ff6b6b", gold: "#e0ab45", blu: "#7aa2ff", dim: "#8a7fb8", txt: "#f0e9ff", line: "#2a1a4a", bg: "#120c1c" };
+  function chip(t, c, tip) { return '<span' + (tip ? ' title="' + esc(tip) + '"' : "") + ' style="display:inline-block;padding:3px 9px;border-radius:999px;border:1px solid ' + (c || VC.line) + '55;color:' + (c || VC.txt) + ';background:' + (c || "#ffffff") + '14;font-size:11.5px;margin:0 6px 6px 0;white-space:nowrap">' + t + "</span>"; }
+  function shortTxt(s) { var t = String(s).split(" (")[0].split(" · ")[0].trim(); return t.length > 46 ? t.slice(0, 44) + "…" : t; }
+  function ladderHtml(vm) {
+    var L = vm.lv; if (!L || !vm.map) return "";
+    var pts = [], add = function (v, lab, col, dash, above) { if (v != null && isFinite(v)) pts.push({ v: v, lab: lab, col: col, dash: dash, above: above }); };
+    var va = vm.map.va || {}, side = L.sideDay === "C" ? "calls" : "puts", sc = L.sideDay === "C" ? VC.up : VC.dn;
+    add(vm.map.trapLine, "TRAP " + (L.sideDay === "C" ? "↑ calls below " : "↓ puts above ") + p2(vm.map.trapLine), sc, false, true);
+    add(L.sideDay === "C" ? L.PDL : L.PDH, "failed poke " + p2(L.sideDay === "C" ? L.PDL : L.PDH), VC.gold, true, false);
+    add(L.gapLvl, "gap-and-go " + (L.weekSide === "C" ? "↑ open ≥ " : "↓ open ≤ ") + p2(L.gapLvl), VC.blu, true, true);
+    add(L.PDC, "yday close " + p2(L.PDC), VC.dim, true, false);
+    if (L.now != null) add(L.now, "QQQ now " + p2(L.now), VC.txt, false, false);
+    var vs = [va.yval, va.yvah].concat(pts.map(function (p) { return p.v; })).filter(function (v) { return v != null && isFinite(v); });
+    if (vs.length < 2) return "";
+    var lo = Math.min.apply(null, vs), hi = Math.max.apply(null, vs), pd = (hi - lo) * .08 || 1; lo -= pd; hi += pd;
+    var W = 600, H = 132, X = function (v) { return 10 + (v - lo) / (hi - lo) * (W - 20); }, axis = 70, g = "";
+    if (va.yval != null && va.yvah != null) g += '<rect x="' + X(va.yval).toFixed(1) + '" y="' + (axis - 16) + '" width="' + (X(va.yvah) - X(va.yval)).toFixed(1) + '" height="32" rx="4" fill="#7aa2ff1c" stroke="#7aa2ff55"/><text x="' + ((X(va.yval) + X(va.yvah)) / 2).toFixed(1) + '" y="' + (axis + 4) + '" fill="#7aa2ffaa" font-size="10" text-anchor="middle">yesterday\'s value area ' + p2(va.yval) + "–" + p2(va.yvah) + "</text>";
+    g += '<line x1="10" x2="' + (W - 10) + '" y1="' + axis + '" y2="' + axis + '" stroke="#ffffff22"/>';
+    var up = [], dn = [];
+    pts.sort(function (a, b) { return a.v - b.v; }).forEach(function (p) {
+      var x = X(p.v), row = p.above ? up : dn, lvl = 0; while (row.some(function (q) { return q.l === lvl && Math.abs(q.x - x) < 150; })) lvl++; row.push({ x: x, l: lvl });
+      var ty = p.above ? axis - 22 - lvl * 14 : axis + 30 + lvl * 14, anchor = x > W - 130 ? "end" : x < 130 ? "start" : "middle";
+      g += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + (axis - 16) + '" y2="' + (axis + 16) + '" stroke="' + p.col + '" stroke-width="' + (p.dash ? 1.5 : 2.5) + '"' + (p.dash ? ' stroke-dasharray="3 3"' : "") + '/>' +
+        (p.lab.indexOf("QQQ now") === 0 ? '<circle cx="' + x.toFixed(1) + '" cy="' + axis + '" r="5" fill="' + VC.txt + '"/>' : "") +
+        '<text x="' + x.toFixed(1) + '" y="' + ty + '" fill="' + p.col + '" font-size="10.5" font-weight="600" text-anchor="' + anchor + '">' + esc(p.lab) + "</text>";
+    });
+    return '<svg viewBox="0 0 ' + W + " " + H + '" style="width:100%;height:auto;display:block;background:' + VC.bg + ';border:1px solid ' + VC.line + ';border-radius:8px">' + g + "</svg>";
+  }
+  function timeHtml(vm) {
+    var L = vm.lv || {}, ev = [[0, "6:30 open", VC.dim], [1, "6:31 bell put", VC.gold], [30, "7:00 value check", VC.blu], [47, "7:17 window", VC.dim], [60, "7:30 bounce / fade", L.vbDay ? VC.up : VC.blu], [120, "8:30 no new entries", VC.dim], [150, "9:00 done", VC.dim]];
+    var W = 600, H = 54, X = function (m) { return 10 + m / 150 * (W - 20); }, g = '<line x1="10" x2="' + (W - 10) + '" y1="20" y2="20" stroke="#ffffff22" stroke-width="2"/>', row = [];
+    if (vm.atM != null && vm.atM >= 0 && vm.atM <= 150) g += '<rect x="10" y="17" width="' + (X(vm.atM) - 10).toFixed(1) + '" height="6" rx="3" fill="#e0ab4555"/>';
+    ev.forEach(function (e) { var x = X(e[0]), l = 0; while (row.some(function (q) { return q.l === l && Math.abs(q.x - x) < 95; })) l++; row.push({ x: x, l: l });
+      g += '<circle cx="' + x.toFixed(1) + '" cy="20" r="4" fill="' + e[2] + '"/><text x="' + x.toFixed(1) + '" y="' + (36 + l * 12) + '" fill="' + e[2] + '" font-size="9.5" text-anchor="' + (x < 40 ? "start" : x > W - 40 ? "end" : "middle") + '">' + esc(e[1]) + "</text>"; });
+    return '<svg viewBox="0 0 ' + W + " " + H + '" style="width:100%;height:auto;display:block">' + g + "</svg>";
+  }
+  function setupsHtml(vm) {
+    var col = function (name, t) { if (/^off/.test(t)) return "#6b5f8f"; if (/^Trap/.test(name)) return (vm.lv && vm.lv.sideDay === "C") ? VC.up : VC.dn; if (/Options/.test(name)) return VC.gold; return /calls/.test(t) ? VC.up : /puts/.test(t) ? VC.dn : VC.blu; };
+    return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px">' + vm.lines.map(function (l) { var c = col(l[0], l[1]), size = (l[1].match(/\b[123]×/) || [""])[0];
+      return '<div title="' + esc(l[0] + ": " + l[1]) + '" style="border:1px solid ' + c + '44;border-left:3px solid ' + c + ';border-radius:7px;padding:6px 8px;background:' + VC.bg + '"><div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.08em;color:' + c + '"><b>' + esc(l[0].toUpperCase()) + "</b>" + (size ? "<span>" + size + "</span>" : "") + '</div><div style="font-size:11.5px;color:' + (/^off/.test(l[1]) ? "#6b5f8f" : VC.txt) + ';margin-top:2px">' + esc(shortTxt(l[1])) + "</div></div>"; }).join("") + "</div>";
+  }
+  function hivVisual(vm) {
+    var L = vm.hiv; if (!L && !vm.hivErr) return "";
+    var pc = function (v) { return v == null ? "—" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%"; }, n = L && L.night, h = '<div class="hiv"><div class="top"><span class="hl">HIGH-IV LAYER</span><span class="sp"></span>';
+    if (L && !L.pre) h += chip("IV " + (L.ivNow == null ? "?" : Math.round(L.ivNow * 100) + "%") + (L.on ? " · ON" : " · off"), L.on ? VC.up : "#6b5f8f", "Layer trades only when IV is over 35%");
+    h += "</div><div>";
+    if (n) { h += chip("night " + pc(n.nightPct), n.nightPct < 0 ? VC.dn : VC.up, "after-hours + overnight move"); if (n.lastPct != null) h += chip("6:00→open " + pc(n.lastPct), n.lastPct < 0 ? VC.dn : VC.up); if (n.gapPct != null) h += chip("gap " + pc(n.gapPct), n.gapPct < 0 ? VC.dn : VC.up); }
+    if (L && L.lean) h += chip("lean: " + shortTxt(L.lean.txt), L.lean.side === "P" ? VC.dn : L.lean.side === "C" ? VC.up : VC.dim, L.lean.txt + " · bot trades with the lean: 74% wins, against: 60%");
+    h += "</div>";
+    if (L && L.odds) { var p = L.odds.pct, mx = Math.max(p, 15);
+      h += '<div title="' + esc(L.odds.why) + '" style="font-size:11px;margin-top:2px">crash odds today <b style="color:' + (p > 3.4 * 2 ? VC.dn : p > 3.4 ? VC.gold : VC.up) + '">' + p + '%</b> <span style="color:' + VC.dim + '">vs normal 3.4% · ' + esc(shortTxt(L.odds.why)) + '</span>' +
+        '<div style="position:relative;height:10px;background:#ffffff0c;border-radius:5px;margin-top:4px"><div style="position:absolute;left:0;top:0;bottom:0;width:' + (p / mx * 100).toFixed(1) + '%;background:' + (p > 6.8 ? VC.dn : p > 3.4 ? VC.gold : VC.up) + ';opacity:.75;border-radius:5px"></div><div style="position:absolute;top:-3px;bottom:-3px;left:' + (3.4 / mx * 100).toFixed(1) + '%;border-left:2px solid ' + VC.txt + '"></div></div></div>'; }
+    if (L && !L.pre) { var b = L.bell || {}, pp = L.pop || {};
+      h += "<div>" + chip("bell put: " + (b.state === "fired" ? "FIRED 6:31" : shortTxt(b.txt || b.state || "—")), b.state === "fired" ? VC.dn : "#6b5f8f", b.txt || "") + chip("pop put: " + (pp.state === "fired" ? "fired" : pp.state === "watching" ? (L.on ? "watching > " + q2(pp.level) : "waits for IV > 35%") : pp.state === "done" ? "window over" : shortTxt(pp.txt || pp.state || "—")), pp.state === "fired" ? VC.dn : "#6b5f8f", "Pop put: $1.50 over VWAP and +$1.50 in 15 min, 6:50–8:29") + "</div>"; }
+    else if (L && L.pre) h += '<div>' + chip("bell put decided 6:31", VC.gold, "needs QQQ down 0.15%+ from 6:00 to the open after a red night, and IV over 35%") + chip(n && n.nightPct < 0 ? "✓ red night" : "✗ red night", n && n.nightPct < 0 ? VC.up : "#6b5f8f") + chip("? QQQ −0.15% into open", VC.dim) + chip("? IV > 35%", VC.dim) + "</div>";
+    return h + "</div>";
+  }
+  function metersHtml(vm) {
+    var M = vm.meter; if (!M) return "";
+    var tile = function (t, big, sub, c) { return '<div style="border:1px solid ' + VC.line + ';border-radius:8px;padding:7px 9px;background:' + VC.bg + '"><div style="font-size:9.5px;letter-spacing:.1em;color:' + VC.dim + '">' + t + '</div><div style="font-size:16px;font-weight:700;color:' + c + '">' + big + '</div><div style="font-size:10px;color:' + VC.dim + '">' + sub + "</div></div>"; }, out = "";
+    if (M.v95All) out += tile("LAST " + M.n + " MORNINGS", usd(M.v95), "all " + usd(M.v95All.usd_sized) + (M.v95Fwd && M.v95Fwd.mornings ? " · since Nov 2 " + usd(M.v95Fwd.usd_sized) : ""), M.v95 >= 0 ? VC.up : VC.dn);
+    if (M.optAll) out += tile("OPTIONS", usd(M.optAll.addons_usd), M.optAll.addons + " extra trades · card + options " + usd(M.optAll.total_usd), M.optAll.addons_usd >= 0 ? VC.up : VC.dn);
+    if (M.hiv) out += tile("HIGH-IV LAYER", usd(M.hiv.usd), M.hiv.trades + " trades · everything " + usd(M.hiv.total_usd), M.hiv.usd >= 0 ? VC.up : VC.dn);
+    return out ? '<div style="font-size:9.5px;letter-spacing:.1em;color:' + VC.dim + '">PAPER LOG</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px">' + out + "</div>" : "";
+  }
   function render(el, vm) { el.innerHTML = build(vm); }
   function build(vm) {
     var pill = { buy: ["BUY", "buy"], sell: ["SELL NOW", "sell"], "in": ["IN TRADE", "in"], done: ["DONE", ""], recap: ["RECAP", ""], reentry: ["RE-ENTRY WATCH", ""],
@@ -570,18 +638,17 @@
       " · total " + usd(vm.optPnl) + "</div>";
     try { h += hivRestHtml(vm); } catch (e) {}
     h += '<details class="more"' + (root.__v92more ? " open" : "") + ' ontoggle="window.__v92more=this.open"><summary>details · setups, map, high-IV layer, paper log</summary><div class="morein">';
-    if (vm.map) h += '<div class="sub">Yesterday ' + vm.map.yday + " · last week " + vm.map.week + " · value area " + p2(vm.map.va.yval) + "–" + p2(vm.map.va.yvah) + (vm.vix != null ? " · VIX yesterday " + p2(vm.vix) : "") + "</div>";
-    if (vm.lines.length) h += '<div class="lines">' + vm.lines.map(function (l) { return "<b>" + esc(l[0]) + "</b><span>" + esc(l[1]) + "</span>"; }).join("") + "</div>";
+    if (vm.map) h += "<div>" + chip("yesterday " + (vm.map.yday === "red" ? "▼ red" : "▲ green"), vm.map.yday === "red" ? VC.dn : VC.up) + chip("week " + (vm.map.week === "up" ? "▲ up" : "▼ down"), vm.map.week === "up" ? VC.up : VC.dn) + chip("value area " + p2(vm.map.va.yval) + "–" + p2(vm.map.va.yvah), VC.blu) + (vm.vix != null ? chip("VIX " + p2(vm.vix), vm.vix >= 20 ? VC.gold : VC.dim) : "") + "</div>";
+    try { h += ladderHtml(vm); } catch (e) {}
+    try { h += timeHtml(vm); } catch (e) {}
+    if (vm.lines.length) h += setupsHtml(vm);
     if (vm.watch && vm.stage !== "recap") h += '<div class="watch">' + esc(vm.watch) + "</div>";
     if (vm.optErr) h += '<div class="warn">Options error: ' + esc(vm.optErr) + "</div>";
-    if (vm.bf && /^(no|nodata)$/.test(vm.bf.state)) h += '<div class="ctx">Big fish: ' + esc(vm.bf.txt) + "</div>";
-    try { h += hivHtml(vm); } catch (e) { h += '<div class="warn">High-IV layer display error</div>'; }
-    if (vm.meter && vm.meter.hiv) h += '<div class="closed">Layer (paper log): ' + vm.meter.hiv.trades + " trades " + usd(vm.meter.hiv.usd) + " · card + options + layer " + usd(vm.meter.hiv.total_usd) + "</div>";
-    if (vm.meter) h += (vm.meter.v95All ? '<div class="closed">Last ' + vm.meter.n + ' mornings (v9.5, paper log): <span class="' + (vm.meter.v95 >= 0 ? "up" : "dn") + '">' + usd(vm.meter.v95) + '</span> · all ' + usd(vm.meter.v95All.usd_sized) + ' (1 contract ' + usd(vm.meter.v95All.usd_1ct) + ')' +
-        (vm.meter.v95Fwd && vm.meter.v95Fwd.mornings ? ' · since Nov 2: ' + usd(vm.meter.v95Fwd.usd_sized) : '') + '</div>' : '') +
-      (vm.meter.optAll ? '<div class="closed">Options (paper log): ' + vm.meter.optAll.addons + ' extra trades ' + usd(vm.meter.optAll.addons_usd) + ' · card + options ' + usd(vm.meter.optAll.total_usd) +
-        (vm.meter.optFwd && vm.meter.optFwd.addons ? ' · forward: ' + usd(vm.meter.optFwd.addons_usd) : '') + '</div>' : '');
-    h += '<div class="ctx">' + (vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "") + (HIVL() ? " · + high-IV layer" : "") + (BFL() ? " · + big fish" : "")) + ' · ' + (vm.pull === "on" ? "live pull (~15 s) · " : vm.pull === "fallback" ? "live pull unavailable, using the logger copy · " : "") + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div></details></div>";
+    if (vm.bf && /^(no|nodata)$/.test(vm.bf.state)) h += "<div>" + chip("big fish: " + shortTxt(vm.bf.txt), VC.dim, vm.bf.txt) + "</div>";
+    try { h += hivVisual(vm); } catch (e) { h += '<div class="warn">High-IV layer display error</div>'; }
+    try { h += metersHtml(vm); } catch (e) {}
+    var rulesTxt = vm.v95 === false ? "v9.4 rules (v9.5 extras off: your lines/VWAP missing)" : "v9.5 rules: v9.2 setups + VIX bounce + 3-tick trail + failed poke (B) · 3× when your lines agree" + (OPTM() ? " · + options" : "") + (HIVL() ? " · + high-IV layer" : "") + (BFL() ? " · + big fish" : "");
+    h += '<div class="ctx" title="' + esc(rulesTxt) + '">' + (vm.v95 === false ? "v9.4 rules (extras off)" : "v9.5 rules ⓘ") + ' · ' + (vm.pull === "on" ? "live pull (~15 s) · " : vm.pull === "fallback" ? "live pull unavailable, using the logger copy · " : "") + (vm.replay ? "REPLAY of " + vm.day + " at " + clock(vm.atM) : (vm.stage !== "offday" && vm.atM >= 0 && vm.atM < 150 ? "live · " + clock(vm.atM) + " PT" : "")) + "</div></div></details></div>";
     return h;
   }
   // For the dashboard: one refresh -> {html, vm}
