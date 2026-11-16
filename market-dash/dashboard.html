@@ -7531,7 +7531,7 @@
     var pce = m.core_pce; if (ok(pce)) { var c1 = (pce.latest / pce.prior - 1) * 100, c3 = pace("core_pce", 3); tiles += _mxTile("Core PCE (Fed's gauge)", '<span style="color:' + (c1 > .25 ? _MX.dn : c1 < .15 ? _MX.up : _MX.warn) + '">' + (c1 >= 0 ? "+" : "") + c1.toFixed(2) + '% m/m</span>', (c3 ? (c3.mo + "-mo pace <b style='color:" + (c3.p > 3 ? _MX.dn : _MX.txt) + "'>" + c3.p.toFixed(1) + "%/yr</b> · ") : "") + "print for " + _mxD(pce.latest_date), mini("core_pce")); }
     var ff = m.fed_funds; if (ok(ff)) { var fs = _mxSer(function (x) { return get(x, "macro.fed_funds.latest"); }), f0 = fs.length ? fs[0].v : ff.latest, real = (cpi && ok(cpi) && pace("cpi", 3)) ? ff.latest - pace("cpi", 3).p : null;
       tiles += _mxTile("Fed funds", num(ff.latest, 2, "%") + ' <span style="font-size:10px;color:' + _MX.dim + '">' + (ff.latest - f0 === 0 ? "no change since " + _mxD(fs[0] ? fs[0].d : ff.latest_date) : signed((ff.latest - f0) * 100, 0) + " bp since " + _mxD(fs[0].d)) + '</span>', (real !== null ? "real rate (minus CPI pace) <b style='color:" + (real > 1 ? _MX.warn : _MX.txt) + "'>" + (real >= 0 ? "+" : "") + real.toFixed(2) + "%</b> · " : "") + _ptStreak(fs, "change").t, mini("fed_funds")); }
-    out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px">' + tiles + '</div>';
+    out += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px">' + tiles + '</div>';
     out += _mxNote("Pace = annualised change between the latest print and the one ~3 months earlier in your logged history. Colours: red = hot for inflation, green = cool.");
     return out;
   }
@@ -7606,27 +7606,8 @@
     var names = days[days.length - 1].sectors.rows.map(function (r) { return r.sector; });
     var rel = function (nm, end, len) { var s = 0, n = 0; for (var i = Math.max(0, end - len + 1); i <= end; i++) { var r = days[i].sectors.rows, avg = r.reduce(function (t, q) { return t + q.pct_change; }, 0) / r.length, q = r.filter(function (z) { return z.sector === nm; })[0]; if (q) { s += q.pct_change - avg; n++; } } return n ? s : null; };
     var E = days.length - 1, P = names.map(function (nm) { var tr = []; for (var k = 4; k >= 0; k--) tr.push({ x: rel(nm, E - k, 20), y: rel(nm, E - k, 5) }); return { nm: nm, tr: tr }; });
-    var xs = [], ys = []; P.forEach(function (p) { p.tr.forEach(function (t) { if (t.x !== null) { xs.push(Math.abs(t.x)); ys.push(Math.abs(t.y)); } }); });
-    var mxX = Math.max.apply(null, xs) * 1.15 || 1, mxY = Math.max.apply(null, ys) * 1.15 || 1, W = 600, Hh = 380, cx = W / 2, cy = Hh / 2, X = function (v) { return cx + v / mxX * (W / 2 - 20); }, Y = function (v) { return cy - v / mxY * (Hh / 2 - 20); };
-    var g = '<rect x="' + cx + '" y="0" width="' + cx + '" height="' + cy + '" fill="rgba(61,220,132,.05)"/><rect x="0" y="' + cy + '" width="' + cx + '" height="' + cy + '" fill="rgba(255,82,82,.05)"/>' +
-      '<line x1="0" x2="' + W + '" y1="' + cy + '" y2="' + cy + '" stroke="rgba(255,255,255,.15)"/><line x1="' + cx + '" x2="' + cx + '" y1="0" y2="' + Hh + '" stroke="rgba(255,255,255,.15)"/>' +
-      '<text x="' + (W - 8) + '" y="16" fill="' + _MX.up + '" font-size="11" text-anchor="end" font-weight="600">LEADING</text><text x="' + (W - 8) + '" y="' + (Hh - 8) + '" fill="' + _MX.warn + '" font-size="11" text-anchor="end" font-weight="600">WEAKENING</text>' +
-      '<text x="8" y="' + (Hh - 8) + '" fill="' + _MX.dn + '" font-size="11" font-weight="600">LAGGING</text><text x="8" y="16" fill="' + _MX.blu + '" font-size="11" font-weight="600">IMPROVING</text>';
     var short = function (nm) { return nm.replace("Communication Services", "Comm Svcs").replace("Consumer Discretionary", "Cons Disc").replace("Consumer Staples", "Staples").replace("Information Technology", "Tech").replace("Real Estate", "Real Est").replace("Health Care", "Health"); };
-    var quad = function (t) { return t.x >= 0 ? (t.y >= 0 ? ["Leading", _MX.up] : ["Weakening", _MX.warn]) : (t.y >= 0 ? ["Improving", _MX.blu] : ["Lagging", _MX.dn]); }, list = [];
-    P.forEach(function (p) { var tr = p.tr.filter(function (t) { return t.x !== null; }); if (!tr.length) return; var L = tr[tr.length - 1], qd = quad(L); list.push({ nm: p.nm, q: qd, L: L });
-      g += '<path d="' + tr.map(function (t, i) { return (i ? "L" : "M") + X(t.x).toFixed(1) + " " + Y(t.y).toFixed(1); }).join("") + '" fill="none" stroke="' + qd[1] + '" stroke-width="1.2" opacity=".55"/>';
-      tr.slice(0, -1).forEach(function (t) { g += '<circle cx="' + X(t.x).toFixed(1) + '" cy="' + Y(t.y).toFixed(1) + '" r="1.8" fill="' + qd[1] + '" opacity=".5"/>'; });
-      g += '<g><title>' + esc(p.nm + " · 20-day vs avg " + (L.x >= 0 ? "+" : "") + L.x.toFixed(2) + "% · 5-day " + (L.y >= 0 ? "+" : "") + L.y.toFixed(2) + "% · " + qd[0]) + '</title><circle cx="' + X(L.x).toFixed(1) + '" cy="' + Y(L.y).toFixed(1) + '" r="5" fill="' + qd[1] + '" stroke="#0B0D17" stroke-width="1.5"/></g>'; });
-    (function () {   // labels: pushed apart vertically so clustered sectors stay readable, with a thin leader line
-      var ls = list.map(function (s2) { return { x: X(s2.L.x), y: Y(s2.L.y), t: short(s2.nm) }; }).sort(function (a, b) { return a.y - b.y; }), placed = [];
-      ls.forEach(function (l) { var ly = l.y; placed.forEach(function (q) { if (Math.abs(q.x - l.x) < 90 && Math.abs(q.ly - ly) < 12) ly = q.ly + 12; }); l.ly = ly; placed.push(l);
-        if (Math.abs(ly - l.y) > 2) g += '<line x1="' + (l.x + 5).toFixed(1) + '" y1="' + l.y.toFixed(1) + '" x2="' + (l.x + 8).toFixed(1) + '" y2="' + (ly - 3).toFixed(1) + '" stroke="rgba(255,255,255,.25)"/>';
-        g += '<text x="' + (l.x + 9).toFixed(1) + '" y="' + (ly + 3).toFixed(1) + '" fill="' + _MX.txt + '" font-size="10">' + esc(l.t) + '</text>'; });
-    })();
-    var out = '<div class="p-lbl">Sector rotation map</div><svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto;display:block;background:#0E1124;border-radius:8px">' + g + '</svg>';
-    var grp = { Leading: [], Weakening: [], Improving: [], Lagging: [] }; list.forEach(function (s) { grp[s.q[0]].push(short(s.nm)); });
-    out += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:10.5px;margin:6px 0">' + [["Leading", _MX.up], ["Weakening", _MX.warn], ["Improving", _MX.blu], ["Lagging", _MX.dn]].map(function (q) { return '<div><b style="color:' + q[1] + '">' + q[0] + '</b> <span style="color:' + _MX.txt + '">' + (grp[q[0]].join(", ") || "—") + '</span></div>'; }).join("") + '</div>';
+    var out = '<div class="p-lbl">Sector rotation map</div>' + _qmap(P.map(function (p) { return { nm: p.nm, lab: short(p.nm), tr: p.tr }; }), { h: 420, xName: "20-day vs avg sector", yName: "5-day vs avg sector" });
     out += _mxNote("Right = beating the average sector over 20 sessions; up = beating it over the last 5. The tail shows the last 5 days of travel: sectors usually rotate clockwise (improving → leading → weakening → lagging).");
     var rows = days[E].sectors.rows.slice().sort(function (a, b) { return b.pct_change - a.pct_change; }), mm = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.pct_change); })) || 1;
     out += '<div class="p-lbl" style="margin-top:8px">Today by sector</div>' + rows.map(function (r) { var w = Math.abs(r.pct_change) / mm * 50, up = r.pct_change >= 0;
@@ -7649,6 +7630,123 @@
     var bar = function (lab, a, n, col, x) { return '<div style="display:grid;grid-template-columns:120px 1fr 120px;gap:6px;align-items:center;font-size:10.5px;margin:2px 0"><span style="color:' + _MX.txt + '">' + lab + '</span><div style="height:10px;background:rgba(255,255,255,.04);border-radius:2px"><div style="height:100%;width:' + (a / mx * 100).toFixed(0) + '%;background:' + col + ';opacity:.75;border-radius:2px"></div></div><span style="text-align:right;color:' + _MX.dim + '"><b style="color:' + col + '">' + a.toFixed(2) + '%</b>' + (x ? " · " + x.toFixed(1) + "×" : "") + " · " + n + 'd</span></div>'; };
     return '<div class="p-sep"></div><div class="p-lbl">Event days · QQQ\'s average move</div>' + out.map(function (o) { return bar(o.t, o.a, o.n, o.x >= 1.3 ? _MX.warn : o.x >= 1 ? _MX.txt : _MX.blu, o.x); }).join("") + bar("Normal days", nAvg, norm.length, _MX.dim) +
       _mxNote("Average size of QQQ's close-to-close move (up or down) on days with that US release, vs days with no big release, across " + Object.keys(qm).length + " logged sessions. Small samples — treat as a guide.");
+  }
+  // ===== Nov 16: Watchlist deep view =====
+  var _WL_SKIP = ["QQQM", "NDX", "UUP", "SCHX"];   // near-copies of QQQ / DXY / SPY — left out of the comparison charts
+  function _wlSeries() {   // per ticker: [{d, last, pct}] one per session
+    var S = {}; _ptDays().forEach(function (x) { (x.watchlist || []).forEach(function (r) { if (!r || !r.symbol) return; (S[r.symbol] = S[r.symbol] || []).push({ d: x.entry_date, last: _orN(r.last), pct: _orN(r.pct_change) }); }); });
+    return S;
+  }
+  function _wlRows(e) { return (e.watchlist || []).filter(function (r) { return r && r.symbol; }); }
+  // generic 4-quadrant map with tails (used by Macro Outlook sectors and Watchlist vs QQQ)
+  function _qmap(P, o) {
+    o = o || {}; var cur = P.map(function (p) { return p.tr[p.tr.length - 1]; }).filter(function (t) { return t && t.x !== null; }); if (!cur.length) return "";
+    // scale on today's spread (not the tails) so clusters open up; tails that run past the edge are clipped
+    var ax = cur.map(function (t) { return Math.abs(t.x); }).sort(function (a, b) { return a - b; }), ay = cur.map(function (t) { return Math.abs(t.y); }).sort(function (a, b) { return a - b; });
+    // robust scale: one outlier (e.g. VIX) no longer squashes everything else; outliers sit pinned at the edge (real value in the tooltip)
+    var rob = function (a) { var mx = a[a.length - 1] || 1, p80 = a[Math.floor(.8 * (a.length - 1))] || mx; return Math.max(1e-6, Math.min(mx * 1.25, p80 * 2.2)); };
+    var mxX = rob(ax), mxY = rob(ay), W = 600, Hh = o.h || 420, cx = W / 2, cy = Hh / 2, cl = function (v, m) { return Math.max(-m, Math.min(m, v)); };
+    var X = function (v) { return cx + cl(v, mxX * 1.04) / mxX * (W / 2 - 24); }, Y = function (v) { return cy - cl(v, mxY * 1.04) / mxY * (Hh / 2 - 24); }, id = "qm" + Math.random().toString(36).slice(2, 7);
+    var L = o.labels || ["LEADING", "WEAKENING", "LAGGING", "IMPROVING"], C = [_MX.up, _MX.warn, _MX.dn, _MX.blu];
+    var g = '<defs><clipPath id="' + id + '"><rect x="0" y="0" width="' + W + '" height="' + Hh + '"/></clipPath></defs><rect x="' + cx + '" y="0" width="' + cx + '" height="' + cy + '" fill="rgba(61,220,132,.05)"/><rect x="0" y="' + cy + '" width="' + cx + '" height="' + cy + '" fill="rgba(255,82,82,.05)"/>' +
+      '<line x1="0" x2="' + W + '" y1="' + cy + '" y2="' + cy + '" stroke="rgba(255,255,255,.15)"/><line x1="' + cx + '" x2="' + cx + '" y1="0" y2="' + Hh + '" stroke="rgba(255,255,255,.15)"/>' +
+      '<text x="' + (W - 8) + '" y="16" fill="' + C[0] + '" font-size="11" text-anchor="end" font-weight="600">' + L[0] + '</text><text x="' + (W - 8) + '" y="' + (Hh - 8) + '" fill="' + C[1] + '" font-size="11" text-anchor="end" font-weight="600">' + L[1] + '</text>' +
+      '<text x="8" y="' + (Hh - 8) + '" fill="' + C[2] + '" font-size="11" font-weight="600">' + L[2] + '</text><text x="8" y="16" fill="' + C[3] + '" font-size="11" font-weight="600">' + L[3] + '</text><g clip-path="url(#' + id + ')">';
+    var quad = function (t) { return t.x >= 0 ? (t.y >= 0 ? 0 : 1) : (t.y >= 0 ? 3 : 2); }, list = [];
+    P.forEach(function (p) { var tr = p.tr.filter(function (t) { return t && t.x !== null; }); if (!tr.length) return; var T = tr[tr.length - 1], q = quad(T); list.push({ nm: p.nm, lab: p.lab || p.nm, q: q, T: T });
+      g += '<path d="' + tr.map(function (t, i) { return (i ? "L" : "M") + X(t.x).toFixed(1) + " " + Y(t.y).toFixed(1); }).join("") + '" fill="none" stroke="' + C[q] + '" stroke-width="1.2" opacity=".5"/>';
+      tr.slice(0, -1).forEach(function (t) { g += '<circle cx="' + X(t.x).toFixed(1) + '" cy="' + Y(t.y).toFixed(1) + '" r="1.8" fill="' + C[q] + '" opacity=".45"/>'; });
+      g += '<g><title>' + esc(p.nm + " · " + (o.xName || "long") + " " + (T.x >= 0 ? "+" : "") + T.x.toFixed(2) + "% · " + (o.yName || "short") + " " + (T.y >= 0 ? "+" : "") + T.y.toFixed(2) + "%") + '</title><circle cx="' + X(T.x).toFixed(1) + '" cy="' + Y(T.y).toFixed(1) + '" r="5" fill="' + C[q] + '" stroke="#0B0D17" stroke-width="1.5"/></g>'; });
+    g += '</g>';
+    var ls = list.map(function (s) { return { x: X(s.T.x), y: Y(s.T.y), t: s.lab }; }).sort(function (a, b) { return a.y - b.y; }), placed = [];
+    ls.forEach(function (l) { var ly = l.y; placed.forEach(function (q) { if (Math.abs(q.x - l.x) < 80 && Math.abs(q.ly - ly) < 12) ly = q.ly + 12; }); l.ly = Math.min(Hh - 18, ly); placed.push(l);
+      if (Math.abs(l.ly - l.y) > 2) g += '<line x1="' + (l.x + 5).toFixed(1) + '" y1="' + l.y.toFixed(1) + '" x2="' + (l.x + 8).toFixed(1) + '" y2="' + (l.ly - 3).toFixed(1) + '" stroke="rgba(255,255,255,.25)"/>';
+      var rt = l.x > W - 70; g += '<text x="' + (rt ? l.x - 9 : l.x + 9).toFixed(1) + '" y="' + (l.ly + 3).toFixed(1) + '" fill="' + _MX.txt + '" font-size="10"' + (rt ? ' text-anchor="end"' : "") + '>' + esc(l.t) + '</text>'; });
+    var grp = [[], [], [], []]; list.forEach(function (s) { grp[s.q].push(s.lab); });
+    return '<svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto;display:block;background:#0E1124;border-radius:8px">' + g + '</svg>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:10.5px;margin:6px 0">' + [0, 1, 3, 2].map(function (q) { return '<div><b style="color:' + C[q] + '">' + L[q].charAt(0) + L[q].slice(1).toLowerCase() + '</b> <span style="color:' + _MX.txt + '">' + (grp[q].join(", ") || "—") + '</span></div>'; }).join("") + '</div>';
+  }
+  // 2 · upgraded scanner table
+  function _wlTable(e) {
+    var rows = _wlRows(e).slice().sort(function (a, b) { return (b.z20 || 0) - (a.z20 || 0); }), S = _wlSeries(); if (!rows.length) return "";
+    var mr = Math.max.apply(null, rows.map(function (r) { return Math.max(Math.abs(r.ret_5d || 0), Math.abs(r.ret_1m || 0), Math.abs(r.ret_3m || 0)); })) || 1;
+    var rb = function (v) { if (v === null || v === undefined) return '<span style="color:' + _MX.dim + '">—</span>'; var w = Math.min(50, Math.abs(v) / mr * 50), up = v >= 0;
+      return '<div style="position:relative;height:9px;background:rgba(255,255,255,.03);border-radius:2px" title="' + (up ? "+" : "") + v.toFixed(1) + '%"><div style="position:absolute;left:50%;top:-1px;bottom:-1px;border-left:1px solid rgba(255,255,255,.15)"></div><div style="position:absolute;top:0;bottom:0;' + (up ? "left:50%" : "right:50%") + ';width:' + w.toFixed(1) + '%;background:' + (up ? _MX.up : _MX.dn) + ';opacity:.7"></div></div><div style="font-size:9.5px;text-align:center;color:' + (up ? _MX.up : _MX.dn) + '">' + (up ? "+" : "") + v.toFixed(1) + '%</div>'; };
+    var zs = function (z) { if (z === null || z === undefined) return ""; var p = Math.max(0, Math.min(100, (z + 3) / 6 * 100)), c = Math.abs(z) >= 2 ? _MX.warn : Math.abs(z) >= 1 ? _MX.txt : _MX.dim;
+      return '<div style="position:relative;height:12px" title="z20 ' + z.toFixed(2) + '"><div style="position:absolute;left:0;right:0;top:5px;height:2px;background:linear-gradient(90deg,rgba(255,82,82,.4),rgba(255,255,255,.08) 33%,rgba(255,255,255,.08) 67%,rgba(61,220,132,.4))"></div><div style="position:absolute;left:50%;top:2px;bottom:2px;border-left:1px solid rgba(255,255,255,.2)"></div><div style="position:absolute;top:1px;width:10px;height:10px;border-radius:50%;left:calc(' + p.toFixed(1) + '% - 5px);background:' + c + '"></div></div><div style="font-size:9.5px;text-align:center;color:' + c + '">' + (z >= 0 ? "+" : "") + z.toFixed(2) + '</div>'; };
+    var spark = function (sym) { var s = (S[sym] || []).filter(function (p) { return p.last !== null; }).slice(-20); if (s.length < 3) return ""; var lo = Math.min.apply(null, s.map(function (p) { return p.last; })), hi = Math.max.apply(null, s.map(function (p) { return p.last; })); if (hi === lo) hi = lo + 1;
+      var up = s[s.length - 1].last >= s[0].last; return '<svg viewBox="0 0 100 24" preserveAspectRatio="none" style="width:100%;height:22px;display:block"><path d="' + s.map(function (p, i) { return (i ? "L" : "M") + (i / (s.length - 1) * 100).toFixed(1) + " " + (2 + (hi - p.last) / (hi - lo) * 20).toFixed(1); }).join("") + '" fill="none" stroke="' + (up ? _MX.up : _MX.dn) + '" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>'; };
+    var th = function (t, a) { return '<th style="text-align:' + (a || "center") + ';font-weight:400;color:' + _MX.dim + ';font-size:9.5px;letter-spacing:.1em;padding:4px 6px">' + t + '</th>'; };
+    var body = rows.map(function (r) { var dp = r.pct_change;
+      return '<tr style="border-top:1px solid #1A1E36"><td style="padding:5px 6px;white-space:nowrap"><b style="color:' + _MX.txt + '">' + esc(r.symbol) + '</b> <span style="color:' + _MX.dim + ';font-size:10px">' + esc(String(r.name || "").slice(0, 26)) + '</span></td>' +
+        '<td style="text-align:right;padding:5px 6px;color:' + (dp >= 0 ? _MX.up : _MX.dn) + '">' + (dp === null || dp === undefined ? "—" : (dp >= 0 ? "+" : "") + Number(dp).toFixed(2) + "%") + '</td>' +
+        '<td style="padding:5px 6px;min-width:70px">' + rb(r.ret_5d) + '</td><td style="padding:5px 6px;min-width:70px">' + rb(r.ret_1m) + '</td><td style="padding:5px 6px;min-width:70px">' + rb(r.ret_3m) + '</td>' +
+        '<td style="padding:5px 6px;min-width:110px">' + zs(r.z20) + '</td><td style="padding:5px 6px;min-width:90px">' + spark(r.symbol) + '</td>' +
+        '<td style="text-align:right;padding:5px 6px;color:' + _MX.dim + '">' + (has(r.realized_vol_pct) ? Number(r.realized_vol_pct).toFixed(0) + "%" : "—") + '</td></tr>'; }).join("");
+    return '<div class="p-lbl"><span class="p-num">01</span> Scanner · every ticker</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><tr>' + th("TICKER", "left") + th("DAY", "right") + th("5 DAY") + th("1 MONTH") + th("3 MONTHS") + th("STRETCH (z20, −3 … +3)") + th("LAST 20") + th("VOL", "right") + '</tr>' + body + '</table></div>' +
+      _mxNote("Sorted by stretch (z20 = how many standard deviations price sits from its 20-day average). Orange dot = beyond ±2, a stretched move. Vol = realised volatility, % a year.");
+  }
+  // 1 · small multiples
+  function _wlSmall(e) {
+    var S = _wlSeries(), syms = _wlRows(e).map(function (r) { return r.symbol; }).filter(function (s) { return _WL_SKIP.indexOf(s) < 0; }), cells = "";
+    syms.forEach(function (sym) { var s = (S[sym] || []).filter(function (p) { return p.last !== null && p.last > 0; }).slice(-60); if (s.length < 5) return;
+      var b = s[0].last, pts = s.map(function (p) { return (p.last / b - 1) * 100; }), lo = Math.min.apply(null, pts.concat([0])), hi = Math.max.apply(null, pts.concat([0])); if (hi === lo) hi = lo + 1;
+      var r = pts[pts.length - 1], col = r >= 0 ? _MX.up : _MX.dn, Y = function (v) { return 3 + (hi - v) / (hi - lo) * 44; }, d = pts.map(function (v, i) { return (i ? "L" : "M") + (i / (pts.length - 1) * 200).toFixed(1) + " " + Y(v).toFixed(1); }).join("");
+      cells += '<div style="background:#10132A;border:1px solid #1F2440;border-radius:6px;padding:6px 8px" title="' + esc(sym + " · " + s[0].d + " → " + s[s.length - 1].d + " · " + (r >= 0 ? "+" : "") + r.toFixed(1) + "%") + '"><div style="display:flex;justify-content:space-between;font-size:10.5px"><b style="color:' + _MX.txt + '">' + esc(sym) + '</b><span style="color:' + col + '">' + (r >= 0 ? "+" : "") + r.toFixed(1) + '%</span></div>' +
+        '<svg viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:46px;display:block"><line x1="0" x2="200" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="rgba(255,255,255,.15)" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/><path d="' + d + 'L200 ' + Y(0).toFixed(1) + 'L0 ' + Y(0).toFixed(1) + 'Z" fill="' + col + '" opacity=".10"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg></div>'; });
+    return '<div class="p-lbl" style="margin-top:4px"><span class="p-num">02</span> Every ticker · last 60 sessions</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px">' + cells + '</div>' +
+      _mxNote("% change since the first of the last 60 logged sessions; dashed line = start. Each chart has its own scale — compare shapes and the % in the corner.");
+  }
+  // 3 · beating QQQ map
+  function _wlVsQQQ(e) {
+    var S = _wlSeries(), q = S.QQQ || []; if (q.length < 25) return ""; var qm = {}; q.forEach(function (p) { qm[p.d] = p.pct; });
+    var P = _wlRows(e).map(function (r) { return r.symbol; }).filter(function (s) { return s !== "QQQ" && _WL_SKIP.indexOf(s) < 0; }).map(function (sym) {
+      var s = (S[sym] || []).filter(function (p) { return p.pct !== null && qm[p.d] !== null && qm[p.d] !== undefined; }), rel = s.map(function (p) { return p.pct - qm[p.d]; }), n = rel.length, tr = [];
+      for (var k = 4; k >= 0; k--) { var end = n - 1 - k; if (end < 19) { tr.push(null); continue; } var a = 0, b = 0; for (var i = end - 19; i <= end; i++) a += rel[i]; for (var j = end - 4; j <= end; j++) b += rel[j]; tr.push({ x: a, y: b }); }
+      return { nm: sym, tr: tr };
+    });
+    return '<div class="p-lbl"><span class="p-num">03</span> What\'s beating QQQ</div>' + _qmap(P, { h: 420, xName: "20-day vs QQQ", yName: "5-day vs QQQ" }) +
+      _mxNote("Right = beat QQQ over the last 20 sessions; up = beat it over the last 5. Tails = the last 5 days of travel. Improving → leading is where new leadership shows up first.");
+  }
+  // 4 · correlation heatmap + what broke
+  function _wlCorr(e) {
+    var S = _wlSeries(), syms = _wlRows(e).map(function (r) { return r.symbol; }).filter(function (s) { return _WL_SKIP.indexOf(s) < 0 && (S[s] || []).length >= 30; });
+    var m = {}; syms.forEach(function (s) { m[s] = {}; S[s].forEach(function (p) { if (p.pct !== null) m[s][p.d] = p.pct; }); });
+    var cor = function (a, b, last) { var ds = Object.keys(m[a]).filter(function (d) { return m[b][d] !== undefined; }).sort().slice(-last); if (ds.length < Math.min(15, last)) return null; return _mxCorr(ds.map(function (d) { return m[a][d]; }), ds.map(function (d) { return m[b][d]; })); };
+    var n = syms.length; if (n < 3) return ""; var cell = 22, lab = 46, W = lab + n * cell, Hh = lab + n * cell, g = "", broke = [];
+    var col = function (c) { if (c === null) return "#14182E"; var a = Math.min(1, Math.abs(c)); return c >= 0 ? "rgba(61,220,132," + (.08 + a * .8).toFixed(2) + ")" : "rgba(255,82,82," + (.08 + a * .8).toFixed(2) + ")"; };
+    syms.forEach(function (a, i) { g += '<text x="' + (lab - 4) + '" y="' + (lab + i * cell + 15) + '" fill="' + _MX.txt + '" font-size="9.5" text-anchor="end">' + esc(a) + '</text><text transform="translate(' + (lab + i * cell + 14) + ',' + (lab - 4) + ') rotate(-60)" fill="' + _MX.txt + '" font-size="9.5">' + esc(a) + '</text>';
+      syms.forEach(function (b, j) { var c = i === j ? 1 : cor(a, b, 60); g += '<rect x="' + (lab + j * cell) + '" y="' + (lab + i * cell) + '" width="' + (cell - 1) + '" height="' + (cell - 1) + '" fill="' + col(c) + '"><title>' + esc(a + " / " + b + " · 60-session corr " + (c === null ? "—" : c.toFixed(2))) + '</title></rect>';
+        if (j > i) { var c20 = cor(a, b, 20); if (c !== null && c20 !== null && Math.abs(c20 - c) >= .45) broke.push({ a: a, b: b, c: c, c20: c20 }); } }); });
+    broke.sort(function (x, y) { return Math.abs(y.c20 - y.c) - Math.abs(x.c20 - x.c); });
+    var bl = broke.slice(0, 8).map(function (o) { return '<div style="display:grid;grid-template-columns:110px 1fr;gap:6px;font-size:10.5px;margin:1px 0"><b style="color:' + _MX.txt + '">' + o.a + ' / ' + o.b + '</b><span style="color:' + _MX.dim + '">normal ' + o.c.toFixed(2) + ' → last 20 days <b style="color:' + (o.c20 > o.c ? _MX.up : _MX.dn) + '">' + o.c20.toFixed(2) + '</b> ' + (Math.sign(o.c) !== Math.sign(o.c20) ? "· flipped sign" : o.c20 > o.c ? "· moving together more" : "· decoupling") + '</span></div>'; }).join("");
+    return '<div class="p-lbl"><span class="p-num">04</span> Correlation map · 60 sessions</div><div style="overflow-x:auto"><svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;max-width:' + (W * 1.3) + 'px;height:auto;display:block">' + g + '</svg></div>' +
+      _mxNote("Green = move together, red = move opposite (darker = stronger). Hover a square for the number.") +
+      '<div class="p-lbl" style="margin-top:8px">Correlations that just broke</div>' + (bl || '<div class="p-val-sm p-dim">Nothing unusual — the last 20 days look like normal.</div>');
+  }
+  // 5 · stretch scatter
+  function _wlStretch(e) {
+    var rows = _wlRows(e).filter(function (r) { return has(r.z20) && has(r.ret_1m) && _WL_SKIP.indexOf(r.symbol) < 0; }); if (rows.length < 3) return "";
+    var W = 600, Hh = 340, mz = Math.max(3, Math.max.apply(null, rows.map(function (r) { return Math.abs(r.z20); })) * 1.1), mr = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.ret_1m); })) * 1.15 || 1;
+    var X = function (v) { return W / 2 + v / mz * (W / 2 - 24); }, Y = function (v) { return Hh / 2 - v / mr * (Hh / 2 - 22); }, g = "";
+    g += '<rect x="' + X(-mz) + '" y="0" width="' + (X(-2) - X(-mz)) + '" height="' + Hh + '" fill="rgba(255,82,82,.06)"/><rect x="' + X(2) + '" y="0" width="' + (X(mz) - X(2)) + '" height="' + Hh + '" fill="rgba(61,220,132,.06)"/>' +
+      '<line x1="0" x2="' + W + '" y1="' + Y(0) + '" y2="' + Y(0) + '" stroke="rgba(255,255,255,.15)"/><line x1="' + X(0) + '" x2="' + X(0) + '" y1="0" y2="' + Hh + '" stroke="rgba(255,255,255,.15)"/>' +
+      '<text x="8" y="14" fill="' + _MX.dim + '" font-size="10">1-month trend up · stretched down = dip in an uptrend</text><text x="' + (W - 8) + '" y="' + (Hh - 6) + '" fill="' + _MX.dim + '" font-size="10" text-anchor="end">trend down · stretched up = bounce in a downtrend</text>' +
+      '<text x="' + (X(-2) - 4) + '" y="' + (Hh - 6) + '" fill="' + _MX.dn + '" font-size="9" text-anchor="end">−2σ</text><text x="' + (X(2) + 4) + '" y="28" fill="' + _MX.up + '" font-size="9">+2σ</text>';
+    var pts = rows.map(function (r) { return { x: X(r.z20), y: Y(r.ret_1m), r: r }; }).sort(function (a, b) { return a.y - b.y; }), placed = [];
+    pts.forEach(function (p) { var c = Math.abs(p.r.z20) >= 2 ? _MX.warn : p.r.ret_1m >= 0 ? _MX.up : _MX.dn, ly = p.y; placed.forEach(function (q) { if (Math.abs(q.x - p.x) < 50 && Math.abs(q.ly - ly) < 11) ly = q.ly + 11; }); p.ly = ly; placed.push(p);
+      g += '<g><title>' + esc(p.r.symbol + " · z20 " + p.r.z20.toFixed(2) + " · 1-month " + (p.r.ret_1m >= 0 ? "+" : "") + p.r.ret_1m.toFixed(1) + "%") + '</title><circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4.5" fill="' + c + '"/></g><text x="' + (p.x + 7).toFixed(1) + '" y="' + (ly + 3).toFixed(1) + '" fill="' + _MX.txt + '" font-size="9.5">' + esc(p.r.symbol) + '</text>'; });
+    return '<div class="p-lbl"><span class="p-num">05</span> Stretch vs trend</div><svg viewBox="0 0 ' + W + ' ' + Hh + '" style="width:100%;height:auto;display:block;background:#0E1124;border-radius:8px">' + g + '</svg>' +
+      _mxNote("Across: how stretched today (z20; shaded = beyond ±2σ). Up/down: 1-month return. Orange = stretched past 2σ — the snap-back candidates.");
+  }
+  // 6 · today's moves ranked in % with "how unusual" (today's % ÷ that ticker's normal daily move)
+  function _wlMoves(e) {
+    var S = _wlSeries(), rows = _wlRows(e).filter(function (r) { return has(r.pct_change) && _WL_SKIP.indexOf(r.symbol) < 0; }).map(function (r) {
+      var hist = (S[r.symbol] || []).map(function (p) { return p.pct; }).filter(function (v) { return v !== null; }), sd = _mxStats(hist).s; return { s: r.symbol, p: Number(r.pct_change), z: sd ? Number(r.pct_change) / sd : null }; }).sort(function (a, b) { return b.p - a.p; });
+    if (!rows.length) return ""; var mx = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.p); })) || 1;
+    return '<div class="p-lbl"><span class="p-num">06</span> Today\'s moves · % and how unusual</div>' + rows.map(function (r) { var up = r.p >= 0, w = Math.abs(r.p) / mx * 50, un = r.z !== null && Math.abs(r.z) >= 2;
+      return '<div style="display:grid;grid-template-columns:60px 1fr 70px 90px;gap:6px;align-items:center;font-size:10.5px;margin:1px 0"><b style="color:' + _MX.txt + '">' + esc(r.s) + '</b><div style="position:relative;height:10px"><div style="position:absolute;left:50%;top:-2px;bottom:-2px;border-left:1px solid rgba(255,255,255,.18)"></div><div style="position:absolute;top:0;bottom:0;' + (up ? "left:50%" : "right:50%") + ';width:' + w.toFixed(1) + '%;background:' + (up ? _MX.up : _MX.dn) + ';opacity:.7;border-radius:2px"></div></div><span style="text-align:right;color:' + (up ? _MX.up : _MX.dn) + '">' + (up ? "+" : "") + r.p.toFixed(2) + '%</span><span style="text-align:right;color:' + (un ? _MX.warn : _MX.dim) + '">' + (r.z === null ? "" : (Math.abs(r.z)).toFixed(1) + "× normal" + (un ? " ⚑" : "")) + '</span></div>'; }).join("") +
+      _mxNote("× normal = today's move ÷ that ticker's typical daily move (standard deviation of its logged daily %). ⚑ = 2× or more, an unusual day for it.");
   }
   // ===== Nov 16: Research trend lines + how long each move has lasted =====
   function _ptDays() { var by = {}; H.forEach(function (x) { if (x && x.entry_date) by[x.entry_date] = x; }); return Object.keys(by).sort().map(function (d) { return by[d]; }); }
@@ -8756,11 +8854,20 @@
 
     // Nov 16: Macro Outlook = economy, regime, Fed, COT, sectors, news (two columns); Watchlist = every ticker section
     var _dashBody = window.DASHV === "watch"
-      ? '<div class="p-page p-one">' + _pipeHeader.replace("Cross-Asset Research · <em>Pipeline v2</em>", "Watchlist · <em>tickers, rotation, correlations</em>") +
-        _centerCol + _wlRow + _pipeFooter + '</div>'
+      ? '<div class="p-page p-two">' + _pipeHeader.replace("Cross-Asset Research · <em>Pipeline v2</em>", "Watchlist · <em>tickers, rotation, correlations</em>") +
+        '<div class="p-panel p-wide">' + _wlTable(e) + '</div>' +
+        '<div class="p-panel p-wide">' + _wlSmall(e) + '</div>' +
+        '<div class="p-panel">' + _wlVsQQQ(e) + '</div><div class="p-panel">' + _wlStretch(e) + '</div>' +
+        '<div class="p-panel">' + _wlCorr(e) + '</div><div class="p-panel">' + _wlMoves(e) + '</div>' +
+        '<div class="p-panel p-wide"><details' + ((function () { try { return localStorage.getItem("md:fold:wlclassic") === "1"; } catch (x) { return false; } })() ? " open" : "") + ' ontoggle="try{localStorage.setItem(\'md:fold:wlclassic\',this.open?\'1\':\'0\')}catch(e){}"><summary style="cursor:pointer;font-size:11px;letter-spacing:.14em;color:#5D6488">CLASSIC VIEW · rotation scanner, rebased overlay chart, correlation list, dollar moves, stretch wheel, full table</summary><div style="margin-top:10px">' + _centerCol + (_wlRow ? _wlRow.replace('<div class="p-panel p-wide">', '<div>') : "") + '</div></details></div>' +
+        _pipeFooter + '</div>'
       : '<div class="p-page p-two">' + _pipeHeader.replace("Cross-Asset Research · <em>Pipeline v2</em>", "Macro Outlook · <em>economy, regime, Fed, sectors</em>") +
-        '<div class="p-panel">' + _mxScore(e) + _mxRates(e) + _mxCatalyst(e) + '<div class="p-sep"></div>' + finalRegime(e, align) + _mxCrowd(e) + _mxCot(e) + '</div>' +
-        '<div class="p-panel">' + _mxRotation(e) + _sectorHeat() + _mxEvents(e) + '<div class="p-sep"></div>' + secWeek(e) + '</div>' +
+        // Nov 16 structure: scoreboard across the top, then two balanced rows of panels
+        '<div class="p-panel p-wide">' + _mxScore(e) + '</div>' +
+        '<div class="p-panel">' + finalRegime(e, align) + _mxCatalyst(e) + _mxRates(e) + '</div>' +
+        '<div class="p-panel">' + _mxRotation(e) + '</div>' +
+        '<div class="p-panel">' + _mxCrowd(e).replace('<div class="p-sep"></div>', '') + _mxCot(e) + '</div>' +
+        '<div class="p-panel">' + _sectorHeat().replace('<div class="p-sep"></div>', '') + _mxEvents(e) + '<div class="p-sep"></div>' + secWeek(e) + '</div>' +
         _pipeFooter + '</div>';
 
     app.innerHTML = _header + tabBar() +
