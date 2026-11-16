@@ -555,6 +555,8 @@
     .p-page { grid-template-columns:1fr; grid-template-rows:auto; }
   }
 
+  .p-panel.p-wide { grid-column:1 / -1; }
+  .p-panel.p-wide td, .p-panel.p-wide th { white-space:nowrap; }
   .p-panel {
     background:#0B0D17;
     padding:14px 16px;
@@ -880,7 +882,7 @@
 
   // Overlay-chart UI state. mode: "dxy" (everything vs the dollar) or "rebase".
   // hidden: symbols toggled off. big: fullscreen. Survives the 60s live redraw.
-  var CHART = { mode: "dxy", hidden: {}, big: false, height: 240 };
+  var CHART = { mode: "dxy", hidden: {}, big: false, height: 480 };   // Nov 16: taller default (the chart sits in a narrow column)
   var TAB = "nasdaq";   // in-page tab: opens on Nasdaq (Nov 15 order: Nasdaq · Performance · Strategy · Replay · Research)
   try {
     var _st = localStorage.getItem("md:tab");
@@ -891,7 +893,7 @@
   } catch (eTab) {}
   try {
     var _cm = localStorage.getItem("md:chartmode"); if (_cm) CHART.mode = _cm;
-    var _ch = parseInt(localStorage.getItem("md:charth"), 10);
+    var _ch = parseInt(localStorage.getItem("md:charth2"), 10);
     if (_ch) CHART.height = Math.min(Math.max(_ch, 160), 900);
   } catch (e) {}
 
@@ -8526,12 +8528,12 @@
       secInternals(e) +
       '<div class="p-sep"></div>' +
       secWeek(e) +
-      '<div class="p-sep"></div>' +
-      secWatchlist(e) +
       '</div>';
+    // Nov 16: watchlist moved out of the right column to full width under all three (it made that column 3× longer and crushed the table)
+    var _wlRow = (function () { var w = secWatchlist(e); return w ? '<div class="p-panel p-wide">' + w + '</div>' : ""; })();
 
     var _dashBody = '<div class="p-page">' + _pipeHeader +
-      _leftCol + _centerCol + _rightCol +
+      _leftCol + _centerCol + _rightCol + _wlRow +
       _pipeFooter + '</div>';
 
     app.innerHTML = _header + tabBar() +
@@ -8583,10 +8585,10 @@
       CHART.big = !CHART.big;
     } else if (t.hasAttribute("data-chart-taller")) {
       CHART.height = Math.min(CHART.height + 80, 900);
-      try { localStorage.setItem("md:charth", CHART.height); } catch (e3) {}
+      try { localStorage.setItem("md:charth2", CHART.height); } catch (e3) {}
     } else if (t.hasAttribute("data-chart-shorter")) {
       CHART.height = Math.max(CHART.height - 80, 160);
-      try { localStorage.setItem("md:charth", CHART.height); } catch (e4) {}
+      try { localStorage.setItem("md:charth2", CHART.height); } catch (e4) {}
     } else {
       var s = t.getAttribute("data-series");
       if (CHART.hidden[s]) delete CHART.hidden[s]; else CHART.hidden[s] = true;
