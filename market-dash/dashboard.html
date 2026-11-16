@@ -7675,14 +7675,15 @@
     p.forEach(function (q) { var m = q[0].slice(0, 7); by[m] = (by[m] || 0) + q[1]; cnt[m] = (cnt[m] || 0) + 1; });
     return Object.keys(by).sort().map(function (m) { return { k: m, v: by[m] / cnt[m] }; });
   }
-  function _mhAgg(mon, mode, how) {   // how: "pct" (price index change), "diff" (level change, e.g. payrolls), "avg" (level)
+  function _mhAgg(mon, mode, how) {
+    var qNative = mon.every(function (m) { return /-(01|04|07|10)$/.test(m.k); });   // GDP: one point per quarter; monthly series annualise by months elapsed   // how: "pct" (price index change), "diff" (level change, e.g. payrolls), "avg" (level)
     var lab = function (k) { var y = k.slice(2, 4); if (mode === "Y") return k.slice(0, 4); if (mode === "Q") return k.slice(5) + " " + y; return _MXN[+k.slice(5, 7)] + " " + y; };
     var out = [];
     if (mode === "M") { for (var i = Math.max(1, mon.length - 24); i < mon.length; i++) { var a = mon[i - 1].v, b = mon[i].v; out.push({ k: mon[i].k, lab: lab(mon[i].k), v: how === "pct" ? (b / a - 1) * 100 : how === "diff" ? b - a : b }); } return out; }
     var bucket = function (k) { return mode === "Q" ? k.slice(0, 4) + "-Q" + (Math.floor((+k.slice(5, 7) - 1) / 3) + 1) : k.slice(0, 4); };
     var g = {}, order = []; mon.forEach(function (m) { var bk = bucket(m.k); if (!g[bk]) { g[bk] = []; order.push(bk); } g[bk].push(m); });
     for (var j = 1; j < order.length; j++) { var cur = g[order[j]], prev = g[order[j - 1]], v;
-      if (how === "pct") { var c = cur[cur.length - 1].v, pv = prev[prev.length - 1].v; v = mode === "Q" ? (Math.pow(c / pv, 4) - 1) * 100 : (c / pv - 1) * 100; }
+      if (how === "pct") { var c = cur[cur.length - 1].v, pv = prev[prev.length - 1].v; v = mode === "Q" ? (Math.pow(c / pv, qNative ? 4 : 12 / cur.length) - 1) * 100 : (c / pv - 1) * 100; }
       else if (how === "diff") v = (cur[cur.length - 1].v - prev[prev.length - 1].v) / cur.length;   // average monthly change in the period
       else v = cur.reduce(function (s, m) { return s + m.v; }, 0) / cur.length;
       out.push({ k: order[j], lab: lab(order[j]), v: v, partial: mode === "Q" ? cur.length < 3 : cur.length < 12 }); }
