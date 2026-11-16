@@ -44,23 +44,37 @@ function _filterBar(widgetId){
 }
 function perfSetFilter(widgetId,value){ if(!value)return; PERF_FILTER[widgetId]=value; document.getElementById('root').innerHTML=renderCombinedWidget(); }
 
-function _miniEquity(D){
+function _miniEquity(D){   // Nov 15: money tracker — P&L per day / week / month / quarter / year + running total
   var d=D.equity; if(!d||!d.length) return '';
-  var W=520,H=120,pad={top:8,right:46,bottom:18,left:4};
-  var pW=W-pad.left-pad.right,pH=H-pad.top-pad.bottom;
-  var yMin=Infinity,yMax=-Infinity;
-  for(var i=0;i<d.length;i++){if(d[i].cum_pnl<yMin)yMin=d[i].cum_pnl;if(d[i].cum_pnl>yMax)yMax=d[i].cum_pnl;}
-  var yPad=(yMax-yMin)*0.1||100;yMin-=yPad;yMax+=yPad;
-  function x(i){return pad.left+i/(Math.max(1,d.length-1))*pW;}
-  function y(v){return pad.top+(1-(v-yMin)/(yMax-yMin))*pH;}
-  var svg=perfSvg(W,H);
-  var pts='';for(var i=0;i<d.length;i++){pts+=x(i).toFixed(1)+','+y(d[i].cum_pnl).toFixed(1)+' ';}
-  var last=d[d.length-1].cum_pnl;var lCol=last>=0?'#00e5cc':'#cc1111';
-  var path='M';for(var i=0;i<d.length;i++){path+=(i?'L':'')+x(i).toFixed(1)+','+y(d[i].cum_pnl).toFixed(1);}
-  svg+='<path d="'+path+'" fill="none" stroke="'+lCol+'" stroke-width="1.5"/>';
-  svg+='</svg>';
-  return svg;
+  var EQ=(function(){try{var v=localStorage.getItem('tp:eq');return /^(day|week|month|quarter|year)$/.test(v)?v:'day';}catch(e){return 'day';}})();
+  var MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var key=function(t){var ds=t.trade_date;if(EQ==='day')return ds;if(EQ==='week')return _wkKey(ds);if(EQ==='month')return ds.slice(0,7);if(EQ==='quarter')return ds.slice(0,4)+'-Q'+(Math.floor((+ds.slice(5,7)-1)/3)+1);return ds.slice(0,4);};
+  var lab=function(k){if(EQ==='day')return MN[+k.slice(5,7)]+' '+(+k.slice(8));if(EQ==='week')return 'wk '+(+k.slice(5,7))+'/'+(+k.slice(8));if(EQ==='month')return MN[+k.slice(5)]+' '+k.slice(2,4);if(EQ==='quarter')return k.slice(5)+' '+k.slice(2,4);return k;};
+  var P=[],by={};d.forEach(function(t){var k=key(t);if(!by[k]){by[k]={k:k,pnl:0,days:0};P.push(by[k]);}by[k].pnl+=t.day_pnl;by[k].days++;});
+  var cum=0;P.forEach(function(p){cum+=p.pnl;p.cum=cum;});
+  var n=P.length,W=1000,H=260,pl=10,pr=70,pt=26,pb=34,mx=0,cl=0,ch=0;P.forEach(function(p){mx=Math.max(mx,Math.abs(p.pnl));cl=Math.min(cl,p.cum);ch=Math.max(ch,p.cum);});mx=mx||1;
+  var step=(W-pl-pr)/n,bw=Math.max(2,Math.min(70,step*.62)),zy=pt+(H-pt-pb)/2,half=(H-pt-pb)/2-4,X=function(i){return pl+step*(i+.5);};
+  var cr=(ch-cl)||1,CY=function(v){return pt+(ch-v)/cr*(H-pt-pb);},g='';
+  g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+zy+'" y2="'+zy+'" stroke="rgba(230,200,200,0.2)"/>';
+  var showLab=n<=24;
+  P.forEach(function(p,i){var h=Math.abs(p.pnl)/mx*half,up=p.pnl>=0,y=up?zy-h:zy,col=up?'#00e5cc':'#cc1111';
+    g+='<g><title>'+lab(p.k)+': '+perfNum(p.pnl)+' · running total '+perfNum(p.cum)+(EQ==='day'?'':' · '+p.days+' trading days')+'</title><rect x="'+(X(i)-bw/2).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(1,h).toFixed(1)+'" rx="1.5" fill="'+col+'" opacity=".55"/></g>';
+    if(showLab)g+='<text x="'+X(i).toFixed(1)+'" y="'+(up?y-4:y+h+11).toFixed(1)+'" fill="'+col+'" font-size="'+(n>14?9:11)+'" text-anchor="middle">'+perfNum(p.pnl)+'</text>';
+    if(showLab||i%Math.ceil(n/12)===0||i===n-1)g+='<text x="'+X(i).toFixed(1)+'" y="'+(H-14)+'" fill="rgba(200,160,160,0.55)" font-size="10" text-anchor="middle">'+lab(p.k)+'</text>';});
+  var path='';P.forEach(function(p,i){path+=(i?'L':'M')+X(i).toFixed(1)+' '+CY(p.cum).toFixed(1);});
+  var last=P[n-1].cum,lc='#ff2be0';
+  g+='<path d="'+path+'" fill="none" stroke="'+lc+'" stroke-width="2"/><circle cx="'+X(n-1).toFixed(1)+'" cy="'+CY(last).toFixed(1)+'" r="4" fill="'+lc+'"/>';
+  g+='<text x="'+(W-pr+8)+'" y="'+(CY(last)+4).toFixed(1)+'" fill="'+lc+'" font-size="12" font-weight="600">'+perfNum(last)+'</text>';
+  g+='<text x="'+(W-pr+8)+'" y="'+(CY(ch)+4).toFixed(1)+'" fill="rgba(200,160,160,0.45)" font-size="9">'+(ch!==last?'high '+perfNum(ch):'')+'</text><text x="'+(W-pr+8)+'" y="'+(CY(cl)+4).toFixed(1)+'" fill="rgba(200,160,160,0.45)" font-size="9">'+(cl!==last&&cl<0?'low '+perfNum(cl):'')+'</text>';
+  var tg=[['day','Day'],['week','Week'],['month','Month'],['quarter','Quarter'],['year','Year']].map(function(t){var on=t[0]===EQ;return '<button type="button" onclick="tpEq(\''+t[0]+'\')" style="font:600 10px ui-monospace,Menlo,monospace;padding:4px 10px;border-radius:6px;cursor:pointer;margin-right:4px;background:'+(on?'rgba(0,229,204,0.14)':'rgba(140,20,20,0.08)')+';color:'+(on?'#00e5cc':'rgba(200,160,160,0.6)')+';border:1px solid '+(on?'rgba(0,229,204,0.35)':'rgba(140,20,20,0.25)')+'">'+t[1]+'</button>';}).join('');
+  var up=P.filter(function(p){return p.pnl>0;}).length,best=P.slice().sort(function(a,b){return b.pnl-a.pnl;})[0],worst=P.slice().sort(function(a,b){return a.pnl-b.pnl;})[0];
+  var unit={day:'days',week:'weeks',month:'months',quarter:'quarters',year:'years'}[EQ];
+  return '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px"><div>'+perfLabel('MONEY · P&amp;L PER '+EQ.toUpperCase()+' + RUNNING TOTAL')+tg+'</div>'+
+    '<div style="font-size:10px;color:rgba(200,160,160,0.7)">green '+unit+' <b style="color:#00e5cc">'+up+'</b> of '+n+' · best <b style="color:#00e5cc">'+perfNum(best.pnl)+'</b> ('+lab(best.k)+') · worst <b style="color:#cc1111">'+perfNum(worst.pnl)+'</b> ('+lab(worst.k)+') · total <b style="color:'+(last>=0?'#00e5cc':'#cc1111')+'">'+perfNum(last)+'</b></div></div>'+
+    '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+g+'</svg>'+
+    '<div style="font-size:9px;color:rgba(200,160,160,0.45)">Bars = P&amp;L for each '+EQ+' (hover for details). Pink line = running total, adding every '+EQ+' up.</div>';
 }
+function tpEq(v){try{localStorage.setItem('tp:eq',v);}catch(e){}var y=window.scrollY;document.getElementById('root').innerHTML=renderCombinedWidget();window.scrollTo(0,y);}
 
 function _payoffStats(D){
   var e=D.edges||[];
@@ -507,6 +521,8 @@ function renderCombinedWidget(){
   var html='<div style="'+css+'">';
   html+='<div style="grid-column:1/-1">'+_filterBar('perf-combined')+'</div>';
   if (PVIEW === 'perf') {
+    var _po=(function(){try{return localStorage.getItem('tp:progOpen')!=='0';}catch(e){return true;}})();
+    html+='<details style="grid-column:1/-1;padding:2px;border:1px solid rgba(140,20,20,0.2);border-radius:8px;padding:8px 10px"'+(_po?' open':'')+' ontoggle="try{localStorage.setItem(\'tp:progOpen\',this.open?\'1\':\'0\')}catch(e){}"><summary style="cursor:pointer;color:rgba(200,160,160,0.75);font-size:10px;letter-spacing:0.15em">AM I IMPROVING? · WINS · MONEY USED</summary><div style="margin-top:8px">'+_progress()+'</div></details>';
     html+='<div style="grid-column:1/-1">'+_combinedHero(D)+'</div>';
     // bot paper test panel removed Nov 15 (your page is your trades only; the bot lives on Trading Strategy + Trade Replay)
   }
@@ -520,7 +536,6 @@ function renderCombinedWidget(){
     html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('BUDGET · $150 PER 2 WEEKS')+_budget2w(D)+'</div>';
     html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('P&L CALENDAR')+_pnlCalendar(D)+'</div>';
     html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('MONTHLY')+_compactMonthly(D)+'</div>';
-    html+='<div style="grid-column:1/-1;padding:2px;margin-top:10px">'+perfLabel('AM I IMPROVING? · WINS · MONEY USED')+_progress()+'</div>';
   } else {
     if(D.alpha){
       html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('STRIKE ZONE')+_strikeZone(D)+'</div>';
