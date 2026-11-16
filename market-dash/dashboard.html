@@ -1090,11 +1090,13 @@
       } else {
         var gdp = m.real_gdp, cpi = m.cpi, pce = m.core_pce;
         var ff = m.fed_funds, curve = m.curve_2s10s;
-        out += '<div class="p-row"><span class="p-val-sm">Growth ' + (ok(gdp) ? num(gdp.latest, 1) + " " + signed(gdp.change, 1) : na()) + '</span></div>';
-        out += '<div class="p-row"><span class="p-val-sm">CPI ' + (ok(cpi) ? num(cpi.latest, 1) + " " + signed(cpi.change, 2) : na()) + '</span></div>';
-        out += '<div class="p-row"><span class="p-val-sm">PCE ' + (ok(pce) ? num(pce.latest, 2) + " " + signed(pce.change, 2) : na()) + '</span></div>';
-        out += '<div class="p-row"><span class="p-val-sm">Fed funds ' + (ok(ff) ? num(ff.latest, 2, "%") + " " + signed(ff.change, 2) : na()) + '</span></div>';
-        out += '<div class="p-row"><span class="p-val-sm">2s10s ' + (ok(curve) ? signed(curve.spread, 2) + " " + esc(curve.read || "") : na()) + '</span></div>';
+        var y10 = m.yield_10y;
+        out += '<div class="p-row"><span class="p-val-sm">Growth ' + (ok(gdp) ? num(gdp.latest, 1) + " " + signed(gdp.change, 1) : na()) + '</span></div>' + _ptrend(function (x) { return get(x, "macro.real_gdp.latest"); }, "release");
+        out += '<div class="p-row"><span class="p-val-sm">CPI ' + (ok(cpi) ? num(cpi.latest, 1) + " " + signed(cpi.change, 2) : na()) + '</span></div>' + _ptrend(function (x) { return get(x, "macro.cpi.latest"); }, "release");
+        out += '<div class="p-row"><span class="p-val-sm">PCE ' + (ok(pce) ? num(pce.latest, 2) + " " + signed(pce.change, 2) : na()) + '</span></div>' + _ptrend(function (x) { return get(x, "macro.core_pce.latest"); }, "release");
+        out += '<div class="p-row"><span class="p-val-sm">Fed funds ' + (ok(ff) ? num(ff.latest, 2, "%") + " " + signed(ff.change, 2) : na()) + '</span></div>' + _ptrend(function (x) { return get(x, "macro.fed_funds.latest"); }, "change");
+        if (ok(y10)) out += '<div class="p-row"><span class="p-val-sm">10y ' + num(y10.latest, 2, "%") + " " + signed(y10.change, 2) + '</span></div>' + _ptrend(function (x) { return get(x, "macro.yield_10y.latest"); }, "session");
+        out += '<div class="p-row"><span class="p-val-sm">2s10s ' + (ok(curve) ? signed(curve.spread, 2) + " " + esc(curve.read || "") : na()) + '</span></div>' + _ptrend(function (x) { return get(x, "macro.curve_2s10s.spread"); }, "session");
       }
 
       // Catalysts
@@ -1240,7 +1242,7 @@
         if (!ok(c)) return;
         out += '<div class="p-row"><span class="p-val-sm" style="color:#DDD9E8">' + esc(k.replace(/_/g, " ")) + '</span></div>';
         out += '<div class="p-row"><span class="p-val-sm">net ' + signed(c.nonCommercialNet, 0) + '</span>' +
-          '<span class="p-val-sm">Δ ' + signed(c.nonCommercialNetChange, 0) + '</span></div>';
+          '<span class="p-val-sm">Δ ' + signed(c.nonCommercialNetChange, 0) + '</span></div>' + _ptrend(function (x) { return get(x, "positioning." + k + ".nonCommercialNet"); }, "week");
       });
       out += '<div class="p-val-sm p-dim" style="margin-top:4px">COT = Tue data released Fri — stale by design</div>';
       return out;
@@ -1605,6 +1607,7 @@
       out += '<div class="p-row"><span class="p-val-sm">Laggards: ' + esc((s.laggards || []).join(", ") || "—") + '</span></div>';
       out += '<div class="p-row"><span class="p-val-sm">Breadth: ' + val(s.breadth) + '</span></div>';
       out += '<div class="p-row"><span class="p-val-sm p-dim">' + esc(tone + ", " + flavor) + '</span></div>';
+      out += _sectorHeat();
       out += '</div>';
       return out;
     }
@@ -3197,7 +3200,7 @@
         var volCls = vol2 < 0.15 ? "p-neg" : vol2 < 0.35 ? "p-warn" : "p-pos";
         mathHtml += '<div class="p-sep"></div>';
         mathHtml += '<div class="p-lbl">Regime Math</div>';
-        mathHtml += '<div class="p-row"><span class="p-val-sm">√det(G) ' + num(vol2, 3) + ' <span class="' + volCls + '">' + volLabel + '</span></span></div>';
+        mathHtml += '<div class="p-row"><span class="p-val-sm">√det(G) ' + num(vol2, 3) + ' <span class="' + volCls + '">' + volLabel + '</span></span></div>' + _ptrend(function (x) { return get(x, "quant.geometry.diversification_volume"); }, "session");
         if (has(geom.variance_ratio)) {
           var vr = geom.variance_ratio;
           var vrLabel = vr > 1.05 ? "trending" : vr < 0.95 ? "mean-reverting" : "random walk";
@@ -6249,7 +6252,7 @@
     }
     return '<div style="display:flex;align-items:flex-end;' +
       'border-bottom:1px solid var(--line);margin:8px 0 16px">' +
-      tab("nasdaq", "Nasdaq") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("replay", "Trade Replay") + tab("dash", "Research") + "</div>";
+      tab("nasdaq", "QQQ") + tab("perf", "Trading Performance") + tab("strategy", "Trading Strategy") + tab("dash", "Research") + "</div>";
   }
 
   // ── TRADING COCKPIT ─────────────────────────────────────────────────────
@@ -7475,6 +7478,44 @@
       dataHtml: secWide("QQQ data · month by month", gsData(G)) };
   }
 
+  // ===== Nov 16: Research trend lines + how long each move has lasted =====
+  function _ptDays() { var by = {}; H.forEach(function (x) { if (x && x.entry_date) by[x.entry_date] = x; }); return Object.keys(by).sort().map(function (d) { return by[d]; }); }
+  function _ptStreak(pts, unit) {   // pts: [{d, v}] one per session; streak counted on actual changes (monthly / weekly data only changes on release)
+    var ch = []; pts.forEach(function (p, i) { if (i && p.v !== pts[i - 1].v) ch.push({ d: p.d, s: p.v > pts[i - 1].v ? 1 : -1 }); });
+    if (!ch.length) return { t: "flat all " + pts.length + " sessions", c: "#8b8ba6" };
+    var s = ch[ch.length - 1].s, k = 0, i = ch.length - 1; while (i >= 0 && ch[i].s === s) { k++; i--; }
+    var since = ch[i + 1].d, MN = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], fd = function (x) { return MN[+x.slice(5, 7)] + " " + (+x.slice(8)); };
+    var held = 0; for (var j = pts.length - 1; j > 0 && pts[j].v === pts[j - 1].v; j--) held++;
+    return { t: (s > 0 ? "▲ up " : "▼ down ") + k + " " + unit + (k > 1 ? "s" : "") + " in a row · since " + fd(since) + (held >= 2 ? " · unchanged " + held + " sessions" : ""), c: s > 0 ? "#00E676" : "#FF4D6A" };
+  }
+  function _ptrend(get1, unit, col) {
+    var pts = []; _ptDays().forEach(function (x) { var v = Number(get1(x)); if (isFinite(v) && get1(x) !== null && get1(x) !== undefined) pts.push({ d: x.entry_date, v: v }); });
+    if (pts.length < 3) return "";
+    var W = 200, Hh = 22, lo = Math.min.apply(null, pts.map(function (p) { return p.v; })), hi = Math.max.apply(null, pts.map(function (p) { return p.v; })); if (hi === lo) { hi += 1; lo -= 1; }
+    var n = pts.length, d = pts.map(function (p, i) { return (i ? "L" : "M") + (i / (n - 1) * W).toFixed(1) + " " + (2 + (hi - p.v) / (hi - lo) * (Hh - 4)).toFixed(1); }).join("");
+    var st = _ptStreak(pts, unit || "session"), last = pts[n - 1];
+    return '<svg viewBox="0 0 ' + W + ' ' + Hh + '" preserveAspectRatio="none" style="width:100%;height:20px;display:block;margin:1px 0 0"><title>' + esc(pts[0].d + " → " + last.d + " · " + n + " sessions") + '</title><path d="' + d + '" fill="none" stroke="' + (col || "#9CA3C7") + '" stroke-width="1.4" vector-effect="non-scaling-stroke"/><circle cx="' + W + '" cy="' + (2 + (hi - last.v) / (hi - lo) * (Hh - 4)).toFixed(1) + '" r="2.2" fill="' + st.c + '"/></svg>' +
+      '<div style="font-size:9.5px;color:' + st.c + ';margin:0 0 6px;letter-spacing:.02em">' + st.t + '</div>';
+  }
+  function _sectorHeat() {   // 11 sectors × last 20 sessions, colour = that day's %; streak = days in a row beating / trailing the sector average
+    var days = _ptDays().filter(function (x) { return get(x, "sectors.rows", []).length; }).slice(-20); if (days.length < 3) return "";
+    var names = []; days[days.length - 1].sectors.rows.forEach(function (r) { names.push(r.sector); });
+    var cell = function (p) { if (p === null) return "rgba(255,255,255,.03)"; var a = Math.min(1, Math.abs(p) / 2); return p >= 0 ? "rgba(0,230,118," + (.12 + a * .7).toFixed(2) + ")" : "rgba(255,77,106," + (.12 + a * .7).toFixed(2) + ")"; };
+    var avg = days.map(function (x) { var r = x.sectors.rows, s = 0; r.forEach(function (q) { s += q.pct_change; }); return s / r.length; });
+    var rows = names.map(function (nm) {
+      var v = days.map(function (x) { var q = x.sectors.rows.filter(function (r) { return r.sector === nm; })[0]; return q ? q.pct_change : null; });
+      var rel = v.map(function (p, i) { return p === null ? 0 : (p > avg[i] ? 1 : -1); }), s = rel[rel.length - 1], k = 0; for (var i = rel.length - 1; i >= 0 && rel[i] === s; i--) k++;
+      var tag = (s > 0 ? "leading " : "lagging ") + k + "d", tc = s > 0 ? "#00E676" : "#FF4D6A";
+      var short = nm.replace("Communication Services", "Comm Svcs").replace("Consumer Discretionary", "Cons Disc").replace("Consumer Staples", "Cons Staples").replace("Information Technology", "Info Tech").replace("Real Estate", "Real Est");
+      return '<div style="display:grid;grid-template-columns:78px 1fr 64px;gap:6px;align-items:center;margin:1px 0"><span style="font-size:10px;color:#9CA3C7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(short) + '</span>' +
+        '<div style="display:grid;grid-template-columns:repeat(' + days.length + ',1fr);gap:1px">' + v.map(function (p, i) { return '<div title="' + esc(nm + " · " + days[i].entry_date + " · " + (p === null ? "—" : (p > 0 ? "+" : "") + p.toFixed(2) + "%")) + '" style="height:12px;border-radius:1px;background:' + cell(p) + '"></div>'; }).join("") + '</div>' +
+        '<span style="font-size:9.5px;color:' + tc + ';text-align:right;white-space:nowrap">' + tag + '</span></div>';
+    }).join("");
+    var MN = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], fd = function (x) { return MN[+x.slice(5, 7)] + " " + (+x.slice(8)); };
+    return '<div class="p-sep"></div><div class="p-lbl">Sector streaks <span class="p-dim">· last ' + days.length + ' sessions</span></div>' + rows +
+      '<div style="display:flex;justify-content:space-between;font-size:9px;color:#5D6488;margin:3px 70px 0 84px"><span>' + fd(days[0].entry_date) + '</span><span>' + fd(days[days.length - 1].entry_date) + '</span></div>' +
+      '<div class="p-val-sm p-dim" style="font-size:10px;margin-top:4px">Green / red = that day\'s %. Tag = days in a row the sector beat (leading) or trailed (lagging) the average sector. Hover a square for the number.</div>';
+  }
   // ===== Nov 15: Where the money sits (replaces the strike × expiry grid as the main view) =====
   window.__ORMM = (function () { try { var v = localStorage.getItem("md:ormm"); return /^(prem|vol|oi)$/.test(v) ? v : "prem"; } catch (x) { return "prem"; } })();
   function _orMoney(e) {
@@ -8423,6 +8464,14 @@
     // leaders / laggards (Alpaca daily bars) · GEX sign (logger). All from the relay, ~15 min delayed; pulled on load and every 30 s.
     if (!window.__hdrqT) {
       window.__hdrq = {};
+      window.__hdrNews = function () {   // Nov 16: today's US news (PT) from the latest logged calendar
+        var today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" }), ev = get(H[H.length - 1], "calendar.all_events", []) || [];
+        var ptDate = function (s) { return new Date(s).toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" }); }, ptTime = function (s) { return new Date(s).toLocaleTimeString("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit" }).replace(/ (AM|PM)/, ""); };
+        if (!ev.some(function (x) { return x.date && ptDate(x.date) >= today; })) return 'news <span style="color:var(--dim)">loads with today\'s first log</span>';
+        var t = ev.filter(function (x) { return x.country === "USD" && x.date && ptDate(x.date) === today && /High|Medium/.test(x.impact || ""); });
+        if (!t.length) return 'news <span style="color:var(--dim)">no big US news today</span>';
+        return "news " + t.slice(0, 4).map(function (x) { return '<b style="color:' + (x.impact === "High" ? "#ff9f0a" : "var(--txt)") + '">' + ptTime(x.date) + " " + esc(x.title) + "</b>"; }).join(", ") + (t.length > 4 ? " +" + (t.length - 4) : "");
+      };
       window.__hdrqHtml = function () {
         var Q = window.__hdrq, out = [], b = function (t) { return '<b style="color:var(--txt)">' + t + "</b>"; },
             pc = function (p) { return p == null ? "" : ' <span style="color:var(' + (p > 0 ? "--up" : p < 0 ? "--down" : "--flat") + ')">' + (p > 0 ? "+" : "") + p.toFixed(2) + "%</span>"; };
@@ -8432,6 +8481,7 @@
         if (p && p.qqq_vol) out.push("QQQ vol " + b((p.qqq_vol / 1e6).toFixed(1) + "M"));
         // Nov 15: sector leaders / laggards removed from the strip (asked)
         var g = Q.gex; if (g && g.regime) out.push("GEX " + '<b style="color:var(' + (/NEG/i.test(g.regime) ? "--down" : "--up") + ')">' + (/NEG/i.test(g.regime) ? "neg" : "pos") + "</b>");
+        out.push(window.__hdrNews());
         return out.join("  ·  ");
       };
       var hdrqPull = function () {
@@ -8540,7 +8590,10 @@
       (TAB === "replay"
         ? ('<div class="flow"><iframe src="trade-replay.html" title="Trade Replay" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0c0710"></iframe></div>')
         : TAB === "strategy"
-        ? ('<div class="flow"><iframe src="playbook/index.html" title="3v3 Playbook (v9.2 locked)" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#0c0710;margin-bottom:12px"></iframe><details class="tulip-fold"' + (window.TULIP_OPEN ? ' open' : '') + ' ontoggle="window.TULIP_OPEN=this.open" style="border:1px solid var(--line);border-radius:10px;background:#0c0710"><summary style="cursor:pointer;padding:12px 14px;font-weight:600">Tulip Mania Strategy (v3.2, history)</summary><iframe src="tulip-mania.html" title="Trading Strategy: Tulip Mania" style="width:100%;height:calc(100vh - 170px);border:0;border-top:1px solid var(--line);border-radius:0 0 10px 10px;background:#0c0710"></iframe></details></div>')
+        ? ('<div class="flow">' + (function () {   // Nov 16: Trade Replay first, then the playbook; both fold, state remembered
+            var op = function (k) { try { return localStorage.getItem("md:fold:" + k) !== "0"; } catch (x) { return true; } };
+            var fold = function (k, title, src, bg) { return '<details' + (op(k) ? " open" : "") + ' ontoggle="try{localStorage.setItem(\'md:fold:' + k + '\',this.open?\'1\':\'0\')}catch(e){}" style="border:1px solid var(--line);border-radius:10px;background:' + bg + ';margin-bottom:12px"><summary style="cursor:pointer;padding:12px 14px;font-weight:600">' + title + '</summary><iframe src="' + src + '" title="' + title + '" loading="lazy" style="width:100%;height:calc(100vh - 170px);border:0;border-top:1px solid var(--line);border-radius:0 0 10px 10px;background:' + bg + '"></iframe></details>'; };
+            return fold("replay", "Trade Replay", "trade-replay.html", "#0c0710") + fold("playbook", "3v3 Playbook", "playbook/index.html", "#0c0710"); })() + '<details class="tulip-fold"' + (window.TULIP_OPEN ? ' open' : '') + ' ontoggle="window.TULIP_OPEN=this.open" style="border:1px solid var(--line);border-radius:10px;background:#0c0710"><summary style="cursor:pointer;padding:12px 14px;font-weight:600">Tulip Mania Strategy (v3.2, history)</summary><iframe src="tulip-mania.html" title="Trading Strategy: Tulip Mania" style="width:100%;height:calc(100vh - 170px);border:0;border-top:1px solid var(--line);border-radius:0 0 10px 10px;background:#0c0710"></iframe></details></div>')
         : TAB === "perf"
         ? ('<div class="flow"><iframe src="trading-performance.html" title="Trading Performance" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:10px;background:#160a0e"></iframe></div>')
         : TAB === "journal"
