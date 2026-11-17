@@ -7889,9 +7889,9 @@
     var hi = null; gr.cells.forEach(function (c) { var v = Number(c[mm]) || 0; if (!hi || v > hi.v) hi = { v: v, c: c }; });
     var above = 0, below = 0, mid = Math.floor(nm / 2); for (m = 0; m < nm; m++) { if (m > mid) above += rowT[m]; else if (m < mid) below += rowT[m]; }
     var ss = tf.short_share || {}, ls = tf.long_share || {}, sv = _orN(ss[mm]), lv = _orN(ls[mm]);
-    var split = (sv !== null && lv !== null) ? '<div style="margin:12px 0 4px;font-size:11px;letter-spacing:.12em;color:var(--dim)">SHORT- VS LONG-DATED · ' + ML[mm].toUpperCase() + '</div>' +
-      '<div style="display:flex;height:18px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.06)"><div title="short-dated" style="width:' + sv + '%;background:#ff2be0;opacity:.8"></div><div style="flex:1"></div><div title="long-dated" style="width:' + lv + '%;background:#29b6f6;opacity:.8"></div></div>' +
-      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:3px"><span style="color:#ff2be0">short-dated ' + sv.toFixed(1) + '%</span><span style="color:var(--dim)">' + (100 - sv - lv > 0.5 ? "other " + (100 - sv - lv).toFixed(1) + "%" : "") + '</span><span style="color:#29b6f6">long-dated ' + lv.toFixed(1) + '%</span></div>' : "";
+    var split = (sv !== null && lv !== null) ? '<div style="margin:12px 0 4px;font-size:11px;letter-spacing:.12em;color:var(--dim)">NEAR VS FAR EXPIRY · ' + ML[mm].toUpperCase() + '</div>' +
+      '<div style="display:flex;height:18px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.06)"><div title="near expiry" style="width:' + sv + '%;background:#ff2be0;opacity:.8"></div><div style="flex:1"></div><div title="far expiry" style="width:' + lv + '%;background:#29b6f6;opacity:.8"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:3px"><span style="color:#ff2be0">near expiry ' + sv.toFixed(1) + '%</span><span style="color:var(--dim)">' + (100 - sv - lv > 0.5 ? "other " + (100 - sv - lv).toFixed(1) + "%" : "") + '</span><span style="color:#29b6f6">far expiry ' + lv.toFixed(1) + '%</span></div>' : "";
     // over time: share of the metric at the money and in weeklies, one point per session
     var by = {}; H.forEach(function (x) { if (x && x.entry_date && get(x, "time_footprint.grid.cells")) by[x.entry_date] = x; });
     var pts = Object.keys(by).sort().filter(function (d) { return d <= (e.entry_date || "9"); }).map(function (d) {
@@ -8872,10 +8872,28 @@
         else if (dayMs < open) tail = "opens in " + _dur(open - dayMs);
         else if (dayMs >= close) tail = "day done · see you 6:30";
         else { var k = Math.floor((dayMs - open) / 1200e3), end = Math.min(open + (k + 1) * 1200e3, close);
-          tail = '<b style="color:var(--accent)">candle #' + (k + 1) + '</b> of 8 · ' + _dur(end - dayMs) + " left"; }
+          tail = '<b style="color:var(--accent)">candle #' + (k + 1) + '</b> of 8 · ' + _dur(end - dayMs) + " left" + (window.__ccStreak || ""); }
         return clock + "  ·  " + tail;
       };
       (function tick() { var el = document.getElementById("cclock"); if (el) el.innerHTML = window.__cclockTxt(); requestAnimationFrame(tick); })();
+      // move streak: today's 1-min QQQ bars (relay, ~15 s old) → 20-min candles from 6:30 PT → how many in a row the same colour
+      var _ccPT = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit", hour12: false, year: "numeric", month: "2-digit", day: "2-digit" });
+      var ccPull = function () {
+        fetch("https://gex-relay.jag12111997.workers.dev/live/bars", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (j) {
+          if (!j || !Array.isArray(j.candles) || !j.candles.length) return;
+          var today = null, K = {};
+          j.candles.slice().sort(function (a, b) { return a.time - b.time; }).forEach(function (c) {
+            var p = {}; _ccPT.formatToParts(new Date(c.time * 1000)).forEach(function (x) { p[x.type] = x.value; });
+            var d = p.year + p.month + p.day, m = (Number(p.hour) % 24) * 60 + Number(p.minute) - 390; if (m < 0 || m >= 150) return;
+            if (d !== today) { if (today && d < today) return; today = d; K = {}; }
+            var k = Math.floor(m / 20); if (!K[k]) K[k] = { o: c.open, c: c.close }; else K[k].c = c.close; });
+          var ks = Object.keys(K).map(Number).sort(function (a, b) { return a - b; }); if (!ks.length) { window.__ccStreak = ""; return; }
+          var col = function (q) { return q.c > q.o ? 1 : q.c < q.o ? -1 : 0; }, last = col(K[ks[ks.length - 1]]), n = 0;
+          for (var i = ks.length - 1; i >= 0 && col(K[ks[i]]) === last && last !== 0; i--) n++;
+          window.__ccStreak = last ? '  ·  <b style="color:var(' + (last > 0 ? "--up" : "--down") + ')">' + (last > 0 ? "▲ " : "▼ ") + n + " " + (last > 0 ? "green" : "red") + " in a row</b>" : "  ·  flat candle";
+        });
+      };
+      ccPull(); setInterval(ccPull, 60000);
     }
     var _header =
       "<header><h1>ༀ</h1>" +
