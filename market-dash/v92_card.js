@@ -571,8 +571,10 @@
     g += '<line x1="10" x2="' + (W - 10) + '" y1="' + axis + '" y2="' + axis + '" stroke="#ffffff22"/>';
     var up = [], dn = [];
     pts.sort(function (a, b) { return a.v - b.v; }).forEach(function (p) {
-      var x = X(p.v), row = p.above ? up : dn, lvl = 0; while (row.some(function (q) { return q.l === lvl && Math.abs(q.x - x) < 150; })) lvl++; row.push({ x: x, l: lvl });
-      var ty = p.above ? axis - 22 - lvl * 14 : axis + 30 + lvl * 14, anchor = x > W - 130 ? "end" : x < 130 ? "start" : "middle";
+      var x = X(p.v), row = p.above ? up : dn, lvl = 0, anchor = x > W - 130 ? "end" : x < 130 ? "start" : "middle", tw = p.lab.length * 6.6 + 10,   // Nov 17: overlap by label width, not distance
+          x0 = anchor === "end" ? x - tw : anchor === "start" ? x : x - tw / 2, x1 = x0 + tw;
+      while (row.some(function (q) { return q.l === lvl && q.x0 < x1 && x0 < q.x1; })) lvl++; row.push({ x0: x0, x1: x1, l: lvl });
+      var ty = p.above ? axis - 22 - lvl * 14 : axis + 30 + lvl * 14;
       g += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + (axis - 16) + '" y2="' + (axis + 16) + '" stroke="' + p.col + '" stroke-width="' + (p.dash ? 1.5 : 2.5) + '"' + (p.dash ? ' stroke-dasharray="3 3"' : "") + '/>' +
         (p.lab.indexOf("QQQ now") === 0 ? '<circle cx="' + x.toFixed(1) + '" cy="' + axis + '" r="5" fill="' + VC.txt + '"/>' : "") +
         '<text x="' + x.toFixed(1) + '" y="' + ty + '" fill="' + p.col + '" font-size="10.5" font-weight="600" text-anchor="' + anchor + '">' + esc(p.lab) + "</text>";
