@@ -1,5 +1,6 @@
 {
  "rules_since": "2026-11-16",
+ "rules_updated": "2026-11-17",
  "entries": [
   {
    "date": "2026-11-17",
@@ -10,9 +11,9 @@
    "first": "7:31",
    "last": "9:19",
    "best": "7:31 P 651 +206",
-   "score": 6.0,
-   "kept": 6,
-   "of": 10,
+   "score": 6.4,
+   "kept": 7,
+   "of": 11,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -20,9 +21,14 @@
      "why": "11 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "2 flips"
+     "why": "2 against: 8:03 put, 8:21 call"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #6, #8 had 4, 3"
     },
     {
      "rule": "Never add to a loser",
@@ -30,8 +36,8 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median stop $0.15 under entry"
     },
     {
@@ -67,7 +73,7 @@
    ],
    "summary": "Woke up late and was right place, right time. Stayed at 1 contract on purpose after yesterday. Caught the big put move I knew was coming, then sat through the chop and kept the bulk of it. Could have made more with 2 or by holding, but I'm in account-recovery mode. $1,800 in the account stressed me out \u2014 going to hold it around $1,250 and withdraw weekly.",
    "right": "P651 held 11 min for +$206 \u2014 the move I planned for. Size stayed at 1. Finished green +$172.",
-   "fix": "11 trades (cap is 8). 4 losers in a row 8:03\u20138:21 and kept going. Flipped puts\u2194calls within a minute at 8:21. Stops still ~$0.15, not $0.30.",
+   "fix": "11 trades (cap is 8). 4 losers in a row 8:03\u20138:21 and kept going. Flipped puts\u2194calls within a minute at 8:21.",
    "ramble": true
   },
   {
@@ -79,9 +85,9 @@
    "first": "6:31",
    "last": "7:30",
    "best": "6:52 P 662.0 +64",
-   "score": 3.0,
-   "kept": 3,
-   "of": 10,
+   "score": 3.6,
+   "kept": 4,
+   "of": 11,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -89,9 +95,14 @@
      "why": "15 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "14 flips"
+     "why": "7 against: 6:33 call, 6:34 call, 6:36 call, 6:37 call"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2 had 12, 3"
     },
     {
      "rule": "Never add to a loser",
@@ -99,8 +110,8 @@
      "why": "3 adds into red"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median stop $0.15 under entry"
     },
     {
@@ -136,7 +147,7 @@
    ],
    "summary": "Whiplashed all morning. Bought in multiple times on wrong entries and added without confirmation. Limits felt slow \u2014 price ran past the order, so I chased. Stops too tight for the chop. Lost $166, way past my threshold. Felt like I was carrying too much money and I went past my 8-trade sweet spot.",
    "right": "Spotted the problems myself the same day and wrote rules for them. Last put (P662) held 38 min for +$64.",
-   "fix": "Mondays = paper. 8 trades max then close Webull. No flip within 10 min of a stop. Stops $0.30. Limit at ask + $0.02\u20130.03, skip if it ran $0.10 past.",
+   "fix": "Mondays = paper. 8 trades max then close Webull. Stops $0.15\u20130.20. Only enter with the 20-min candle, max 2 entries per candle. Limit at ask + $0.02\u20130.03, skip if it ran $0.10 past.",
    "ramble": true
   },
   {
@@ -148,9 +159,9 @@
    "first": "6:34",
    "last": "7:20",
    "best": "6:55 put 677.0 +139",
-   "score": 2.5,
-   "kept": 2,
-   "of": 8,
+   "score": 3.3,
+   "kept": 3,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -158,9 +169,14 @@
      "why": "11 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "7 flips"
+     "why": "3 against: 6:34 call, 6:47 call, 7:19 call"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2 had 5, 4"
     },
     {
      "rule": "Never add to a loser",
@@ -168,8 +184,8 @@
      "why": "1 adds into red"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.16 a contract"
     },
     {
@@ -217,9 +233,9 @@
    "first": "6:31",
    "last": "7:25",
    "best": "6:34 call 691.0 +68",
-   "score": 3.8,
-   "kept": 3,
-   "of": 8,
+   "score": 4.4,
+   "kept": 4,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -227,9 +243,14 @@
      "why": "12 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "3 flips"
+     "why": "8 against: 6:31 put, 6:33 put, 6:49 put, 6:51 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2, #3 had 5, 4, 3"
     },
     {
      "rule": "Never add to a loser",
@@ -237,8 +258,8 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.16 a contract"
     },
     {
@@ -286,9 +307,9 @@
    "first": "6:32",
    "last": "8:00",
    "best": "7:18 call 695.0 +40",
-   "score": 8.8,
+   "score": 7.8,
    "kept": 7,
-   "of": 8,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -296,9 +317,14 @@
      "why": "5 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
-     "ok": true,
-     "why": "none"
+     "rule": "No entry against the 20-min candle",
+     "ok": false,
+     "why": "3 against: 6:37 call, 6:46 call, 7:18 call"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1 had 3"
     },
     {
      "rule": "Never add to a loser",
@@ -306,8 +332,8 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.17 a contract"
     },
     {
@@ -355,9 +381,9 @@
    "first": "6:32",
    "last": "7:25",
    "best": "6:54 call 680.0 +92",
-   "score": 7.5,
-   "kept": 6,
-   "of": 8,
+   "score": 7.8,
+   "kept": 7,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -365,9 +391,14 @@
      "why": "8 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "1 flips"
+     "why": "3 against: 6:32 call, 6:33 call, 6:33 call"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2 had 3, 4"
     },
     {
      "rule": "Never add to a loser",
@@ -375,8 +406,8 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.14 a contract"
     },
     {
@@ -424,9 +455,9 @@
    "first": "6:32",
    "last": "9:48",
    "best": "7:51 call 678.0 +99",
-   "score": 3.8,
-   "kept": 3,
-   "of": 8,
+   "score": 4.4,
+   "kept": 4,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -434,9 +465,14 @@
      "why": "15 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "6 flips"
+     "why": "7 against: 6:46 put, 6:49 put, 6:52 put, 6:52 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2 had 6, 3"
     },
     {
      "rule": "Never add to a loser",
@@ -444,8 +480,8 @@
      "why": "4 adds into red"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.16 a contract"
     },
     {
@@ -493,9 +529,9 @@
    "first": "6:36",
    "last": "7:23",
    "best": "6:36 call 667.0 +92",
-   "score": 6.2,
-   "kept": 5,
-   "of": 8,
+   "score": 6.7,
+   "kept": 6,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -503,9 +539,14 @@
      "why": "7 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "1 flips"
+     "why": "2 against: 6:36 call, 7:00 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #2 had 4"
     },
     {
      "rule": "Never add to a loser",
@@ -513,8 +554,8 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.19 a contract"
     },
     {
@@ -562,9 +603,9 @@
    "first": "6:38",
    "last": "1:00",
    "best": "6:40 put 667.0 +55",
-   "score": 5.0,
-   "kept": 4,
-   "of": 8,
+   "score": 3.3,
+   "kept": 3,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -572,9 +613,14 @@
      "why": "10 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
-     "ok": true,
-     "why": "none"
+     "rule": "No entry against the 20-min candle",
+     "ok": false,
+     "why": "1 against: 8:23 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2 had 4, 3"
     },
     {
      "rule": "Never add to a loser",
@@ -582,7 +628,7 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
+     "rule": "Stops $0.15\u20130.20",
      "ok": false,
      "why": "median loser \u2212$0.06 a contract"
     },
@@ -631,9 +677,9 @@
    "first": "6:43",
    "last": "8:03",
    "best": "6:43 call 701.0 +32",
-   "score": 3.8,
-   "kept": 3,
-   "of": 8,
+   "score": 4.4,
+   "kept": 4,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -641,9 +687,14 @@
      "why": "12 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "2 flips"
+     "why": "1 against: 7:54 call"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #3 had 3, 6"
     },
     {
      "rule": "Never add to a loser",
@@ -651,8 +702,8 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.15 a contract"
     },
     {
@@ -700,9 +751,9 @@
    "first": "7:34",
    "last": "9:28",
    "best": "7:34 call 691.0 +15",
-   "score": 6.2,
-   "kept": 5,
-   "of": 8,
+   "score": 6.7,
+   "kept": 6,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -710,9 +761,14 @@
      "why": "9 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
+     "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "2 flips"
+     "why": "2 against: 7:34 call, 9:01 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #8 had 4"
     },
     {
      "rule": "Never add to a loser",
@@ -720,8 +776,8 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.16 a contract"
     },
     {
@@ -769,9 +825,9 @@
    "first": "10:31",
    "last": "11:56",
    "best": "11:45 put 683.0 +50",
-   "score": 6.2,
+   "score": 5.6,
    "kept": 5,
-   "of": 8,
+   "of": 9,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -779,9 +835,14 @@
      "why": "9 trades"
     },
     {
-     "rule": "No flip within 10 min of a stop",
-     "ok": true,
-     "why": "none"
+     "rule": "No entry against the 20-min candle",
+     "ok": false,
+     "why": "1 against: 11:52 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #13, #16 had 3, 4"
     },
     {
      "rule": "Never add to a loser",
@@ -789,8 +850,8 @@
      "why": "none"
     },
     {
-     "rule": "Stops about $0.30",
-     "ok": false,
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
      "why": "median loser \u2212$0.14 a contract"
     },
     {

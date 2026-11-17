@@ -26,6 +26,41 @@ def load(f, default):
         return default
 
 
+_MIN = None
+def qqq_bars(date):
+    """1-min QQQ bars for the day keyed by minute after 6:30 PT -> (open, close). history/<day>.json first, then qqq_candle_history.json."""
+    global _MIN
+    import datetime as dt
+    t0 = int(dt.datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=dt.timezone.utc).timestamp()) + int(14.5 * 3600)   # 6:30 PT (PST)
+    c = (load(os.path.join("history", date + ".json"), {}) or {}).get("candles")
+    if not c:
+        if _MIN is None:
+            _MIN = load("qqq_candle_history.json", {}).get("minute", [])
+        c = [b for b in _MIN if t0 <= b["time"] < t0 + 390 * 60]
+    out = {}
+    for b in c:
+        k = (b["time"] - t0) // 60
+        if 0 <= k < 390:
+            out[k] = (b["open"], b["close"])
+    return out
+
+
+def candle_dir(bars, t0):
+    """+1 green / -1 red / 0 flat: the 20-min candle the entry sits in, open -> price at entry; if it's barely moved (<$0.05), the candle before."""
+    m = int((t0 - 6.5 * 3600) // 60)
+    k = m // 20
+    for kk in (k, k - 1):
+        if kk < 0:
+            break
+        first = bars.get(kk * 20)
+        last = next((bars[j] for j in range(min(m, kk * 20 + 19), kk * 20 - 1, -1) if j in bars), None)
+        if first and last:
+            d = last[1] - first[0]
+            if abs(d) >= 0.05 or kk < k:
+                return 1 if d > 0 else -1 if d < 0 else 0
+    return 0
+
+
 def hm(sec):   # seconds after midnight PT -> "7:31"
     m = int(sec // 60)
     return "%d:%02d" % ((m // 60 - 1) % 12 + 1, m % 60)
@@ -57,22 +92,32 @@ def score_day(date, fills, cancels, note):
         checks.append({"rule": rule, "ok": ok, "why": why})
 
     chk("8 trades or fewer", n <= 8, "%d trades" % n)
-    # flipping: opposite side within 10 min of a losing exit
-    flips = [g for g in fills if any(g["side"] != f["side"] and 0 <= g["t0"] - f["t1"] <= 600 for f in losses)]
-    chk("No flip within 10 min of a stop", not flips, "%d flips" % len(flips) if flips else "none")
+    # with the trend: calls only while the 20-min QQQ candle is green, puts only while it's red (rule changed Nov 17)
+    bars = qqq_bars(date)
+    if bars:
+        vs = [f for f in fills if candle_dir(bars, f["t0"]) * (1 if f["side"] in ("C", "call") else -1) < 0]
+        chk("No entry against the 20-min candle", not vs,
+            ("%d against: %s" % (len(vs), ", ".join("%s %s" % (hm(f["t0"]), "call" if f["side"] in ("C", "call") else "put") for f in vs[:4]))) if vs else "all with the candle")
+    else:
+        chk("No entry against the 20-min candle", None, "no QQQ bars yet")
+    per = collections.Counter(int((f["t0"] - 6.5 * 3600) // 1200) for f in fills)
+    over = sorted(k for k, v in per.items() if v > 2)
+    chk("Max 2 entries per 20-min candle", not over,
+        ("candle %s had %s" % (", ".join("#%d" % (k + 1) for k in over), ", ".join(str(per[k]) for k in over))) if over else "max %d" % max(per.values()))
     # adding to a loser: same-side entry while an earlier same-side trade is still open and ends red
     adds = [g for g in fills if any(f is not g and f["side"] == g["side"] and f["t0"] < g["t0"] < f["t1"] and f["pnl"] < 0 for f in fills)]
     chk("Never add to a loser", not adds, "%d adds into red" % len(adds) if adds else "none")
-    # stop size: rule is $0.30
+    # stop size: $0.15–0.20 (Nov 17: wider stops lost more on your entries — see the stop study)
     dist = [f["buy"] - f["stop"] for f in fills if f.get("stop")]
+    R = "Stops $0.15–0.20"
     if dist:
         med = sorted(dist)[len(dist) // 2]
-        chk("Stops about $0.30", med >= 0.25, "median stop $%.2f under entry" % med)
+        chk(R, 0.12 <= med <= 0.22, "median stop $%.2f under entry" % med)
     elif losses:
         ml = sorted(f["buy"] - f["sell"] for f in losses)[len(losses) // 2]
-        chk("Stops about $0.30", ml >= 0.25, "median loser −$%.2f a contract" % ml)
+        chk(R, 0.12 <= ml <= 0.22, "median loser −$%.2f a contract" % ml)
     else:
-        chk("Stops about $0.30", None, "no losers")
+        chk(R, None, "no losers")
     # daily stop: no new entry after 3 losses in a row or −$75
     run, cum, broke, why = 0, 0.0, False, "kept"
     for f in sorted(fills, key=lambda x: x["t1"]):
@@ -122,7 +167,7 @@ def main():
         cancels_by[d] = v.get("cancels", [])
     out = [score_day(d, days[d], cancels_by.get(d), notes.get(d)) for d in sorted(days) if days[d]]
     with open(P("journal_log.json"), "w") as fh:
-        json.dump({"rules_since": "2026-11-16", "entries": out[::-1]}, fh, indent=1)
+        json.dump({"rules_since": "2026-11-16", "rules_updated": "2026-11-17", "entries": out[::-1]}, fh, indent=1)
     for e in out:
         print(e["date"], e["trades"], "%+.0f" % e["pnl"], "score", e["score"], "(%d/%d)" % (e["kept"], e["of"]))
 
