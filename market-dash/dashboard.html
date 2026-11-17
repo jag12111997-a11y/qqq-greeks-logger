@@ -8856,12 +8856,12 @@
         var now = new Date(), p = {}; _ccFmt.formatToParts(now).forEach(function (x) { p[x.type] = x.value; });
         var h = Number(p.hour) % 24, mi = Number(p.minute), se = Number(p.second), ms = now.getMilliseconds();
         var hh = h % 12 || 12, clock = hh + ":" + _p2(mi) + ":" + _p2(se) + "." + _p3(ms) + " " + (h < 12 ? "AM" : "PM") + " PT";
-        var dayMs = ((h * 60 + mi) * 60 + se) * 1000 + ms, open = 6.5 * 3600e3, close = 13 * 3600e3, wk = p.weekday !== "Sat" && p.weekday !== "Sun", tail;
+        var dayMs = ((h * 60 + mi) * 60 + se) * 1000 + ms, open = 6.5 * 3600e3, close = 9 * 3600e3, wk = p.weekday !== "Sat" && p.weekday !== "Sun", tail;
         if (!wk) tail = "market closed";
         else if (dayMs < open) tail = "opens in " + _dur(open - dayMs);
-        else if (dayMs >= close) tail = "market closed";
+        else if (dayMs >= close) tail = "day done · see you 6:30";
         else { var k = Math.floor((dayMs - open) / 1200e3), end = Math.min(open + (k + 1) * 1200e3, close);
-          tail = '<b style="color:var(--accent)">candle #' + (k + 1) + '</b> of 20 · ' + _dur(end - dayMs) + " left"; }
+          tail = '<b style="color:var(--accent)">candle #' + (k + 1) + '</b> of 8 · ' + _dur(end - dayMs) + " left"; }
         return clock + "  ·  " + tail;
       };
       (function tick() { var el = document.getElementById("cclock"); if (el) el.innerHTML = window.__cclockTxt(); requestAnimationFrame(tick); })();
