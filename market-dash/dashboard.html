@@ -8846,12 +8846,29 @@
       };
       hdrqPull(); window.__hdrqT = setInterval(hdrqPull, 30000);
     }
+    // ===== Nov 17: candle clock in the header — PT time to the millisecond + which 20-min candle (from 6:30) + time left in it =====
+    if (!window.__cclockOn) {
+      window.__cclockOn = true;
+      var _ccFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: false, weekday: "short" });
+      var _p2 = function (n) { return (n < 10 ? "0" : "") + n; }, _p3 = function (n) { return n < 10 ? "00" + n : n < 100 ? "0" + n : "" + n; };
+      var _dur = function (ms) { var s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return (h ? h + ":" + _p2(m) : m) + ":" + _p2(s % 60) + "." + _p3(ms % 1000); };
+      window.__cclockTxt = function () {
+        var now = new Date(), p = {}; _ccFmt.formatToParts(now).forEach(function (x) { p[x.type] = x.value; });
+        var h = Number(p.hour) % 24, mi = Number(p.minute), se = Number(p.second), ms = now.getMilliseconds();
+        var hh = h % 12 || 12, clock = hh + ":" + _p2(mi) + ":" + _p2(se) + "." + _p3(ms) + " " + (h < 12 ? "AM" : "PM") + " PT";
+        var dayMs = ((h * 60 + mi) * 60 + se) * 1000 + ms, open = 6.5 * 3600e3, close = 13 * 3600e3, wk = p.weekday !== "Sat" && p.weekday !== "Sun", tail;
+        if (!wk) tail = "market closed";
+        else if (dayMs < open) tail = "opens in " + _dur(open - dayMs);
+        else if (dayMs >= close) tail = "market closed";
+        else { var k = Math.floor((dayMs - open) / 1200e3), end = Math.min(open + (k + 1) * 1200e3, close);
+          tail = '<b style="color:var(--accent)">candle #' + (k + 1) + '</b> of 20 · ' + _dur(end - dayMs) + " left"; }
+        return clock + "  ·  " + tail;
+      };
+      (function tick() { var el = document.getElementById("cclock"); if (el) el.innerHTML = window.__cclockTxt(); requestAnimationFrame(tick); })();
+    }
     var _header =
       "<header><h1>ༀ</h1>" +
-      '<span class="stamp">session ' + fmtDate(e.session_date || e.entry_date) +
-      (e.session ? '  <span style="color:var(--accent)">' +
-                   esc(String(e.session).toUpperCase()) + "</span>" : "") +
-      "  ·  fetched " + fmtDateTime(e.fetched_utc) + "</span>" +
+      '<span class="stamp" id="cclock" style="font-variant-numeric:tabular-nums;color:var(--fg,#e8e8f0)">' + (window.__cclockTxt ? window.__cclockTxt() : "") + "</span>" +
       '<span style="flex:1"></span>' +
       '<select id="pick">' + opts + "</select>" +
       '<div id="hdrq" class="stamp" style="flex-basis:100%;width:100%;margin-top:-6px">' + window.__hdrqHtml() + "</div>" +
