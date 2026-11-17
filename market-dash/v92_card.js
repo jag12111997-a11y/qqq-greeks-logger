@@ -566,8 +566,8 @@
     var vs = [va.yval, va.yvah].concat(pts.map(function (p) { return p.v; })).filter(function (v) { return v != null && isFinite(v); });
     if (vs.length < 2) return "";
     var lo = Math.min.apply(null, vs), hi = Math.max.apply(null, vs), pd = (hi - lo) * .08 || 1; lo -= pd; hi += pd;
-    var W = 600, H = 132, X = function (v) { return 10 + (v - lo) / (hi - lo) * (W - 20); }, axis = 70, g = "";
-    if (va.yval != null && va.yvah != null) g += '<rect x="' + X(va.yval).toFixed(1) + '" y="' + (axis - 16) + '" width="' + (X(va.yvah) - X(va.yval)).toFixed(1) + '" height="32" rx="4" fill="#7aa2ff1c" stroke="#7aa2ff55"/><text x="' + ((X(va.yval) + X(va.yvah)) / 2).toFixed(1) + '" y="' + (axis + 4) + '" fill="#7aa2ffaa" font-size="10" text-anchor="middle">yesterday\'s value area ' + p2(va.yval) + "–" + p2(va.yvah) + "</text>";
+    var W = 600, H = 150, X = function (v) { return 10 + (v - lo) / (hi - lo) * (W - 20); }, axis = 70, g = "";
+    if (va.yval != null && va.yvah != null) g += '<rect x="' + X(va.yval).toFixed(1) + '" y="' + (axis - 16) + '" width="' + (X(va.yvah) - X(va.yval)).toFixed(1) + '" height="32" rx="4" fill="#7aa2ff1c" stroke="#7aa2ff55"/><text x="' + Math.min(W - 150, Math.max(150, (X(va.yval) + X(va.yvah)) / 2)).toFixed(1) + '" y="' + (H - 5) + '" fill="#7aa2ffaa" font-size="10" text-anchor="middle">▭ yesterday\'s value area ' + p2(va.yval) + "–" + p2(va.yvah) + "</text>";
     g += '<line x1="10" x2="' + (W - 10) + '" y1="' + axis + '" y2="' + axis + '" stroke="#ffffff22"/>';
     var up = [], dn = [];
     pts.sort(function (a, b) { return a.v - b.v; }).forEach(function (p) {

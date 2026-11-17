@@ -874,7 +874,7 @@
 <script src="v95_options.js?v=20261110a"></script>
 <script src="hiv_layer.js?v=20261110a"></script>
 <script src="bigfish_layer.js?v=20261110d"></script>
-<script src="v92_card.js?v=20261116a"></script>
+<script src="v92_card.js?v=20261117a"></script>
 
 <script>
 (function () {
@@ -8826,7 +8826,18 @@
             pc = function (p) { return p == null ? "" : ' <span style="color:var(' + (p > 0 ? "--up" : p < 0 ? "--down" : "--flat") + ')">' + (p > 0 ? "+" : "") + p.toFixed(2) + "%</span>"; };
         ["vix", "dxy"].forEach(function (k) { var j = Q[k]; out.push(k.toUpperCase() + " " + (j ? b(j.last.toFixed(2)) + pc(typeof j.pct === "number" ? j.pct : null) : "—")); });
         var p = Q.pulse;
-        if (p && p.fear != null) out.push("Fear " + '<b style="color:var(' + (p.fear < 45 ? "--down" : p.fear > 55 ? "--up" : "--flat") + ')">' + p.fear + "</b>");
+        // Nov 17: our own Fear & Greed (CNN blocks the relay) — VIX and equity put/call, each ranked against every logged session since Jul 14
+        var fg = (function () {
+          var vx = H.map(function (x) { return get(x, "markets.VIX.last", null); }).filter(function (v) { return v != null; }),
+              pcs = H.map(function (x) { return get(x, "options.equity_pc", null); }).filter(function (v) { return v != null; });
+          var v = Q.vix && Q.vix.last != null ? Q.vix.last : vx[vx.length - 1], pcv = pcs[pcs.length - 1];
+          if (v == null || pcv == null || vx.length < 20 || pcs.length < 20) return null;
+          var rk = function (a, x) { return a.filter(function (y) { return y < x; }).length / a.length * 100; };
+          var sc = Math.round(100 - (rk(vx, v) + rk(pcs, pcv)) / 2);
+          return { s: sc, lab: sc < 25 ? "extreme fear" : sc < 45 ? "fear" : sc <= 55 ? "neutral" : sc <= 75 ? "greed" : "extreme greed", v: v, pc: pcv, n: vx.length };
+        })();
+        if (fg) out.push('<span title="Our own gauge: VIX ' + fg.v.toFixed(2) + ' and equity put/call ' + fg.pc.toFixed(2) + ' ranked against ' + fg.n + ' logged sessions. 0 = most fear, 100 = most greed.">Fear/Greed <b style="color:var(' + (fg.s < 45 ? "--down" : fg.s > 55 ? "--up" : "--flat") + ')">' + fg.s + " " + fg.lab + "</b></span>");
+        else if (p && p.fear != null) out.push("Fear " + '<b style="color:var(' + (p.fear < 45 ? "--down" : p.fear > 55 ? "--up" : "--flat") + ')">' + p.fear + "</b>");
         if (p && p.qqq_vol) out.push("QQQ vol " + b((p.qqq_vol / 1e6).toFixed(1) + "M"));
         // Nov 15: sector leaders / laggards removed from the strip (asked)
         var g = Q.gex; if (g && g.regime) out.push("GEX " + '<b style="color:var(' + (/NEG/i.test(g.regime) ? "--down" : "--up") + ')">' + (/NEG/i.test(g.regime) ? "neg" : "pos") + "</b>");
