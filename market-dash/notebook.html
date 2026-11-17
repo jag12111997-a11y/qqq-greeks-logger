@@ -221,8 +221,50 @@ function deleteNotebookEntry(id) {
   } catch (e) {}
   renderPastEntries();
 }
-document.getElementById('app').innerHTML = '<h2 class="nb-title">Trading Notebook</h2>' + renderNotebook({}, null) + '<section id="past-entries" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--line)"></section>';
+document.getElementById('app').innerHTML = '<section id="jlog" style="margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--line)"></section><h2 class="nb-title">Trading Notebook</h2>' + renderNotebook({}, null) + '<section id="past-entries" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--line)"></section>';
 renderPastEntries();
+
+// ===== Nov 17: daily log + discipline score (journal_log.json, same on every device) =====
+(function(){
+  var E=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var col=function(sc){return sc==null?'#8b3a3a':sc>=8?'#00e5cc':sc>=6?'#e6c84a':'#ff4d5e';};
+  var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var day=function(d){var t=new Date(d+'T12:00:00');return D[t.getDay()]+' '+M[t.getMonth()]+' '+t.getDate();};
+  function card(e,open){
+    var sc=e.score, c=col(sc), pnl=(e.pnl>=0?'+$':'−$')+Math.abs(Math.round(e.pnl));
+    var checks=e.checks.map(function(k){var ic=k.ok===true?'✓':k.ok===false?'✗':'–',kc=k.ok===true?'#00e5cc':k.ok===false?'#ff4d5e':'#5a2a2a';
+      return '<div style="display:flex;gap:8px;font-size:11px;padding:2px 0"><span style="color:'+kc+';width:12px">'+ic+'</span><span style="flex:1;color:'+(k.ok===null?'#5a2a2a':'var(--txt)')+'">'+E(k.rule)+'</span><span style="color:var(--dim)">'+E(k.why)+'</span></div>';}).join('');
+    var txt=e.ramble?'<div style="font-size:12px;line-height:1.5;margin:8px 0">'+E(e.summary)+'</div>'
+      +'<div style="font-size:11px;margin:4px 0"><span style="color:#00e5cc">RIGHT</span> '+E(e.right)+'</div>'
+      +'<div style="font-size:11px;margin:4px 0 8px"><span style="color:#ff4d5e">FIX</span> '+E(e.fix)+'</div>'
+      :'<div style="font-size:11px;color:var(--dim);margin:8px 0">No ramble — scored from trades only'+(e.best?' · best: '+E(e.best):'')+'</div>';
+    return '<details'+(open?' open':'')+' style="border:1px solid var(--line);border-left:3px solid '+c+';border-radius:6px;padding:8px 12px;margin-bottom:8px;background:var(--panel)">'
+      +'<summary style="cursor:pointer;display:flex;align-items:center;gap:12px;list-style:none">'
+      +'<span style="font:700 18px var(--font);color:'+c+';min-width:42px">'+(sc==null?'–':sc.toFixed(1))+'</span>'
+      +'<span style="flex:1;font-size:12px">'+day(e.date)+(e.ramble?' <span style="color:#00e5cc;font-size:10px">● logged</span>':'')+'</span>'
+      +'<span style="font-size:12px;color:'+(e.pnl>=0?'#00e5cc':'#ff4d5e')+'">'+pnl+'</span>'
+      +'<span style="font-size:11px;color:var(--dim);min-width:86px;text-align:right">'+e.trades+' trades · '+e.wins+'W '+e.losses+'L</span></summary>'
+      +txt+'<div style="border-top:1px solid var(--line);padding-top:6px">'+checks+'</div>'
+      +'<div style="font-size:10px;color:var(--dim);margin-top:4px">'+e.kept+' of '+e.of+' rules kept'+(e.first?' · '+e.first+'–'+e.last+' PT':'')+'</div></details>';
+  }
+  function strip(es){
+    var a=es.slice().reverse(),W=600,H=70,n=a.length,st=W/n;
+    var g=a.map(function(e,i){var v=e.score||0,h=v/10*(H-22);
+      return '<rect x="'+(i*st+st*.18).toFixed(1)+'" y="'+(H-14-h).toFixed(1)+'" width="'+(st*.64).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2" fill="'+col(e.score)+'" opacity="'+(e.ramble?.9:.45)+'"><title>'+day(e.date)+' · '+(e.score==null?'–':e.score)+'/10 · '+(e.pnl>=0?'+':'')+Math.round(e.pnl)+'</title></rect>'
+        +'<text x="'+(i*st+st/2).toFixed(1)+'" y="'+(H-3)+'" fill="#8b3a3a" font-size="9" text-anchor="middle">'+e.date.slice(8)+'</text>';}).join('');
+    return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;margin:6px 0 12px"><line x1="0" x2="'+W+'" y1="'+(H-14-.8*(H-22)).toFixed(1)+'" y2="'+(H-14-.8*(H-22)).toFixed(1)+'" stroke="#00e5cc" stroke-dasharray="4 4" opacity=".35"/>'+g+'</svg>';
+  }
+  fetch('journal_log.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    var el=document.getElementById('jlog'); if(!el||!j||!j.entries||!j.entries.length) return;
+    var es=j.entries, avg=function(x){var v=x.filter(function(e){return e.score!=null;});return v.length?(v.reduce(function(s,e){return s+e.score;},0)/v.length).toFixed(1):'–';};
+    var cut=new Date(); cut.setDate(cut.getDate()-7); var wk=es.filter(function(e){return new Date(e.date+'T12:00:00')>=cut;});
+    var more=es.length>5;
+    el.innerHTML='<h2 class="nb-title" style="display:flex;gap:16px;align-items:baseline">Daily Log <span style="color:var(--txt);font-size:11px;text-transform:none;letter-spacing:0">last 7 days '+avg(wk)+'/10 · all '+avg(es)+'/10</span></h2>'
+      +strip(es)+es.slice(0,5).map(function(e,i){return card(e,i===0);}).join('')
+      +(more?'<details><summary style="cursor:pointer;font-size:11px;color:var(--dim);margin:4px 0 8px">Older days ('+(es.length-5)+')</summary>'+es.slice(5).map(function(e){return card(e,false);}).join('')+'</details>':'')
+      +'<div style="font-size:10px;color:var(--dim)">Rules written '+day(j.rules_since)+' — earlier days scored against them for reference. P&L shown, not scored. Faded bars = no ramble.</div>';
+  }).catch(function(){});
+})();
 </script>
 </body>
 </html>

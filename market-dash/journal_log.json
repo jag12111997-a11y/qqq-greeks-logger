@@ -1,0 +1,833 @@
+{
+ "rules_since": "2026-11-16",
+ "entries": [
+  {
+   "date": "2026-11-17",
+   "pnl": 172.0,
+   "trades": 11,
+   "wins": 4,
+   "losses": 6,
+   "first": "7:31",
+   "last": "9:19",
+   "best": "7:31 P 651 +206",
+   "score": 6.0,
+   "kept": 6,
+   "of": 10,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "11 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "2 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median stop $0.15 under entry"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 8:21 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 7:31 for 11 min, +206"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": true,
+     "why": "ramble logged"
+    }
+   ],
+   "summary": "Woke up late and was right place, right time. Stayed at 1 contract on purpose after yesterday. Caught the big put move I knew was coming, then sat through the chop and kept the bulk of it. Could have made more with 2 or by holding, but I'm in account-recovery mode. $1,800 in the account stressed me out \u2014 going to hold it around $1,250 and withdraw weekly.",
+   "right": "P651 held 11 min for +$206 \u2014 the move I planned for. Size stayed at 1. Finished green +$172.",
+   "fix": "11 trades (cap is 8). 4 losers in a row 8:03\u20138:21 and kept going. Flipped puts\u2194calls within a minute at 8:21. Stops still ~$0.15, not $0.30.",
+   "ramble": true
+  },
+  {
+   "date": "2026-11-16",
+   "pnl": -164.0,
+   "trades": 15,
+   "wins": 2,
+   "losses": 13,
+   "first": "6:31",
+   "last": "7:30",
+   "best": "6:52 P 662.0 +64",
+   "score": 3.0,
+   "kept": 3,
+   "of": 10,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "15 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "14 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": false,
+     "why": "3 adds into red"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median stop $0.15 under entry"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:35 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": false,
+     "why": "1 chased fills"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": false,
+     "why": "10 entries 6:30\u20136:45, both sides"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 6:52 for 37 min, +64"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": true,
+     "why": "ramble logged"
+    }
+   ],
+   "summary": "Whiplashed all morning. Bought in multiple times on wrong entries and added without confirmation. Limits felt slow \u2014 price ran past the order, so I chased. Stops too tight for the chop. Lost $166, way past my threshold. Felt like I was carrying too much money and I went past my 8-trade sweet spot.",
+   "right": "Spotted the problems myself the same day and wrote rules for them. Last put (P662) held 38 min for +$64.",
+   "fix": "Mondays = paper. 8 trades max then close Webull. No flip within 10 min of a stop. Stops $0.30. Limit at ask + $0.02\u20130.03, skip if it ran $0.10 past.",
+   "ramble": true
+  },
+  {
+   "date": "2026-11-13",
+   "pnl": 249.0,
+   "trades": 11,
+   "wins": 5,
+   "losses": 6,
+   "first": "6:34",
+   "last": "7:20",
+   "best": "6:55 put 677.0 +139",
+   "score": 2.5,
+   "kept": 2,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "11 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "7 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": false,
+     "why": "1 adds into red"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.16 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:46 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": false,
+     "why": "3 entries 6:30\u20136:45, both sides"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 6:55 for 8 min, +102"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-12",
+   "pnl": 52.0,
+   "trades": 12,
+   "wins": 4,
+   "losses": 8,
+   "first": "6:31",
+   "last": "7:25",
+   "best": "6:34 call 691.0 +68",
+   "score": 3.8,
+   "kept": 3,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "12 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "3 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.16 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:59 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": false,
+     "why": "4 entries 6:30\u20136:45, both sides"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 6:35 for 13 min, +35"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-11",
+   "pnl": 127.0,
+   "trades": 5,
+   "wins": 4,
+   "losses": 1,
+   "first": "6:32",
+   "last": "8:00",
+   "best": "7:18 call 695.0 +40",
+   "score": 8.8,
+   "kept": 7,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": true,
+     "why": "5 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.17 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": true,
+     "why": "kept"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 6:37 for 82 min, +29"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-10",
+   "pnl": 148.0,
+   "trades": 8,
+   "wins": 5,
+   "losses": 3,
+   "first": "6:32",
+   "last": "7:25",
+   "best": "6:54 call 680.0 +92",
+   "score": 7.5,
+   "kept": 6,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": true,
+     "why": "8 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "1 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.14 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": true,
+     "why": "kept"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 6:33 for 9 min, +17"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-09",
+   "pnl": -102.0,
+   "trades": 15,
+   "wins": 2,
+   "losses": 12,
+   "first": "6:32",
+   "last": "9:48",
+   "best": "7:51 call 678.0 +99",
+   "score": 3.8,
+   "kept": 3,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "15 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "6 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": false,
+     "why": "4 adds into red"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.16 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:46 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 7:51 for 8 min, +99"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-06",
+   "pnl": 57.0,
+   "trades": 7,
+   "wins": 3,
+   "losses": 4,
+   "first": "6:36",
+   "last": "7:23",
+   "best": "6:36 call 667.0 +92",
+   "score": 6.2,
+   "kept": 5,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": true,
+     "why": "7 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "1 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.19 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": true,
+     "why": "kept"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": false,
+     "why": "winners cut early"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-05",
+   "pnl": 24.0,
+   "trades": 10,
+   "wins": 2,
+   "losses": 7,
+   "first": "6:38",
+   "last": "1:00",
+   "best": "6:40 put 667.0 +55",
+   "score": 5.0,
+   "kept": 4,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "10 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.06 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:58 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": false,
+     "why": "winners cut early"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-04",
+   "pnl": 26.0,
+   "trades": 12,
+   "wins": 5,
+   "losses": 6,
+   "first": "6:43",
+   "last": "8:03",
+   "best": "6:43 call 701.0 +32",
+   "score": 3.8,
+   "kept": 3,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "12 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "2 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.15 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 7:18 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": false,
+     "why": "winners cut early"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-03",
+   "pnl": -23.0,
+   "trades": 9,
+   "wins": 5,
+   "losses": 4,
+   "first": "7:34",
+   "last": "9:28",
+   "best": "7:34 call 691.0 +15",
+   "score": 6.2,
+   "kept": 5,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "9 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": false,
+     "why": "2 flips"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.16 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": true,
+     "why": "kept"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 7:34 for 10 min, +15"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  },
+  {
+   "date": "2026-11-02",
+   "pnl": 53.0,
+   "trades": 9,
+   "wins": 3,
+   "losses": 5,
+   "first": "10:31",
+   "last": "11:56",
+   "best": "11:45 put 683.0 +50",
+   "score": 6.2,
+   "kept": 5,
+   "of": 8,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "9 trades"
+    },
+    {
+     "rule": "No flip within 10 min of a stop",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops about $0.30",
+     "ok": false,
+     "why": "median loser \u2212$0.14 a contract"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": true,
+     "why": "kept"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": null,
+     "why": "not in the CSV export"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": false,
+     "why": "winners cut early"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": null,
+     "why": "logging started Nov 17"
+    }
+   ],
+   "summary": null,
+   "right": null,
+   "fix": null,
+   "ramble": false
+  }
+ ]
+}
