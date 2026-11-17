@@ -64,7 +64,7 @@
 #rp .dayhead b { font-size:14px; }
 #rp .strip { display:grid; grid-template-columns:repeat(auto-fill,minmax(165px,1fr)); gap:8px; }
 /* one month at a time: month tabs, then that month's trades in one sideways-scrolling row */
-#rp .mbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+#rp .mbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px; }
 #rp .mtab { font:600 13px var(--display); background:var(--panel); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:6px 10px; cursor:pointer; display:flex; gap:8px; align-items:baseline; }
 #rp .mtab small { font:500 11.5px var(--mono); color:var(--mute); }
 #rp .mtab[aria-pressed="true"] { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
@@ -163,7 +163,7 @@
       '<p class="readout" id="rp-main-r">Hover the chart for a minute.</p>' +
       '<div class="legend"><span><i style="border-color:var(--vwap)"></i>VWAP</span><span>Your lines: green 8/14/35 · yellow 52/80 · orange 120 · red 250/304/400</span><span><i style="border-color:var(--cw)"></i>Call wall</span><span><i style="border-color:var(--pw)"></i>Put wall</span><span><i style="border-color:var(--gf)"></i>Gamma flip</span>' +
       '<span><i style="border-color:var(--yd);border-top-style:dashed"></i>Yesterday H/L/C</span><span>▒ yesterday\'s value area</span><span><i style="border-color:var(--level);border-top-style:dashed"></i>Trap line</span><span><i style="border-color:var(--accent);border-top-style:dashed"></i>Trade level (box / bounce level / fake-out)</span><span>▲ bot buy · ▼ bot sell · ● other bot trades</span></div></section>' +
-      '<aside class="panel"><p class="eyebrow">The contract</p><p class="ttl" id="rp-opt-t"></p><div class="opt"><canvas id="rp-opt"></canvas></div><p class="fine" id="rp-opt-n"></p><p class="eyebrow" style="margin-top:4px">30-min candles · this contract, 6:30 →</p><div class="opt30"><canvas id="rp-opt30"></canvas></div><p class="fine" id="rp-opt30-n"></p><div id="rp-side" style="display:flex;flex-direction:column;gap:10px"></div></aside></div>';
+      '<aside class="panel"><p class="eyebrow">The contract</p><p class="ttl" id="rp-opt-t"></p><div class="opt"><canvas id="rp-opt"></canvas></div><p class="fine" id="rp-opt-n"></p><p class="eyebrow" style="margin-top:4px">20-min candles · this contract, 6:30 →</p><div class="opt30"><canvas id="rp-opt30"></canvas></div><p class="fine" id="rp-opt30-n"></p><div id="rp-side" style="display:flex;flex-direction:column;gap:10px"></div></aside></div>';
     html += '</div><div class="pane" data-p="sum" hidden><div class="kpis" id="rp-kpis"></div>' +
       '<div class="grid2"><section class="panel"><p class="eyebrow">Every morning · card vs options · tap a day</p><div class="tbl"><table id="rp-daily"></table></div><p class="fine" id="rp-daily-n"></p></section>' +
       '<section class="panel"><p class="eyebrow">Running total</p><canvas id="rp-cum" style="height:240px"></canvas>' +
@@ -201,22 +201,33 @@
       if (c.ct > 1) t.push('<span class="tag">' + c.ct + '×</span>');
       t.push('<span class="tag ' + (c.why === 'open' ? 'live' : c.why === 'stop' ? 'bad' : c.pnl > 0 ? 'ok' : 'warn') + '">' + esc(c.why === 'open' ? 'open now' : why(c)) + '</span>');
       return t.join(''); }
-    var monthSel = null;   // the month being shown (newest by default)
+    var monthSel = null, weekSel = null, daySel = null;   // Nov 17: pick month → week → day, then that day's trades (no sideways scroll)
+    function wkOf(d) { var t = new Date(d + 'T12:00:00Z'), dow = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - dow); return t.toISOString().slice(0, 10); }
+    function sumP(L) { return L.reduce(function (a, c) { return a + (c.pnl || 0); }, 0); }
+    function tab(attr, val, on, label, L) { var t = sumP(L); return '<button class="mtab" ' + attr + '="' + val + '" aria-pressed="' + on + '">' + label + '<small>' + L.length + ' · <span class="' + cl(t) + '">' + usd(t) + '</span></small></button>'; }
     function strip() {
       var el = document.getElementById('rp-strip'), months = {};
       C.filter(function (c) { return fOk(c); }).forEach(function (c) { (months[c.date.slice(0, 7)] = months[c.date.slice(0, 7)] || []).push(c); });
       var keys = Object.keys(months).sort().reverse();
       if (!keys.length) { el.innerHTML = '<p class="fine">No trades for this filter.</p>'; return; }
       if (!months[monthSel]) monthSel = keys[0];
-      var bar = '<div class="mbar">' + keys.map(function (m) { var L = months[m], t = L.reduce(function (a, c) { return a + (c.pnl || 0); }, 0);
-        return '<button class="mtab" data-m="' + m + '" aria-pressed="' + (m === monthSel) + '">' + mname(m) + '<small>' + L.length + ' · <span class="' + cl(t) + '">' + usd(t) + '</span></small></button>'; }).join('') + '</div>';
-      el.innerHTML = bar + [monthSel].map(function (m) {
-        var L = months[m].slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : a.m - b.m; });
-        return '<p class="mhint">' + mname(m) + ' · ' + L.length + ' trade' + (L.length === 1 ? '' : 's') + (L.length > 2 ? ' · swipe sideways for more →' : '') + '</p><div class="strip h">' + L.map(function (c) { var i = C.indexOf(c);
-          return '<button class="card' + (c.why === 'open' ? ' open' : '') + '" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><div class="top"><span>' + c.weekday + ' ' + c.date.slice(5) + ' · ' + c.time_pt + ' · ' + (c.side === 'call' ? 'Call' : 'Put') + ' ' + c.strike + (c.ct > 1 ? ' ×' + c.ct : '') +
+      var ML = months[monthSel], weeks = {}; ML.forEach(function (c) { (weeks[wkOf(c.date)] = weeks[wkOf(c.date)] || []).push(c); });
+      var wk = Object.keys(weeks).sort();
+      if (!weeks[weekSel]) weekSel = wk[wk.length - 1];
+      var days = {}; weeks[weekSel].forEach(function (c) { (days[c.date] = days[c.date] || []).push(c); });
+      var dk = Object.keys(days).sort();
+      if (!days[daySel]) daySel = dk[dk.length - 1];
+      var L = days[daySel].slice().sort(function (a, b) { return a.m - b.m; });
+      var wlab = function (w, i) { var L2 = weeks[w].map(function (c) { return c.date; }).sort(); return 'Week ' + (i + 1) + ' · ' + mmdd(L2[0]) + (L2.length > 1 && L2[L2.length - 1] !== L2[0] ? '–' + new Date(L2[L2.length - 1] + 'T12:00:00Z').getUTCDate() : ''); };
+      el.innerHTML = '<div class="mbar">' + keys.map(function (m) { return tab('data-m', m, m === monthSel, mname(m), months[m]); }).join('') + '</div>'
+        + '<div class="mbar">' + wk.map(function (w, i) { return tab('data-w', w, w === weekSel, wlab(w, i), weeks[w]); }).join('') + '</div>'
+        + '<div class="mbar">' + dk.map(function (d) { return tab('data-d', d, d === daySel, days[d][0].weekday + ' ' + mmdd(d), days[d]); }).join('') + '</div>'
+        + '<p class="mhint">' + days[daySel][0].weekday + ' ' + mmdd(daySel) + ' · ' + L.length + ' trade' + (L.length === 1 ? '' : 's') + ' · tap one to open it</p><div class="strip">' + L.map(function (c) { var i = C.indexOf(c);
+          return '<button class="card' + (c.why === 'open' ? ' open' : '') + '" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><div class="top"><span>' + c.time_pt + ' · ' + (c.side === 'call' ? 'Call' : 'Put') + ' ' + c.strike + (c.ct > 1 ? ' ×' + c.ct : '') +
             '</span><span class="pnl ' + cl(c.pnl) + '">' + usd(c.pnl) + '</span></div><canvas></canvas><div class="tags">' + tagsOf(c) + '</div></button>'; }).join('') + '</div>';
-      }).join('');
-      el.querySelectorAll('.mtab').forEach(function (b) { b.addEventListener('click', function () { monthSel = b.dataset.m; strip(); }); });
+      el.querySelectorAll('[data-m]').forEach(function (b) { b.addEventListener('click', function () { monthSel = b.dataset.m; weekSel = daySel = null; strip(); tellHeight(); }); });
+      el.querySelectorAll('[data-w]').forEach(function (b) { b.addEventListener('click', function () { weekSel = b.dataset.w; daySel = null; strip(); tellHeight(); }); });
+      el.querySelectorAll('[data-d]').forEach(function (b) { b.addEventListener('click', function () { daySel = b.dataset.d; strip(); tellHeight(); }); });
       el.querySelectorAll('.card[data-i]').forEach(function (b) { var c = C[+b.dataset.i]; mini(b.querySelector('canvas'), c); b.addEventListener('click', function () { select(c, true); }); });
     }
     function setup(cv) { var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); return [g, w, h]; }
@@ -316,9 +327,9 @@
         var sg = c.side === 'call' ? 1 : -1, mi = Math.floor(c.m), g8 = D.g8 || [], hold = (c.exit_m - c.m);
         var turn = g8[mi] != null && g8[mi - 1] != null ? sg * (g8[mi] - g8[mi - 1]) > 0 : null;
         ok(turn, 'Green 8 already turning your way', turn == null ? 'no line' : 'green 8 ' + (g8[mi] - g8[mi - 1] >= 0 ? 'rising' : 'falling') + ' at ' + pt(c.m));
-        var w = Math.floor(c.m / 30), O = (c.opt || []).filter(function (o) { return o[0] >= w * 30 && o[0] <= mi; }), pos = null;
+        var w = Math.floor(c.m / 20), O = (c.opt || []).filter(function (o) { return o[0] >= w * 20 && o[0] <= mi; }), pos = null;
         if (O.length >= 2) { var lo = Math.min.apply(null, O.map(function (o) { return o[1]; })), hi = Math.max.apply(null, O.map(function (o) { return o[1]; })); if (hi > lo) pos = (c.paid - lo) / (hi - lo); }
-        ok(pos == null ? null : pos < 0.67, 'Not chasing the top of the 30-min candle', pos == null ? 'no quotes' : 'bought at ' + Math.round(Math.max(0, Math.min(1, pos)) * 100) + '% of that candle\'s range so far');
+        ok(pos == null ? null : pos < 0.67, 'Not chasing the top of the 20-min candle', pos == null ? 'no quotes' : 'bought at ' + Math.round(Math.max(0, Math.min(1, pos)) * 100) + '% of that candle\'s range so far');
         ok(hold >= 2, 'Held 2+ minutes', Math.round(hold * 10) / 10 + ' min');
         ok(c.m < 150, 'Before 9:00 PT', pt(c.m));
         var dayC = C.filter(function (o) { return o.date === c.date && o.m < c.m; }), run = 0, pk = 0; dayC.forEach(function (o) { run += o.pnl; pk = Math.max(pk, run); });
@@ -365,17 +376,17 @@
     }
 
     // ---------- contract chart ----------
-    // the contract's 30-min candles for the morning (from the logger's quotes), with the bot's buy ▲ and sell ▼ inside their candle
+    // the contract's 20-min candles for the morning (from the logger's quotes), with the bot's buy ▲ and sell ▼ inside their candle
     function drawOpt30(c) {
       var cv = document.getElementById('rp-opt30'), note = document.getElementById('rp-opt30-n'); if (!cv) return;
       var S = setup(cv), g = S[0], w = S[1], h = S[2], K = c.c30;
       if (!K || !K.length) {          // live trades: build what we can from the minute quotes we have
-        var b = {}; (c.opt || []).forEach(function (o) { var k = Math.floor(o[0] / 30); if (k < 0 || o[1] == null) return; (b[k] = b[k] || []).push(o[1]); });
+        var b = {}; (c.opt || []).forEach(function (o) { var k = Math.floor(o[0] / 20); if (k < 0 || o[1] == null) return; (b[k] = b[k] || []).push(o[1]); });
         K = []; var top = Math.max.apply(null, Object.keys(b).map(Number).concat([-1]));
         for (var k = 0; k <= top; k++) { var v = b[k]; K.push(v && v.length ? [v[0], Math.max.apply(null, v), Math.min.apply(null, v), v[v.length - 1]] : null); }
       }
       if (!K.length) { note.textContent = 'No quotes were logged for this strike.'; return; }
-      var n = Math.max(K.length, Math.min(11, Math.ceil(((c.exit_m != null ? c.exit_m : c.m) + 1) / 30))), padL = 4, padR = 42, top = 8, bot = 18;
+      var n = Math.max(K.length, Math.min(17, Math.ceil(((c.exit_m != null ? c.exit_m : c.m) + 1) / 20))), padL = 4, padR = 42, top = 8, bot = 18;
       var sold = c.sold != null ? c.sold : (c.per != null && c.paid != null ? c.paid + (c.per + 2.6) / 100 : null);
       var vals = []; K.forEach(function (k) { if (k) vals.push(k[1], k[2]); }); if (c.paid != null) vals.push(c.paid); if (sold != null) vals.push(sold);
       var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), pd = (hi - lo) * 0.08 || 0.05; lo -= pd; hi += pd;
@@ -383,16 +394,16 @@
       g.font = '10.5px ' + css('--mono');
       var st = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2].find(function (s) { return (hi - lo) / s <= 5; }) || 5;
       for (var v = Math.ceil(lo / st) * st; v <= hi; v += st) { g.strokeStyle = css('--grid'); g.lineWidth = 1; g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w - padR, Y(v)); g.stroke(); g.fillStyle = css('--mute'); g.fillText(v.toFixed(2), w - padR + 4, Y(v) + 3); }
-      for (var i = 0; i < n; i += (n > 6 ? 2 : 1)) { g.fillStyle = css('--mute'); g.fillText(pt(i * 30), X(i) + 1, h - 4); }
-      var fw = Math.floor(c.m / 30); g.fillStyle = css('--grid'); g.fillRect(X(fw), top, cw * (Math.floor(((c.exit_m != null ? c.exit_m : c.m)) / 30) - fw + 1), h - top - bot);
+      for (var i = 0; i < n; i += (n > 6 ? 2 : 1)) { g.fillStyle = css('--mute'); g.fillText(pt(i * 20), X(i) + 1, h - 4); }
+      var fw = Math.floor(c.m / 20); g.fillStyle = css('--grid'); g.fillRect(X(fw), top, cw * (Math.floor(((c.exit_m != null ? c.exit_m : c.m)) / 20) - fw + 1), h - top - bot);
       K.forEach(function (k, i) { if (!k) return; var up = k[3] >= k[0], col = css(up ? '--win' : '--loss'), cx = X(i) + cw / 2, bw = Math.max(3, cw * 0.55);
         g.strokeStyle = col; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx, Y(k[1])); g.lineTo(cx, Y(k[2])); g.stroke();
         g.fillStyle = col; var y1 = Y(Math.max(k[0], k[3])), y2 = Y(Math.min(k[0], k[3])); g.fillRect(cx - bw / 2, y1, bw, Math.max(1.5, y2 - y1)); });
-      function mark(m, p, buy) { if (m == null || p == null) return; var x = X(Math.floor(m / 30)) + (m % 30) / 30 * cw, y = Y(p);
+      function mark(m, p, buy) { if (m == null || p == null) return; var x = X(Math.floor(m / 20)) + (m % 20) / 20 * cw, y = Y(p);
         g.fillStyle = css(buy ? '--you' : (c.pnl > 0 ? '--win' : '--loss')); g.beginPath();
         if (buy) { g.moveTo(x, y + 1); g.lineTo(x - 5, y + 10); g.lineTo(x + 5, y + 10); } else { g.moveTo(x, y - 1); g.lineTo(x - 5, y - 10); g.lineTo(x + 5, y - 10); } g.closePath(); g.fill(); }
       mark(c.m, c.paid, true); if (c.why !== 'open') mark(c.exit_m, sold, false);
-      var bk = K[fw]; note.textContent = 'Each candle = 30 min of this contract (mid). ▲ bought ' + q2(c.paid) + ' at ' + pt(c.m) + (bk ? ' (that candle opened ' + q2(bk[0]) + ', high ' + q2(bk[1]) + ', low ' + q2(bk[2]) + ')' : '') + (c.why !== 'open' && sold != null ? ' · ▼ sold ' + q2(sold) + ' at ' + pt(c.exit_m) : '') + '.';
+      var bk = K[fw]; note.textContent = 'Each candle = 20 min of this contract (mid). ▲ bought ' + q2(c.paid) + ' at ' + pt(c.m) + (bk ? ' (that candle opened ' + q2(bk[0]) + ', high ' + q2(bk[1]) + ', low ' + q2(bk[2]) + ')' : '') + (c.why !== 'open' && sold != null ? ' · ▼ sold ' + q2(sold) + ' at ' + pt(c.exit_m) : '') + '.';
     }
     function drawOpt() {
       var c = sel.card, cv = document.getElementById('rp-opt'), S = setup(cv), g = S[0], w = S[1], h = S[2], P = c.path || {};
@@ -448,7 +459,7 @@
     function select(card, scroll) {
       sel.card = card; hoverM = null;
       if (document.querySelector('#rp .pane[data-p="chart"]').hidden) showPane('chart');
-      if (card.date.slice(0, 7) !== monthSel) { monthSel = card.date.slice(0, 7); strip(); }
+      if (card.date !== daySel) { monthSel = card.date.slice(0, 7); weekSel = wkOf(card.date); daySel = card.date; strip(); }
       document.getElementById('rp-title').textContent = card.weekday + ' ' + mmdd(card.date) + ' · ' + card.time_pt + ' PT · ' + (card.side === 'call' ? 'Call ' : 'Put ') + card.strike + ' · ' + lab(card) + ' · ' + usd(card.pnl);
       document.querySelectorAll('#rp-strip .card').forEach(function (b) { var on = C[+b.dataset.i] === card; b.setAttribute('aria-current', on ? 'true' : 'false');
         if (on && b.parentNode) { var s = b.parentNode; if (b.offsetLeft < s.scrollLeft || b.offsetLeft + b.offsetWidth > s.scrollLeft + s.clientWidth) s.scrollLeft = b.offsetLeft - 8; } });

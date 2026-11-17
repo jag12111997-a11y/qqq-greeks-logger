@@ -44,7 +44,7 @@ for (const day of Object.keys(byDay).sort()) {
     for (let m = -5; m <= z; m++) { if (o[m]) last = (o[m].bid + o[m].ask) / 2; if (last == null) continue; [11, 18].forEach(n => { const k = 2 / (n + 1); e[n] = e[n] === null ? last : k * last + (1 - k) * e[n]; });
       if (m >= a && o[m]) s.push([m, r2(last), r2(o[m].bid), r2(e[11]), r2(e[18])]); } return s; }
   function c30(side, K) { const o = OQ[side + "|" + Number(K)] || {}, res = [];
-    for (let w = 0; w < 13; w++) { const v = []; for (let m = w * 30; m < w * 30 + 30; m++) if (o[m]) v.push((o[m].bid + o[m].ask) / 2); res.push(v.length >= 5 ? [r2(v[0]), r2(Math.max(...v)), r2(Math.min(...v)), r2(v[v.length - 1])] : null); }
+    for (let w = 0; w < 20; w++) { const v = []; for (let m = w * 20; m < w * 20 + 20; m++) if (o[m]) v.push((o[m].bid + o[m].ask) / 2); res.push(v.length >= 4 ? [r2(v[0]), r2(Math.max(...v)), r2(Math.min(...v)), r2(v[v.length - 1])] : null); }
     while (res.length && res[res.length - 1] === null) res.pop(); return res; }
   function pathOf(side, K, fill, exit, paid) { const o = OQ[side + "|" + Number(K)] || {}, q0 = o[fill] || o[fill + 1] || o[fill - 1], aMid = q0 ? (q0.bid + q0.ask) / 2 : paid; let best = -9, worst = 9, after = -9;
     for (let m = fill + 1; m <= exit; m++) { const q = o[m]; if (!q) continue; best = Math.max(best, q.bid - paid); worst = Math.min(worst, q.bid - paid); }

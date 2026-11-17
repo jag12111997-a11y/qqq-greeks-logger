@@ -52,10 +52,10 @@ function build(ROOT) {
       for (let m = fill + 1; m <= (exit == null ? fill + 90 : exit); m++) { const q = o[m]; if (!q) continue; const mid = (q.bid + q.ask) / 2; best = Math.max(best, q.bid - paid); worst = Math.min(worst, q.bid - paid); if (hit30 == null && mid >= aMid + 0.30) hit30 = m; if (hit50 == null && mid >= aMid + 0.50) hit50 = m; }
       let after = -9; for (let m = (exit == null ? fill : exit) + 1; m <= (exit == null ? fill : exit) + 30; m++) { const q = o[m]; if (q) after = Math.max(after, q.bid - paid); }
       return { aMid: r2(aMid), iv: q0 ? q0.iv : null, best: best > -9 ? r2(best) : null, worst: worst < 9 ? r2(worst) : null, hit30, hit50, after: after > -9 ? r2(after) : null }; }
-    // the contract's own 30-min candles (mid), 6:30 .. 12:00 PT: [open, high, low, close] or null
+    // the contract's own 20-min candles (mid), 6:30 .. 12:00 PT: [open, high, low, close] or null
     function c30(side, K) { const o = OQ[side + "|" + Number(K)] || {}, out = [];
-      for (let w = 0; w < 11; w++) { const v = []; for (let m = w * 30; m < w * 30 + 30; m++) if (o[m]) v.push((o[m].bid + o[m].ask) / 2);
-        out.push(v.length >= 5 ? [r2(v[0]), r2(Math.max(...v)), r2(Math.min(...v)), r2(v[v.length - 1])] : null); }
+      for (let w = 0; w < 17; w++) { const v = []; for (let m = w * 20; m < w * 20 + 20; m++) if (o[m]) v.push((o[m].bid + o[m].ask) / 2);
+        out.push(v.length >= 4 ? [r2(v[0]), r2(Math.max(...v)), r2(Math.min(...v)), r2(v[v.length - 1])] : null); }
       while (out.length && out[out.length - 1] === null) out.pop();
       return out; }
     const sideOf = s => s === "call" ? "C" : "P";
