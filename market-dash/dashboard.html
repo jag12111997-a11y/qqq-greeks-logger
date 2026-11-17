@@ -1627,6 +1627,27 @@
     return sec("Internals", body, read(tone + ", " + flavor));
   }
 
+  // ===== Nov 17: over-time charts for the options / vol / venue numbers (one point per logged day, latest pull of the day) =====
+  window.__QTR = (function () { try { var v = localStorage.getItem("md:qtr"); return /^(1W|1M|ALL)$/.test(v) ? v : "1M"; } catch (x) { return "1M"; } })();
+  function _qtPts(e, fn) {
+    var by = {}, upto = (e && e.entry_date) || "9999";
+    H.forEach(function (x) { if (!x || !x.entry_date || x.entry_date > upto) return; var v; try { v = fn(x); } catch (z) { v = null; } if (v == null || !isFinite(v)) return; by[x.entry_date] = Number(v); });
+    var ds = Object.keys(by).sort(), R = window.__QTR, cut = ds.length ? new Date(Date.parse(ds[ds.length - 1]) - (R === "1W" ? 7 : R === "1M" ? 31 : 99999) * 864e5).toISOString().slice(0, 10) : "";
+    return ds.filter(function (d) { return d > cut; }).map(function (d) { return { d: d, v: by[d] }; });
+  }
+  function _qtHead(t) { return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 2px"><span style="font-size:11px;letter-spacing:.12em;color:var(--dim)">' + t + '</span>' + _mxSeg('data-qts="' + esc(t) + '" data-qtr', window.__QTR, [["1W", "1W"], ["1M", "1M"], ["ALL", "All"]]) + '</div>'; }
+  function _qtChart(title, series, o) {
+    series = series.filter(function (s) { return s.pts.length; }); if (!series.length) return "";
+    var n = Math.max.apply(null, series.map(function (s) { return s.pts.length; }));
+    return _qtHead(title + " · OVER TIME") + (n < 2 ? '<div style="font-size:11px;color:var(--dim)">Only one logged day in this window — pick a longer range.</div>' : _mxChart(series, o)) +
+      '<div style="font-size:10.5px;color:var(--dim);margin-bottom:6px">One point per logged day (latest pull). Hover for the exact numbers.' + (o && o.note ? " " + o.note : "") + '</div>';
+  }
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest && ev.target.closest("[data-qtr]"); if (!b) return;
+    window.__QTR = b.getAttribute("data-qtr"); try { localStorage.setItem("md:qtr", window.__QTR); } catch (x) {}
+    renderAllWidgets(true, b);
+  });
+
   function secOptions(e) {
     var o = e.options;
     if (!ok(o) || !has(o.total_pc)) {
@@ -1650,6 +1671,8 @@
     body += row("Open interest", commas(o.total_open_interest));
     if (has(o.session_date)) body += row("Session", fmtDate(o.session_date));
     body += "</details>";
+    body += _qtChart("PUT / CALL", [["Total", "total_pc", "#ffd600", 2.2], ["Index", "index_pc", "#ff453a"], ["ETP", "etp_pc", "#ff9f0a"], ["Equity", "equity_pc", "#00e676"], ["VIX", "vix_pc", "#29b6f6"]].map(function (k) {
+      return { name: k[0], col: k[2], w: k[3] || 1.4, pts: _qtPts(e, function (x) { return x.options[k[1]]; }) }; }), { h: 190, fmt: function (v) { return v.toFixed(2); }, band: [1, 99, "rgba(255,69,58,.06)"], note: "Shaded = above 1.00 (more puts than calls)." });
     body += staleStamp(e);
 
     var t = o.total_pc;
@@ -1690,6 +1713,13 @@
     var body = '<h2 style="margin:10px 0 6px">Volume share</h2>' + vb(v.volume_share) + '<h2 style="margin:10px 0 6px">Premium share</h2>' + vb(v.premium_share) +
       '<div style="font-size:11px;color:var(--dim)">White tick = 5-day average; number in brackets = today minus 5-day.</div>';
     body += '<details><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">TABLES</summary>' + tbl("Volume share", v.volume_share) + tbl("Premium share", v.premium_share) + "</details>";
+    var VCOL = ["#29b6f6", "#ff2be0", "#ffd600", "#00e676", "#ff9f0a", "#b388ff", "#8b8ba6"];
+    ["volume_share", "premium_share"].forEach(function (key) {
+      var names = (v[key] || []).map(function (r) { return r.venue; });
+      body += _qtChart(key === "volume_share" ? "VOLUME SHARE" : "PREMIUM SHARE", names.map(function (nm, i) {
+        return { name: nm.replace(/\s*\(.*\)/, ""), col: VCOL[i % VCOL.length], w: i ? 1.4 : 2.2, pts: _qtPts(e, function (x) { var r = (x.venue_concentration[key] || []).filter(function (q) { return q.venue === nm; })[0]; return r ? r.today : null; }) }; }),
+        { h: 190, fmt: function (q) { return q.toFixed(1) + "%"; }, note: "A venue dropping to 0% is usually a logger glitch, not real trading." });
+    });
     if (has(v.total_volume)) body += row("Total matched volume", commas(v.total_volume));
     if (has(v.total_premium)) body += row("Total premium", "$" + commas(v.total_premium));
     if (has(v.session_date)) body += row("Session", fmtDate(v.session_date));
@@ -3071,7 +3101,11 @@
         '<details><summary style="cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--dim)">NUMBERS</summary>' +
         row("Realized (" + rvi.window_days + "d)", num(rvi.realized_vol_pct, 2, "%")) +
         row("Implied (VIX)", num(rvi.implied_vol_pct, 2, "%")) +
-        row("Spread", signed(rvi.spread_pct, 2, "pp")) + "</details></div>";
+        row("Spread", signed(rvi.spread_pct, 2, "pp")) + "</details>" +
+        _qtChart("REALIZED VS IMPLIED", [{ name: "realized", col: "#ff9f0a", w: 2, pts: _qtPts(e, function (x) { return x.quant.realized_vs_implied.realized_vol_pct; }) },
+          { name: "implied", col: "#29b6f6", w: 2, pts: _qtPts(e, function (x) { return x.quant.realized_vs_implied.implied_vol_pct; }) },
+          { name: "GARCH", col: "#b388ff", dash: true, pts: _qtPts(e, function (x) { return x.quant.garch.conditional_vol_pct; }) }],
+          { h: 170, fmt: function (v) { return v.toFixed(1) + "%"; }, fillBetween: [0, 1], note: "Gap between the lines = the spread; realized above implied = moving more than priced." }) + "</div>";
     }
 
     // skew from the options tape
@@ -3084,6 +3118,9 @@
         body += row("Index − equity P/C", signed(ipc - epc, 2) +
           " <span class=k>" + (ipc - epc > 0.2 ? "institutional hedging" : "balanced") + "</span>");
       }
+      body += _qtChart("POSITIONING SKEW", [{ name: "total P/C", col: "#ffd600", w: 2, pts: _qtPts(e, function (x) { return x.options.total_pc; }) },
+        { name: "index − equity", col: "#00e676", w: 2, pts: _qtPts(e, function (x) { return x.options.index_pc != null && x.options.equity_pc != null ? x.options.index_pc - x.options.equity_pc : null; }) }],
+        { h: 150, fmt: function (v) { return v.toFixed(2); }, zero: true, note: "Index − equity above 0.20 = institutions hedging." });
       body += "</div>";
     }
 
@@ -3623,8 +3660,8 @@
   ["wheel", "touchmove", "keydown"].forEach(function (n) { window.addEventListener(n, function () { _lastUserScroll = Date.now(); }, { passive: true, capture: true }); });
   // anchor = the clicked control, else the first heading / control near the top of the screen; after the redraw (and again
   // once charts have mounted) scroll so the same element sits exactly where it was. Safari has no built-in scroll anchoring.
-  var _ANCH = "#app h2, #app [data-gs-month], #app [data-or-month], #app [data-or-ovl], #app [data-or-mm], #app [data-mxp], #app [data-mxr], #app [data-gs-ovl], #app [data-dd-ovl], #app [data-gs-day], #app .band";
-  function _anchorKey(el) { return el.tagName + "|" + (el.getAttribute("data-gs-month") || el.getAttribute("data-or-month") || el.getAttribute("data-or-ovl") || el.getAttribute("data-or-mm") || el.getAttribute("data-mxp") || el.getAttribute("data-mxr") || el.getAttribute("data-gs-ovl") || el.getAttribute("data-dd-ovl") || el.getAttribute("data-gs-day") || "") + "|" + (el.textContent || "").trim().slice(0, 40); }
+  var _ANCH = "#app h2, #app [data-gs-month], #app [data-or-month], #app [data-or-ovl], #app [data-or-mm], #app [data-mxp], #app [data-mxr], #app [data-qtr], #app [data-gs-ovl], #app [data-dd-ovl], #app [data-gs-day], #app .band";
+  function _anchorKey(el) { return el.tagName + "|" + (el.getAttribute("data-qtr") ? el.getAttribute("data-qts") + ":" + el.getAttribute("data-qtr") : "") + (el.getAttribute("data-gs-month") || el.getAttribute("data-or-month") || el.getAttribute("data-or-ovl") || el.getAttribute("data-or-mm") || el.getAttribute("data-mxp") || el.getAttribute("data-mxr") || el.getAttribute("data-gs-ovl") || el.getAttribute("data-dd-ovl") || el.getAttribute("data-gs-day") || "") + "|" + (el.textContent || "").trim().slice(0, 40); }
   function _anchorTake(clicked) {
     var L = Array.prototype.slice.call(document.querySelectorAll(_ANCH)), el = null;
     if (clicked && L.indexOf(clicked) >= 0) el = clicked;
