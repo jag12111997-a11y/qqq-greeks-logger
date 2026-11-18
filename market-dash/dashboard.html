@@ -5086,6 +5086,9 @@
       return '<div style="display:flex;justify-content:space-between;font-size:12.5px;line-height:1.75"><span style="color:' + (lc || "#e8eaed") + '">' + label + '</span><span style="color:' + (vc || "#e8eaed") + ';font-variant-numeric:tabular-nums">' + val + '</span></div>';
     }
     function f2(v) { v = v == null ? null : Number(v); return v === null || !isFinite(v) ? "—" : v.toFixed(2); }
+    // Nov 17: no zero crossing inside the captured strikes → say which way dealers lean instead of a bare dash
+    function zgT(z, net) { if (z != null && isFinite(Number(z))) return Number(z).toFixed(2); var est = g && g.gamma_flip != null && isFinite(Number(g.gamma_flip)) ? " · est. " + Number(g.gamma_flip).toFixed(0) : "";
+      return net == null ? "none in range" + est : "none · dealers " + (net < 0 ? "short" : "long") + " gamma" + est; }
     function seg(items) {
       return '<div style="display:flex;flex-direction:column;border:1px solid #333;border-radius:6px;overflow:hidden">' + items.map(function (it, i) {
         return '<button type="button"' + (it.attr || "") + (it.dis ? " disabled" : "") + ' title="' + esc(it.title || "") + '" style="padding:8px;border:0;' + (i ? "border-top:1px solid #333;" : "") +
@@ -5151,16 +5154,16 @@
         row("date", day.slice(5, 7) + "/" + day.slice(8, 10) + "/" + day.slice(0, 4)) + row("time", clock + " ET") + row("spot", spot.toFixed(2)) +
         (frames ? row("source", cur.b ? "rebuilt from trades" : "logged", null, cur.b ? "#8ab4f8" : null) : "") +
         '<div style="' + hdr + '">volume</div>' +
-        (LV ? row("zero gamma", f2(LV.zg), GXC.zg) + row("major positive", f2(LV.mp), GXC.cw) + row("major negative", f2(LV.mn), GXC.pw) +
+        (LV ? row("zero gamma", zgT(LV.zg, LV.net), GXC.zg) + row("major positive", f2(LV.mp), GXC.cw) + row("major negative", f2(LV.mn), GXC.pw) +
               row("net gex", gxMoney(LV.net), null, LV.net >= 0 ? "#00e676" : "#ff5252")
             : '<div style="font-size:12px;color:#fcb103;line-height:1.5">Waiting for logger: per-minute volume GEX.</div>') +
         '<div style="' + hdr + '">open interest</div>' +
-        row("zero gamma", f2(zgOI), GXC.zg) + row("call wall", f2(callWall), GXC.cw) + row("put wall", f2(putWall), GXC.pw) +
+        row("zero gamma", zgT(zgOI, LO && LO.net), GXC.zg) + row("call wall", f2(callWall), GXC.cw) + row("put wall", f2(putWall), GXC.pw) +
         row("OI magnet", f2(magnet), GXC.mag) + row("net gex", gxMoney(LO && LO.net), null, LO && LO.net >= 0 ? "#00e676" : "#ff5252") +
         '<div style="' + hdr + '">touch odds · by close <span style="font-weight:400;color:#9aa0a6;font-size:11.5px">σ ' + (sigLeft ? (sigLeft * 100).toFixed(2) + "%" : "—") + '</span></div>' +
         [["zero gamma", zgNow, GXC.zg], ["call wall", callWall, GXC.cw], ["put wall", putWall, GXC.pw], ["OI magnet", magnet, GXC.mag]].map(function (r) {
           var p = touch(r[1] == null ? null : Number(r[1]));
-          return row(r[0], (p == null ? "—" : Math.round(p * 100) + "%"), r[2]);
+          return row(r[0], (p == null ? (r[0] === "zero gamma" && r[1] == null ? "no flip in range" : "—") : Math.round(p * 100) + "%"), r[2]);
         }).join("") +
         '<div style="' + hdr + '">max change gex</div>' +
         (frames ? [[1, GXC.d1], [5, GXC.d5], [10, GXC.d10], [15, GXC.d15], [30, GXC.d30]].map(function (m) {

@@ -911,7 +911,7 @@ table.cond td:last-child { text-align: right; font-family: var(--mono); font-var
       const L = byDay[d]; if (!L) return;
       const best = Math.max(...L.map((a) => a.n)), col = best === 3 ? '--win' : best === 2 ? '--shake' : '--mute';
       const scored = L.some((a) => a.pnl != null), isHr = L.some((a) => a.why === 'take profit');
-      g.strokeStyle = css(col); g.fillStyle = css(col); g.lineWidth = 2; g.beginPath(); g.arc(x, mid, Math.min(7, cw * 0.38), 0, 7); scored ? g.fill() : g.stroke();
+      g.strokeStyle = css(col); g.fillStyle = css(col); g.lineWidth = 2; g.beginPath(); g.arc(x, mid, Math.max(0, Math.min(7, cw * 0.38)), 0, 7); scored ? g.fill() : g.stroke();
       if (L.length > 1) { g.fillStyle = css('--mute'); g.font = '10px ' + css('--mono'); g.fillText('×' + L.length, x - 6, mid + 22); }
       if (isHr) { g.fillStyle = css('--win'); g.font = '700 15px ' + css('--display'); g.fillText('★', x - 6, mid - 14); }
     });
