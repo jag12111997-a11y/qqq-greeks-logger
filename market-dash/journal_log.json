@@ -3,6 +3,80 @@
  "rules_updated": "2026-11-17",
  "entries": [
   {
+   "date": "2026-11-18",
+   "pnl": 46.0,
+   "trades": 17,
+   "wins": 5,
+   "losses": 11,
+   "first": "6:31",
+   "last": "8:28",
+   "best": "6:34 P 649.0 +87",
+   "score": 4.5,
+   "kept": 5,
+   "of": 11,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "17 trades"
+    },
+    {
+     "rule": "No entry against the 20-min candle",
+     "ok": false,
+     "why": "7 against: 6:31 put, 6:33 call, 7:02 put, 7:13 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2, #3, #4 had 4, 4, 5, 3"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
+     "why": "median stop $0.13 under entry"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 7:22 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": false,
+     "why": "1 chased fills"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": false,
+     "why": "4 entries 6:30\u20136:45, both sides"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 6:35 for 12 min, +53"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": true,
+     "why": "ramble logged"
+    }
+   ],
+   "summary": "Struggled. No direction \u2014 price kept getting bought up, just a slow grind down, and calls got eaten up quickly. Gave back a big chunk of my first trade and didn't respect my rules. Still ended green, but non-direction days like this kill me every time.",
+   "right": "Read the open: P649 6:34 +$87 and the add at 6:35 +$53 \u2014 up +$114 by 6:47. Stops stayed small (median ~$0.15). Finished green.",
+   "fix": "Peaked +$114 at 6:47 and gave back $68 \u2014 the $45 giveback rule would have ended the day around +$70. 17 trades (cap 8): 12 more after the high, mostly calls\u2194puts every few minutes in chop. On a no-direction day, once you hit +$60 and the candles alternate colors, close Webull.",
+   "ramble": true
+  },
+  {
    "date": "2026-11-17",
    "pnl": 172.0,
    "trades": 11,
