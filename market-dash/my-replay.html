@@ -62,6 +62,11 @@
 #rp .day { display:flex; flex-direction:column; gap:6px; }
 #rp .dayhead { display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; font-size:13px; border-top:1px solid var(--line); padding-top:8px; }
 #rp .dayhead b { font-size:14px; }
+#rp .tlist { border:1px dashed var(--line); border-radius:8px; padding:4px 0; }
+#rp .trow { display:flex; justify-content:space-between; gap:10px; width:100%; background:none; border:0; border-left:3px solid transparent; padding:9px 14px; color:var(--fg); font:14px var(--sans, inherit); cursor:pointer; text-align:left; }
+#rp .trow:hover { background:rgba(255,255,255,.03); }
+#rp .trow[aria-current="true"] { border-left-color:var(--accent); background:rgba(255,255,255,.05); }
+#rp .trow b { font:600 14px var(--mono); white-space:nowrap; }
 #rp .strip { display:grid; grid-template-columns:repeat(auto-fill,minmax(165px,1fr)); gap:8px; }
 /* one month at a time: month tabs, then that month's trades in one sideways-scrolling row */
 #rp .mbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px; }
@@ -222,13 +227,12 @@
       el.innerHTML = '<div class="mbar">' + keys.map(function (m) { return tab('data-m', m, m === monthSel, mname(m), months[m]); }).join('') + '</div>'
         + '<div class="mbar">' + wk.map(function (w, i) { return tab('data-w', w, w === weekSel, wlab(w, i), weeks[w]); }).join('') + '</div>'
         + '<div class="mbar">' + dk.map(function (d) { return tab('data-d', d, d === daySel, days[d][0].weekday + ' ' + mmdd(d), days[d]); }).join('') + '</div>'
-        + '<p class="mhint">' + days[daySel][0].weekday + ' ' + mmdd(daySel) + ' · ' + L.length + ' trade' + (L.length === 1 ? '' : 's') + ' · tap one to open it</p><div class="strip">' + L.map(function (c) { var i = C.indexOf(c);
-          return '<button class="card' + (c.why === 'open' ? ' open' : '') + '" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><div class="top"><span>' + c.time_pt + ' · ' + (c.side === 'call' ? 'Call' : 'Put') + ' ' + c.strike + (c.ct > 1 ? ' ×' + c.ct : '') +
-            '</span><span class="pnl ' + cl(c.pnl) + '">' + usd(c.pnl) + '</span></div><canvas></canvas><div class="tags">' + tagsOf(c) + '</div></button>'; }).join('') + '</div>';
+        + '<p class="mhint">' + days[daySel][0].weekday + ' ' + mmdd(daySel) + ' · ' + L.length + ' trade' + (L.length === 1 ? '' : 's') + ' · <span class="' + cl(sumP(L)) + '">' + usd(sumP(L)) + '</span> · tap one to open it</p><div class="tlist">' + L.map(function (c) { var i = C.indexOf(c);
+          return '<button class="trow" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><span>' + c.time_pt + ' · ' + (c.side === 'call' ? 'call' : 'put') + ' ' + c.strike + (c.ct > 1 ? ' ×' + c.ct : '') + '</span><b class="' + cl(c.pnl) + '">' + (c.why === 'open' ? 'open ' : '') + usd(c.pnl) + '</b></button>'; }).join('') + '</div>';
       el.querySelectorAll('[data-m]').forEach(function (b) { b.addEventListener('click', function () { monthSel = b.dataset.m; weekSel = daySel = null; strip(); tellHeight(); }); });
       el.querySelectorAll('[data-w]').forEach(function (b) { b.addEventListener('click', function () { weekSel = b.dataset.w; daySel = null; strip(); tellHeight(); }); });
       el.querySelectorAll('[data-d]').forEach(function (b) { b.addEventListener('click', function () { daySel = b.dataset.d; strip(); tellHeight(); }); });
-      el.querySelectorAll('.card[data-i]').forEach(function (b) { var c = C[+b.dataset.i]; mini(b.querySelector('canvas'), c); b.addEventListener('click', function () { select(c, true); }); });
+      el.querySelectorAll('.trow[data-i]').forEach(function (b) { var c = C[+b.dataset.i]; b.addEventListener('click', function () { select(c, true); }); });
     }
     function setup(cv) { var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); return [g, w, h]; }
     var exitOf = function (c) { var D = DAYS[c.date]; return c.exit_m == null ? D.candles.length - 1 : Math.min(c.exit_m, D.candles.length - 1); };
@@ -461,7 +465,7 @@
       if (document.querySelector('#rp .pane[data-p="chart"]').hidden) showPane('chart');
       if (card.date !== daySel) { monthSel = card.date.slice(0, 7); weekSel = wkOf(card.date); daySel = card.date; strip(); }
       document.getElementById('rp-title').textContent = card.weekday + ' ' + mmdd(card.date) + ' · ' + card.time_pt + ' PT · ' + (card.side === 'call' ? 'Call ' : 'Put ') + card.strike + ' · ' + lab(card) + ' · ' + usd(card.pnl);
-      document.querySelectorAll('#rp-strip .card').forEach(function (b) { var on = C[+b.dataset.i] === card; b.setAttribute('aria-current', on ? 'true' : 'false');
+      document.querySelectorAll('#rp-strip .trow').forEach(function (b) { var on = C[+b.dataset.i] === card; b.setAttribute('aria-current', on ? 'true' : 'false');
         if (on && b.parentNode) { var s = b.parentNode; if (b.offsetLeft < s.scrollLeft || b.offsetLeft + b.offsetWidth > s.scrollLeft + s.clientWidth) s.scrollLeft = b.offsetLeft - 8; } });
       drawMain(); drawOpt(); side();
       if (scroll) { var dk = document.getElementById('rp-desk'); window.scrollTo({ top: dk.getBoundingClientRect().top + window.pageYOffset - 8, behavior: 'smooth' }); }   // scroll this frame only, never the dashboard around it
