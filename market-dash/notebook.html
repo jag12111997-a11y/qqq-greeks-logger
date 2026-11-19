@@ -7,10 +7,10 @@
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root{
-  --bg:#050000; --panel:#0d0305; --line:#2a0a0f;
-  --txt:#e8d8d8; --dim:#8b3a3a; --faint:#4a1a1f;
-  --accent:#00e5cc; --warn:#cc1111;
-  --text-secondary: rgba(200,160,160,0.65);
+  --bg:#26231A; --panel:#332E20; --line:#6E6744;
+  --txt:#FFF3D1; --dim:#D9C48A; --faint:#4A4430;
+  --accent:#F4C95D; --warn:#F0381F;
+  --text-secondary: rgba(217,196,138,1.00);
   --font: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 html,body{ height:100%; background:var(--bg); color:var(--txt); font-family:var(--font); }
@@ -165,7 +165,7 @@ function renderNotebook(e, widget) {
   }
   function section(name, label) { return '<section data-notebook-section="' + name + '" style="margin-top:18px;padding-top:12px;border-top:1px solid var(--line)"><h3 style="font-size:13px;color:var(--accent);margin:0 0 10px">' + label + '</h3>'; }
   var html = '<div data-notebook-root data-notebook-key="' + notebookAttr(key) + '" style="width:100%;height:100%;overflow:auto;box-sizing:border-box;padding:2px">';
-  html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><label>Entry date <input aria-label="Entry date" data-notebook-date type="date" value="' + notebookAttr(draft.entryDate) + '" onchange="setNotebookDate(this)" style="color-scheme:dark;padding:6px"></label><button type="button" onclick="archiveNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(0,229,204,0.08);color:var(--accent);font:inherit;cursor:pointer">Save entry</button><button type="button" onclick="exportNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(0,229,204,0.08);color:var(--accent);font:inherit;cursor:pointer">Export backup</button></div>';
+  html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><label>Entry date <input aria-label="Entry date" data-notebook-date type="date" value="' + notebookAttr(draft.entryDate) + '" onchange="setNotebookDate(this)" style="color-scheme:dark;padding:6px"></label><button type="button" onclick="archiveNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(168,216,180,0.08);color:var(--accent);font:inherit;cursor:pointer">Save entry</button><button type="button" onclick="exportNotebook(this)" style="padding:8px 12px;border:1px solid var(--accent);border-radius:4px;background:rgba(168,216,180,0.08);color:var(--accent);font:inherit;cursor:pointer">Export backup</button></div>';
   html += '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Drafts autosave on this device. Save entry keeps a dated copy of your notebook. Each save adds a new copy.</div>';
   html += '<div data-notebook-last-entry style="font-size:11px;margin-bottom:8px">' + (draft.lastEntrySavedAt ? 'Last entry saved: ' + esc(notebookTime(draft.lastEntrySavedAt)) : 'No dated entry saved from this notebook yet.') + '</div>';
   html += section('notes', 'Notes') + textarea('notes', 'Scratch pad...', 160) + '</section>';
@@ -227,22 +227,22 @@ renderPastEntries();
 // ===== Nov 17: daily log + discipline score (journal_log.json, same on every device) =====
 (function(){
   var E=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-  var col=function(sc){return sc==null?'#8b3a3a':sc>=8?'#00e5cc':sc>=6?'#e6c84a':'#ff4d5e';};
+  var col=function(sc){return sc==null?'#D9C48A':sc>=8?'#A8D8B4':sc>=6?'#F4C95D':'#FF5A2E';};
   var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var day=function(d){var t=new Date(d+'T12:00:00');return D[t.getDay()]+' '+M[t.getMonth()]+' '+t.getDate();};
   function card(e,open){
     var sc=e.score, c=col(sc), pnl=(e.pnl>=0?'+$':'−$')+Math.abs(Math.round(e.pnl));
-    var checks=e.checks.map(function(k){var ic=k.ok===true?'✓':k.ok===false?'✗':'–',kc=k.ok===true?'#00e5cc':k.ok===false?'#ff4d5e':'#5a2a2a';
-      return '<div style="display:flex;gap:8px;font-size:11px;padding:2px 0"><span style="color:'+kc+';width:12px">'+ic+'</span><span style="flex:1;color:'+(k.ok===null?'#5a2a2a':'var(--txt)')+'">'+E(k.rule)+'</span><span style="color:var(--dim)">'+E(k.why)+'</span></div>';}).join('');
+    var checks=e.checks.map(function(k){var ic=k.ok===true?'✓':k.ok===false?'✗':'–',kc=k.ok===true?'#A8D8B4':k.ok===false?'#FF5A2E':'#8E9C8F';
+      return '<div style="display:flex;gap:8px;font-size:11px;padding:2px 0"><span style="color:'+kc+';width:12px">'+ic+'</span><span style="flex:1;color:'+(k.ok===null?'#8E9C8F':'var(--txt)')+'">'+E(k.rule)+'</span><span style="color:var(--dim)">'+E(k.why)+'</span></div>';}).join('');
     var txt=e.ramble?'<div style="font-size:12px;line-height:1.5;margin:8px 0">'+E(e.summary)+'</div>'
-      +'<div style="font-size:11px;margin:4px 0"><span style="color:#00e5cc">RIGHT</span> '+E(e.right)+'</div>'
-      +'<div style="font-size:11px;margin:4px 0 8px"><span style="color:#ff4d5e">FIX</span> '+E(e.fix)+'</div>'
+      +'<div style="font-size:11px;margin:4px 0"><span style="color:#A8D8B4">RIGHT</span> '+E(e.right)+'</div>'
+      +'<div style="font-size:11px;margin:4px 0 8px"><span style="color:#FF5A2E">FIX</span> '+E(e.fix)+'</div>'
       :'<div style="font-size:11px;color:var(--dim);margin:8px 0">No ramble — scored from trades only'+(e.best?' · best: '+E(e.best):'')+'</div>';
     return '<details'+(open?' open':'')+' style="border:1px solid var(--line);border-left:3px solid '+c+';border-radius:6px;padding:8px 12px;margin-bottom:8px;background:var(--panel)">'
       +'<summary style="cursor:pointer;display:flex;align-items:center;gap:12px;list-style:none">'
       +'<span style="font:700 18px var(--font);color:'+c+';min-width:42px">'+(sc==null?'–':sc.toFixed(1))+'</span>'
-      +'<span style="flex:1;font-size:12px">'+day(e.date)+(e.ramble?' <span style="color:#00e5cc;font-size:10px">● logged</span>':'')+'</span>'
-      +'<span style="font-size:12px;color:'+(e.pnl>=0?'#00e5cc':'#ff4d5e')+'">'+pnl+'</span>'
+      +'<span style="flex:1;font-size:12px">'+day(e.date)+(e.ramble?' <span style="color:#A8D8B4;font-size:10px">● logged</span>':'')+'</span>'
+      +'<span style="font-size:12px;color:'+(e.pnl>=0?'#A8D8B4':'#FF5A2E')+'">'+pnl+'</span>'
       +'<span style="font-size:11px;color:var(--dim);min-width:86px;text-align:right">'+e.trades+' trades · '+e.wins+'W '+e.losses+'L</span></summary>'
       +txt+'<div style="border-top:1px solid var(--line);padding-top:6px">'+checks+'</div>'
       +'<div style="font-size:10px;color:var(--dim);margin-top:4px">'+e.kept+' of '+e.of+' rules kept'+(e.first?' · '+e.first+'–'+e.last+' PT':'')+'</div></details>';
@@ -251,8 +251,8 @@ renderPastEntries();
     var a=es.slice().reverse(),W=600,H=70,n=a.length,st=W/n;
     var g=a.map(function(e,i){var v=e.score||0,h=v/10*(H-22);
       return '<rect x="'+(i*st+st*.18).toFixed(1)+'" y="'+(H-14-h).toFixed(1)+'" width="'+(st*.64).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2" fill="'+col(e.score)+'" opacity="'+(e.ramble?.9:.45)+'"><title>'+day(e.date)+' · '+(e.score==null?'–':e.score)+'/10 · '+(e.pnl>=0?'+':'')+Math.round(e.pnl)+'</title></rect>'
-        +'<text x="'+(i*st+st/2).toFixed(1)+'" y="'+(H-3)+'" fill="#8b3a3a" font-size="9" text-anchor="middle">'+e.date.slice(8)+'</text>';}).join('');
-    return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;margin:6px 0 12px"><line x1="0" x2="'+W+'" y1="'+(H-14-.8*(H-22)).toFixed(1)+'" y2="'+(H-14-.8*(H-22)).toFixed(1)+'" stroke="#00e5cc" stroke-dasharray="4 4" opacity=".35"/>'+g+'</svg>';
+        +'<text x="'+(i*st+st/2).toFixed(1)+'" y="'+(H-3)+'" fill="#D9C48A" font-size="9" text-anchor="middle">'+e.date.slice(8)+'</text>';}).join('');
+    return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;margin:6px 0 12px"><line x1="0" x2="'+W+'" y1="'+(H-14-.8*(H-22)).toFixed(1)+'" y2="'+(H-14-.8*(H-22)).toFixed(1)+'" stroke="#A8D8B4" stroke-dasharray="4 4" opacity=".35"/>'+g+'</svg>';
   }
   fetch('journal_log.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var el=document.getElementById('jlog'); if(!el||!j||!j.entries||!j.entries.length) return;

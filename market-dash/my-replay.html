@@ -5,13 +5,13 @@
 <title>My Trades</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
-<style>html,body{margin:0;background:#160a0e;color:#e6c8c8;}</style>
+<style>html,body{margin:0;background:#26231A;color:#FFF3D1;}</style>
 </head><body>
 <!-- ===== MY TRADES: the user's own QQQ option trades (complete Webull orders), same viewer as the bot's Trade Replay, Trading Performance colors ===== -->
 <style>
-#rp { --bg:#160a0e; --panel:#1d0e13; --line:rgba(140,20,20,0.35); --grid:rgba(200,120,120,0.08); --fg:#e6c8c8; --mute:rgba(200,160,160,0.6); --accent:#b0408f;
-  --up:#00e5cc; --down:#cc1111; --vwap:#e0a030; --level:#ffffff; --win:#00e5cc; --loss:#ff3b3b; --shake:#e0a030; --you:#e6c8c8;
-  --cw:#ff7a7a; --pw:#5fd18a; --gf:#f5e663; --yd:#8c7f8c; --s4:#3fd3ff; --s7:#ff9a3c;
+#rp { --bg:#26231A; --panel:#332E20; --line:rgba(110,103,68,0.7); --grid:rgba(217,196,138,0.10); --fg:#FFF3D1; --mute:rgba(217,196,138,0.9); --accent:#FF4FD8;
+  --up:#A8D8B4; --down:#F0381F; --vwap:#E7A93B; --level:#ffffff; --win:#A8D8B4; --loss:#FF5A2E; --shake:#F4A99A; --you:#FFF3D1;
+  --cw:#F4A99A; --pw:#7FBFA0; --gf:#F4C95D; --yd:#8E9C8F; --s4:#6FC3B0; --s7:#E7A93B;
   --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
   padding:14px 16px 30px; background:var(--bg); color:var(--fg); font-family:var(--display); display:flex; flex-direction:column; gap:12px; }
 #rp .hd { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 14px; }
@@ -26,7 +26,7 @@
 #rp [hidden] { display:none !important; }
 #rp .wrap { display:flex; flex-direction:column; gap:12px; }
 #rp .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:10px; min-width:0; }
-#rp .eyebrow { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--mute); margin:0; }
+#rp .eyebrow { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--gf); margin:0; }
 #rp .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
 #rp .kpi { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
 #rp .kpi small { font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--mute); }
@@ -62,11 +62,9 @@
 #rp .day { display:flex; flex-direction:column; gap:6px; }
 #rp .dayhead { display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; font-size:13px; border-top:1px solid var(--line); padding-top:8px; }
 #rp .dayhead b { font-size:14px; }
-#rp .tlist { border:1px dashed var(--line); border-radius:8px; padding:4px 0; }
-#rp .trow { display:flex; justify-content:space-between; gap:10px; width:100%; background:none; border:0; border-left:3px solid transparent; padding:9px 14px; color:var(--fg); font:14px var(--sans, inherit); cursor:pointer; text-align:left; }
-#rp .trow:hover { background:rgba(255,255,255,.03); }
-#rp .trow[aria-current="true"] { border-left-color:var(--accent); background:rgba(255,255,255,.05); }
-#rp .trow b { font:600 14px var(--mono); white-space:nowrap; }
+#rp .mrow { display:block; width:100%; background:none; border:0; border-left:3px solid transparent; padding:3px 6px; margin:1px 0; color:inherit; font:inherit; text-align:left; cursor:pointer; border-radius:4px; }
+#rp .mrow:hover { background:rgba(244,201,93,.10); }
+#rp .mrow[aria-current="true"] { border-left-color:var(--accent); background:rgba(255,79,216,.12); }
 #rp .strip { display:grid; grid-template-columns:repeat(auto-fill,minmax(165px,1fr)); gap:8px; }
 /* one month at a time: month tabs, then that month's trades in one sideways-scrolling row */
 #rp .mbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px; }
@@ -93,7 +91,8 @@
 @media (max-width:680px) { #rp .desk { grid-template-columns:minmax(0,1fr); } #rp .desk > aside.panel { height:auto; min-height:0; overflow:visible; } }
 #rp .main canvas { height:400px; } #rp .opt canvas { height:200px; }
 @media (max-width:680px) { #rp .main canvas { height:330px; } }
-#rp .ttl { font-size:16px; font-weight:700; margin:0; }
+#rp .ttl { font-size:16px; font-weight:700; margin:0; color:var(--gf); }
+#rp .hd h2 { color:var(--gf); }
 #rp .readout { font:12px var(--mono); color:var(--mute); min-height:18px; overflow-wrap:anywhere; }
 #rp .rules { display:grid; grid-template-columns:16px minmax(0,1fr); gap:6px 8px; align-items:baseline; font-size:13px; line-height:1.3; }
 #rp .rules .ok { color:var(--win); font-weight:700; } #rp .rules .no { color:var(--loss); font-weight:700; } #rp .rules .na { color:var(--mute); }
@@ -210,6 +209,8 @@
     function wkOf(d) { var t = new Date(d + 'T12:00:00Z'), dow = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - dow); return t.toISOString().slice(0, 10); }
     function sumP(L) { return L.reduce(function (a, c) { return a + (c.pnl || 0); }, 0); }
     function tab(attr, val, on, label, L) { var t = sumP(L); return '<button class="mtab" ' + attr + '="' + val + '" aria-pressed="' + on + '">' + label + '<small>' + L.length + ' · <span class="' + cl(t) + '">' + usd(t) + '</span></small></button>'; }
+    var dayFirst = null;
+    function openFirst() { if (dayFirst && sel.card !== dayFirst) select(dayFirst, false); }
     function strip() {
       var el = document.getElementById('rp-strip'), months = {};
       C.filter(function (c) { return fOk(c); }).forEach(function (c) { (months[c.date.slice(0, 7)] = months[c.date.slice(0, 7)] || []).push(c); });
@@ -222,17 +223,15 @@
       var days = {}; weeks[weekSel].forEach(function (c) { (days[c.date] = days[c.date] || []).push(c); });
       var dk = Object.keys(days).sort();
       if (!days[daySel]) daySel = dk[dk.length - 1];
-      var L = days[daySel].slice().sort(function (a, b) { return a.m - b.m; });
+      var L = days[daySel].slice().sort(function (a, b) { return a.m - b.m; }); dayFirst = L[0];
       var wlab = function (w, i) { var L2 = weeks[w].map(function (c) { return c.date; }).sort(); return 'Week ' + (i + 1) + ' · ' + mmdd(L2[0]) + (L2.length > 1 && L2[L2.length - 1] !== L2[0] ? '–' + new Date(L2[L2.length - 1] + 'T12:00:00Z').getUTCDate() : ''); };
       el.innerHTML = '<div class="mbar">' + keys.map(function (m) { return tab('data-m', m, m === monthSel, mname(m), months[m]); }).join('') + '</div>'
         + '<div class="mbar">' + wk.map(function (w, i) { return tab('data-w', w, w === weekSel, wlab(w, i), weeks[w]); }).join('') + '</div>'
         + '<div class="mbar">' + dk.map(function (d) { return tab('data-d', d, d === daySel, days[d][0].weekday + ' ' + mmdd(d), days[d]); }).join('') + '</div>'
-        + '<p class="mhint">' + days[daySel][0].weekday + ' ' + mmdd(daySel) + ' · ' + L.length + ' trade' + (L.length === 1 ? '' : 's') + ' · <span class="' + cl(sumP(L)) + '">' + usd(sumP(L)) + '</span> · tap one to open it</p><div class="tlist">' + L.map(function (c) { var i = C.indexOf(c);
-          return '<button class="trow" data-i="' + i + '" aria-current="' + (sel.card === c) + '"><span>' + c.time_pt + ' · ' + (c.side === 'call' ? 'call' : 'put') + ' ' + c.strike + (c.ct > 1 ? ' ×' + c.ct : '') + '</span><b class="' + cl(c.pnl) + '">' + (c.why === 'open' ? 'open ' : '') + usd(c.pnl) + '</b></button>'; }).join('') + '</div>';
-      el.querySelectorAll('[data-m]').forEach(function (b) { b.addEventListener('click', function () { monthSel = b.dataset.m; weekSel = daySel = null; strip(); tellHeight(); }); });
-      el.querySelectorAll('[data-w]').forEach(function (b) { b.addEventListener('click', function () { weekSel = b.dataset.w; daySel = null; strip(); tellHeight(); }); });
-      el.querySelectorAll('[data-d]').forEach(function (b) { b.addEventListener('click', function () { daySel = b.dataset.d; strip(); tellHeight(); }); });
-      el.querySelectorAll('.trow[data-i]').forEach(function (b) { var c = C[+b.dataset.i]; b.addEventListener('click', function () { select(c, true); }); });
+        + '<p class="mhint">' + days[daySel][0].weekday + ' ' + mmdd(daySel) + ' · ' + L.length + ' trade' + (L.length === 1 ? '' : 's') + ' · <span class="' + cl(sumP(L)) + '">' + usd(sumP(L)) + '</span> · tap a trade in “That morning” to open it</p>';
+      el.querySelectorAll('[data-m]').forEach(function (b) { b.addEventListener('click', function () { monthSel = b.dataset.m; weekSel = daySel = null; strip(); openFirst(); tellHeight(); }); });
+      el.querySelectorAll('[data-w]').forEach(function (b) { b.addEventListener('click', function () { weekSel = b.dataset.w; daySel = null; strip(); openFirst(); tellHeight(); }); });
+      el.querySelectorAll('[data-d]').forEach(function (b) { b.addEventListener('click', function () { daySel = b.dataset.d; strip(); openFirst(); tellHeight(); }); });
     }
     function setup(cv) { var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); return [g, w, h]; }
     var exitOf = function (c) { var D = DAYS[c.date]; return c.exit_m == null ? D.candles.length - 1 : Math.min(c.exit_m, D.candles.length - 1); };
@@ -456,17 +455,16 @@
       h += '<p class="eyebrow">' + (c.src === 'you' ? 'Your checklist (from your own stats)' : 'The bot\'s rules') + ' · ' + kept + ' kept' + (broke ? ', ' + broke + ' missed' : '') + '</p><div class="rules">' + rs.map(function (r) {
         var s = r.ok === true ? '<span class="ok">✓</span>' : r.ok === false ? '<span class="no">✗</span>' : '<span class="na">–</span>';
         return s + '<span>' + esc(r.label) + '<span class="d">' + esc(r.d) + '</span></span>'; }).join('') + '</div>';
-      h += '<div class="tw miss"><b>That morning</b><br>' + dayC.map(function (o) { return pt(o.m) + ' · ' + (o.src === 'option' ? 'option ' : '') + esc(lab(o)) + ' · ' + o.side + ' ' + o.strike + (o.ct > 1 ? ' ×' + o.ct : '') + ' · <b class="' + cl(o.pnl) + '">' + (o.why === 'open' ? 'open ' : '') + usd(o.pnl) + '</b>'; }).join('<br>') +
-        '<br><span class="mut">Total ' + usd(dayC.reduce(function (s2, o) { return s2 + o.pnl; }, 0)) + '</span></div>';
+      h += '<div class="tw miss"><b>That morning</b> <span class="mut">· tap one to open it</span>' + dayC.map(function (o) { return '<button class="mrow" data-ci="' + C.indexOf(o) + '" aria-current="' + (o === c) + '">' + pt(o.m) + ' · ' + (o.src === 'option' ? 'option ' : '') + esc(lab(o)) + ' · ' + o.side + ' ' + o.strike + (o.ct > 1 ? ' ×' + o.ct : '') + ' · <b class="' + cl(o.pnl) + '">' + (o.why === 'open' ? 'open ' : '') + usd(o.pnl) + '</b></button>'; }).join('') +
+        '<span class="mut">Total ' + usd(dayC.reduce(function (s2, o) { return s2 + o.pnl; }, 0)) + '</span></div>';
       el.innerHTML = h;
+      el.querySelectorAll('.mrow').forEach(function (b) { b.addEventListener('click', function () { var o = C[+b.dataset.ci]; if (o) select(o, false); }); });
     }
     function select(card, scroll) {
       sel.card = card; hoverM = null;
       if (document.querySelector('#rp .pane[data-p="chart"]').hidden) showPane('chart');
       if (card.date !== daySel) { monthSel = card.date.slice(0, 7); weekSel = wkOf(card.date); daySel = card.date; strip(); }
       document.getElementById('rp-title').textContent = card.weekday + ' ' + mmdd(card.date) + ' · ' + card.time_pt + ' PT · ' + (card.side === 'call' ? 'Call ' : 'Put ') + card.strike + ' · ' + lab(card) + ' · ' + usd(card.pnl);
-      document.querySelectorAll('#rp-strip .trow').forEach(function (b) { var on = C[+b.dataset.i] === card; b.setAttribute('aria-current', on ? 'true' : 'false');
-        if (on && b.parentNode) { var s = b.parentNode; if (b.offsetLeft < s.scrollLeft || b.offsetLeft + b.offsetWidth > s.scrollLeft + s.clientWidth) s.scrollLeft = b.offsetLeft - 8; } });
       drawMain(); drawOpt(); side();
       if (scroll) { var dk = document.getElementById('rp-desk'); window.scrollTo({ top: dk.getBoundingClientRect().top + window.pageYOffset - 8, behavior: 'smooth' }); }   // scroll this frame only, never the dashboard around it
     }
