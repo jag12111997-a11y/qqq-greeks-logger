@@ -700,7 +700,7 @@ function tpView(v){
   root.style.display = (v === 'perf' || v === 'stats') ? '' : 'none';
   if (mt) mt.style.display = v === 'trades' ? '' : 'none';
   jw.style.display = v === 'journal' ? '' : 'none';
-  if (v === 'journal' && !jw.firstChild) jw.innerHTML = '<iframe src="notebook.html" title="Trading Journal" style="width:100%;height:calc(100vh - 70px);border:1px solid rgba(110,103,68,0.55);border-radius:10px;display:block;background:#332E20"></iframe>';
+  if (v === 'journal' && !jw.firstChild) jw.innerHTML = '<iframe src="notebook.html?v=20261118b" title="Trading Journal" style="width:100%;height:calc(100vh - 70px);border:1px solid rgba(110,103,68,0.55);border-radius:10px;display:block;background:#332E20"></iframe>';
   if (v === 'perf' || v === 'stats') root.innerHTML = renderCombinedWidget();
   window.scrollTo(0, 0);
 }
@@ -709,7 +709,7 @@ function tpView(v){
 <!-- MY TRADES: look back at every one of your own trades (same viewer as the bot's Trade Replay, this page's colors) -->
 <div id="my-trades" style="margin:14px 0 0;padding:0 16px">
   <div style="color:#FF4FD8;font-size:8px;letter-spacing:0.15em;padding:0 2px 6px">MY TRADES · LOOK BACK BY MONTH</div>
-  <iframe id="my-replay" src="my-replay.html" title="My trades" scrolling="no" style="width:100%;height:1500px;border:0;display:block;background:#26231A"></iframe>
+  <iframe id="my-replay" src="my-replay.html?v=20261118b" title="My trades" scrolling="no" style="width:100%;height:1500px;border:0;display:block;background:#26231A"></iframe>
 </div>
 <script>
 (function(){var mt=document.getElementById('my-trades');if(mt&&PVIEW!=='trades')mt.style.display='none';})();
