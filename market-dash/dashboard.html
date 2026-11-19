@@ -4903,6 +4903,29 @@
       svg += '<path d="' + path(e9.slice(0, ci + 1).map(function (p) { return [p.time - T0 + step * 30, p.value]; }), 1e9) + '" fill="none" stroke="#29b6f6" stroke-width="1.2" opacity=".8"/>';
       svg += '<path d="' + path(e20.slice(0, ci + 1).map(function (p) { return [p.time - T0 + step * 30, p.value]; }), 1e9) + '" fill="none" stroke="#ff9f0a" stroke-width="1.2" opacity=".8"/>';
     }
+    // Nov 18: the bot's paper trades on the chart — ▲ where it bought (under the candle), ▼ where it sold (over it)
+    try {
+      var BT = botTradesFor(day);
+      if (BT && BT.length) {
+        var BCOL = { bot: "#fcb103", hiv: "#ff7ac8", "big fish": "#7cff6b", opt: "#3fd3ff" }, bLimit = times[ci] + step * 60;
+        var mAt = function (u) { var best = null; for (var i = 0; i < minute.length; i++) { if (minute[i].time <= u) best = minute[i]; else break; } return best; };
+        BT.forEach(function (t) {
+          var col = BCOL[t.lab] || "#fcb103";
+          [[t.a, true], [t.b, false]].forEach(function (pr) {
+            if (pr[0] == null) return;
+            var u = botPtUnix(day, pr[0]); if (u > bLimit) return;
+            var k = mAt(u); if (!k) return;
+            var x = X(u - T0 + 30), y = pr[1] ? Y(k.low) + 12 : Y(k.high) - 12;
+            if (x < PX0 || x > PX1) return;
+            var tri = pr[1] ? "M" + x.toFixed(1) + " " + (y - 8).toFixed(1) + " L" + (x - 7).toFixed(1) + " " + (y + 5).toFixed(1) + " L" + (x + 7).toFixed(1) + " " + (y + 5).toFixed(1) + " Z"
+                            : "M" + x.toFixed(1) + " " + (y + 8).toFixed(1) + " L" + (x - 7).toFixed(1) + " " + (y - 5).toFixed(1) + " L" + (x + 7).toFixed(1) + " " + (y - 5).toFixed(1) + " Z";
+            var lab = pr[1] ? "bot buy " + (t.lab !== "bot" ? t.lab + " " : "") + t.side + t.K : "bot sold" + (t.usd != null ? " " + (t.usd >= 0 ? "+$" : "−$") + Math.abs(Math.round(t.usd)) : "");
+            svg += '<g><title>' + esc(lab) + '</title><path d="' + tri + '" fill="' + col + '" stroke="#111" stroke-width="1"/>' +
+              '<text x="' + x.toFixed(1) + '" y="' + (pr[1] ? y + 19 : y - 11).toFixed(1) + '" fill="' + col + '" text-anchor="middle" style="' + sty + ';font-size:11px;font-weight:700">' + esc(lab) + "</text></g>";
+          });
+        });
+      }
+    } catch (botErr) {}
     // level history: thin solid lines (raw = dots)
     if (QQQ_LAYERS.core) {
       var hz, hp, hn;
@@ -5788,6 +5811,7 @@
     if (h === 10) g -= 3600;   // daylight time: 9:30 ET = 13:30 UTC
     return g + mins * 60;
   }
+  function botToday() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
   function botHm(x) { var p = String(x || "").split(":"); if (p.length < 2) return null; var h = +p[0], m = +p[1]; if (h < 6) h += 12; return h * 60 + m - 390; }
   function botFromLog(j) {
     var T = [], add = function (arr, lab) { (arr || []).forEach(function (t) { var a = botHm(t.filled || t.signal); if (a == null) return;
@@ -5804,7 +5828,7 @@
   }
   function botPaint() {
     var B = QQQ_BOT, TV = window.LightweightCharts; if (!B.series || !TV) return;
-    var today = qqqSessionDay(Math.floor(Date.now() / 1000)) || new Date().toISOString().slice(0, 10), day = B.day || today, T = null;
+    var today = botToday(), day = B.day || today, T = null;
     if (day === today && window.__V92VM) T = botFromVm(window.__V92VM);
     else if (BOT_LOG[day] === undefined) {
       BOT_LOG[day] = null;
@@ -5825,6 +5849,17 @@
       else if (TV.createSeriesMarkers) B.mk = TV.createSeriesMarkers(B.series, M);
       else if (B.series.setMarkers) B.series.setMarkers(M);
     } catch (x) {}
+  }
+  function botTradesFor(day) {
+    var today = botToday();
+    if (day === today && window.__V92VM) return botFromVm(window.__V92VM);
+    if (BOT_LOG[day] === undefined) {
+      BOT_LOG[day] = null;
+      fetch("v92_log/" + day + ".json?t=" + Date.now()).then(function (r) { return r.ok ? r.json() : false; }).catch(function () { return false; })
+        .then(function (j) { BOT_LOG[day] = j ? botFromLog(j) : []; if (BOT_LOG[day].length) { try { renderAllWidgets(true); } catch (x) {} } });
+      return null;
+    }
+    return BOT_LOG[day];
   }
   window.__qqqBotMarks = botPaint; window.__QQQ_BOT = QQQ_BOT;
   function mountQqqChart(e, chartModel) {
