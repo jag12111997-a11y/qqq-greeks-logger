@@ -13,5 +13,10 @@
   "summary": "Struggled. No direction — price kept getting bought up, just a slow grind down, and calls got eaten up quickly. Gave back a big chunk of my first trade and didn't respect my rules. Still ended green, but non-direction days like this kill me every time.",
   "right": "Read the open: P649 6:34 +$87 and the add at 6:35 +$53 — up +$114 by 6:47. Stops stayed small (median ~$0.15). Finished green.",
   "fix": "Peaked +$114 at 6:47 and gave back $68 — the $45 giveback rule would have ended the day around +$70. 17 trades (cap 8): 12 more after the high, mostly calls↔puts every few minutes in chop. On a no-direction day, once you hit +$60 and the candles alternate colors, close Webull."
+ },
+ "2026-11-19": {
+  "summary": "Absolute chaos. Went in like Bambi with heavy size (2 contracts), ran out of cash and had to use unsettled funds (good-faith violation risk on Webull). When it was time to add size I didn't, then got scared holding — the put went to about $6.00 and I left with about half of it.",
+  "right": "The 7:10 P659 caught the real move: 0.75 -> 3.73, +$298, held 22 minutes. Opening call at 6:30 +$33. Ended green +$161.",
+  "fix": "Down -$137 by 7:10 after 10 trades in 40 minutes, mostly 2 contracts, flipping 682 calls / 660 puts and two far-OTM 687 calls (-$53). That broke the -$75 stop — the day was saved by the trade that broke it, which is luck, not a plan. Size only after a green trade, never on the first ones. Keep cash settled so you never need unsettled funds."
  }
 }
