@@ -72,12 +72,12 @@ function render(ix,D,fwdFrom){
   h+='</table></div><div class="verdict">'+verdicts.join('<br>')+'</div>';
   // live log
   function dayBox(d){
-    var rows=[],sum=0;
-    LAYERS.forEach(function(L){L.trades(d).forEach(function(t){var u=L.usd(t);sum+=u;
-      rows.push('<div class="tr"><span><span class="tag '+L.cls+'">'+L.k+'</span></span><span>'+esc(t.filled||t.signal||'')+' → '+esc(t.exit||'')+'</span><span>'+esc(t.side||'')+' '+esc(t.strike||'')+((t.contracts||1)>1?' ×'+t.contracts:'')+' · '+(t.paid!=null?Number(t.paid).toFixed(2):'')+' → '+(t.sold!=null?Number(t.sold).toFixed(2):'')+' · <span class="dim">'+esc(t.setup||t.rule||'')+(t.why?' · '+esc(t.why):'')+'</span></span><span class="'+cl(u)+'">'+usd(u)+'</span></div>');});});
-    return '<div class="day"><div class="hd"><b>'+day(d.date)+'</b><span class="'+cl(sum)+'">'+(rows.length?rows.length+' trade'+(rows.length>1?'s':'')+' · '+usd(sum):'<span class="dim">no trades</span>')+'</span></div>'+rows.join('')+'</div>';
+    var rows=[],per=[];
+    LAYERS.forEach(function(L){var ls=0,ln=0;L.trades(d).forEach(function(t){var u=L.usd(t);ls+=u;ln++;
+      rows.push('<div class="tr"><span><span class="tag '+L.cls+'">'+L.k+'</span></span><span>'+esc(t.filled||t.signal||'')+' → '+esc(t.exit||'')+'</span><span>'+esc(t.side||'')+' '+esc(t.strike||'')+((t.contracts||1)>1?' ×'+t.contracts:'')+' · '+(t.paid!=null?Number(t.paid).toFixed(2):'')+' → '+(t.sold!=null?Number(t.sold).toFixed(2):'')+' · <span class="dim">'+esc(t.setup||t.rule||'')+(t.why?' · '+esc(t.why):'')+'</span></span><span class="'+cl(u)+'">'+usd(u)+'</span></div>');});if(ln)per.push('<span class="tag '+L.cls+'">'+L.k+' <span class="'+cl(ls)+'">'+usd(ls)+'</span></span>');});
+    return '<div class="day"><div class="hd"><b>'+day(d.date)+'</b><span>'+(rows.length?per.join(''):'<span class="dim">no trades</span>')+'</span></div>'+rows.join('')+'</div>';
   }
-  h+='<h2>LIVE MORNINGS · EVERY TRADE</h2><p class="sub">Newest first. Each line: layer · fill → exit time (PT) · contract · paid → sold · setup / why it closed · $.</p>'+LV.slice().reverse().map(dayBox).join('');
+  h+='<h2>LIVE MORNINGS · EVERY TRADE</h2><p class="sub">Newest first. Day totals are per layer (v9.5 already includes the card trades, so they do not add up). Each line: layer · fill → exit time (PT) · contract · paid → sold · setup / why it closed · $.</p>'+LV.slice().reverse().map(dayBox).join('');
   h+='<details><summary>Backtested mornings ('+BT.length+') · every trade</summary>'+BT.slice().reverse().map(dayBox).join('')+'</details>';
   document.getElementById('app').innerHTML=h; tellHeight();
   document.querySelectorAll('details').forEach(function(x){x.addEventListener('toggle',tellHeight);});
