@@ -668,6 +668,8 @@
     if (!o.day) { var t = setInterval(go, 20000); el._v92stop = function () { clearInterval(t); }; }
     return p;
   }
-  var api = { mount: mount, model: model, loadReplay: loadReplay, loadLive: loadLive, html: html, build: build };
+  // Nov 18: one-line status for the dashboard header (the card itself is hidden): an active trade first, else the blocked-signal line, else the headline
+  function status(vm) { if (!vm) return ""; if (/^(buy|in|sell)$/.test(vm.stage)) return vm.head; if (vm.blocked && vm.blocked.length) return blockedTxt(vm.blocked); return vm.head || ""; }
+  var api = { mount: mount, model: model, loadReplay: loadReplay, loadLive: loadLive, html: html, build: build, status: status };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.V92CARD = api;
 })(this);

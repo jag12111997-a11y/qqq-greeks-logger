@@ -874,7 +874,7 @@
 <script src="v95_options.js?v=20261110a"></script>
 <script src="hiv_layer.js?v=20261110a"></script>
 <script src="bigfish_layer.js?v=20261110d"></script>
-<script src="v92_card.js?v=20261117b"></script>
+<script src="v92_card.js?v=20261118a"></script>
 
 <script>
 (function () {
@@ -5780,6 +5780,53 @@
     return out;
   }
 
+  // ===== Nov 18: the bot's paper trades as arrows on this chart (today from the live engine, past days from v92_log) =====
+  var BOT_LOG = {}, QQQ_BOT = { series: null, tf: null, day: null, mk: null };
+  function botPtUnix(day, mins) {
+    var g = Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10), 14, 30) / 1000;
+    var h = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hourCycle: "h23" }).format(new Date(g * 1000)));
+    if (h === 10) g -= 3600;   // daylight time: 9:30 ET = 13:30 UTC
+    return g + mins * 60;
+  }
+  function botHm(x) { var p = String(x || "").split(":"); if (p.length < 2) return null; var h = +p[0], m = +p[1]; if (h < 6) h += 12; return h * 60 + m - 390; }
+  function botFromLog(j) {
+    var T = [], add = function (arr, lab) { (arr || []).forEach(function (t) { var a = botHm(t.filled || t.signal); if (a == null) return;
+      T.push({ lab: lab, side: /^c/i.test(t.side) ? "C" : "P", K: t.strike, a: a, b: botHm(t.exit), usd: (t.usd || 0) * (t.contracts || 1) }); }); };
+    add(j.shadow_v95 && j.shadow_v95.trades, "bot"); add(j.shadow_options && j.shadow_options.trades, "opt");
+    add(j.shadow_hiv && j.shadow_hiv.trades, "hiv"); add(j.shadow_bigfish && j.shadow_bigfish.trades, "big fish");
+    return T;
+  }
+  function botFromVm(vm) {
+    var T = [];
+    (vm.closed || []).concat(vm.tickets || []).forEach(function (b) { if (b.mf == null) return; T.push({ lab: "bot", side: b.S === "CALL" ? "C" : "P", K: b.K, a: b.mf, b: b.out != null ? b.out : null, usd: b.res != null ? b.res : b.pnl }); });
+    (vm.hivClosed || []).concat(vm.hivTk || []).forEach(function (k) { if (k.mf == null) return; T.push({ lab: "hiv", side: "P", K: k.K, a: k.mf, b: k.out != null ? k.out : null, usd: k.usd }); });
+    return T;
+  }
+  function botPaint() {
+    var B = QQQ_BOT, TV = window.LightweightCharts; if (!B.series || !TV) return;
+    var today = qqqSessionDay(Math.floor(Date.now() / 1000)) || new Date().toISOString().slice(0, 10), day = B.day || today, T = null;
+    if (day === today && window.__V92VM) T = botFromVm(window.__V92VM);
+    else if (BOT_LOG[day] === undefined) {
+      BOT_LOG[day] = null;
+      fetch("v92_log/" + day + ".json?t=" + Date.now()).then(function (r) { return r.ok ? r.json() : false; }).catch(function () { return false; })
+        .then(function (j) { BOT_LOG[day] = j ? botFromLog(j) : []; if (QQQ_BOT.day === day || (!QQQ_BOT.day && day === today)) botPaint(); });
+      return;
+    } else T = BOT_LOG[day] || [];
+    if (!T) return;
+    var COL = { bot: "#fcb103", hiv: "#ff7ac8", "big fish": "#7cff6b", opt: "#3fd3ff" }, M = [];
+    T.forEach(function (t) {
+      var c = COL[t.lab] || "#fcb103", nm = t.lab + " " + t.side + t.K;
+      M.push({ time: qqqTimeBucket(botPtUnix(day, t.a), B.tf), position: "belowBar", color: c, shape: "arrowUp", text: "BOT BUY " + nm });
+      if (t.b != null) M.push({ time: qqqTimeBucket(botPtUnix(day, t.b), B.tf), position: "aboveBar", color: c, shape: "arrowDown", text: "BOT SELL " + (t.usd != null ? (t.usd >= 0 ? "+$" : "−$") + Math.abs(Math.round(t.usd)) : "") });
+    });
+    M.sort(function (x, y) { return x.time - y.time; });
+    try {
+      if (B.mk && B.mk.setMarkers) B.mk.setMarkers(M);
+      else if (TV.createSeriesMarkers) B.mk = TV.createSeriesMarkers(B.series, M);
+      else if (B.series.setMarkers) B.series.setMarkers(M);
+    } catch (x) {}
+  }
+  window.__qqqBotMarks = botPaint; window.__QQQ_BOT = QQQ_BOT;
   function mountQqqChart(e, chartModel) {
     destroyQqqChart();
     var el = document.getElementById("qqq-tv-chart");
@@ -5901,6 +5948,7 @@
         priceLineVisible: false, lastValueVisible: true
       });
       series.setData(displayCandles);
+      if (!calendarTimeframe) { QQQ_BOT.series = series; QQQ_BOT.tf = timeframe; QQQ_BOT.day = QQQ_SESSION.date || null; QQQ_BOT.mk = null; botPaint(); } else QQQ_BOT.series = null;
 
       if (QQQ_CHART_VIEW.ema) {
         ema9Series = chart.addSeries(TV.LineSeries, {
@@ -8789,10 +8837,16 @@
   function v92Tick() {
     return V92CARD.html({ base: LIVE_DATA_BASE }).then(function (r) {
       V92_HTML = r.html; V92_VM = r.vm;
+      window.__V92VM = r.vm;
+      var st = document.getElementById("v92st"), txt = window.__v92Status();
+      if (st) st.innerHTML = txt; else { var hq = document.getElementById("hdrq"); if (hq && window.__hdrqHtml) hq.innerHTML = window.__hdrqHtml(); }
+      try { if (window.__qqqBotMarks) window.__qqqBotMarks(); } catch (x) {}
       var el = document.getElementById("hr-box"); if (el) el.innerHTML = V92_HTML;
     }).catch(function () {});
   }
+  window.__v92Status = function () { var vm = window.__V92VM; if (!vm || typeof V92CARD === "undefined" || !V92CARD.status) return ""; var t = V92CARD.status(vm); return t ? '<b style="color:#ff2be0">bot</b> ' + esc(t) : ""; };
   function v92Start() { if (V92_ON) return; V92_ON = true; v92Tick(); setInterval(function () { if (!document.hidden) v92Tick(); }, 20000); }
+  if (USE_V92) setTimeout(function () { try { v92Start(); } catch (x) {} }, 1200);   // Nov 18: runs on every tab now (header line + chart arrows)
   function v92Banner() {
     var vm = V92_VM; if (!vm) return "";
     var tk = (vm.tickets || [])[0], box = function (bg, fg, txt) { return '<div style="background:' + bg + ';color:' + fg + ';border-radius:6px;padding:5px 8px;margin-bottom:6px;font-weight:700">' + esc(txt) + "</div>"; };
@@ -8808,7 +8862,7 @@
       (vm.reentry ? '<div style="color:#fcb103;font-size:10px">' + esc(vm.reentry) + "</div>" : "") + "</div>";
   }
   function secHomeRun() {
-    if (USE_V92) { v92Start(); return '<div class="band"><span>3v3 v9.5 · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + (V92_HTML || '<div style="padding:14px;color:#c8a0d0">Loading v9.5 game plan…</div>') + "</div>"; }
+    if (USE_V92) { v92Start(); return ""; }   // Nov 18: game plan card hidden (asked) — the bot's line is in the header, its trades are arrows on the QQQ chart
     return '<div class="band"><span>Home run · game plan</span><i></i></div><div id="hr-box" style="margin:0 0 14px">' + hrHtml() + "</div>";
   }
   function hrPaint() { var el = document.getElementById("hr-box"); if (!el) return; if (USE_V92) { if (V92_HTML) el.innerHTML = V92_HTML; return; } el.innerHTML = hrHtml(); }
@@ -8863,7 +8917,9 @@
       };
       window.__hdrqHtml = function () {
         var Q = window.__hdrq, out = [], b = function (t) { return '<b style="color:var(--txt)">' + t + "</b>"; },
+            _st = window.__v92Status ? window.__v92Status() : "",
             pc = function (p) { return p == null ? "" : ' <span style="color:var(' + (p > 0 ? "--up" : p < 0 ? "--down" : "--flat") + ')">' + (p > 0 ? "+" : "") + p.toFixed(2) + "%</span>"; };
+        out.push('<span id="v92st" style="color:#fcb103">' + _st + "</span>"); if (!_st) out.pop();   // Nov 18: the bot's line (was the game plan card)
         ["vix", "dxy"].forEach(function (k) { var j = Q[k]; out.push(k.toUpperCase() + " " + (j ? b(j.last.toFixed(2)) + pc(typeof j.pct === "number" ? j.pct : null) : "—")); });
         var p = Q.pulse;
         // Nov 17: our own Fear & Greed (CNN blocks the relay) — VIX and equity put/call, each ranked against every logged session since Jul 14
