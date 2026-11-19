@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bot Paper Log</title>
+<!-- Nov 18: the bot's paper trades from v92_log (written nightly by v92_paper_log.js) — live mornings (Nov 2+, never seen by the
+     research) next to the backtested ones, per layer, plus every trade. Read-only: nothing here changes the bot. -->
+<style>
+:root{--bg:#0c0710;--panel:#140c18;--line:rgba(176,64,143,.28);--fg:#ecdce8;--mute:rgba(220,190,210,.72);--up:#00e5cc;--down:#ff4d5e;--acc:#ff2be0;--gold:#f5c542;--font:ui-monospace,SFMono-Regular,Menlo,monospace}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--font)}
+.wrap{padding:14px 16px 40px;max-width:1200px}
+h2{font-size:12px;letter-spacing:.14em;color:var(--acc);margin:18px 0 8px;font-weight:600}
+.sub{color:var(--mute);font-size:11.5px;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{color:var(--mute);font-weight:500;font-size:11px;letter-spacing:.06em}
+td:first-child,th:first-child{text-align:left}
+th.grp{color:var(--gold);text-align:center;border-bottom:1px solid var(--line)}
+.pos{color:var(--up)}.neg{color:var(--down)}.dim{color:var(--mute)}
+.tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:10.5px;margin-right:6px;border:1px solid var(--line)}
+.L-card{color:#ffd166;border-color:rgba(255,209,102,.4)}.L-v95{color:#ff9a3c;border-color:rgba(255,154,60,.4)}.L-opt{color:#3fd3ff;border-color:rgba(63,211,255,.4)}
+.L-hiv{color:#ff7ac8;border-color:rgba(255,122,200,.4)}.L-bf{color:#7cff6b;border-color:rgba(124,255,107,.4)}
+.day{border:1px solid var(--line);border-radius:8px;background:var(--panel);margin:6px 0;padding:8px 10px}
+.day .hd{display:flex;justify-content:space-between;gap:10px}
+.day .hd b{font-weight:600}
+.tr{display:grid;grid-template-columns:90px 120px 1fr 80px;gap:8px;padding:4px 0 0;font-size:12px}
+.tr span:last-child{text-align:right}
+.verdict{border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin:8px 0 4px;background:var(--panel);font-size:12px}
+details>summary{cursor:pointer;color:var(--mute);font-size:12px;margin:10px 0}
+.scroll{overflow-x:auto}
+</style></head><body><div class="wrap" id="app">Loading the bot's paper log…</div>
+<script>
+(function(){
+var LAYERS=[
+  {k:'card',name:'Card (v9.2)',cls:'L-card',trades:function(d){return d.trades||[];},usd:function(t){return t.usd;}},
+  {k:'v95',name:'v9.5 (sized)',cls:'L-v95',trades:function(d){return (d.shadow_v95&&d.shadow_v95.trades)||[];},usd:function(t){return t.usd*(t.contracts||1);}},
+  {k:'opt',name:'Options add-ons',cls:'L-opt',trades:function(d){return (d.shadow_options&&d.shadow_options.trades)||[];},usd:function(t){return t.usd*(t.contracts||1);}},
+  {k:'hiv',name:'High-IV layer',cls:'L-hiv',trades:function(d){return (d.shadow_hiv&&d.shadow_hiv.trades)||[];},usd:function(t){return t.usd;}},
+  {k:'bf',name:'Big-fish layer',cls:'L-bf',trades:function(d){return (d.shadow_bigfish&&d.shadow_bigfish.trades)||[];},usd:function(t){return t.usd;}}];
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function usd(v){v=Math.round(v);return (v<0?'−$':'+$')+Math.abs(v).toLocaleString();}
+function cl(v){return v>0.5?'pos':v<-0.5?'neg':'dim';}
+var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],W=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function day(d){var t=new Date(d+'T12:00:00');return W[t.getDay()]+' '+M[t.getMonth()]+' '+t.getDate();}
+function tellHeight(){}
+fetch('v92_log/index.json?t='+Date.now()).then(function(r){return r.json();}).then(function(ix){
+  var dates=ix.days.map(function(r){return r.date;}),fwdFrom=ix.forward_from||'2026-11-02';
+  return Promise.all(dates.map(function(d){return fetch('v92_log/'+d+'.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});})).then(function(D){render(ix,D.filter(Boolean),fwdFrom);});
+}).catch(function(e){document.getElementById('app').textContent='Could not load the paper log ('+e+').';});
+function stats(D,L){
+  var tr=[],days=0,bestDay=0,worstDay=0;
+  D.forEach(function(d){var T=L.trades(d);if(T.length){days++;var s=0;T.forEach(function(t){var u=L.usd(t);tr.push(u);s+=u;});bestDay=Math.max(bestDay,s);worstDay=Math.min(worstDay,s);}});
+  var tot=tr.reduce(function(a,b){return a+b;},0),w=tr.filter(function(u){return u>0.5;}).length;
+  return {mornings:D.length,days:days,n:tr.length,w:w,tot:tot,avg:tr.length?tot/tr.length:0,wr:tr.length?100*w/tr.length:0,worst:worstDay,best:bestDay};
+}
+function render(ix,D,fwdFrom){
+  var BT=D.filter(function(d){return d.date<fwdFrom;}),LV=D.filter(function(d){return d.date>=fwdFrom;});
+  var h='<h2>BOT PAPER LOG · LIVE VS BACKTEST</h2><p class="sub">Live = mornings from '+day(fwdFrom)+' on, which the research never saw. Backtest = '+day(BT[0]?BT[0].date:'')+' – '+day(BT.length?BT[BT.length-1].date:'')+'. 1 contract unless the layer sizes up. Written nightly; last update '+esc((ix.updated_utc||'').slice(0,16).replace('T',' '))+' UTC.</p>';
+  h+='<div class="scroll"><table><tr><th></th><th class="grp" colspan="5">BACKTEST · '+BT.length+' mornings</th><th class="grp" colspan="5">LIVE · '+LV.length+' mornings</th></tr>'+
+     '<tr><th>Layer</th><th>trades</th><th>win %</th><th>avg / trade</th><th>total</th><th>worst day</th><th>trades</th><th>win %</th><th>avg / trade</th><th>total</th><th>worst day</th></tr>';
+  var verdicts=[];
+  LAYERS.forEach(function(L){var b=stats(BT,L),l=stats(LV,L);
+    h+='<tr><td><span class="tag '+L.cls+'">'+L.name+'</span></td>'+
+      '<td>'+b.n+'</td><td>'+(b.n?b.wr.toFixed(0)+'%':'—')+'</td><td class="'+cl(b.avg)+'">'+(b.n?usd(b.avg):'—')+'</td><td class="'+cl(b.tot)+'">'+(b.n?usd(b.tot):'—')+'</td><td class="'+cl(b.worst)+'">'+(b.n?usd(b.worst):'—')+'</td>'+
+      '<td>'+l.n+'</td><td>'+(l.n?l.wr.toFixed(0)+'%':'—')+'</td><td class="'+cl(l.avg)+'">'+(l.n?usd(l.avg):'—')+'</td><td class="'+cl(l.tot)+'">'+(l.n?usd(l.tot):'—')+'</td><td class="'+cl(l.worst)+'">'+(l.n?usd(l.worst):'—')+'</td></tr>';
+    var txt;
+    if(!l.n) txt='no live trades yet';
+    else if(l.n<5) txt='only '+l.n+' live trade'+(l.n>1?'s':'')+' — too few to judge';
+    else if(l.avg>=b.avg*0.5&&l.avg>0) txt='tracking the backtest';
+    else if(l.avg>0) txt='positive but well below the backtest';
+    else txt='losing live while the backtest made '+usd(b.avg)+' a trade';
+    verdicts.push('<span class="tag '+L.cls+'">'+L.name+'</span>'+txt+(l.n?' · live '+l.w+' of '+l.n+' won':''));
+  });
+  h+='</table></div><div class="verdict">'+verdicts.join('<br>')+'</div>';
+  // live log
+  function dayBox(d){
+    var rows=[],sum=0;
+    LAYERS.forEach(function(L){L.trades(d).forEach(function(t){var u=L.usd(t);sum+=u;
+      rows.push('<div class="tr"><span><span class="tag '+L.cls+'">'+L.k+'</span></span><span>'+esc(t.filled||t.signal||'')+' → '+esc(t.exit||'')+'</span><span>'+esc(t.side||'')+' '+esc(t.strike||'')+((t.contracts||1)>1?' ×'+t.contracts:'')+' · '+(t.paid!=null?Number(t.paid).toFixed(2):'')+' → '+(t.sold!=null?Number(t.sold).toFixed(2):'')+' · <span class="dim">'+esc(t.setup||t.rule||'')+(t.why?' · '+esc(t.why):'')+'</span></span><span class="'+cl(u)+'">'+usd(u)+'</span></div>');});});
+    return '<div class="day"><div class="hd"><b>'+day(d.date)+'</b><span class="'+cl(sum)+'">'+(rows.length?rows.length+' trade'+(rows.length>1?'s':'')+' · '+usd(sum):'<span class="dim">no trades</span>')+'</span></div>'+rows.join('')+'</div>';
+  }
+  h+='<h2>LIVE MORNINGS · EVERY TRADE</h2><p class="sub">Newest first. Each line: layer · fill → exit time (PT) · contract · paid → sold · setup / why it closed · $.</p>'+LV.slice().reverse().map(dayBox).join('');
+  h+='<details><summary>Backtested mornings ('+BT.length+') · every trade</summary>'+BT.slice().reverse().map(dayBox).join('')+'</details>';
+  document.getElementById('app').innerHTML=h; tellHeight();
+  document.querySelectorAll('details').forEach(function(x){x.addEventListener('toggle',tellHeight);});
+}
+})();
+</script></body></html>
