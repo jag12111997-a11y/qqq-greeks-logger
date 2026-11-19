@@ -8954,7 +8954,6 @@
         var Q = window.__hdrq, out = [], b = function (t) { return '<b style="color:var(--txt)">' + t + "</b>"; },
             _st = window.__v92Status ? window.__v92Status() : "",
             pc = function (p) { return p == null ? "" : ' <span style="color:var(' + (p > 0 ? "--up" : p < 0 ? "--down" : "--flat") + ')">' + (p > 0 ? "+" : "") + p.toFixed(2) + "%</span>"; };
-        out.push('<span id="v92st" style="color:#fcb103">' + _st + "</span>"); if (!_st) out.pop();   // Nov 18: the bot's line (was the game plan card)
         ["vix", "dxy"].forEach(function (k) { var j = Q[k]; out.push(k.toUpperCase() + " " + (j ? b(j.last.toFixed(2)) + pc(typeof j.pct === "number" ? j.pct : null) : "—")); });
         var p = Q.pulse;
         // Nov 17: our own Fear & Greed (CNN blocks the relay) — VIX and equity put/call, each ranked against every logged session since Jul 14
@@ -8973,6 +8972,7 @@
         // Nov 15: sector leaders / laggards removed from the strip (asked)
         var g = Q.gex; if (g && g.regime) out.push("GEX " + '<b style="color:var(' + (/NEG/i.test(g.regime) ? "--down" : "--up") + ')">' + (/NEG/i.test(g.regime) ? "neg" : "pos") + "</b>");
         out.push(window.__hdrNews());
+        if (_st) out.push('<span id="v92st" style="color:#fcb103">' + _st + "</span>");   // Nov 18: the bot's line, last (was the game plan card)
         return out.join("  ·  ");
       };
       var hdrqPull = function () {
