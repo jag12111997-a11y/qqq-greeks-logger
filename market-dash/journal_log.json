@@ -3,6 +3,80 @@
  "rules_updated": "2026-11-17",
  "entries": [
   {
+   "date": "2026-11-20",
+   "pnl": 199.0,
+   "trades": 15,
+   "wins": 3,
+   "losses": 12,
+   "first": "6:31",
+   "last": "7:49",
+   "best": "7:07 P 621 +242",
+   "score": 4.5,
+   "kept": 5,
+   "of": 11,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "15 trades"
+    },
+    {
+     "rule": "No entry against the 20-min candle",
+     "ok": false,
+     "why": "9 against: 6:31 call, 6:36 call, 6:45 call, 6:46 call"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2 had 7, 7"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Stops $0.15\u20130.20",
+     "ok": false,
+     "why": "median stop $0.08 under entry"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:42 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": false,
+     "why": "4 entries 6:30\u20136:45, both sides"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 7:07 for 19 min, +242"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": true,
+     "why": "1\u20132 contracts"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": true,
+     "why": "ramble logged"
+    }
+   ],
+   "summary": "Practice day \u2014 testing the range levels on purpose. Yes, too many trades, but I was testing levels. Took a call that won, then jumped in at the right level for the put dump, but didn't realise how much cash I'd used, so I had to buy a really far out-of-the-money put. It still paid. I was okay with how it went \u2014 still practicing.",
+   "right": "Two real reads made +$330: the 6:51 C650 caught the 636 \u2192 643 pop (+$88, added into a winner), and the 7:07 P621 \u00d72 at 0.37 caught the dump after the failed push at 643 \u2014 held 19 min with a raised stop, sold 1.58 (+$242). Every stop $0.15 or tighter, no chasing. Ended +$199.",
+   "fix": "Testing the $634\u2013638 chop cost \u2212$128 over 12 tries and broke the \u2212$75 stop by 6:49 (\u2212$85); 7 entries in each of the first two 20-min candles. Practice rule: 1 contract, 2 tries, then wait \u2014 the tests cost ~$30 and the cash is still there for the real setup.",
+   "ramble": true
+  },
+  {
    "date": "2026-11-19",
    "pnl": 161.0,
    "trades": 11,
@@ -23,7 +97,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "3 against: 6:30 call, 6:46 put, 6:46 put"
+     "why": "4 against: 6:46 put, 6:46 put, 6:51 call, 6:51 call"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
