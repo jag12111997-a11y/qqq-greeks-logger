@@ -700,7 +700,7 @@ function tpView(v){
   root.style.display = (v === 'perf' || v === 'stats') ? '' : 'none';
   if (mt) mt.style.display = v === 'trades' ? '' : 'none';
   jw.style.display = v === 'journal' ? '' : 'none';
-  if (v === 'journal' && !jw.firstChild) jw.innerHTML = '<iframe src="notebook.html?v=20261118b" title="Trading Journal" style="width:100%;height:calc(100vh - 70px);border:1px solid rgba(110,103,68,0.55);border-radius:10px;display:block;background:#332E20"></iframe>';
+  if (v === 'journal' && !jw.firstChild) jw.innerHTML = '<iframe src="notebook.html?v=20261120a" title="Trading Journal" style="width:100%;height:calc(100vh - 70px);border:1px solid rgba(110,103,68,0.55);border-radius:10px;display:block;background:#332E20"></iframe>';
   if (v === 'perf' || v === 'stats') root.innerHTML = renderCombinedWidget();
   window.scrollTo(0, 0);
 }

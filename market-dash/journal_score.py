@@ -157,6 +157,49 @@ def score_day(date, fills, cancels, note):
             "ramble": bool(note)}
 
 
+def weeks_from(days, out):
+    """Nov 20: one row per Mon–Fri week for the Week-by-week table (same data as the day cards)."""
+    import datetime as dt
+    by = collections.OrderedDict()
+    for e in out:
+        d = dt.date.fromisoformat(e["date"])
+        by.setdefault((d - dt.timedelta(days=d.weekday())).isoformat(), []).append(e)
+    rows = []
+    for wk, es in by.items():
+        F = [f for e in es for f in days[e["date"]]]
+        pn = sorted((f["pnl"] for f in F), reverse=True)
+        first20 = sum(f["pnl"] for f in F if f["t0"] < 6.5 * 3600 + 1200)
+        after8 = 0.0
+        lows = []
+        for e in es:
+            fs = sorted(days[e["date"]], key=lambda f: f["t0"])
+            after8 += sum(f["pnl"] for f in fs[8:])
+            run = low = 0.0
+            for f in sorted(fs, key=lambda f: f["t1"]):
+                run += f["pnl"]
+                low = min(low, run)
+            lows.append(low)
+        rules = collections.OrderedDict()
+        for e in es:
+            for c in e["checks"]:
+                if c["ok"] is not None:
+                    r = rules.setdefault(c["rule"], [0, 0])
+                    r[0] += 1 if c["ok"] else 0
+                    r[1] += 1
+        sc = [e["score"] for e in es if e["score"] is not None]
+        rows.append({"week": wk, "days": len(es), "green": sum(1 for e in es if e["pnl"] > 0),
+                     "pnl": round(sum(e["pnl"] for e in es), 2), "trades": len(F),
+                     "wins": sum(1 for f in F if f["pnl"] > 0.5),
+                     "score": round(sum(sc) / len(sc), 1) if sc else None,
+                     "kept": sum(e["kept"] for e in es), "of": sum(e["of"] for e in es),
+                     "best2": round(sum(pn[:2]), 2), "rest": round(sum(pn[2:]), 2),
+                     "first20": round(first20, 2), "after8": round(after8, 2),
+                     "days8": sum(1 for e in es if e["trades"] <= 8), "worst_low": round(min(lows), 2),
+                     "daily": [{"date": e["date"], "pnl": e["pnl"], "score": e["score"], "trades": e["trades"]} for e in es],
+                     "rules": rules})
+    return rows[::-1]
+
+
 def main():
     days = days_from_csv()
     extra = load("journal_fills.json", {})
@@ -167,7 +210,8 @@ def main():
         cancels_by[d] = v.get("cancels", [])
     out = [score_day(d, days[d], cancels_by.get(d), notes.get(d)) for d in sorted(days) if days[d]]
     with open(P("journal_log.json"), "w") as fh:
-        json.dump({"rules_since": "2026-11-16", "rules_updated": "2026-11-17", "entries": out[::-1]}, fh, indent=1)
+        json.dump({"rules_since": "2026-11-16", "rules_updated": "2026-11-17", "entries": out[::-1],
+                   "weeks": weeks_from(days, out)}, fh, indent=1)
     for e in out:
         print(e["date"], e["trades"], "%+.0f" % e["pnl"], "score", e["score"], "(%d/%d)" % (e["kept"], e["of"]))
 

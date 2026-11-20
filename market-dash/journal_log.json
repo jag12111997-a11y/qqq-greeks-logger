@@ -1112,5 +1112,276 @@
    "fix": null,
    "ramble": false
   }
+ ],
+ "weeks": [
+  {
+   "week": "2026-11-16",
+   "days": 5,
+   "green": 4,
+   "pnl": 414.0,
+   "trades": 69,
+   "wins": 17,
+   "score": 4.7,
+   "kept": 26,
+   "of": 55,
+   "best2": 540.0,
+   "rest": -126.0,
+   "first20": -228.0,
+   "after8": 439.0,
+   "days8": 0,
+   "worst_low": -228.0,
+   "daily": [
+    {
+     "date": "2026-11-16",
+     "pnl": -164.0,
+     "score": 3.6,
+     "trades": 15
+    },
+    {
+     "date": "2026-11-17",
+     "pnl": 172.0,
+     "score": 6.4,
+     "trades": 11
+    },
+    {
+     "date": "2026-11-18",
+     "pnl": 46.0,
+     "score": 4.5,
+     "trades": 17
+    },
+    {
+     "date": "2026-11-19",
+     "pnl": 161.0,
+     "score": 4.5,
+     "trades": 11
+    },
+    {
+     "date": "2026-11-20",
+     "pnl": 199.0,
+     "score": 4.5,
+     "trades": 15
+    }
+   ],
+   "rules": {
+    "8 trades or fewer": [
+     0,
+     5
+    ],
+    "No entry against the 20-min candle": [
+     0,
+     5
+    ],
+    "Max 2 entries per 20-min candle": [
+     0,
+     5
+    ],
+    "Never add to a loser": [
+     3,
+     5
+    ],
+    "Stops $0.15\u20130.20": [
+     4,
+     5
+    ],
+    "Done after 3 losses in a row or \u2212$75": [
+     0,
+     5
+    ],
+    "No chasing ($0.10+ past entry)": [
+     2,
+     5
+    ],
+    "Waited for a setup (no open whiplash)": [
+     2,
+     5
+    ],
+    "Held a winner (8+ min)": [
+     5,
+     5
+    ],
+    "Size 2 contracts or less": [
+     5,
+     5
+    ],
+    "Logged the day": [
+     5,
+     5
+    ]
+   }
+  },
+  {
+   "week": "2026-11-09",
+   "days": 5,
+   "green": 4,
+   "pnl": 474.0,
+   "trades": 51,
+   "wins": 20,
+   "score": 5.5,
+   "kept": 25,
+   "of": 45,
+   "best2": 241.0,
+   "rest": 233.0,
+   "first20": 67.0,
+   "after8": 17.0,
+   "days8": 2,
+   "worst_low": -102.0,
+   "daily": [
+    {
+     "date": "2026-11-09",
+     "pnl": -102.0,
+     "score": 4.4,
+     "trades": 15
+    },
+    {
+     "date": "2026-11-10",
+     "pnl": 148.0,
+     "score": 7.8,
+     "trades": 8
+    },
+    {
+     "date": "2026-11-11",
+     "pnl": 127.0,
+     "score": 7.8,
+     "trades": 5
+    },
+    {
+     "date": "2026-11-12",
+     "pnl": 52.0,
+     "score": 4.4,
+     "trades": 12
+    },
+    {
+     "date": "2026-11-13",
+     "pnl": 249.0,
+     "score": 3.3,
+     "trades": 11
+    }
+   ],
+   "rules": {
+    "8 trades or fewer": [
+     2,
+     5
+    ],
+    "No entry against the 20-min candle": [
+     0,
+     5
+    ],
+    "Max 2 entries per 20-min candle": [
+     0,
+     5
+    ],
+    "Never add to a loser": [
+     3,
+     5
+    ],
+    "Stops $0.15\u20130.20": [
+     5,
+     5
+    ],
+    "Done after 3 losses in a row or \u2212$75": [
+     2,
+     5
+    ],
+    "Waited for a setup (no open whiplash)": [
+     3,
+     5
+    ],
+    "Held a winner (8+ min)": [
+     5,
+     5
+    ],
+    "Size 2 contracts or less": [
+     5,
+     5
+    ]
+   }
+  },
+  {
+   "week": "2026-11-02",
+   "days": 5,
+   "green": 4,
+   "pnl": 137.0,
+   "trades": 47,
+   "wins": 18,
+   "score": 5.3,
+   "kept": 24,
+   "of": 45,
+   "best2": 147.0,
+   "rest": -10.0,
+   "first20": 184.0,
+   "after8": -43.0,
+   "days8": 1,
+   "worst_low": -29.0,
+   "daily": [
+    {
+     "date": "2026-11-02",
+     "pnl": 53.0,
+     "score": 5.6,
+     "trades": 9
+    },
+    {
+     "date": "2026-11-03",
+     "pnl": -23.0,
+     "score": 6.7,
+     "trades": 9
+    },
+    {
+     "date": "2026-11-04",
+     "pnl": 26.0,
+     "score": 4.4,
+     "trades": 12
+    },
+    {
+     "date": "2026-11-05",
+     "pnl": 24.0,
+     "score": 3.3,
+     "trades": 10
+    },
+    {
+     "date": "2026-11-06",
+     "pnl": 57.0,
+     "score": 6.7,
+     "trades": 7
+    }
+   ],
+   "rules": {
+    "8 trades or fewer": [
+     1,
+     5
+    ],
+    "No entry against the 20-min candle": [
+     0,
+     5
+    ],
+    "Max 2 entries per 20-min candle": [
+     0,
+     5
+    ],
+    "Never add to a loser": [
+     5,
+     5
+    ],
+    "Stops $0.15\u20130.20": [
+     4,
+     5
+    ],
+    "Done after 3 losses in a row or \u2212$75": [
+     3,
+     5
+    ],
+    "Waited for a setup (no open whiplash)": [
+     5,
+     5
+    ],
+    "Held a winner (8+ min)": [
+     1,
+     5
+    ],
+    "Size 2 contracts or less": [
+     5,
+     5
+    ]
+   }
+  }
  ]
 }

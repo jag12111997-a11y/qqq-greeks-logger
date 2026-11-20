@@ -254,12 +254,78 @@ renderPastEntries();
         +'<text x="'+(i*st+st/2).toFixed(1)+'" y="'+(H-3)+'" fill="#D9C48A" font-size="9" text-anchor="middle">'+e.date.slice(8)+'</text>';}).join('');
     return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;margin:6px 0 12px"><line x1="0" x2="'+W+'" y1="'+(H-14-.8*(H-22)).toFixed(1)+'" y2="'+(H-14-.8*(H-22)).toFixed(1)+'" stroke="#A8D8B4" stroke-dasharray="4 4" opacity=".35"/>'+g+'</svg>';
   }
+  // ===== Nov 20: week by week (journal_log.json "weeks", built by journal_score.py) =====
+  var G='#A8D8B4',R='#FF5A2E',Y='#F4C95D',DM='#D9C48A';
+  var $=function(v){v=Math.round(v);return (v<0?'−$':'+$')+Math.abs(v);};
+  var pc=function(v){return v>0.5?G:v<-0.5?R:DM;};
+  var wkLab=function(w){var a=new Date(w+'T12:00:00'),b=new Date(a);b.setDate(a.getDate()+4);return M[a.getMonth()]+' '+a.getDate()+'–'+(b.getMonth()!==a.getMonth()?M[b.getMonth()]+' ':'')+b.getDate();};
+  var SHORT={'8 trades or fewer':'8 trades max','No entry against the 20-min candle':'With the 20-min candle','Max 2 entries per 20-min candle':'2 per candle','Never add to a loser':'No adding to losers','Stops $0.15–0.20':'Stops $0.15–0.20','Done after 3 losses in a row or −$75':'Daily stop','No chasing ($0.10+ past entry)':'No chasing','Waited for a setup (no open whiplash)':'Calm open','Held a winner (8+ min)':'Held a winner','Size 2 contracts or less':'Size ≤ 2','Logged the day':'Logged'};
+  function bars(w){
+    var mx=Math.max.apply(0,w.daily.map(function(d){return Math.abs(d.pnl);}).concat([50])),BW=11,H=34,mid=H/2,s='';
+    var byDow={};w.daily.forEach(function(d){byDow[new Date(d.date+'T12:00:00').getDay()]=d;});
+    for(var i=1;i<=5;i++){var d=byDow[i],x=(i-1)*(BW+3);
+      if(!d){s+='<rect x="'+x+'" y="'+(mid-.5)+'" width="'+BW+'" height="1" fill="'+DM+'" opacity=".3"/>';continue;}
+      var h=Math.max(1.5,Math.abs(d.pnl)/mx*(mid-1));
+      s+='<rect x="'+x+'" y="'+(d.pnl>=0?mid-h:mid)+'" width="'+BW+'" height="'+h.toFixed(1)+'" rx="1.5" fill="'+(d.pnl>=0?G:R)+'"><title>'+day(d.date)+' '+$(d.pnl)+' · '+d.trades+' trades · '+(d.score==null?'–':d.score)+'/10</title></rect>';}
+    return '<svg viewBox="0 0 '+(5*BW+12)+' '+H+'" width="'+(5*BW+12)+'" height="'+H+'" style="display:block"><line x1="0" x2="'+(5*BW+12)+'" y1="'+mid+'" y2="'+mid+'" stroke="'+DM+'" opacity=".25"/>'+s+'</svg>';
+  }
+  function chip(lab,val,prev,fmt,goodUp,note){
+    var d=prev==null?null:val-prev,arrow='',c=DM;
+    if(d!=null&&Math.abs(d)>1e-9){var better=goodUp?d>0:d<0;c=better?G:R;arrow=(d>0?'▲ ':'▼ ')+fmt(Math.abs(d),true);}
+    return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 10px;min-width:0">'
+      +'<div style="font-size:9.5px;letter-spacing:.08em;color:'+DM+';text-transform:uppercase">'+lab+'</div>'
+      +'<div style="font:700 17px var(--font);margin:2px 0;font-variant-numeric:tabular-nums">'+fmt(val)+'</div>'
+      +'<div style="font-size:10px;color:'+c+'">'+(arrow?arrow+' vs last week':(note||'&nbsp;'))+'</div></div>';
+  }
+  function weekHtml(W){
+    if(!W||!W.length) return '';
+    var a=W[0],b=W[1]||null,tpd=function(w){return w.trades/w.days;},kp=function(w){return w.of?100*w.kept/w.of:0;};
+    var money=function(v,abs){return abs?'$'+Math.round(v):$(v);};
+    var h='<h2 class="nb-title" style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap">Week by week <span style="color:var(--txt);font-size:11px;text-transform:none;letter-spacing:0">'+wkLab(a.week)+(a.days<5?' · '+a.days+' of 5 days so far':'')+'</span></h2>';
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr));gap:6px;margin-bottom:10px">'
+      +chip('P&L',a.pnl,b&&b.pnl,money,true)
+      +chip('Trades / day',tpd(a),b&&tpd(b),function(v){return v.toFixed(1);},false,'goal 8')
+      +chip('Avg score',a.score||0,b&&b.score,function(v){return v.toFixed(1);},true)
+      +chip('Rules kept',kp(a),b&&kp(b),function(v){return Math.round(v)+'%';},true)
+      +chip('Trades #9+',a.after8,b&&b.after8,money,true)
+      +'</div>';
+    // focus: the rules kept least this week
+    var rs=Object.keys(a.rules).map(function(k){return [k,a.rules[k][0],a.rules[k][1]];}).filter(function(r){return r[2];});
+    var never=rs.filter(function(r){return r[1]===0;}).map(function(r){return SHORT[r[0]]||r[0];});
+    var always=rs.filter(function(r){return r[1]===r[2];}).map(function(r){return SHORT[r[0]]||r[0];});
+    h+='<div style="font-size:11.5px;line-height:1.5;margin:0 0 10px">'
+      +(never.length?'<span style="color:'+R+'">Never kept this week:</span> '+E(never.join(' · ')):'<span style="color:'+G+'">Every rule kept at least once this week.</span>')
+      +(always.length?'<br><span style="color:'+G+'">Kept every day:</span> '+E(always.join(' · ')):'')
+      +'<br><span style="color:'+Y+'">Carried by:</span> best 2 trades '+$(a.best2)+', the other '+(a.trades-2)+' '+$(a.rest)+'.</div>';
+    // table
+    var th=function(t,tip){return '<th title="'+E(tip||'')+'" style="padding:5px 7px;font-weight:500;font-size:9.5px;letter-spacing:.06em;color:'+DM+';text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)">'+t+'</th>';};
+    var td=function(v,c,al){return '<td style="padding:6px 7px;text-align:'+(al||'right')+';white-space:nowrap;border-bottom:1px solid var(--faint);color:'+(c||'var(--txt)')+';font-variant-numeric:tabular-nums">'+v+'</td>';};
+    h+='<div style="overflow-x:auto;margin-bottom:10px"><table style="border-collapse:collapse;width:100%;font-size:11.5px"><tr>'
+      +th('WEEK').replace('right','left')+th('MON–FRI')+th('P&L')+th('GREEN')+th('TRADES/DAY','goal: 8 or fewer')+th('WIN %')+th('SCORE')+th('RULES')+th('BEST 2 / REST','your two biggest winners vs every other trade')+th('FIRST 20 MIN','entries 6:30–6:49 PT')+th('TRADES #9+','P&L of every trade after your 8th each day')+th('LOW POINT','deepest the day went red')+'</tr>';
+    W.forEach(function(w,i){
+      h+='<tr'+(i===0?' style="background:rgba(244,201,93,.06)"':'')+'>'+td(wkLab(w.week)+(w.days<5?' <span style="color:'+DM+'">('+w.days+'d)</span>':''),null,'left')
+        +'<td style="padding:4px 7px;border-bottom:1px solid var(--faint)"><div style="display:flex;justify-content:flex-end">'+bars(w)+'</div></td>'
+        +td('<b>'+$(w.pnl)+'</b>',pc(w.pnl))+td(w.green+'/'+w.days)
+        +td(tpd(w).toFixed(1),tpd(w)<=8?G:tpd(w)<=11?Y:R)+td(Math.round(100*w.wins/w.trades)+'%')
+        +td(w.score==null?'–':w.score.toFixed(1),col(w.score))+td(w.kept+'/'+w.of+' <span style="color:'+DM+'">'+Math.round(kp(w))+'%</span>')
+        +td('<span style="color:'+pc(w.best2)+'">'+$(w.best2)+'</span> / <span style="color:'+pc(w.rest)+'">'+$(w.rest)+'</span>')
+        +td($(w.first20),pc(w.first20))+td($(w.after8),pc(w.after8))+td($(w.worst_low),pc(w.worst_low))+'</tr>';});
+    h+='</table></div>';
+    // rule grid: which rules held, week after week
+    var rules=Object.keys(a.rules);
+    h+='<details style="margin-bottom:14px"><summary style="cursor:pointer;font-size:11px;color:'+DM+';margin:2px 0 6px">Rule by rule, week by week</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:11px">'
+      +'<tr><th></th>'+W.map(function(w){return '<th style="padding:3px 8px;font-weight:500;font-size:9.5px;color:'+DM+';white-space:nowrap">'+wkLab(w.week)+'</th>';}).join('')+'</tr>'
+      +rules.map(function(r){return '<tr><td style="padding:3px 10px 3px 0;white-space:nowrap">'+E(SHORT[r]||r)+'</td>'+W.map(function(w){var x=w.rules[r];if(!x||!x[1])return '<td style="text-align:center;color:'+DM+'">–</td>';
+        var f=x[0]/x[1],c=f>=.8?G:f>=.4?Y:R;return '<td style="padding:2px 4px"><div style="text-align:center;border-radius:4px;padding:3px 8px;background:'+c+'22;color:'+c+';font-variant-numeric:tabular-nums">'+x[0]+'/'+x[1]+'</div></td>';}).join('')+'</tr>';}).join('')
+      +'</table></div></details>';
+    return '<div id="jweek" style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)">'+h+'</div>';
+  }
   fetch('journal_log.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var el=document.getElementById('jlog'); if(!el||!j||!j.entries||!j.entries.length) return;
     var es=j.entries, avg=function(x){var v=x.filter(function(e){return e.score!=null;});return v.length?(v.reduce(function(s,e){return s+e.score;},0)/v.length).toFixed(1):'–';};
     var cut=new Date(); cut.setDate(cut.getDate()-7); var wk=es.filter(function(e){return new Date(e.date+'T12:00:00')>=cut;});
     var more=es.length>5;
-    el.innerHTML='<h2 class="nb-title" style="display:flex;gap:16px;align-items:baseline">Daily Log <span style="color:var(--txt);font-size:11px;text-transform:none;letter-spacing:0">last 7 days '+avg(wk)+'/10 · all '+avg(es)+'/10</span></h2>'
+    el.innerHTML=weekHtml(j.weeks)+'<h2 class="nb-title" style="display:flex;gap:16px;align-items:baseline">Daily Log <span style="color:var(--txt);font-size:11px;text-transform:none;letter-spacing:0">last 7 days '+avg(wk)+'/10 · all '+avg(es)+'/10</span></h2>'
       +strip(es)+es.slice(0,5).map(function(e,i){return card(e,i===0);}).join('')
       +(more?'<details><summary style="cursor:pointer;font-size:11px;color:var(--dim);margin:4px 0 8px">Older days ('+(es.length-5)+')</summary>'+es.slice(5).map(function(e){return card(e,false);}).join('')+'</details>':'')
       +'<div style="font-size:10px;color:var(--dim)">Rules written '+day(j.rules_since)+' — earlier days scored against them for reference. P&L shown, not scored. Faded bars = no ramble.</div>';
