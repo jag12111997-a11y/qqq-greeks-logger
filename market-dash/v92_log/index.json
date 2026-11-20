@@ -1,32 +1,32 @@
 {
- "updated_utc": "2026-11-19T04:08:04.342Z",
+ "updated_utc": "2026-11-20T03:58:41.178Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 79,
-   "usd": 3170.7
+   "mornings": 80,
+   "usd": 3113.4
   },
   "forward": {
-   "mornings": 13,
-   "usd": -145.9,
+   "mornings": 14,
+   "usd": -203.2,
    "green": 0,
-   "red": 2
+   "red": 3
   },
   "last10": {
-   "usd": -125.6,
-   "worst_dip": 125.6,
-   "from": "2026-11-05"
+   "usd": -182.9,
+   "worst_dip": 182.9,
+   "from": "2026-11-06"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
    "all": {
-    "usd": 3447.3,
+    "usd": 3390,
     "vs_v92": 276.6,
     "bounce_days": 18
    },
    "forward": {
-    "usd": -137.5,
+    "usd": -194.8,
     "vs_v92": 8.4,
     "bounce_days": 8
    }
@@ -34,42 +34,42 @@
   "shadow_combo": {
    "note": "v9.2 + 3-tick trail + VIX bounce calls (paper only; the card's signals stay v9.2)",
    "all": {
-    "usd": 4003.3
+    "usd": 3946
    },
    "forward": {
-    "usd": -171.5,
-    "mornings": 13
+    "usd": -228.8,
+    "mornings": 14
    },
    "last10": {
-    "usd": -125.6
+    "usd": -182.9
    },
    "ribbon_watch": {
     "note": "combo with 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees, else 1 (paper only)",
     "all": {
-     "usd": 6810.9,
-     "ribbon_trades": 24
+     "usd": 6639,
+     "ribbon_trades": 25
     },
     "forward": {
-     "usd": -276.1,
-     "ribbon_trades": 1
+     "usd": -448,
+     "ribbon_trades": 2
     }
    }
   },
   "shadow_v95": {
    "note": "v9.5 candidate (paper only): combo + failed poke B + 3x on A trades by your lines. Promote over the combo only if, after 10 forward mornings, it made more, drawdown no bigger, zero glitches.",
    "all": {
-    "usd_1ct": 4379.3,
-    "usd_sized": 11479.1,
+    "usd_1ct": 4322,
+    "usd_sized": 11307.2,
     "off_mornings": 0
    },
    "forward": {
-    "usd_1ct": -31.8,
-    "usd_sized": -283,
-    "mornings": 13
+    "usd_1ct": -89.1,
+    "usd_sized": -454.9,
+    "mornings": 14
    },
    "last10": {
-    "usd_1ct": -125.6,
-    "usd_sized": -376.8
+    "usd_1ct": -182.9,
+    "usd_sized": -548.7
    }
   },
   "shadow_options": {
@@ -78,17 +78,17 @@
     "addons_usd": 4112.6,
     "addons": 53,
     "contracts": 74,
-    "total_usd": 15591.7
+    "total_usd": 15419.8
    },
    "forward": {
     "addons_usd": 0,
     "addons": 0,
-    "total_usd": -283,
-    "mornings": 13
+    "total_usd": -454.9,
+    "mornings": 14
    },
    "last10": {
     "addons_usd": 0,
-    "total_usd": -376.8
+    "total_usd": -548.7
    }
   },
   "shadow_hiv": {
@@ -96,7 +96,7 @@
    "all": {
     "usd": 1555.3,
     "trades": 16,
-    "total_usd": 17147
+    "total_usd": 16975.1
    },
    "forward": {
     "from": "2026-11-09",
@@ -107,15 +107,15 @@
   "shadow_bigfish": {
    "note": "big-fish layer (on the card since Nov 10): setup days only (selloff/fear market + 1% gap), 6:35 agrees with the gap, ~$1.00 contract, hold to the VWAP cross, no IV rule. Scored on its own; total = card sized + options + high-IV layer + big fish.",
    "all": {
-    "usd": 456.8,
-    "trades": 7,
-    "setup_days": 9,
-    "total_usd": 17603.8
+    "usd": 451.2,
+    "trades": 8,
+    "setup_days": 10,
+    "total_usd": 17426.3
    },
    "forward": {
     "from": "2026-11-10",
-    "usd": -37.6,
-    "trades": 1
+    "usd": -43.2,
+    "trades": 2
    }
   }
  },
@@ -123,40 +123,40 @@
   "note": "SQN = √(trades, capped at 100) × average trade ÷ standard deviation, per trade in dollars. Under 1.6 poor · 2–2.5 average · 2.5–3 good · 3–5 excellent.",
   "all": {
    "v92": {
-    "sqn": 3.74,
-    "trades": 74
+    "sqn": 3.65,
+    "trades": 75
    },
    "v93_vix_bounce": {
-    "sqn": 3.84,
-    "trades": 82
+    "sqn": 3.76,
+    "trades": 83
    },
    "combo": {
-    "sqn": 4.07,
-    "trades": 79
+    "sqn": 3.99,
+    "trades": 80
    },
    "v95_1ct": {
-    "sqn": 4.32,
-    "trades": 89
+    "sqn": 4.24,
+    "trades": 90
    },
    "v95_sized": {
-    "sqn": 4.15,
-    "trades": 89
+    "sqn": 4.06,
+    "trades": 90
    },
    "options_sized": {
     "sqn": 4.5,
     "trades": 53
    },
    "card_plus_options_sized": {
-    "sqn": 4.48,
-    "trades": 142
+    "sqn": 4.39,
+    "trades": 143
    },
    "hiv_layer": {
     "sqn": 1.05,
     "trades": 16
    },
    "big_fish": {
-    "sqn": 1.26,
-    "trades": 7
+    "sqn": 1.23,
+    "trades": 8
    },
    "by_setup_1ct": {
     "fw": {
@@ -168,8 +168,8 @@
      "trades": 36
     },
     "gap": {
-     "sqn": 1.24,
-     "trades": 14
+     "sqn": 0.99,
+     "trades": 15
     },
     "re-gap": {
      "sqn": 3.69,
@@ -219,45 +219,45 @@
   },
   "forward": {
    "v92": {
-    "sqn": -3.43,
-    "trades": 3
+    "sqn": -4.96,
+    "trades": 4
    },
    "v93_vix_bounce": {
-    "sqn": -1.18,
-    "trades": 5
+    "sqn": -1.65,
+    "trades": 6
    },
    "combo": {
-    "sqn": -2,
-    "trades": 5
+    "sqn": -2.63,
+    "trades": 6
    },
    "v95_1ct": {
-    "sqn": -0.16,
-    "trades": 6
+    "sqn": -0.45,
+    "trades": 7
    },
    "v95_sized": {
-    "sqn": -0.91,
-    "trades": 6
+    "sqn": -1.37,
+    "trades": 7
    },
    "options_sized": {
     "sqn": null,
     "trades": 0
    },
    "card_plus_options_sized": {
-    "sqn": -0.91,
-    "trades": 6
+    "sqn": -1.37,
+    "trades": 7
    },
    "hiv_layer": {
     "sqn": 0.95,
     "trades": 9
    },
    "big_fish": {
-    "sqn": 1.29,
-    "trades": 4
+    "sqn": 1.24,
+    "trades": 5
    }
   }
  },
  "htf_next": {
-  "through": "2026-11-18",
+  "through": "2026-11-19",
   "daily": -1,
   "weekly": -1
  },
@@ -2394,6 +2394,33 @@
    "bf_usd": 0,
    "bf_n": 0,
    "bf_setup": false
+  },
+  {
+   "date": "2026-11-19",
+   "forward": true,
+   "n": 1,
+   "usd": -57.3,
+   "stops": 1,
+   "vix": 24.56,
+   "bounce_day": false,
+   "shadow_usd": -57.3,
+   "combo_usd": -57.3,
+   "ribbon_x3_usd": -171.9,
+   "ribbon_trades": 1,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
+   "v95_usd": -57.3,
+   "v95_sized_usd": -171.9,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0,
+   "opt_contracts": 0,
+   "hiv_usd": 0,
+   "hiv_n": 0,
+   "bf_usd": -5.6,
+   "bf_n": 1,
+   "bf_setup": true
   }
  ]
 }
