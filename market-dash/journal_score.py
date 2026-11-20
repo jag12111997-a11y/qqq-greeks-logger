@@ -114,7 +114,8 @@ def score_day(date, fills, cancels, note):
         med = sorted(dist)[len(dist) // 2]
         chk(R, 0.12 <= med <= 0.22, "median stop $%.2f under entry" % med)
     elif losses:
-        ml = sorted(f["buy"] - f["sell"] for f in losses)[len(losses) // 2]
+        stopped = [f for f in losses if not f.get("expired")] or losses   # an expired lottery ticket isn't a stop
+        ml = sorted(f["buy"] - f["sell"] for f in stopped)[len(stopped) // 2]
         chk(R, 0.12 <= ml <= 0.22, "median loser −$%.2f a contract" % ml)
     else:
         chk(R, None, "no losers")

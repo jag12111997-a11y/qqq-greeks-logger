@@ -825,8 +825,8 @@
    "first": "6:38",
    "last": "1:00",
    "best": "6:40 put 667.0 +55",
-   "score": 3.3,
-   "kept": 3,
+   "score": 4.4,
+   "kept": 4,
    "of": 9,
    "checks": [
     {
@@ -851,8 +851,8 @@
     },
     {
      "rule": "Stops $0.15\u20130.20",
-     "ok": false,
-     "why": "median loser \u2212$0.06 a contract"
+     "ok": true,
+     "why": "median loser \u2212$0.16 a contract"
     },
     {
      "rule": "Done after 3 losses in a row or \u2212$75",
@@ -899,8 +899,8 @@
    "first": "6:43",
    "last": "1:00",
    "best": "6:43 call 701.0 +32",
-   "score": 3.3,
-   "kept": 3,
+   "score": 4.4,
+   "kept": 4,
    "of": 9,
    "checks": [
     {
@@ -925,8 +925,8 @@
     },
     {
      "rule": "Stops $0.15\u20130.20",
-     "ok": false,
-     "why": "median loser \u2212$0.09 a contract"
+     "ok": true,
+     "why": "median loser \u2212$0.15 a contract"
     },
     {
      "rule": "Done after 3 losses in a row or \u2212$75",
@@ -1303,8 +1303,8 @@
    "pnl": 133.0,
    "trades": 48,
    "wins": 18,
-   "score": 5.1,
-   "kept": 23,
+   "score": 5.6,
+   "kept": 25,
    "of": 45,
    "best2": 147.0,
    "rest": -14.0,
@@ -1328,13 +1328,13 @@
     {
      "date": "2026-11-04",
      "pnl": 22.0,
-     "score": 3.3,
+     "score": 4.4,
      "trades": 13
     },
     {
      "date": "2026-11-05",
      "pnl": 24.0,
-     "score": 3.3,
+     "score": 4.4,
      "trades": 10
     },
     {
@@ -1362,7 +1362,7 @@
      5
     ],
     "Stops $0.15\u20130.20": [
-     3,
+     5,
      5
     ],
     "Done after 3 losses in a row or \u2212$75": [
