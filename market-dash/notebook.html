@@ -279,7 +279,7 @@ renderPastEntries();
   }
   function weekHtml(W){
     if(!W||!W.length) return '';
-    var a=W[0],b=W[1]||null,tpd=function(w){return w.trades/w.days;},kp=function(w){return w.of?100*w.kept/w.of:0;};
+    var a=W[0],b=W[1]||null,tpd=function(w){return w.trades/w.days;},kp=function(w){return w.of?Math.round(100*w.kept/w.of):0;};
     var money=function(v,abs){return abs?'$'+Math.round(v):$(v);};
     var h='<h2 class="nb-title" style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap">Week by week <span style="color:var(--txt);font-size:11px;text-transform:none;letter-spacing:0">'+wkLab(a.week)+(a.days<5?' · '+a.days+' of 5 days so far':'')+'</span></h2>';
     h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr));gap:6px;margin-bottom:10px">'
