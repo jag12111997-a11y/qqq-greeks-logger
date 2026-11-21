@@ -23,7 +23,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "9 against: 6:31 call, 6:36 call, 6:45 call, 6:46 call"
+     "why": "10 against: 6:31 call, 6:36 call, 6:45 call, 6:46 call"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -74,7 +74,16 @@
    "summary": "Practice day \u2014 testing the range levels on purpose. Yes, too many trades, but I was testing levels. Took a call that won, then jumped in at the right level for the put dump, but didn't realise how much cash I'd used, so I had to buy a really far out-of-the-money put. It still paid. I was okay with how it went \u2014 still practicing.",
    "right": "Two real reads made +$330: the 6:51 C650 caught the 636 \u2192 643 pop (+$88, added into a winner), and the 7:07 P621 \u00d72 at 0.37 caught the dump after the failed push at 643 \u2014 held 19 min with a raised stop, sold 1.58 (+$242). Every stop $0.15 or tighter, no chasing. Ended +$199.",
    "fix": "Testing the $634\u2013638 chop cost \u2212$128 over 12 tries and broke the \u2212$75 stop by 6:49 (\u2212$85); 7 entries in each of the first two 20-min candles. Practice rule: 1 contract, 2 tries, then wait \u2014 the tests cost ~$30 and the cash is still there for the real setup.",
-   "ramble": true
+   "ramble": true,
+   "sized": {
+    "n": 2,
+    "pnl": 287.0,
+    "wins": 2,
+    "list": [
+     "6:54 C650 \u00d72 +45",
+     "7:07 P621 \u00d72 +242"
+    ]
+   }
   },
   {
    "date": "2026-11-19",
@@ -148,7 +157,18 @@
    "summary": "Absolute chaos. Went in like Bambi with heavy size (2 contracts), ran out of cash and had to use unsettled funds (good-faith violation risk on Webull). When it was time to add size I didn't, then got scared holding \u2014 the put went to about $6.00 and I left with about half of it.",
    "right": "The 7:10 P659 caught the real move: 0.75 -> 3.73, +$298, held 22 minutes. Opening call at 6:30 +$33. Ended green +$161.",
    "fix": "Down -$137 by 7:10 after 10 trades in 40 minutes, mostly 2 contracts, flipping 682 calls / 660 puts and two far-OTM 687 calls (-$53). That broke the -$75 stop \u2014 the day was saved by the trade that broke it, which is luck, not a plan. Size only after a green trade, never on the first ones. Keep cash settled so you never need unsettled funds.",
-   "ramble": true
+   "ramble": true,
+   "sized": {
+    "n": 4,
+    "pnl": -84.0,
+    "wins": 1,
+    "list": [
+     "6:41 C682 \u00d72 +8",
+     "6:43 C682 \u00d72 -26",
+     "6:46 P660 \u00d72 -40",
+     "6:49 C682 \u00d72 -26"
+    ]
+   }
   },
   {
    "date": "2026-11-18",
@@ -222,7 +242,13 @@
    "summary": "Struggled. No direction \u2014 price kept getting bought up, just a slow grind down, and calls got eaten up quickly. Gave back a big chunk of my first trade and didn't respect my rules. Still ended green, but non-direction days like this kill me every time.",
    "right": "Read the open: P649 6:34 +$87 and the add at 6:35 +$53 \u2014 up +$114 by 6:47. Stops stayed small (median ~$0.15). Finished green.",
    "fix": "Peaked +$114 at 6:47 and gave back $68 \u2014 the $45 giveback rule would have ended the day around +$70. 17 trades (cap 8): 12 more after the high, mostly calls\u2194puts every few minutes in chop. On a no-direction day, once you hit +$60 and the candles alternate colors, close Webull.",
-   "ramble": true
+   "ramble": true,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-17",
@@ -296,7 +322,13 @@
    "summary": "Woke up late and was right place, right time. Stayed at 1 contract on purpose after yesterday. Caught the big put move I knew was coming, then sat through the chop and kept the bulk of it. Could have made more with 2 or by holding, but I'm in account-recovery mode. $1,800 in the account stressed me out \u2014 going to hold it around $1,250 and withdraw weekly.",
    "right": "P651 held 11 min for +$206 \u2014 the move I planned for. Size stayed at 1. Finished green +$172.",
    "fix": "11 trades (cap is 8). 4 losers in a row 8:03\u20138:21 and kept going. Flipped puts\u2194calls within a minute at 8:21.",
-   "ramble": true
+   "ramble": true,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-16",
@@ -370,7 +402,13 @@
    "summary": "Whiplashed all morning. Bought in multiple times on wrong entries and added without confirmation. Limits felt slow \u2014 price ran past the order, so I chased. Stops too tight for the chop. Lost $166, way past my threshold. Felt like I was carrying too much money and I went past my 8-trade sweet spot.",
    "right": "Spotted the problems myself the same day and wrote rules for them. Last put (P662) held 38 min for +$64.",
    "fix": "Mondays = paper. 8 trades max then close Webull. Stops $0.15\u20130.20. Only enter with the 20-min candle, max 2 entries per candle. Limit at ask + $0.02\u20130.03, skip if it ran $0.10 past.",
-   "ramble": true
+   "ramble": true,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-13",
@@ -444,7 +482,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-12",
@@ -518,7 +562,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-11",
@@ -592,7 +642,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-10",
@@ -666,7 +722,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-09",
@@ -740,7 +802,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-06",
@@ -814,7 +882,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-05",
@@ -888,7 +962,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-04",
@@ -962,7 +1042,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-03",
@@ -1036,7 +1122,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   },
   {
    "date": "2026-11-02",
@@ -1110,7 +1202,13 @@
    "summary": null,
    "right": null,
    "fix": null,
-   "ramble": false
+   "ramble": false,
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0,
+    "list": []
+   }
   }
  ],
  "weeks": [
@@ -1207,6 +1305,16 @@
      5,
      5
     ]
+   },
+   "sized": {
+    "n": 6,
+    "pnl": 203.0,
+    "wins": 3
+   },
+   "single": {
+    "n": 63,
+    "pnl": 211.0,
+    "wins": 14
    }
   },
   {
@@ -1294,6 +1402,16 @@
      5,
      5
     ]
+   },
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0
+   },
+   "single": {
+    "n": 51,
+    "pnl": 474.0,
+    "wins": 20
    }
   },
   {
@@ -1381,6 +1499,16 @@
      5,
      5
     ]
+   },
+   "sized": {
+    "n": 0,
+    "pnl": 0,
+    "wins": 0
+   },
+   "single": {
+    "n": 48,
+    "pnl": 133.0,
+    "wins": 18
    }
   }
  ]

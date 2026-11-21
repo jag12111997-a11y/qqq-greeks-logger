@@ -150,12 +150,15 @@ def score_day(date, fills, cancels, note):
     kept = sum(1 for c in scorable if c["ok"])
     score = round(10.0 * kept / len(scorable), 1) if scorable else None
     best = max(fills, key=lambda f: f["pnl"]) if fills else None
+    big2 = [f for f in fills if f["ct"] >= 2]   # Nov 20: entries with size (one entry = one trade, tagged ×N)
+    sized = {"n": len(big2), "pnl": round(sum(f["pnl"] for f in big2), 2), "wins": sum(1 for f in big2 if f["pnl"] > 0.5),
+             "list": ["%s %s%s ×%d %+.0f" % (hm(f["t0"]), "C" if f["side"] in ("C", "call") else "P", int(float(f["strike"])), f["ct"], f["pnl"]) for f in big2]}
     return {"date": date, "pnl": round(pnl, 2), "trades": n, "wins": len(wins), "losses": len(losses),
             "first": hm(fills[0]["t0"]) if fills else None, "last": hm(max(f["t1"] for f in fills)) if fills else None,
             "best": ("%s %s %s %+.0f" % (hm(best["t0"]), best["side"], best["strike"], best["pnl"])) if best else None,
             "score": score, "kept": kept, "of": len(scorable), "checks": checks,
             "summary": (note or {}).get("summary"), "right": (note or {}).get("right"), "fix": (note or {}).get("fix"),
-            "ramble": bool(note)}
+            "ramble": bool(note), "sized": sized}
 
 
 def weeks_from(days, out):
@@ -197,7 +200,11 @@ def weeks_from(days, out):
                      "first20": round(first20, 2), "after8": round(after8, 2),
                      "days8": sum(1 for e in es if e["trades"] <= 8), "worst_low": round(min(lows), 2),
                      "daily": [{"date": e["date"], "pnl": e["pnl"], "score": e["score"], "trades": e["trades"]} for e in es],
-                     "rules": rules})
+                     "rules": rules,
+                     "sized": {"n": sum(1 for f in F if f["ct"] >= 2), "pnl": round(sum(f["pnl"] for f in F if f["ct"] >= 2), 2),
+                               "wins": sum(1 for f in F if f["ct"] >= 2 and f["pnl"] > 0.5)},
+                     "single": {"n": sum(1 for f in F if f["ct"] < 2), "pnl": round(sum(f["pnl"] for f in F if f["ct"] < 2), 2),
+                                "wins": sum(1 for f in F if f["ct"] < 2 and f["pnl"] > 0.5)}})
     return rows[::-1]
 
 

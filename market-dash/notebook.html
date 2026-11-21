@@ -244,7 +244,8 @@ renderPastEntries();
       +'<span style="flex:1;font-size:12px">'+day(e.date)+(e.ramble?' <span style="color:#A8D8B4;font-size:10px">● logged</span>':'')+'</span>'
       +'<span style="font-size:12px;color:'+(e.pnl>=0?'#A8D8B4':'#FF5A2E')+'">'+pnl+'</span>'
       +'<span style="font-size:11px;color:var(--dim);min-width:86px;text-align:right">'+e.trades+' trades · '+e.wins+'W '+e.losses+'L</span></summary>'
-      +txt+'<div style="border-top:1px solid var(--line);padding-top:6px">'+checks+'</div>'
+      +txt+(e.sized&&e.sized.n?'<div style="font-size:11px;margin:0 0 8px"><span style="color:#F4C95D">SIZED UP</span> '+E(e.sized.list.join(' · '))+' <span style="color:var(--dim)">= </span><b style="color:'+(e.sized.pnl>=0?'#A8D8B4':'#FF5A2E')+'">'+(e.sized.pnl<0?'−$':'+$')+Math.abs(Math.round(e.sized.pnl))+'</b></div>':'')
+      +'<div style="border-top:1px solid var(--line);padding-top:6px">'+checks+'</div>'
       +'<div style="font-size:10px;color:var(--dim);margin-top:4px">'+e.kept+' of '+e.of+' rules kept'+(e.first?' · '+e.first+'–'+e.last+' PT':'')+'</div></details>';
   }
   function strip(es){
@@ -296,18 +297,20 @@ renderPastEntries();
     h+='<div style="font-size:11.5px;line-height:1.5;margin:0 0 10px">'
       +(never.length?'<span style="color:'+R+'">Never kept this week:</span> '+E(never.join(' · ')):'<span style="color:'+G+'">Every rule kept at least once this week.</span>')
       +(always.length?'<br><span style="color:'+G+'">Kept every day:</span> '+E(always.join(' · ')):'')
-      +'<br><span style="color:'+Y+'">Carried by:</span> best 2 trades '+$(a.best2)+', the other '+(a.trades-2)+' '+$(a.rest)+'.</div>';
+      +'<br><span style="color:'+Y+'">Carried by:</span> best 2 trades '+$(a.best2)+', the other '+(a.trades-2)+' '+$(a.rest)+'.'
+      +(a.sized?'<br><span style="color:'+Y+'">Sized up (2+ contracts):</span> '+(a.sized.n?a.sized.n+' entr'+(a.sized.n===1?'y':'ies')+' '+$(a.sized.pnl)+', '+Math.round(100*a.sized.wins/a.sized.n)+'% won':'none')+' · 1 contract: '+a.single.n+' entries '+$(a.single.pnl)+', '+(a.single.n?Math.round(100*a.single.wins/a.single.n):0)+'% won.':'')+'</div>';
     // table
     var th=function(t,tip){return '<th title="'+E(tip||'')+'" style="padding:5px 7px;font-weight:500;font-size:9.5px;letter-spacing:.06em;color:'+DM+';text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)">'+t+'</th>';};
     var td=function(v,c,al){return '<td style="padding:6px 7px;text-align:'+(al||'right')+';white-space:nowrap;border-bottom:1px solid var(--faint);color:'+(c||'var(--txt)')+';font-variant-numeric:tabular-nums">'+v+'</td>';};
     h+='<div style="overflow-x:auto;margin-bottom:10px"><table style="border-collapse:collapse;width:100%;font-size:11.5px"><tr>'
-      +th('WEEK').replace('right','left')+th('MON–FRI')+th('P&L')+th('GREEN')+th('TRADES/DAY','goal: 8 or fewer')+th('WIN %')+th('SCORE')+th('RULES')+th('BEST 2 / REST','your two biggest winners vs every other trade')+th('FIRST 20 MIN','entries 6:30–6:49 PT')+th('TRADES #9+','P&L of every trade after your 8th each day')+th('LOW POINT','deepest the day went red')+'</tr>';
+      +th('WEEK').replace('right','left')+th('MON–FRI')+th('P&L')+th('GREEN')+th('TRADES/DAY','goal: 8 or fewer')+th('WIN %')+th('SCORE')+th('RULES')+th('SIZED UP','entries with 2+ contracts: count · P&L · win %')+th('BEST 2 / REST','your two biggest winners vs every other trade')+th('FIRST 20 MIN','entries 6:30–6:49 PT')+th('TRADES #9+','P&L of every trade after your 8th each day')+th('LOW POINT','deepest the day went red')+'</tr>';
     W.forEach(function(w,i){
       h+='<tr'+(i===0?' style="background:rgba(244,201,93,.06)"':'')+'>'+td(wkLab(w.week)+(w.days<5?' <span style="color:'+DM+'">('+w.days+'d)</span>':''),null,'left')
         +'<td style="padding:4px 7px;border-bottom:1px solid var(--faint)"><div style="display:flex;justify-content:flex-end">'+bars(w)+'</div></td>'
         +td('<b>'+$(w.pnl)+'</b>',pc(w.pnl))+td(w.green+'/'+w.days)
         +td(tpd(w).toFixed(1),tpd(w)<=8?G:tpd(w)<=11?Y:R)+td(Math.round(100*w.wins/w.trades)+'%')
         +td(w.score==null?'–':w.score.toFixed(1),col(w.score))+td(w.kept+'/'+w.of+' <span style="color:'+DM+'">'+Math.round(kp(w))+'%</span>')
+        +td(w.sized&&w.sized.n?w.sized.n+' · <span style="color:'+pc(w.sized.pnl)+'">'+$(w.sized.pnl)+'</span> · '+Math.round(100*w.sized.wins/w.sized.n)+'%':'<span style="color:'+DM+'">–</span>')
         +td('<span style="color:'+pc(w.best2)+'">'+$(w.best2)+'</span> / <span style="color:'+pc(w.rest)+'">'+$(w.rest)+'</span>')
         +td($(w.first20),pc(w.first20))+td($(w.after8),pc(w.after8))+td($(w.worst_low),pc(w.worst_low))+'</tr>';});
     h+='</table></div>';
