@@ -109,5 +109,49 @@
    }
   ],
   "usd": 318.4
+ },
+ "shadow_v10": {
+  "rule": "v10 auction layer (paper): ORB = first close outside 6:30–6:45 · EXT = level break that makes a new day high/low once 40–100% of the implied move is used · POP (GARCH > 22%) = 15% of the 10-day range in 3 min with the 20-min candle · never against the last 3-min move · delta 0.35, ask 0.40–3.00 · 25% stop, +$0.30 → 3-min trail, 60 min max · baseline = random entries, same exits",
+  "regime": {
+   "garch": 33.53,
+   "high_vol": true,
+   "atm_iv": 0.4361,
+   "implied_move": 18.2,
+   "range10": 10.6
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "call",
+    "signal": "6:46",
+    "filled": "6:46",
+    "strike": 673,
+    "paid": 1.97,
+    "exit": "7:46",
+    "sold": 3.31,
+    "why": "time",
+    "usd": 132.7,
+    "best": 1.68
+   },
+   {
+    "rule": "ext",
+    "setup": "new-extreme break · call_wall",
+    "side": "call",
+    "signal": "6:51",
+    "filled": "6:51",
+    "strike": 675,
+    "paid": 1.52,
+    "exit": "7:51",
+    "sold": 2.63,
+    "why": "time",
+    "usd": 109.7,
+    "best": 1.11
+   }
+  ],
+  "usd": 242.4,
+  "baseline_usd": -39.9,
+  "baseline_trades": 2.3
  }
 }

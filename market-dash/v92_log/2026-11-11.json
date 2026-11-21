@@ -204,5 +204,63 @@
   "note": "SETUP · gap up 1.86%, but skipped: 6:35 went against the gap",
   "trades": [],
   "usd": 0
+ },
+ "shadow_v10": {
+  "rule": "v10 auction layer (paper): ORB = first close outside 6:30–6:45 · EXT = level break that makes a new day high/low once 40–100% of the implied move is used · POP (GARCH > 22%) = 15% of the 10-day range in 3 min with the 20-min candle · never against the last 3-min move · delta 0.35, ask 0.40–3.00 · 25% stop, +$0.30 → 3-min trail, 60 min max · baseline = random entries, same exits",
+  "regime": {
+   "garch": 33.05,
+   "high_vol": true,
+   "atm_iv": 0.3467,
+   "implied_move": 15.01,
+   "range10": 11.64
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "put",
+    "signal": "6:46",
+    "filled": "6:46",
+    "strike": 683,
+    "paid": 1.59,
+    "exit": "6:58",
+    "sold": 1.16,
+    "why": "stop",
+    "usd": -44.3,
+    "best": 0.41
+   },
+   {
+    "rule": "pop",
+    "setup": "pop with the 20-min candle",
+    "side": "call",
+    "signal": "7:27",
+    "filled": "7:27",
+    "strike": 689,
+    "paid": 0.98,
+    "exit": "8:02",
+    "sold": 3.19,
+    "why": "trail",
+    "usd": 219.7,
+    "best": 2.53
+   },
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "call",
+    "signal": "7:43",
+    "filled": "7:43",
+    "strike": 690,
+    "paid": 1,
+    "exit": "8:02",
+    "sold": 2.47,
+    "why": "trail",
+    "usd": 145.7,
+    "best": 1.82
+   }
+  ],
+  "usd": 321.1,
+  "baseline_usd": 41.5,
+  "baseline_trades": 2.4
  }
 }

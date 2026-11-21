@@ -124,5 +124,49 @@
   "note": "no setup (no selloff or fear market)",
   "trades": [],
   "usd": 0
+ },
+ "shadow_v10": {
+  "rule": "v10 auction layer (paper): ORB = first close outside 6:30–6:45 · EXT = level break that makes a new day high/low once 40–100% of the implied move is used · POP (GARCH > 22%) = 15% of the 10-day range in 3 min with the 20-min candle · never against the last 3-min move · delta 0.35, ask 0.40–3.00 · 25% stop, +$0.30 → 3-min trail, 60 min max · baseline = random entries, same exits",
+  "regime": {
+   "garch": 17.59,
+   "high_vol": false,
+   "atm_iv": 0.25934999999999997,
+   "implied_move": 12.06,
+   "range10": 5.38
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "call",
+    "signal": "6:47",
+    "filled": "6:47",
+    "strike": 741,
+    "paid": 1.12,
+    "exit": "6:53",
+    "sold": 0.81,
+    "why": "stop",
+    "usd": -32.3,
+    "best": 0.47
+   },
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "put",
+    "signal": "6:57",
+    "filled": "6:57",
+    "strike": 736,
+    "paid": 1.32,
+    "exit": "7:44",
+    "sold": 1.49,
+    "why": "trail",
+    "usd": 15.7,
+    "best": 0.65
+   }
+  ],
+  "usd": -16.6,
+  "baseline_usd": -34.9,
+  "baseline_trades": 2.5
  }
 }

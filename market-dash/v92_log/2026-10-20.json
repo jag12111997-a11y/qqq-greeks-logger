@@ -163,5 +163,35 @@
   "note": "no: gap -0.43% (needs 1%+) · 5-day -3.7% · gap vs week: needs QQQ to open $2.50+ above yesterday's close",
   "trades": [],
   "usd": 0
+ },
+ "shadow_v10": {
+  "rule": "v10 auction layer (paper): ORB = first close outside 6:30–6:45 · EXT = level break that makes a new day high/low once 40–100% of the implied move is used · POP (GARCH > 22%) = 15% of the 10-day range in 3 min with the 20-min candle · never against the last 3-min move · delta 0.35, ask 0.40–3.00 · 25% stop, +$0.30 → 3-min trail, 60 min max · baseline = random entries, same exits",
+  "regime": {
+   "garch": 20.25,
+   "high_vol": false,
+   "atm_iv": 0.36019999999999996,
+   "implied_move": 16.22,
+   "range10": 6.55
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "call",
+    "signal": "6:58",
+    "filled": "6:58",
+    "strike": 717,
+    "paid": 1.29,
+    "exit": "7:35",
+    "sold": 4.83,
+    "why": "trail",
+    "usd": 352.7,
+    "best": 4.58
+   }
+  ],
+  "usd": 352.7,
+  "baseline_usd": 63.5,
+  "baseline_trades": 2.3
  }
 }

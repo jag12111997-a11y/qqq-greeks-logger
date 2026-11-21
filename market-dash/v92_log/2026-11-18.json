@@ -109,5 +109,49 @@
   "note": "no: gap +0.62% (needs 1%+) · 20-day -8.5% · fear market (20-day vol 37%)",
   "trades": [],
   "usd": 0
+ },
+ "shadow_v10": {
+  "rule": "v10 auction layer (paper): ORB = first close outside 6:30–6:45 · EXT = level break that makes a new day high/low once 40–100% of the implied move is used · POP (GARCH > 22%) = 15% of the 10-day range in 3 min with the 20-min candle · never against the last 3-min move · delta 0.35, ask 0.40–3.00 · 25% stop, +$0.30 → 3-min trail, 60 min max · baseline = random entries, same exits",
+  "regime": {
+   "garch": 28.83,
+   "high_vol": true,
+   "atm_iv": 0.60025,
+   "implied_move": 25.04,
+   "range10": 15.51
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "put",
+    "signal": "6:48",
+    "filled": "6:48",
+    "strike": 651,
+    "paid": 2.36,
+    "exit": "6:53",
+    "sold": 1.75,
+    "why": "stop",
+    "usd": -62.3,
+    "best": 0.43
+   },
+   {
+    "rule": "pop",
+    "setup": "pop with the 20-min candle",
+    "side": "call",
+    "signal": "8:24",
+    "filled": "8:24",
+    "strike": 658,
+    "paid": 1.75,
+    "exit": "8:38",
+    "sold": 1.65,
+    "why": "trail",
+    "usd": -11.3,
+    "best": 0.33
+   }
+  ],
+  "usd": -73.6,
+  "baseline_usd": 20.8,
+  "baseline_trades": 2.4
  }
 }

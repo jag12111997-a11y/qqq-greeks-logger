@@ -93,5 +93,63 @@
   "note": "no: gap +0.05% (needs 1%+) · fear market (20-day vol 37%) · gap vs week: needs QQQ to open $2.50+ above yesterday's close",
   "trades": [],
   "usd": 0
+ },
+ "shadow_v10": {
+  "rule": "v10 auction layer (paper): ORB = first close outside 6:30–6:45 · EXT = level break that makes a new day high/low once 40–100% of the implied move is used · POP (GARCH > 22%) = 15% of the 10-day range in 3 min with the 20-min candle · never against the last 3-min move · delta 0.35, ask 0.40–3.00 · 25% stop, +$0.30 → 3-min trail, 60 min max · baseline = random entries, same exits",
+  "regime": {
+   "garch": 30.83,
+   "high_vol": true,
+   "atm_iv": 0.40685,
+   "implied_move": 17.59,
+   "range10": 12.99
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "put",
+    "signal": "6:49",
+    "filled": "6:49",
+    "strike": 682,
+    "paid": 1.77,
+    "exit": "7:29",
+    "sold": 7.42,
+    "why": "trail",
+    "usd": 563.7,
+    "best": 7.95
+   },
+   {
+    "rule": "pop",
+    "setup": "pop with the 20-min candle",
+    "side": "put",
+    "signal": "6:50",
+    "filled": "6:50",
+    "strike": 680,
+    "paid": 1.97,
+    "exit": "7:29",
+    "sold": 5.87,
+    "why": "trail",
+    "usd": 388.7,
+    "best": 6.28
+   },
+   {
+    "rule": "pop",
+    "setup": "pop with the 20-min candle",
+    "side": "put",
+    "signal": "7:35",
+    "filled": "7:35",
+    "strike": 671,
+    "paid": 1.79,
+    "exit": "7:41",
+    "sold": 1.86,
+    "why": "trail",
+    "usd": 5.7,
+    "best": 0.6
+   }
+  ],
+  "usd": 958.1,
+  "baseline_usd": 70.7,
+  "baseline_trades": 2.2
  }
 }
