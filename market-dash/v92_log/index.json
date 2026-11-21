@@ -1,14 +1,14 @@
 {
- "updated_utc": "2026-11-20T03:58:41.178Z",
+ "updated_utc": "2026-11-21T03:55:58.536Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 80,
+   "mornings": 81,
    "usd": 3113.4
   },
   "forward": {
-   "mornings": 14,
+   "mornings": 15,
    "usd": -203.2,
    "green": 0,
    "red": 3
@@ -16,19 +16,19 @@
   "last10": {
    "usd": -182.9,
    "worst_dip": 182.9,
-   "from": "2026-11-06"
+   "from": "2026-11-09"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
    "all": {
     "usd": 3390,
     "vs_v92": 276.6,
-    "bounce_days": 18
+    "bounce_days": 19
    },
    "forward": {
     "usd": -194.8,
     "vs_v92": 8.4,
-    "bounce_days": 8
+    "bounce_days": 9
    }
   },
   "shadow_combo": {
@@ -38,7 +38,7 @@
    },
    "forward": {
     "usd": -228.8,
-    "mornings": 14
+    "mornings": 15
    },
    "last10": {
     "usd": -182.9
@@ -65,7 +65,7 @@
    "forward": {
     "usd_1ct": -89.1,
     "usd_sized": -454.9,
-    "mornings": 14
+    "mornings": 15
    },
    "last10": {
     "usd_1ct": -182.9,
@@ -84,7 +84,7 @@
     "addons_usd": 0,
     "addons": 0,
     "total_usd": -454.9,
-    "mornings": 14
+    "mornings": 15
    },
    "last10": {
     "addons_usd": 0,
@@ -94,14 +94,14 @@
   "shadow_hiv": {
    "note": "high-IV layer (on the card since Nov 9, its own section): pop put + bell put, only when option IV is over 35% at that minute. Scored on its own; total = card sized + options + layer. Keep only while it helps.",
    "all": {
-    "usd": 1555.3,
-    "trades": 16,
-    "total_usd": 16975.1
+    "usd": 1516.7,
+    "trades": 17,
+    "total_usd": 16936.5
    },
    "forward": {
     "from": "2026-11-09",
-    "usd": -187.6,
-    "trades": 6
+    "usd": -226.2,
+    "trades": 7
    }
   },
   "shadow_bigfish": {
@@ -110,7 +110,7 @@
     "usd": 451.2,
     "trades": 8,
     "setup_days": 10,
-    "total_usd": 17426.3
+    "total_usd": 17387.7
    },
    "forward": {
     "from": "2026-11-10",
@@ -151,8 +151,8 @@
     "trades": 143
    },
    "hiv_layer": {
-    "sqn": 1.05,
-    "trades": 16
+    "sqn": 1.03,
+    "trades": 17
    },
    "big_fish": {
     "sqn": 1.23,
@@ -247,8 +247,8 @@
     "trades": 7
    },
    "hiv_layer": {
-    "sqn": 0.95,
-    "trades": 9
+    "sqn": 0.92,
+    "trades": 10
    },
    "big_fish": {
     "sqn": 1.24,
@@ -257,7 +257,7 @@
   }
  },
  "htf_next": {
-  "through": "2026-11-19",
+  "through": "2026-11-20",
   "daily": -1,
   "weekly": -1
  },
@@ -2421,6 +2421,33 @@
    "bf_usd": -5.6,
    "bf_n": 1,
    "bf_setup": true
+  },
+  {
+   "date": "2026-11-20",
+   "forward": true,
+   "n": 0,
+   "usd": 0,
+   "stops": 0,
+   "vix": 28.44,
+   "bounce_day": true,
+   "shadow_usd": 0,
+   "combo_usd": 0,
+   "ribbon_x3_usd": 0,
+   "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
+   "v95_usd": 0,
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0,
+   "opt_contracts": 0,
+   "hiv_usd": -38.6,
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": false
   }
  ]
 }
