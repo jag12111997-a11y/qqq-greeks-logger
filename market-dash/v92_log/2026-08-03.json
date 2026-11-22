@@ -177,5 +177,57 @@
   ],
   "usd": 771.4,
   "baseline_usd": 46.1
+ },
+ "shadow_duo": {
+  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
+  "self_check": {
+   "old": {
+    "on": true,
+    "why": "warming up (0 of 5 active mornings)"
+   },
+   "new": {
+    "on": true,
+    "why": "warming up (1 of 5 active mornings)"
+   }
+  },
+  "legs": [
+   {
+    "lane": "new",
+    "kind": "trade",
+    "side": "call",
+    "strike": 693,
+    "filled": "6:55",
+    "exit": "7:55",
+    "paid": 1.18,
+    "sold": 5.05,
+    "why": "time",
+    "usd": 385.7,
+    "setup": "new bot (v11) · opening-range break"
+   },
+   {
+    "lane": "new",
+    "kind": "trade",
+    "side": "call",
+    "strike": 693,
+    "filled": "6:55",
+    "exit": "7:55",
+    "paid": 1.18,
+    "sold": 5.05,
+    "why": "time",
+    "usd": 385.7,
+    "setup": "new bot (v11) · pop with the 20-min candle"
+   }
+  ],
+  "sat_out": [],
+  "usd": {
+   "combo": 771.4,
+   "lotto": 771.4,
+   "add": 771.4,
+   "both": 771.4
+  },
+  "max_cash": {
+   "combo": 236,
+   "both": 236
+  }
  }
 }

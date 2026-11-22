@@ -17,7 +17,7 @@ th.grp{color:var(--gold);text-align:center;border-bottom:1px solid var(--line)}
 .pos{color:var(--up)}.neg{color:var(--down)}.dim{color:var(--mute)}
 .tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:10.5px;margin-right:6px;border:1px solid var(--line)}
 .L-card{color:#ffd166;border-color:rgba(255,209,102,.4)}.L-v95{color:#ff9a3c;border-color:rgba(255,154,60,.4)}.L-opt{color:#3fd3ff;border-color:rgba(63,211,255,.4)}
-.L-hiv{color:#ff7ac8;border-color:rgba(255,122,200,.4)}.L-bf{color:#7cff6b;border-color:rgba(124,255,107,.4)}.L-v10{color:#ffffff;border-color:rgba(255,255,255,.5);background:rgba(255,43,224,.18)}.L-v11{color:#0c0710;border-color:#f5c542;background:#f5c542}
+.L-hiv{color:#ff7ac8;border-color:rgba(255,122,200,.4)}.L-bf{color:#7cff6b;border-color:rgba(124,255,107,.4)}.L-v10{color:#ffffff;border-color:rgba(255,255,255,.5);background:rgba(255,43,224,.18)}.L-v11{color:#0c0710;border-color:#f5c542;background:#f5c542}.L-duo{color:#0c0710;border-color:#4df0ff;background:#4df0ff}
 .day{border:1px solid var(--line);border-radius:8px;background:var(--panel);margin:6px 0;padding:8px 10px}
 .day .hd{display:flex;justify-content:space-between;gap:10px}
 .day .hd b{font-weight:600}
@@ -36,7 +36,8 @@ var LAYERS=[
   {k:'hiv',name:'High-IV layer',cls:'L-hiv',trades:function(d){return (d.shadow_hiv&&d.shadow_hiv.trades)||[];},usd:function(t){return t.usd;}},
   {k:'bf',name:'Big-fish layer',cls:'L-bf',trades:function(d){return (d.shadow_bigfish&&d.shadow_bigfish.trades)||[];},usd:function(t){return t.usd;}},
   {k:'v10',name:'v10 auction',cls:'L-v10',trades:function(d){return (d.shadow_v10&&d.shadow_v10.trades)||[];},usd:function(t){return t.usd;}},
-  {k:'v11',name:'v11 regime',cls:'L-v11',trades:function(d){return (d.shadow_v11&&d.shadow_v11.trades)||[];},usd:function(t){return t.usd;}}];
+  {k:'v11',name:'v11 regime',cls:'L-v11',trades:function(d){return (d.shadow_v11&&d.shadow_v11.trades)||[];},usd:function(t){return t.usd;}},
+  {k:'combo',name:'Combo v9.2+v11 +add +lotto',cls:'L-duo',trades:function(d){return (d.shadow_duo&&d.shadow_duo.legs)||[];},usd:function(t){return t.usd;}}];
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function usd(v){v=Math.round(v);return (v<0?'−$':'+$')+Math.abs(v).toLocaleString();}
 function cl(v){return v>0.5?'pos':v<-0.5?'neg':'dim';}
@@ -78,6 +79,14 @@ function render(ix,D,fwdFrom){
   function vb11(S){var a=0,n=0,m={};S.forEach(function(d){var v=d.shadow_v11;if(v&&!v.skip){a+=v.usd||0;n++;var k=v.regime?v.regime.name:'?';m[k]=(m[k]||0)+1;}});return {v:a,n:n,m:m};}
   var wB=vb11(BT),wL=vb11(LV);
   if(wB.n||wL.n) h+='<div class="verdict"><span class="tag L-v11">v11 regime</span>v10 + the master switch (last evening\u2019s VIX change + GARCH: vol release / fast vol bid → follow the opening-range break; vol stall / calm vol bid → fade the failed break) · backtest <span class="'+cl(wB.v)+'">'+usd(wB.v)+'</span> vs v10 '+usd(vB.v)+' · live <span class="'+cl(wL.v)+'">'+usd(wL.v)+'</span> vs v10 '+usd(vL.v)+'. Built Nov 22 from these same mornings — forward test from Mon Nov 23.</div>';
+  // Nov 22: combo = old bot + v11 + add-ons, scored four ways, plus each bot's self-check
+  var duoFrom='2026-11-23';
+  function vd(S){var o={combo:0,lotto:0,add:0,both:0,n:0,cash:0};S.forEach(function(d){var u=d.shadow_duo;if(u){o.n++;['combo','lotto','add','both'].forEach(function(k){o[k]+=u.usd[k]||0;});o.cash=Math.max(o.cash,(u.max_cash||{}).both||0);}});return o;}
+  var dB=vd(D.filter(function(d){return d.date<duoFrom;})),dL=vd(D.filter(function(d){return d.date>=duoFrom;}));
+  var lastDuo=null;D.forEach(function(d){if(d.shadow_duo)lastDuo=d.shadow_duo;});
+  function sc(x){return x?(x.on?'<span class="pos">ON</span>':'<span class="neg">SITTING OUT</span>')+' <span class="dim">('+esc(x.why)+')</span>':'—';}
+  function four(o){return 'combo <span class="'+cl(o.combo)+'">'+usd(o.combo)+'</span> · +lotto <span class="'+cl(o.lotto)+'">'+usd(o.lotto)+'</span> · +add <span class="'+cl(o.add)+'">'+usd(o.add)+'</span> · +both <span class="'+cl(o.both)+'">'+usd(o.both)+'</span>';}
+  if(dB.n||dL.n) h+='<div class="verdict"><span class="tag L-duo">Combo</span>old bot (v9.2) + new bot (v11) every morning, opposite sides allowed; when a trade hits +$0.30 it ADDS +1 contract and buys a $0.30–0.80 LOTTO, both sold with the main trade (the table row = +both).<br>Built Nov 22 ('+dB.n+' mornings, in-sample): '+four(dB)+' · most cash at once '+usd(dB.cash).replace('+','')+'<br>Forward from Mon Nov 23 ('+dL.n+' mornings): '+(dL.n?four(dL):'<span class="dim">starts Monday</span>')+'<br>Self-check now — old bot: '+sc(lastDuo&&lastDuo.self_check.old)+' · new bot: '+sc(lastDuo&&lastDuo.self_check.new)+'</div>';
   if(vB.n||vL.n) h+='<div class="verdict"><span class="tag L-v10">v10 auction</span>vs random entries with the same exits · backtest <span class="'+cl(vB.v)+'">'+usd(vB.v)+'</span> vs random <span class="'+cl(vB.b)+'">'+usd(vB.b)+'</span> ('+vB.n+' mornings) · live <span class="'+cl(vL.v)+'">'+usd(vL.v)+'</span> vs random <span class="'+cl(vL.b)+'">'+usd(vL.b)+'</span> ('+vL.n+' mornings). <b>Built Nov 21 from these November mornings, so they are not a fair test</b> — its real forward test starts Mon Nov 23. Paper only — the card does not trade it.</div>';
   // live log
   function dayBox(d){
@@ -87,7 +96,7 @@ function render(ix,D,fwdFrom){
     var rg=d.shadow_v11&&d.shadow_v11.regime?' <span class="dim" style="font-weight:400">· '+esc(d.shadow_v11.regime.name)+' ('+(d.shadow_v11.regime.vix_change>=0?'+':'')+Number(d.shadow_v11.regime.vix_change).toFixed(1)+'% VIX)</span>':'';
     return '<div class="day"><div class="hd"><b>'+day(d.date)+rg+'</b><span>'+(rows.length?per.join(''):'<span class="dim">no trades</span>')+'</span></div>'+rows.join('')+'</div>';
   }
-  h+='<h2>LIVE MORNINGS · EVERY TRADE</h2><p class="sub">Newest first. Day totals are per layer (v9.5 already includes the card trades, so they do not add up). v10 = opening-range break · new-extreme break · pop with the 20-min candle (high-vol only). Each line: layer · fill → exit time (PT) · contract · paid → sold · setup / why it closed · $.</p>'+LV.slice().reverse().map(dayBox).join('');
+  h+='<h2>LIVE MORNINGS · EVERY TRADE</h2><p class="sub">Newest first. Day totals are per layer (v9.5 already includes the card trades, so they do not add up). v10 = opening-range break · new-extreme break · pop with the 20-min candle (high-vol only). combo lines repeat the old-bot and v11 trades plus their ADD and LOTTO legs. Each line: layer · fill → exit time (PT) · contract · paid → sold · setup / why it closed · $.</p>'+LV.slice().reverse().map(dayBox).join('');
   h+='<details><summary>Backtested mornings ('+BT.length+') · every trade</summary>'+BT.slice().reverse().map(dayBox).join('')+'</details>';
   document.getElementById('app').innerHTML=h; tellHeight();
   document.querySelectorAll('details').forEach(function(x){x.addEventListener('toggle',tellHeight);});

@@ -207,5 +207,142 @@
   ],
   "usd": 958.1,
   "baseline_usd": 70.7
+ },
+ "shadow_duo": {
+  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
+  "self_check": {
+   "old": {
+    "on": true,
+    "why": "last 10 active mornings $41/trade vs random $2/trade"
+   },
+   "new": {
+    "on": true,
+    "why": "last 10 active mornings $99/trade vs random $3/trade"
+   }
+  },
+  "legs": [
+   {
+    "lane": "new",
+    "kind": "trade",
+    "side": "put",
+    "strike": 682,
+    "filled": "6:49",
+    "exit": "7:29",
+    "paid": 1.77,
+    "sold": 7.42,
+    "why": "trail",
+    "usd": 563.7,
+    "setup": "new bot (v11) · opening-range break"
+   },
+   {
+    "lane": "new",
+    "kind": "add",
+    "side": "put",
+    "strike": 682,
+    "filled": "6:51",
+    "exit": "7:29",
+    "paid": 2.98,
+    "sold": 7.42,
+    "usd": 442.7,
+    "setup": "new bot (v11) · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "lotto",
+    "side": "put",
+    "strike": 668,
+    "filled": "6:51",
+    "exit": "7:29",
+    "paid": 0.38,
+    "sold": 0.96,
+    "usd": 56.7,
+    "setup": "new bot (v11) · LOTTO $0.30–0.80 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "trade",
+    "side": "put",
+    "strike": 680,
+    "filled": "6:50",
+    "exit": "7:29",
+    "paid": 1.97,
+    "sold": 5.87,
+    "why": "trail",
+    "usd": 388.7,
+    "setup": "new bot (v11) · pop with the 20-min candle"
+   },
+   {
+    "lane": "new",
+    "kind": "add",
+    "side": "put",
+    "strike": 680,
+    "filled": "6:57",
+    "exit": "7:29",
+    "paid": 2.54,
+    "sold": 5.87,
+    "usd": 331.7,
+    "setup": "new bot (v11) · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "lotto",
+    "side": "put",
+    "strike": 667,
+    "filled": "6:57",
+    "exit": "7:29",
+    "paid": 0.35,
+    "sold": 0.82,
+    "usd": 45.7,
+    "setup": "new bot (v11) · LOTTO $0.30–0.80 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "trade",
+    "side": "put",
+    "strike": 671,
+    "filled": "7:35",
+    "exit": "7:41",
+    "paid": 1.79,
+    "sold": 1.86,
+    "why": "trail",
+    "usd": 5.7,
+    "setup": "new bot (v11) · pop with the 20-min candle"
+   },
+   {
+    "lane": "new",
+    "kind": "add",
+    "side": "put",
+    "strike": 671,
+    "filled": "7:37",
+    "exit": "7:41",
+    "paid": 2.41,
+    "sold": 1.86,
+    "usd": -56.3,
+    "setup": "new bot (v11) · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "lotto",
+    "side": "put",
+    "strike": 659,
+    "filled": "7:37",
+    "exit": "7:41",
+    "paid": 0.32,
+    "sold": 0.33,
+    "usd": -0.3,
+    "setup": "new bot (v11) · LOTTO $0.30–0.80 at +$0.30"
+   }
+  ],
+  "sat_out": [],
+  "usd": {
+   "combo": 958.1,
+   "lotto": 1060.2,
+   "add": 1676.2,
+   "both": 1778.3
+  },
+  "max_cash": {
+   "combo": 374,
+   "both": 999
+  }
  }
 }
