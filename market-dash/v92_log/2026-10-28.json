@@ -166,6 +166,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "orb",
     "side": "put",
     "strike": 720,
     "filled": "6:45",
@@ -179,6 +180,7 @@
    {
     "lane": "new",
     "kind": "add",
+    "rule": "add",
     "side": "put",
     "strike": 720,
     "filled": "6:48",
@@ -191,6 +193,7 @@
    {
     "lane": "new",
     "kind": "lotto",
+    "rule": "lotto",
     "side": "put",
     "strike": 709,
     "filled": "6:48",

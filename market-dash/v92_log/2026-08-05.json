@@ -224,6 +224,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "orb",
     "side": "call",
     "strike": 730,
     "filled": "6:50",
@@ -237,6 +238,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "orb",
     "side": "put",
     "strike": 721,
     "filled": "7:30",
@@ -250,6 +252,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "pop",
     "side": "put",
     "strike": 720,
     "filled": "7:55",

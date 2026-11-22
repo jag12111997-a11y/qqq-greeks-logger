@@ -368,6 +368,7 @@
    {
     "lane": "old",
     "kind": "trade",
+    "rule": "trap",
     "side": "put",
     "strike": 714,
     "filled": "6:49",
@@ -381,6 +382,7 @@
    {
     "lane": "old",
     "kind": "add",
+    "rule": "add",
     "side": "put",
     "strike": 714,
     "filled": "6:54",
@@ -393,6 +395,7 @@
    {
     "lane": "old",
     "kind": "lotto",
+    "rule": "lotto",
     "side": "put",
     "strike": 709,
     "filled": "6:54",
@@ -405,6 +408,7 @@
    {
     "lane": "old",
     "kind": "trade",
+    "rule": "trap",
     "side": "put",
     "strike": 715,
     "filled": "7:02",
@@ -418,6 +422,7 @@
    {
     "lane": "old",
     "kind": "add",
+    "rule": "add",
     "side": "put",
     "strike": 715,
     "filled": "7:05",
@@ -430,6 +435,7 @@
    {
     "lane": "old",
     "kind": "lotto",
+    "rule": "lotto",
     "side": "put",
     "strike": 709,
     "filled": "7:05",
@@ -442,6 +448,7 @@
    {
     "lane": "old",
     "kind": "trade",
+    "rule": "trap",
     "side": "put",
     "strike": 715,
     "filled": "7:31",
@@ -455,6 +462,7 @@
    {
     "lane": "old",
     "kind": "add",
+    "rule": "add",
     "side": "put",
     "strike": 715,
     "filled": "7:38",
@@ -467,6 +475,7 @@
    {
     "lane": "old",
     "kind": "lotto",
+    "rule": "lotto",
     "side": "put",
     "strike": 710,
     "filled": "7:38",
@@ -479,6 +488,7 @@
    {
     "lane": "old",
     "kind": "trade",
+    "rule": "trap",
     "side": "put",
     "strike": 714,
     "filled": "7:53",
@@ -492,6 +502,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "orbfade",
     "side": "put",
     "strike": 714,
     "filled": "6:47",
@@ -505,6 +516,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "orbfade",
     "side": "call",
     "strike": 715,
     "filled": "7:48",
@@ -518,6 +530,7 @@
    {
     "lane": "new",
     "kind": "add",
+    "rule": "add",
     "side": "call",
     "strike": 715,
     "filled": "7:50",
@@ -530,6 +543,7 @@
    {
     "lane": "new",
     "kind": "lotto",
+    "rule": "lotto",
     "side": "call",
     "strike": 718,
     "filled": "7:50",

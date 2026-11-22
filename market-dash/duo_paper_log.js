@@ -84,15 +84,15 @@ for (const f of files) {
   ["old", "new"].forEach(k => lanes[k].forEach(t => {
     const s = t.side === "call" ? "C" : "P", T = { s, K: String(t.strike), a: toM(t.filled), b: t.exit ? toM(t.exit) : 146, paid: t.paid };
     const name = k === "old" ? "old bot (v9.2)" : "new bot (v11)";
-    const base = { lane: k, kind: "trade", side: t.side, strike: t.strike, filled: t.filled, exit: t.exit, paid: t.paid, sold: t.sold, why: t.why, usd: t.usd, setup: name + " · " + (t.setup || t.rule || "") };
+    const base = { lane: k, kind: "trade", rule: t.rule || t.setup || "", side: t.side, strike: t.strike, filled: t.filled, exit: t.exit, paid: t.paid, sold: t.sold, why: t.why, usd: t.usd, setup: name + " · " + (t.setup || t.rule || "") };
     if (!on[k].on) { sat.push(base); return; }
     legs.push(base);
     const m = armedMin(O, T); if (m == null) return;
     const xb = T.b < 150 ? bidAt(O, s, T.K, T.b) : null;
     const a = askNear(O, s, T.K, m + 1);
-    if (a && xb != null) legs.push({ lane: k, kind: "add", side: t.side, strike: t.strike, filled: clock(a[0]), exit: t.exit, paid: a[1], sold: xb, usd: r1((xb - a[1]) * 100 - FEE), setup: name + " · ADD +1 at +$0.30" });
+    if (a && xb != null) legs.push({ lane: k, kind: "add", rule: "add", side: t.side, strike: t.strike, filled: clock(a[0]), exit: t.exit, paid: a[1], sold: xb, usd: r1((xb - a[1]) * 100 - FEE), setup: name + " · ADD +1 at +$0.30" });
     const c = cheapest(O, s, m + 1);
-    if (c) { const [b, j] = sellWithMain(O, s, c[0], c[1], T.b); legs.push({ lane: k, kind: "lotto", side: t.side, strike: Number(c[0]), filled: clock(c[1]), exit: clock(j), paid: c[2], sold: b, usd: r1((b - c[2]) * 100 - FEE), setup: name + " · LOTTO $0.30–0.80 at +$0.30" }); }
+    if (c) { const [b, j] = sellWithMain(O, s, c[0], c[1], T.b); legs.push({ lane: k, kind: "lotto", rule: "lotto", side: t.side, strike: Number(c[0]), filled: clock(c[1]), exit: clock(j), paid: c[2], sold: b, usd: r1((b - c[2]) * 100 - FEE), setup: name + " · LOTTO $0.30–0.80 at +$0.30" }); }
   }));
   const sum = F => r1(legs.filter(F).reduce((a, l) => a + l.usd, 0));
   const cash = F => { let mx = 0; for (let m = 0; m < 150; m++) { let c = 0; legs.filter(F).forEach(l => { const a = toM(l.filled), b = l.exit ? toM(l.exit) : 146; if (a <= m && m < b) c += l.paid * 100; }); mx = Math.max(mx, c); } return Math.round(mx); };
@@ -114,4 +114,6 @@ if (ix) {
     Object.keys(v).forEach(k => { if (r[k] !== v[k]) { r[k] = v[k]; ch = true; } }); });
   if (ch) { fs.writeFileSync(ixf, JSON.stringify(ix, null, 1)); written.push(path.relative(ROOT, ixf)); }
 }
+// Trade Replay: rebuild so the new bot's trades + add-ons show there too (v92_paper_log builds it earlier in the night, before this layer)
+if (written.length) { try { written.push(require(path.join(MD, "bot_replay_build.js")).build(ROOT)); } catch (e) { console.error("bot replay build failed: " + e.message); } }
 written.forEach(w => console.log(w));

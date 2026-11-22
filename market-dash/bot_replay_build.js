@@ -66,9 +66,13 @@ function build(ROOT) {
     (doc.shadow_options && doc.shadow_options.trades || []).forEach(t => { const sig = toM(t.signal), fill = sig + 1, exit = toM(t.exit), side = sideOf(t.side), pth = path_(side, t.strike, fill, exit, t.paid);
       cardsToday.push({ src: "option", box: t.box || null, level: t.level || null, levelPx: t.level_px == null ? null : t.level_px, setup: t.from, how: t.how, flipped_from: t.flipped_from || null, side: t.side, strike: t.strike, sig, m: fill, exit_m: exit, paid: t.paid, sold: t.paid == null ? null : r2(t.paid + (t.usd + 2.6) / 100), why: t.why, per: t.usd, ct: t.contracts || 1, pnl: r2((t.usd || 0) * (t.contracts || 1)),
         opt: series(side, t.strike, fill - 10, (exit == null ? fill + 60 : exit) + 20), c30: c30(side, t.strike), path: pth }); });
+    // Nov 22: the combo's new bot (v11) trades + every ADD / LOTTO leg (paper). The old bot's own trades are already here as the card.
+    (doc.shadow_duo && doc.shadow_duo.legs || []).filter(l => l.lane === "new" || l.kind !== "trade").forEach(l => { const fill = toM(l.filled), exit = toM(l.exit), side = sideOf(l.side), pth = path_(side, l.strike, fill, exit, l.paid);
+      cardsToday.push({ src: "newbot", setup: l.kind === "trade" ? l.rule : l.kind, kind: l.kind, lane: l.lane, side: l.side, strike: l.strike, sig: fill, m: fill, exit_m: exit, paid: l.paid, sold: l.sold, why: l.why || (l.kind === "trade" ? "" : "sold with the main trade"), per: l.usd, ct: 1, pnl: r2(l.usd || 0),
+        opt: series(side, l.strike, fill - 10, (exit == null ? fill + 60 : exit) + 20), c30: c30(side, l.strike), path: pth }); });
     cardsToday.sort((a, b) => a.m - b.m).forEach((c, i) => { c.date = day; c.n = i + 1; out.cards.push(c); });
-    const cs = cardsToday.filter(c => c.src === "card"), os = cardsToday.filter(c => c.src === "option");
-    out.daily.push({ date: day, weekday: out.days[day].weekday, card: r2(cs.reduce((a, c) => a + c.pnl, 0)), cardN: cs.length, card1: r2(cs.reduce((a, c) => a + (c.per || 0), 0)), opt: r2(os.reduce((a, c) => a + c.pnl, 0)), optN: os.length, forward: !!doc.forward });
+    const cs = cardsToday.filter(c => c.src === "card"), os = cardsToday.filter(c => c.src === "option"), ns = cardsToday.filter(c => c.src === "newbot");
+    out.daily.push({ date: day, weekday: out.days[day].weekday, card: r2(cs.reduce((a, c) => a + c.pnl, 0)), cardN: cs.length, card1: r2(cs.reduce((a, c) => a + (c.per || 0), 0)), opt: r2(os.reduce((a, c) => a + c.pnl, 0)), optN: os.length, nb: r2(ns.reduce((a, c) => a + c.pnl, 0)), nbN: ns.length, forward: !!doc.forward });
   }
   const f = path.join(MD, "bot_replay.js");
   fs.writeFileSync(f, "window.BOTREPLAY = " + JSON.stringify(out) + ";\n");

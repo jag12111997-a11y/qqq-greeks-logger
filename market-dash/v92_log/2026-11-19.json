@@ -200,6 +200,7 @@
    {
     "lane": "old",
     "kind": "trade",
+    "rule": "gap",
     "side": "call",
     "strike": 674,
     "filled": "6:49",

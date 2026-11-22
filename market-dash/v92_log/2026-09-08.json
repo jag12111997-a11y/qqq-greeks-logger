@@ -195,6 +195,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "orbfade",
     "side": "call",
     "strike": 719,
     "filled": "6:54",
@@ -208,6 +209,7 @@
    {
     "lane": "new",
     "kind": "add",
+    "rule": "add",
     "side": "call",
     "strike": 719,
     "filled": "6:59",
@@ -220,6 +222,7 @@
    {
     "lane": "new",
     "kind": "lotto",
+    "rule": "lotto",
     "side": "call",
     "strike": 721,
     "filled": "6:59",

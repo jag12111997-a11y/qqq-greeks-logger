@@ -166,6 +166,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "pop",
     "side": "call",
     "strike": 689,
     "filled": "7:50",

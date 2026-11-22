@@ -375,6 +375,7 @@
    {
     "lane": "old",
     "kind": "trade",
+    "rule": "trap",
     "side": "put",
     "strike": 724,
     "filled": "6:52",
@@ -388,6 +389,7 @@
    {
     "lane": "old",
     "kind": "add",
+    "rule": "add",
     "side": "put",
     "strike": 724,
     "filled": "6:58",
@@ -400,6 +402,7 @@
    {
     "lane": "old",
     "kind": "lotto",
+    "rule": "lotto",
     "side": "put",
     "strike": 719,
     "filled": "6:58",
@@ -412,6 +415,7 @@
    {
     "lane": "old",
     "kind": "trade",
+    "rule": "trap",
     "side": "put",
     "strike": 723,
     "filled": "7:13",
@@ -425,6 +429,7 @@
    {
     "lane": "old",
     "kind": "trade",
+    "rule": "trap",
     "side": "put",
     "strike": 724,
     "filled": "7:30",
@@ -438,6 +443,7 @@
    {
     "lane": "old",
     "kind": "add",
+    "rule": "add",
     "side": "put",
     "strike": 724,
     "filled": "7:32",
@@ -450,6 +456,7 @@
    {
     "lane": "old",
     "kind": "lotto",
+    "rule": "lotto",
     "side": "put",
     "strike": 719,
     "filled": "7:32",
@@ -462,6 +469,7 @@
    {
     "lane": "new",
     "kind": "trade",
+    "rule": "orbfade",
     "side": "call",
     "strike": 725,
     "filled": "8:06",
