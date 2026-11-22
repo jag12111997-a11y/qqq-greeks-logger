@@ -35,6 +35,12 @@ function quotes(day) {   // same as v92_paper_log.js
 const clock = m => { const t = 390 + m; return ((Math.floor(t / 60) + 11) % 12 + 1) + ":" + String(t % 60).padStart(2, "0"); };
 // prior-evening GARCH vol from the site's evening logs (history.js)
 let HIST = null;
+function vixChgBefore(day) {
+  if (!HIST) garchBefore(day);
+  let v = null;
+  HIST.forEach(e => { if (e && e.entry_date && e.entry_date < day && e.session !== "am" && e.markets && e.markets.VIX && e.markets.VIX.pct_change != null) v = e.markets.VIX.pct_change; });
+  return v;
+}
 function garchBefore(day) {
   if (!HIST) { global.window = global.window || {}; try { require(path.join(MD, "history.js")); } catch (e) {} HIST = (global.window.MARKET_DASH_HISTORY || []); }
   let g = null;
@@ -52,7 +58,7 @@ function morningRange(d) {
 }
 let want = process.argv.slice(2);
 if (!want.length) want = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).map(f => f.slice(0, 10))
-  .filter(d => { const j = readJSON(path.join(OUT, d + ".json")); return j && !j.shadow_v10; }).sort();
+  .filter(d => { const j = readJSON(path.join(OUT, d + ".json")); return j && (!j.shadow_v10 || !j.shadow_v11); }).sort();
 const written = [];
 for (const day of want) {
   const f = path.join(OUT, day + ".json"), doc = readJSON(f); if (!doc) continue;
@@ -73,13 +79,25 @@ for (const day of want) {
       strike: t.K, paid: +t.paid.toFixed(2), exit: clock(t.out), sold: +t.sold.toFixed(2), why: t.why, usd: t.usd, best: +t.hw.toFixed(2) })),
     usd: R.usd || 0, baseline_usd: R.baseline ? R.baseline.usd : null, baseline_trades: R.baseline ? R.baseline.trades : null
   };
+  // v11 = v10 + the master switch (follow or fade the opening range by last evening's VIX change + GARCH)
+  const vc = vixChgBefore(day), RG = V10.regime(vc, X.garch);
+  const R11 = V10.runDay(D, Object.assign({}, X, { mode: RG.mode }), day);
+  const KIND11 = Object.assign({ orbfade: "failed opening-range break, faded" }, KIND);
+  doc.shadow_v11 = {
+    rule: "v11 = v10 + master switch: last evening's VIX change < −3.5% (vol release) or ≥ +2.5% with GARCH ≥ 22 (fast vol bid) → follow the opening-range break; otherwise (vol stall / calm vol bid) → don't chase it, buy the other way if it closes back inside within 10 min",
+    regime: R11.skip ? null : { name: RG.name, mode: RG.mode, vix_change: vc, garch: R11.garch },
+    skip: R11.skip || null,
+    trades: (R11.trades || []).map(t => ({ rule: t.kind, setup: KIND11[t.kind] + (t.lvl ? " · " + t.lvl : ""), side: t.side === "C" ? "call" : "put", signal: clock(t.m), filled: clock(t.mf),
+      strike: t.K, paid: +t.paid.toFixed(2), exit: clock(t.out), sold: +t.sold.toFixed(2), why: t.why, usd: t.usd, best: +t.hw.toFixed(2) })),
+    usd: R11.usd || 0, baseline_usd: R11.baseline ? R11.baseline.usd : null
+  };
   fs.writeFileSync(f, JSON.stringify(doc, null, 1));
   written.push(path.relative(ROOT, f));
 }
 // index: v10 totals per morning (other fields untouched)
 const ixf = path.join(OUT, "index.json"), ix = readJSON(ixf);
 if (ix && written.length) {
-  (ix.days || []).forEach(r => { const j = readJSON(path.join(OUT, r.date + ".json")); if (j && j.shadow_v10) { r.v10_usd = j.shadow_v10.usd; r.v10_baseline = j.shadow_v10.baseline_usd; } });
+  (ix.days || []).forEach(r => { const j = readJSON(path.join(OUT, r.date + ".json")); if (j && j.shadow_v10) { r.v10_usd = j.shadow_v10.usd; r.v10_baseline = j.shadow_v10.baseline_usd; } if (j && j.shadow_v11) { r.v11_usd = j.shadow_v11.usd; r.v11_mode = j.shadow_v11.regime ? j.shadow_v11.regime.name : null; } });
   fs.writeFileSync(ixf, JSON.stringify(ix, null, 1)); written.push(path.relative(ROOT, ixf));
 }
 written.forEach(w => console.log(w));

@@ -138,5 +138,18 @@
   "usd": 29.7,
   "baseline_usd": -52.9,
   "baseline_trades": 2.7
+ },
+ "shadow_v11": {
+  "rule": "v11 = v10 + master switch: last evening's VIX change < −3.5% (vol release) or ≥ +2.5% with GARCH ≥ 22 (fast vol bid) → follow the opening-range break; otherwise (vol stall / calm vol bid) → don't chase it, buy the other way if it closes back inside within 10 min",
+  "regime": {
+   "name": "calm vol bid",
+   "mode": "fade",
+   "vix_change": 4.707,
+   "garch": 16.53
+  },
+  "skip": null,
+  "trades": [],
+  "usd": 0,
+  "baseline_usd": -52.9
  }
 }

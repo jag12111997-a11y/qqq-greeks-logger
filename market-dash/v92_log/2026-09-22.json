@@ -168,5 +168,47 @@
   "usd": -0.6,
   "baseline_usd": -38.8,
   "baseline_trades": 2.4
+ },
+ "shadow_v11": {
+  "rule": "v11 = v10 + master switch: last evening's VIX change < −3.5% (vol release) or ≥ +2.5% with GARCH ≥ 22 (fast vol bid) → follow the opening-range break; otherwise (vol stall / calm vol bid) → don't chase it, buy the other way if it closes back inside within 10 min",
+  "regime": {
+   "name": "vol stall",
+   "mode": "fade",
+   "vix_change": 0.405,
+   "garch": 20.62
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "ext",
+    "setup": "new-extreme break · ORH",
+    "side": "call",
+    "signal": "6:50",
+    "filled": "6:50",
+    "strike": 746,
+    "paid": 1.13,
+    "exit": "7:35",
+    "sold": 1.14,
+    "why": "trail",
+    "usd": -0.3,
+    "best": 0.5
+   },
+   {
+    "rule": "orbfade",
+    "setup": "failed opening-range break, faded · ORH",
+    "side": "put",
+    "signal": "6:55",
+    "filled": "6:55",
+    "strike": 743,
+    "paid": 0.9,
+    "exit": "7:11",
+    "sold": 0.58,
+    "why": "stop",
+    "usd": -33.3,
+    "best": 0.08
+   }
+  ],
+  "usd": -33.6,
+  "baseline_usd": -38.8
  }
 }

@@ -71,7 +71,7 @@
   }
   // slot "A" = ORB only, slot "B" = EXT + POP
   function signals(D, B, X, iv, slot) {
-    var E = B[0].c * iv / Math.sqrt(252), T = CFG.Tk * X.range10, orh = -1e9, orl = 1e9, out = [], done = {}, last = {}, hi = -1e9, lo = 1e9;
+    var E = B[0].c * iv / Math.sqrt(252), T = CFG.Tk * X.range10, orh = -1e9, orl = 1e9, out = [], done = {}, last = {}, hi = -1e9, lo = 1e9, fades = [];
     for (var i = 0; i < CFG.orEnd; i++) if (B[i]) { orh = Math.max(orh, B[i].h); orl = Math.min(orl, B[i].l); }
     for (i = 0; i < CFG.orEnd; i++) if (B[i]) { hi = Math.max(hi, B[i].h); lo = Math.min(lo, B[i].l); }
     for (var m = CFG.orEnd; m < CFG.scanEnd; m++) {
@@ -81,9 +81,19 @@
       var k = Math.floor(m / 20), io = 20 * (k - 1) - 1, ic = 20 * k - 1;
       var o20 = (k >= 1 && io >= 0 && B[io]) ? B[io].c : B[0].c, c20 = (k >= 1 && B[ic]) ? B[ic].c : null;
       var t20 = (c20 === null || m < 20) ? 0 : (c20 > o20 ? 1 : -1);
-      if (slot === "A" && m < CFG.orbLast) {
+      if (slot === "A" && m < CFG.orbLast && X.mode !== "fade") {
         if (!done[1] && c > orh) { cand.push([1, "orb"]); done[1] = true; }
         if (!done[-1] && c < orl) { cand.push([-1, "orb"]); done[-1] = true; }
+      }
+      // v11 (Nov 22): on a "fade" morning the first close outside the opening range is NOT bought; if price closes back inside
+      // within 10 min, buy the other way (the failed break). Not filtered by the 3-min rule — it is a reversal by design.
+      if (slot === "A" && m < CFG.orbLast && X.mode === "fade") {
+        [[1, orh], [-1, orl]].forEach(function (pr) {
+          var dr = pr[0], L = pr[1];
+          if (done[dr] || !(dr * (c - L) > 0)) return;
+          done[dr] = true;
+          for (var j = m + 1; j < Math.min(m + 11, CFG.scanEnd); j++) if (B[j] && dr * (B[j].c - L) < -0.05) { fades.push({ m: j, s: dr > 0 ? "P" : "C", kind: "orbfade", lvl: dr > 0 ? "ORH" : "ORL" }); break; }
+        });
       }
       if (slot === "B") {
         if (ru >= CFG.ruLo && ru < CFG.ruHi) levels(D, m, orh, orl).forEach(function (pr) {
@@ -103,6 +113,7 @@
         out.push({ m: m, s: dr > 0 ? "C" : "P", kind: cand[n][1], lvl: cand[n][2] || null }); break;
       }
     }
+    if (fades.length) out = out.concat(fades).sort(function (a, b) { return a.m - b.m; });
     return out;
   }
   function trade(D, B, sig) {
@@ -146,8 +157,17 @@
     trades.sort(function (a, b) { return a.mf - b.mf; });
     var usd = trades.reduce(function (a, t) { return a + t.usd; }, 0);
     return { iv: iv, implied_move: Math.round(B[0].c * iv / Math.sqrt(252) * 100) / 100, range10: Math.round(X.range10 * 100) / 100,
-      garch: X.garch, hv: (X.garch || 0) > CFG.popG, trades: trades, usd: Math.round(usd * 10) / 10, baseline: baseline(D, B, day || "") };
+      garch: X.garch, hv: (X.garch || 0) > CFG.popG, mode: X.mode || "follow", trades: trades, usd: Math.round(usd * 10) / 10, baseline: baseline(D, B, day || "") };
   }
-  var api = { runDay: runDay, CFG: CFG };
+  // v11 master switch (Nov 22 regime study): last evening's VIX change + GARCH vol decide follow vs fade for the opening range.
+  //   VIX fell > 3.5% (vol release) or VIX up ≥ 2.5% with GARCH ≥ 22 (fast vol bid) → "follow"; otherwise (vol stall, calm vol bid) → "fade".
+  function regime(vixChg, garch) {
+    if (vixChg == null) return { mode: "follow", name: "no VIX read" };
+    if (vixChg < -3.5) return { mode: "follow", name: "vol release" };
+    if (vixChg >= 2.5 && (garch || 0) >= 22) return { mode: "follow", name: "fast vol bid" };
+    if (vixChg >= 2.5) return { mode: "fade", name: "calm vol bid" };
+    return { mode: "fade", name: "vol stall" };
+  }
+  var api = { runDay: runDay, regime: regime, CFG: CFG };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.V10 = api;
 })(this);
