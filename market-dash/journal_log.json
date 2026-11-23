@@ -3,6 +3,96 @@
  "rules_updated": "2026-11-17",
  "entries": [
   {
+   "date": "2026-11-23",
+   "pnl": -505.0,
+   "trades": 16,
+   "wins": 0,
+   "losses": 16,
+   "first": "6:36",
+   "last": "8:31",
+   "best": "6:36 C 665 -1",
+   "score": 1.8,
+   "kept": 2,
+   "of": 11,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "16 trades"
+    },
+    {
+     "rule": "No entry against the 20-min candle",
+     "ok": false,
+     "why": "5 against: 6:36 call, 6:42 call, 6:42 call, 6:43 call"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2 had 8, 6"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": false,
+     "why": "5 adds into red"
+    },
+    {
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
+     "why": "median stop $0.18 under entry"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:41 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": false,
+     "why": "1 chased fills"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": false,
+     "why": "6 entries 6:30\u20136:45, both sides"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": false,
+     "why": "no winners"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": false,
+     "why": "1 entries at 3+"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": true,
+     "why": "ramble logged"
+    }
+   ],
+   "summary": "THE $500 DAY. I told myself not to trade today. QQQ moved about $40 in pre-market, I got pulled in anyway, and it turned into a slow-grind range day: the slowest grind to the top and the weakest pull back down. I kept thinking we were going to break out. I knew I was being tricked and kept trading because I couldn't admit the market was weak today. Moved my stop to 0.30, went to 3 contracts to win it back, kept going with $1 wicks and IV around 60%. Broke my good-faith limit and used all my cash. Gave back all of last week (+$414) and more. Remember how this felt.",
+   "right": "Every stop actually filled \u2014 the stops did their job; the damage was getting back in. I did stop eventually once I saw it was pure revenge on a dead range. And I'm writing it down so I never pay for this lesson twice.",
+   "fix": "16 entries, 0 winners, \u2212$505. The \u2212$75 daily stop broke at 6:43 \u2014 13 minutes in; everything after it cost \u2212$405. 8 entries in the 6:30\u20136:50 candle, 6 in the next. Flipped call/put 2\u201313 seconds after a stop. Added to a losing C665 (0.55 \u2192 0.58 \u2192 0.70) and rode it to 0.27 (\u2212$102). Market orders at the end out of anger (P638 \u00d73 \u2212$120, C658 \u2212$37). RULES FROM TODAY: (1) a no-trade day means Webull stays closed. (2) Big pre-market gap = no entries for the first 30 minutes \u2014 the move already happened. (3) Hit \u2212$75 = close the app, no exceptions. (4) Never add to a loser. (5) Settled cash only \u2014 no more good-faith violations.",
+   "ramble": true,
+   "sized": {
+    "n": 4,
+    "pnl": -258.0,
+    "wins": 0,
+    "list": [
+     "6:42 C665 \u00d72 -50",
+     "6:50 C665 \u00d72 -38",
+     "6:52 P623 \u00d72 -50",
+     "7:55 P638 \u00d73 -120"
+    ]
+   }
+  },
+  {
    "date": "2026-11-20",
    "pnl": 199.0,
    "trades": 15,
@@ -1287,6 +1377,87 @@
   }
  ],
  "weeks": [
+  {
+   "week": "2026-11-23",
+   "days": 1,
+   "green": 0,
+   "pnl": -505.0,
+   "trades": 16,
+   "wins": 0,
+   "score": 1.8,
+   "kept": 2,
+   "of": 11,
+   "best2": -13.0,
+   "rest": -492.0,
+   "first20": -142.0,
+   "after8": -363.0,
+   "days8": 0,
+   "worst_low": -505.0,
+   "daily": [
+    {
+     "date": "2026-11-23",
+     "pnl": -505.0,
+     "score": 1.8,
+     "trades": 16
+    }
+   ],
+   "rules": {
+    "8 trades or fewer": [
+     0,
+     1
+    ],
+    "No entry against the 20-min candle": [
+     0,
+     1
+    ],
+    "Max 2 entries per 20-min candle": [
+     0,
+     1
+    ],
+    "Never add to a loser": [
+     0,
+     1
+    ],
+    "Stops $0.15\u20130.20": [
+     1,
+     1
+    ],
+    "Done after 3 losses in a row or \u2212$75": [
+     0,
+     1
+    ],
+    "No chasing ($0.10+ past entry)": [
+     0,
+     1
+    ],
+    "Waited for a setup (no open whiplash)": [
+     0,
+     1
+    ],
+    "Held a winner (8+ min)": [
+     0,
+     1
+    ],
+    "Size 2 contracts or less": [
+     0,
+     1
+    ],
+    "Logged the day": [
+     1,
+     1
+    ]
+   },
+   "sized": {
+    "n": 4,
+    "pnl": -258.0,
+    "wins": 0
+   },
+   "single": {
+    "n": 12,
+    "pnl": -247.0,
+    "wins": 0
+   }
+  },
   {
    "week": "2026-11-16",
    "days": 5,

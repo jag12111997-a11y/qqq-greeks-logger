@@ -1,938 +1,1160 @@
 {
-"2026-11-16": {
-"fills": [
-{
-"side": "P",
-"strike": 659.0,
-"ct": 1,
-"t0": 23518,
-"buy": 1.54,
-"stop": 1.42,
-"t1": 23525,
-"sell": 1.43,
-"pnl": -11.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 677.0,
-"ct": 1,
-"t0": 23612,
-"buy": 1.12,
-"stop": 0.97,
-"t1": 23664,
-"sell": 0.97,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 677.0,
-"ct": 1,
-"t0": 23682,
-"buy": 0.96,
-"stop": 0.81,
-"t1": 23703,
-"sell": 0.82,
-"pnl": -14.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 659.0,
-"ct": 1,
-"t0": 23710,
-"buy": 1.35,
-"stop": 1.2,
-"t1": 23742,
-"sell": 1.19,
-"pnl": -16.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 676.0,
-"ct": 1,
-"t0": 23805,
-"buy": 1.08,
-"stop": null,
-"t1": 24007,
-"sell": 1.18,
-"pnl": 10.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 676.0,
-"ct": 1,
-"t0": 23844,
-"buy": 1.32,
-"stop": 1.0,
-"t1": 24101,
-"sell": 0.96,
-"pnl": -36.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 660.0,
-"ct": 1,
-"t0": 24102,
-"buy": 1.23,
-"stop": 1.13,
-"t1": 24125,
-"sell": 1.13,
-"pnl": -10.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 660.0,
-"ct": 1,
-"t0": 24116,
-"buy": 1.31,
-"stop": 1.13,
-"t1": 24125,
-"sell": 1.13,
-"pnl": -18.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 676.0,
-"ct": 1,
-"t0": 24142,
-"buy": 1.12,
-"stop": 0.97,
-"t1": 24538,
-"sell": 0.97,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 676.0,
-"ct": 1,
-"t0": 24161,
-"buy": 1.26,
-"stop": 0.97,
-"t1": 24538,
-"sell": 0.97,
-"pnl": -29.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 662.0,
-"ct": 1,
-"t0": 24525,
-"buy": 1.16,
-"stop": 1.01,
-"t1": 24555,
-"sell": 1.0,
-"pnl": -16.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 676.0,
-"ct": 1,
-"t0": 24561,
-"buy": 1.16,
-"stop": 1.01,
-"t1": 24683,
-"sell": 0.98,
-"pnl": -18.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 676.0,
-"ct": 1,
-"t0": 24647,
-"buy": 1.22,
-"stop": 1.01,
-"t1": 24683,
-"sell": 0.98,
-"pnl": -24.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 662.0,
-"ct": 1,
-"t0": 24685,
-"buy": 1.08,
-"stop": 0.93,
-"t1": 24735,
-"sell": 0.92,
-"pnl": -16.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 662.0,
-"ct": 1,
-"t0": 24776,
-"buy": 0.92,
-"stop": null,
-"t1": 27055,
-"sell": 1.56,
-"pnl": 64.0,
-"expired": false
-}
-],
-"cancels": [
-{
-"side": "P",
-"strike": 659.0,
-"t": 23503,
-"lim": 1.51
-},
-{
-"side": "P",
-"strike": 659.0,
-"t": 23483,
-"lim": 1.36
-},
-{
-"side": "P",
-"strike": 659.0,
-"t": 23754,
-"lim": 1.2
-}
-]
-},
-"2026-11-17": {
-"fills": [
-{
-"side": "P",
-"strike": 651,
-"ct": 1,
-"t0": 27061,
-"t1": 27744,
-"buy": 0.95,
-"sell": 3.01,
-"stop": null,
-"pnl": 206.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 644,
-"ct": 1,
-"t0": 29030,
-"t1": 29060,
-"buy": 1.0,
-"sell": 0.76,
-"stop": 0.85,
-"pnl": -24.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 645,
-"ct": 1,
-"t0": 29831,
-"t1": 29888,
-"buy": 1.08,
-"sell": 0.91,
-"stop": 0.93,
-"pnl": -17.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 645,
-"ct": 1,
-"t0": 30017,
-"t1": 30088,
-"buy": 0.95,
-"sell": 0.81,
-"stop": 0.81,
-"pnl": -14.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 662,
-"ct": 1,
-"t0": 30103,
-"t1": 30116,
-"buy": 0.86,
-"sell": 0.71,
-"stop": 0.71,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 645,
-"ct": 1,
-"t0": 30132,
-"t1": 30293,
-"buy": 0.9,
-"sell": 0.91,
-"stop": null,
-"pnl": 1.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 646,
-"ct": 1,
-"t0": 32607,
-"t1": 32712,
-"buy": 1.18,
-"sell": 1.2,
-"stop": null,
-"pnl": 2.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 661,
-"ct": 1,
-"t0": 32764,
-"t1": 32765,
-"buy": 1.11,
-"sell": 1.01,
-"stop": 1.02,
-"pnl": -10.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 661,
-"ct": 1,
-"t0": 32810,
-"t1": 32858,
-"buy": 0.88,
-"sell": 0.88,
-"stop": null,
-"pnl": 0.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 661,
-"ct": 1,
-"t0": 33096,
-"t1": 33290,
-"buy": 0.82,
-"sell": 0.66,
-"stop": 0.67,
-"pnl": -16.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 661,
-"ct": 1,
-"t0": 33321,
-"t1": 33588,
-"buy": 0.78,
-"sell": 1.37,
-"stop": null,
-"pnl": 59.0,
-"expired": false
-}
-],
-"cancels": [
-{
-"side": "P",
-"strike": 651,
-"t": 27283,
-"lim": 1.4
-},
-{
-"side": "C",
-"strike": 658,
-"t": 32747,
-"lim": 1.51
-}
-]
-},
-"2026-11-18": {
-"fills": [
-{
-"side": "P",
-"strike": 649.0,
-"ct": 1,
-"t0": 23503,
-"buy": 0.79,
-"stop": 0.7,
-"t1": 23573,
-"sell": 0.69,
-"pnl": -10.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 671.0,
-"ct": 1,
-"t0": 23593,
-"buy": 0.99,
-"stop": 0.84,
-"t1": 23635,
-"sell": 0.83,
-"pnl": -16.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 649.0,
-"ct": 1,
-"t0": 23697,
-"buy": 0.96,
-"stop": null,
-"t1": 24103,
-"sell": 1.83,
-"pnl": 87.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 649.0,
-"ct": 1,
-"t0": 23714,
-"buy": 1.03,
-"stop": null,
-"t1": 24445,
-"sell": 1.56,
-"pnl": 53.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 645.0,
-"ct": 1,
-"t0": 24614,
-"buy": 1.24,
-"stop": 1.11,
-"t1": 24668,
-"sell": 1.08,
-"pnl": -16.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 668.0,
-"ct": 1,
-"t0": 25199,
-"buy": 1.0,
-"stop": null,
-"t1": 25279,
-"sell": 1.08,
-"pnl": 8.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 668.0,
-"ct": 1,
-"t0": 25209,
-"buy": 1.18,
-"stop": 1.09,
-"t1": 25279,
-"sell": 1.08,
-"pnl": -10.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 649.0,
-"ct": 1,
-"t0": 25320,
-"buy": 0.76,
-"stop": null,
-"t1": 25888,
-"sell": 0.74,
-"pnl": -2.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 668.0,
-"ct": 1,
-"t0": 25914,
-"buy": 0.9,
-"stop": null,
-"t1": 25971,
-"sell": 0.9,
-"pnl": 0.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 649.0,
-"ct": 1,
-"t0": 25982,
-"buy": 0.67,
-"stop": null,
-"t1": 26032,
-"sell": 0.66,
-"pnl": -1.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 668.0,
-"ct": 1,
-"t0": 26414,
-"buy": 0.89,
-"stop": null,
-"t1": 26506,
-"sell": 0.85,
-"pnl": -4.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 649.0,
-"ct": 1,
-"t0": 26518,
-"buy": 0.54,
-"stop": null,
-"t1": 26554,
-"sell": 0.52,
-"pnl": -2.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 649.0,
-"ct": 1,
-"t0": 26661,
-"buy": 0.72,
-"stop": 0.57,
-"t1": 26912,
-"sell": 0.55,
-"pnl": -17.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 649.0,
-"ct": 1,
-"t0": 27108,
-"buy": 0.74,
-"stop": null,
-"t1": 27199,
-"sell": 0.75,
-"pnl": 1.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 668.0,
-"ct": 1,
-"t0": 27287,
-"buy": 0.5,
-"stop": 0.37,
-"t1": 27356,
-"sell": 0.37,
-"pnl": -13.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 645.0,
-"ct": 1,
-"t0": 27379,
-"buy": 0.44,
-"stop": 0.2,
-"t1": 29161,
-"sell": 0.2,
-"pnl": -24.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 645.0,
-"ct": 1,
-"t0": 29215,
-"buy": 0.26,
-"stop": null,
-"t1": 30513,
-"sell": 0.38,
-"pnl": 12.0,
-"expired": false
-}
-],
-"cancels": [
-{
-"side": "P",
-"strike": 649.0,
-"t": 27051,
-"lim": 0.6
-},
-{
-"side": "P",
-"strike": 649.0,
-"t": 26636,
-"lim": 0.66
-}
-]
-},
-"2026-11-19": {
-"fills": [
-{
-"side": "C",
-"strike": 682,
-"ct": 1,
-"t0": 23453,
-"t1": 23828,
-"buy": 0.95,
-"sell": 1.28,
-"stop": null,
-"pnl": 33.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 682,
-"ct": 1,
-"t0": 23494,
-"t1": 23943,
-"buy": 1.04,
-"sell": 1.0,
-"stop": 1.0,
-"pnl": -4.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 682,
-"ct": 2,
-"t0": 24086,
-"t1": 24154,
-"buy": 1.0,
-"sell": 1.04,
-"stop": null,
-"pnl": 8.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 682,
-"ct": 2,
-"t0": 24189,
-"t1": 24323,
-"buy": 1.2,
-"sell": 1.07,
-"stop": 1.08,
-"pnl": -26.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 660,
-"ct": 1,
-"t0": 24376,
-"t1": 24560,
-"buy": 0.73,
-"sell": 0.59,
-"stop": 0.59,
-"pnl": -14.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 660,
-"ct": 2,
-"t0": 24417,
-"t1": 24560,
-"buy": 0.79,
-"sell": 0.59,
-"stop": 0.59,
-"pnl": -40.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 682,
-"ct": 2,
-"t0": 24589,
-"t1": 24604,
-"buy": 1.26,
-"sell": 1.13,
-"stop": 1.14,
-"pnl": -26.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 687,
-"ct": 1,
-"t0": 24680,
-"t1": 25800,
-"buy": 0.46,
-"sell": 0.2,
-"stop": 0.2,
-"pnl": -26.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 687,
-"ct": 1,
-"t0": 24679,
-"t1": 25800,
-"buy": 0.47,
-"sell": 0.2,
-"stop": 0.2,
-"pnl": -27.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 659,
-"ct": 1,
-"t0": 25038,
-"t1": 25079,
-"buy": 0.9,
-"sell": 0.75,
-"stop": 0.75,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 659,
-"ct": 1,
-"t0": 25828,
-"t1": 27178,
-"buy": 0.75,
-"sell": 3.73,
-"stop": null,
-"pnl": 298.0,
-"expired": false
-}
-],
-"cancels": [
-{
-"side": "P",
-"strike": 660,
-"t": 24008,
-"lim": 1.11
-},
-{
-"side": "C",
-"strike": 682,
-"t": 24570,
-"lim": 1.16
-},
-{
-"side": "C",
-"strike": 682,
-"t": 24562,
-"lim": 1.08
-}
-]
-},
-"2026-11-20": {
-"fills": [
-{
-"side": "C",
-"strike": 655,
-"ct": 1,
-"t0": 23479,
-"t1": 23589,
-"buy": 0.76,
-"sell": 0.61,
-"stop": 0.61,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 652,
-"ct": 1,
-"t0": 23809,
-"t1": 23912,
-"buy": 0.85,
-"sell": 0.7,
-"stop": 0.7,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 616,
-"ct": 1,
-"t0": 23954,
-"t1": 24165,
-"buy": 0.76,
-"sell": 0.61,
-"stop": 0.61,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 619,
-"ct": 1,
-"t0": 24257,
-"t1": 24310,
-"buy": 1.05,
-"sell": 0.9,
-"stop": 0.91,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 650,
-"ct": 1,
-"t0": 24353,
-"t1": 24364,
-"buy": 0.86,
-"sell": 0.8,
-"stop": 0.82,
-"pnl": -6.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 650,
-"ct": 1,
-"t0": 24376,
-"t1": 24435,
-"buy": 0.94,
-"sell": 0.83,
-"stop": 0.83,
-"pnl": -11.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 650,
-"ct": 1,
-"t0": 24451,
-"t1": 24563,
-"buy": 0.91,
-"sell": 0.83,
-"stop": 0.83,
-"pnl": -8.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 650,
-"ct": 1,
-"t0": 24685,
-"t1": 25001,
-"buy": 0.8,
-"sell": 1.23,
-"stop": 1.25,
-"pnl": 43.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 650,
-"ct": 2,
-"t0": 24853,
-"t1": 25280,
-"buy": 1.01,
-"sell": 1.235,
-"stop": 1.24,
-"pnl": 45.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 628,
-"ct": 1,
-"t0": 25312,
-"t1": 25325,
-"buy": 0.95,
-"sell": 0.9,
-"stop": 0.91,
-"pnl": -5.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 628,
-"ct": 1,
-"t0": 25337,
-"t1": 25423,
-"buy": 1.01,
-"sell": 0.94,
-"stop": 0.93,
-"pnl": -7.0,
-"expired": false
-},
-{
-"side": "C",
-"strike": 652,
-"ct": 1,
-"t0": 25501,
-"t1": 25537,
-"buy": 0.87,
-"sell": 0.72,
-"stop": 0.72,
-"pnl": -15.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 628,
-"ct": 1,
-"t0": 25544,
-"t1": 25553,
-"buy": 1.14,
-"sell": 0.98,
-"stop": 0.99,
-"pnl": -16.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 621,
-"ct": 2,
-"t0": 25673,
-"t1": 26820,
-"buy": 0.37,
-"sell": 1.58,
-"stop": 1.6,
-"pnl": 242.0,
-"expired": false
-},
-{
-"side": "P",
-"strike": 603,
-"ct": 1,
-"t0": 27798,
-"t1": 28184,
-"buy": 0.18,
-"sell": 0.15,
-"stop": 0.15,
-"pnl": -3.0,
-"expired": false
-}
-],
-"cancels": [
-{
-"side": "C",
-"strike": 650,
-"t": 24676,
-"lim": 0.8
-},
-{
-"side": "C",
-"strike": 650,
-"t": 24672,
-"lim": 0.74
-},
-{
-"side": "C",
-"strike": 650,
-"t": 25221,
-"lim": 1.45
-}
-]
-}
+ "2026-11-16": {
+  "fills": [
+   {
+    "side": "P",
+    "strike": 659.0,
+    "ct": 1,
+    "t0": 23518,
+    "buy": 1.54,
+    "stop": 1.42,
+    "t1": 23525,
+    "sell": 1.43,
+    "pnl": -11.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 677.0,
+    "ct": 1,
+    "t0": 23612,
+    "buy": 1.12,
+    "stop": 0.97,
+    "t1": 23664,
+    "sell": 0.97,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 677.0,
+    "ct": 1,
+    "t0": 23682,
+    "buy": 0.96,
+    "stop": 0.81,
+    "t1": 23703,
+    "sell": 0.82,
+    "pnl": -14.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 659.0,
+    "ct": 1,
+    "t0": 23710,
+    "buy": 1.35,
+    "stop": 1.2,
+    "t1": 23742,
+    "sell": 1.19,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 676.0,
+    "ct": 1,
+    "t0": 23805,
+    "buy": 1.08,
+    "stop": null,
+    "t1": 24007,
+    "sell": 1.18,
+    "pnl": 10.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 676.0,
+    "ct": 1,
+    "t0": 23844,
+    "buy": 1.32,
+    "stop": 1.0,
+    "t1": 24101,
+    "sell": 0.96,
+    "pnl": -36.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 660.0,
+    "ct": 1,
+    "t0": 24102,
+    "buy": 1.23,
+    "stop": 1.13,
+    "t1": 24125,
+    "sell": 1.13,
+    "pnl": -10.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 660.0,
+    "ct": 1,
+    "t0": 24116,
+    "buy": 1.31,
+    "stop": 1.13,
+    "t1": 24125,
+    "sell": 1.13,
+    "pnl": -18.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 676.0,
+    "ct": 1,
+    "t0": 24142,
+    "buy": 1.12,
+    "stop": 0.97,
+    "t1": 24538,
+    "sell": 0.97,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 676.0,
+    "ct": 1,
+    "t0": 24161,
+    "buy": 1.26,
+    "stop": 0.97,
+    "t1": 24538,
+    "sell": 0.97,
+    "pnl": -29.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 662.0,
+    "ct": 1,
+    "t0": 24525,
+    "buy": 1.16,
+    "stop": 1.01,
+    "t1": 24555,
+    "sell": 1.0,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 676.0,
+    "ct": 1,
+    "t0": 24561,
+    "buy": 1.16,
+    "stop": 1.01,
+    "t1": 24683,
+    "sell": 0.98,
+    "pnl": -18.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 676.0,
+    "ct": 1,
+    "t0": 24647,
+    "buy": 1.22,
+    "stop": 1.01,
+    "t1": 24683,
+    "sell": 0.98,
+    "pnl": -24.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 662.0,
+    "ct": 1,
+    "t0": 24685,
+    "buy": 1.08,
+    "stop": 0.93,
+    "t1": 24735,
+    "sell": 0.92,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 662.0,
+    "ct": 1,
+    "t0": 24776,
+    "buy": 0.92,
+    "stop": null,
+    "t1": 27055,
+    "sell": 1.56,
+    "pnl": 64.0,
+    "expired": false
+   }
+  ],
+  "cancels": [
+   {
+    "side": "P",
+    "strike": 659.0,
+    "t": 23503,
+    "lim": 1.51
+   },
+   {
+    "side": "P",
+    "strike": 659.0,
+    "t": 23483,
+    "lim": 1.36
+   },
+   {
+    "side": "P",
+    "strike": 659.0,
+    "t": 23754,
+    "lim": 1.2
+   }
+  ]
+ },
+ "2026-11-17": {
+  "fills": [
+   {
+    "side": "P",
+    "strike": 651,
+    "ct": 1,
+    "t0": 27061,
+    "t1": 27744,
+    "buy": 0.95,
+    "sell": 3.01,
+    "stop": null,
+    "pnl": 206.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 644,
+    "ct": 1,
+    "t0": 29030,
+    "t1": 29060,
+    "buy": 1.0,
+    "sell": 0.76,
+    "stop": 0.85,
+    "pnl": -24.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 645,
+    "ct": 1,
+    "t0": 29831,
+    "t1": 29888,
+    "buy": 1.08,
+    "sell": 0.91,
+    "stop": 0.93,
+    "pnl": -17.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 645,
+    "ct": 1,
+    "t0": 30017,
+    "t1": 30088,
+    "buy": 0.95,
+    "sell": 0.81,
+    "stop": 0.81,
+    "pnl": -14.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 662,
+    "ct": 1,
+    "t0": 30103,
+    "t1": 30116,
+    "buy": 0.86,
+    "sell": 0.71,
+    "stop": 0.71,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 645,
+    "ct": 1,
+    "t0": 30132,
+    "t1": 30293,
+    "buy": 0.9,
+    "sell": 0.91,
+    "stop": null,
+    "pnl": 1.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 646,
+    "ct": 1,
+    "t0": 32607,
+    "t1": 32712,
+    "buy": 1.18,
+    "sell": 1.2,
+    "stop": null,
+    "pnl": 2.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 661,
+    "ct": 1,
+    "t0": 32764,
+    "t1": 32765,
+    "buy": 1.11,
+    "sell": 1.01,
+    "stop": 1.02,
+    "pnl": -10.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 661,
+    "ct": 1,
+    "t0": 32810,
+    "t1": 32858,
+    "buy": 0.88,
+    "sell": 0.88,
+    "stop": null,
+    "pnl": 0.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 661,
+    "ct": 1,
+    "t0": 33096,
+    "t1": 33290,
+    "buy": 0.82,
+    "sell": 0.66,
+    "stop": 0.67,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 661,
+    "ct": 1,
+    "t0": 33321,
+    "t1": 33588,
+    "buy": 0.78,
+    "sell": 1.37,
+    "stop": null,
+    "pnl": 59.0,
+    "expired": false
+   }
+  ],
+  "cancels": [
+   {
+    "side": "P",
+    "strike": 651,
+    "t": 27283,
+    "lim": 1.4
+   },
+   {
+    "side": "C",
+    "strike": 658,
+    "t": 32747,
+    "lim": 1.51
+   }
+  ]
+ },
+ "2026-11-18": {
+  "fills": [
+   {
+    "side": "P",
+    "strike": 649.0,
+    "ct": 1,
+    "t0": 23503,
+    "buy": 0.79,
+    "stop": 0.7,
+    "t1": 23573,
+    "sell": 0.69,
+    "pnl": -10.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 671.0,
+    "ct": 1,
+    "t0": 23593,
+    "buy": 0.99,
+    "stop": 0.84,
+    "t1": 23635,
+    "sell": 0.83,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 649.0,
+    "ct": 1,
+    "t0": 23697,
+    "buy": 0.96,
+    "stop": null,
+    "t1": 24103,
+    "sell": 1.83,
+    "pnl": 87.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 649.0,
+    "ct": 1,
+    "t0": 23714,
+    "buy": 1.03,
+    "stop": null,
+    "t1": 24445,
+    "sell": 1.56,
+    "pnl": 53.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 645.0,
+    "ct": 1,
+    "t0": 24614,
+    "buy": 1.24,
+    "stop": 1.11,
+    "t1": 24668,
+    "sell": 1.08,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 668.0,
+    "ct": 1,
+    "t0": 25199,
+    "buy": 1.0,
+    "stop": null,
+    "t1": 25279,
+    "sell": 1.08,
+    "pnl": 8.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 668.0,
+    "ct": 1,
+    "t0": 25209,
+    "buy": 1.18,
+    "stop": 1.09,
+    "t1": 25279,
+    "sell": 1.08,
+    "pnl": -10.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 649.0,
+    "ct": 1,
+    "t0": 25320,
+    "buy": 0.76,
+    "stop": null,
+    "t1": 25888,
+    "sell": 0.74,
+    "pnl": -2.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 668.0,
+    "ct": 1,
+    "t0": 25914,
+    "buy": 0.9,
+    "stop": null,
+    "t1": 25971,
+    "sell": 0.9,
+    "pnl": 0.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 649.0,
+    "ct": 1,
+    "t0": 25982,
+    "buy": 0.67,
+    "stop": null,
+    "t1": 26032,
+    "sell": 0.66,
+    "pnl": -1.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 668.0,
+    "ct": 1,
+    "t0": 26414,
+    "buy": 0.89,
+    "stop": null,
+    "t1": 26506,
+    "sell": 0.85,
+    "pnl": -4.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 649.0,
+    "ct": 1,
+    "t0": 26518,
+    "buy": 0.54,
+    "stop": null,
+    "t1": 26554,
+    "sell": 0.52,
+    "pnl": -2.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 649.0,
+    "ct": 1,
+    "t0": 26661,
+    "buy": 0.72,
+    "stop": 0.57,
+    "t1": 26912,
+    "sell": 0.55,
+    "pnl": -17.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 649.0,
+    "ct": 1,
+    "t0": 27108,
+    "buy": 0.74,
+    "stop": null,
+    "t1": 27199,
+    "sell": 0.75,
+    "pnl": 1.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 668.0,
+    "ct": 1,
+    "t0": 27287,
+    "buy": 0.5,
+    "stop": 0.37,
+    "t1": 27356,
+    "sell": 0.37,
+    "pnl": -13.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 645.0,
+    "ct": 1,
+    "t0": 27379,
+    "buy": 0.44,
+    "stop": 0.2,
+    "t1": 29161,
+    "sell": 0.2,
+    "pnl": -24.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 645.0,
+    "ct": 1,
+    "t0": 29215,
+    "buy": 0.26,
+    "stop": null,
+    "t1": 30513,
+    "sell": 0.38,
+    "pnl": 12.0,
+    "expired": false
+   }
+  ],
+  "cancels": [
+   {
+    "side": "P",
+    "strike": 649.0,
+    "t": 27051,
+    "lim": 0.6
+   },
+   {
+    "side": "P",
+    "strike": 649.0,
+    "t": 26636,
+    "lim": 0.66
+   }
+  ]
+ },
+ "2026-11-19": {
+  "fills": [
+   {
+    "side": "C",
+    "strike": 682,
+    "ct": 1,
+    "t0": 23453,
+    "t1": 23828,
+    "buy": 0.95,
+    "sell": 1.28,
+    "stop": null,
+    "pnl": 33.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 682,
+    "ct": 1,
+    "t0": 23494,
+    "t1": 23943,
+    "buy": 1.04,
+    "sell": 1.0,
+    "stop": 1.0,
+    "pnl": -4.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 682,
+    "ct": 2,
+    "t0": 24086,
+    "t1": 24154,
+    "buy": 1.0,
+    "sell": 1.04,
+    "stop": null,
+    "pnl": 8.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 682,
+    "ct": 2,
+    "t0": 24189,
+    "t1": 24323,
+    "buy": 1.2,
+    "sell": 1.07,
+    "stop": 1.08,
+    "pnl": -26.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 660,
+    "ct": 1,
+    "t0": 24376,
+    "t1": 24560,
+    "buy": 0.73,
+    "sell": 0.59,
+    "stop": 0.59,
+    "pnl": -14.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 660,
+    "ct": 2,
+    "t0": 24417,
+    "t1": 24560,
+    "buy": 0.79,
+    "sell": 0.59,
+    "stop": 0.59,
+    "pnl": -40.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 682,
+    "ct": 2,
+    "t0": 24589,
+    "t1": 24604,
+    "buy": 1.26,
+    "sell": 1.13,
+    "stop": 1.14,
+    "pnl": -26.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 687,
+    "ct": 1,
+    "t0": 24680,
+    "t1": 25800,
+    "buy": 0.46,
+    "sell": 0.2,
+    "stop": 0.2,
+    "pnl": -26.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 687,
+    "ct": 1,
+    "t0": 24679,
+    "t1": 25800,
+    "buy": 0.47,
+    "sell": 0.2,
+    "stop": 0.2,
+    "pnl": -27.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 659,
+    "ct": 1,
+    "t0": 25038,
+    "t1": 25079,
+    "buy": 0.9,
+    "sell": 0.75,
+    "stop": 0.75,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 659,
+    "ct": 1,
+    "t0": 25828,
+    "t1": 27178,
+    "buy": 0.75,
+    "sell": 3.73,
+    "stop": null,
+    "pnl": 298.0,
+    "expired": false
+   }
+  ],
+  "cancels": [
+   {
+    "side": "P",
+    "strike": 660,
+    "t": 24008,
+    "lim": 1.11
+   },
+   {
+    "side": "C",
+    "strike": 682,
+    "t": 24570,
+    "lim": 1.16
+   },
+   {
+    "side": "C",
+    "strike": 682,
+    "t": 24562,
+    "lim": 1.08
+   }
+  ]
+ },
+ "2026-11-20": {
+  "fills": [
+   {
+    "side": "C",
+    "strike": 655,
+    "ct": 1,
+    "t0": 23479,
+    "t1": 23589,
+    "buy": 0.76,
+    "sell": 0.61,
+    "stop": 0.61,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 652,
+    "ct": 1,
+    "t0": 23809,
+    "t1": 23912,
+    "buy": 0.85,
+    "sell": 0.7,
+    "stop": 0.7,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 616,
+    "ct": 1,
+    "t0": 23954,
+    "t1": 24165,
+    "buy": 0.76,
+    "sell": 0.61,
+    "stop": 0.61,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 619,
+    "ct": 1,
+    "t0": 24257,
+    "t1": 24310,
+    "buy": 1.05,
+    "sell": 0.9,
+    "stop": 0.91,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 650,
+    "ct": 1,
+    "t0": 24353,
+    "t1": 24364,
+    "buy": 0.86,
+    "sell": 0.8,
+    "stop": 0.82,
+    "pnl": -6.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 650,
+    "ct": 1,
+    "t0": 24376,
+    "t1": 24435,
+    "buy": 0.94,
+    "sell": 0.83,
+    "stop": 0.83,
+    "pnl": -11.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 650,
+    "ct": 1,
+    "t0": 24451,
+    "t1": 24563,
+    "buy": 0.91,
+    "sell": 0.83,
+    "stop": 0.83,
+    "pnl": -8.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 650,
+    "ct": 1,
+    "t0": 24685,
+    "t1": 25001,
+    "buy": 0.8,
+    "sell": 1.23,
+    "stop": 1.25,
+    "pnl": 43.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 650,
+    "ct": 2,
+    "t0": 24853,
+    "t1": 25280,
+    "buy": 1.01,
+    "sell": 1.235,
+    "stop": 1.24,
+    "pnl": 45.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 628,
+    "ct": 1,
+    "t0": 25312,
+    "t1": 25325,
+    "buy": 0.95,
+    "sell": 0.9,
+    "stop": 0.91,
+    "pnl": -5.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 628,
+    "ct": 1,
+    "t0": 25337,
+    "t1": 25423,
+    "buy": 1.01,
+    "sell": 0.94,
+    "stop": 0.93,
+    "pnl": -7.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 652,
+    "ct": 1,
+    "t0": 25501,
+    "t1": 25537,
+    "buy": 0.87,
+    "sell": 0.72,
+    "stop": 0.72,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 628,
+    "ct": 1,
+    "t0": 25544,
+    "t1": 25553,
+    "buy": 1.14,
+    "sell": 0.98,
+    "stop": 0.99,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 621,
+    "ct": 2,
+    "t0": 25673,
+    "t1": 26820,
+    "buy": 0.37,
+    "sell": 1.58,
+    "stop": 1.6,
+    "pnl": 242.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 603,
+    "ct": 1,
+    "t0": 27798,
+    "t1": 28184,
+    "buy": 0.18,
+    "sell": 0.15,
+    "stop": 0.15,
+    "pnl": -3.0,
+    "expired": false
+   }
+  ],
+  "cancels": [
+   {
+    "side": "C",
+    "strike": 650,
+    "t": 24676,
+    "lim": 0.8
+   },
+   {
+    "side": "C",
+    "strike": 650,
+    "t": 24672,
+    "lim": 0.74
+   },
+   {
+    "side": "C",
+    "strike": 650,
+    "t": 25221,
+    "lim": 1.45
+   }
+  ]
+ },
+ "2026-11-23": {
+  "fills": [
+   {
+    "side": "P",
+    "strike": 623,
+    "ct": 1,
+    "t0": 23769,
+    "t1": 23795,
+    "buy": 1.2,
+    "sell": 1.05,
+    "stop": 1.05,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 1,
+    "t0": 23808,
+    "t1": 23945,
+    "buy": 0.77,
+    "sell": 0.76,
+    "stop": null,
+    "pnl": -1.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 623,
+    "ct": 1,
+    "t0": 24053,
+    "t1": 24099,
+    "buy": 1.37,
+    "sell": 1.19,
+    "stop": 1.22,
+    "pnl": -18.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 1,
+    "t0": 24121,
+    "t1": 24199,
+    "buy": 0.7,
+    "sell": 0.54,
+    "stop": 0.55,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 2,
+    "t0": 24136,
+    "t1": 24199,
+    "buy": 0.79,
+    "sell": 0.54,
+    "stop": 0.55,
+    "pnl": -50.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 1,
+    "t0": 24221,
+    "t1": 24371,
+    "buy": 0.64,
+    "sell": 0.49,
+    "stop": 0.49,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 623,
+    "ct": 1,
+    "t0": 24571,
+    "t1": 24584,
+    "buy": 0.72,
+    "sell": 0.6,
+    "stop": 0.59,
+    "pnl": -12.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 1,
+    "t0": 24597,
+    "t1": 24680,
+    "buy": 0.56,
+    "sell": 0.41,
+    "stop": 0.41,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 2,
+    "t0": 24642,
+    "t1": 24680,
+    "buy": 0.59,
+    "sell": 0.4,
+    "stop": 0.41,
+    "pnl": -38.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 623,
+    "ct": 1,
+    "t0": 24682,
+    "t1": 24876,
+    "buy": 0.68,
+    "sell": 0.52,
+    "stop": 0.53,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 623,
+    "ct": 2,
+    "t0": 24733,
+    "t1": 24876,
+    "buy": 0.77,
+    "sell": 0.52,
+    "stop": 0.53,
+    "pnl": -50.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 1,
+    "t0": 24927,
+    "t1": 28493,
+    "buy": 0.55,
+    "sell": 0.27,
+    "stop": 0.27,
+    "pnl": -28.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 1,
+    "t0": 25204,
+    "t1": 28493,
+    "buy": 0.58,
+    "sell": 0.27,
+    "stop": 0.27,
+    "pnl": -31.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "ct": 1,
+    "t0": 25328,
+    "t1": 28493,
+    "buy": 0.7,
+    "sell": 0.27,
+    "stop": 0.27,
+    "pnl": -43.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 638,
+    "ct": 3,
+    "t0": 28522,
+    "t1": 29576,
+    "buy": 0.85,
+    "sell": 0.45,
+    "stop": 0.45,
+    "pnl": -120.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 658,
+    "ct": 1,
+    "t0": 30267,
+    "t1": 30717,
+    "buy": 1.28,
+    "sell": 0.91,
+    "stop": 0.93,
+    "pnl": -37.0,
+    "expired": false
+   }
+  ],
+  "cancels": [
+   {
+    "side": "P",
+    "strike": 626,
+    "t": 23727,
+    "lim": 1.42
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "t": 24018,
+    "lim": 0.68
+   },
+   {
+    "side": "C",
+    "strike": 665,
+    "t": 24399,
+    "lim": 0.67
+   },
+   {
+    "side": "P",
+    "strike": 623,
+    "t": 24564,
+    "lim": 0.77
+   }
+  ]
+ }
 }
