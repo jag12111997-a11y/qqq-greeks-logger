@@ -14,8 +14,8 @@ function csv(f) { if (!fs.existsSync(f)) return null; const L = fs.readFileSync(
 function quotes(day) { const out = [];
   for (const ses of ["am", "pm"]) { const dir = path.join(ROOT, "data", day, ses);
     const sep = [["C", "calls"], ["P", "puts"]].map(([s, n]) => [s, csv(path.join(dir, `qqq_greeks_${n}_${day}_${ses}.csv`))]);
-    if (sep.some(([, r]) => r)) { sep.forEach(([side, rows]) => (rows || []).forEach(r => { if (r.expiration !== day) return; out.push({ t: Date.parse(r.run_time.replace(" ", "T") + "Z") / 1000, side, strike: num(r.strike), bid: num(r.bid), ask: num(r.ask), iv: num(r.iv) }); })); continue; }
-    (csv(path.join(dir, `qqq_greeks_${day}_${ses}.csv`)) || []).forEach(r => { if (r.expiration !== day) return; const dl = num(r.delta); if (dl === null) return; out.push({ t: Date.parse(r.run_time.replace(" ", "T") + "Z") / 1000, side: dl >= 0 ? "C" : "P", strike: num(r.strike), bid: num(r.bid), ask: num(r.ask), iv: num(r.iv) }); }); }
+    if (sep.some(([, r]) => r)) { sep.forEach(([side, rows]) => (rows || []).forEach(r => { if (r.expiration !== day) return; out.push({ t: Date.parse(r.run_time.replace(" ", "T") + "Z") / 1000, side, strike: num(r.strike), bid: num(r.bid), ask: num(r.ask), iv: num(r.iv), spot: num(r.spot) }); })); continue; }
+    (csv(path.join(dir, `qqq_greeks_${day}_${ses}.csv`)) || []).forEach(r => { if (r.expiration !== day) return; const dl = num(r.delta); if (dl === null) return; out.push({ t: Date.parse(r.run_time.replace(" ", "T") + "Z") / 1000, side: dl >= 0 ? "C" : "P", strike: num(r.strike), bid: num(r.bid), ask: num(r.ask), iv: num(r.iv), spot: num(r.spot) }); }); }
   return out; }
 const T = rj(path.join(MD, "my_trades_list.json")) || [];
 const hix = rj(path.join(MD, "history", "index.json")), hdays = ((hix && hix.days) || []).filter(d => fs.existsSync(path.join(MD, "history", d + ".json")));
@@ -40,6 +40,21 @@ for (const day of Object.keys(byDay).sort()) {
   const yday = pc.length ? { high: Math.max(...pc.map(c => c.high)), low: Math.min(...pc.map(c => c.low)), close: pc[pc.length - 1].close } : {};
   out.days[day] = { weekday: new Date(day + "T12:00:00Z").toUTCString().slice(0, 3), candles, g8: lines[8], r304: lines[304], levels: lv, yday, map: { yday_high: yday.high, yday_low: yday.low, yday_close: yday.close }, vix: null, htf: null, seed, va: null };
   const Q = quotes(day), OQ = {}; Q.forEach(q => { if (!(q.bid > 0) || !(q.ask > 0)) return; const m = Math.floor((q.t - t0) / 60); if (m < -5 || m > N) return; (OQ[q.side + "|" + q.strike] = OQ[q.side + "|" + q.strike] || {})[m] = q; });
+  // Nov 22: frozen-quote repair. On some mornings the logger's free feed stops updating out-of-the-money strikes (Nov 19: same bid/ask
+  // all morning). A strike whose quotes never change is FROZEN: drop it, and use Alpaca's real 1-min trade bars instead when
+  // option_bars_backfill.py saved them (data/<day>/am/qqq_option_bars_<day>.csv; bid = ask = the bar's close, so it is a trade-price line).
+  const QSRC = {};
+  // a run of 8+ snapshots with the same bid/ask while QQQ moved $1+ is frozen: drop those minutes
+  Object.keys(OQ).forEach(k => { const ms = Object.keys(OQ[k]).map(Number).sort((a, b) => a - b); let i = 0;
+    while (i < ms.length) { let j = i; const key = q => OQ[k][q].bid + "/" + OQ[k][q].ask; while (j + 1 < ms.length && key(ms[j + 1]) === key(ms[i])) j++;
+      const run = ms.slice(i, j + 1), sp = run.map(m => OQ[k][m].spot).filter(x => x != null);
+      if (run.length >= 8 && sp.length && Math.max(...sp) - Math.min(...sp) >= 1.0) { run.forEach(m => delete OQ[k][m]); QSRC[k] = "frozen"; }
+      i = j + 1; }
+    if (!Object.keys(OQ[k]).length) delete OQ[k]; });
+  (csv(path.join(ROOT, "data", day, "am", `qqq_option_bars_${day}.csv`)) || []).forEach(r => { const k = (r.side === "call" ? "C" : "P") + "|" + Number(r.strike);
+    if (OQ[k] && !QSRC[k]) return; const m = Math.floor((Date.parse(r.t_utc) / 1000 - t0) / 60), c = num(r.close); if (m < -5 || m > N || !(c > 0)) return;
+    if (OQ[k] && OQ[k][m]) return;   // keep good logger quotes, fill only the frozen / missing minutes
+    (OQ[k] = OQ[k] || {})[m] = { t: Date.parse(r.t_utc) / 1000, side: k[0], strike: Number(r.strike), bid: c, ask: c, iv: null, bar: true }; if (QSRC[k] === "frozen" || !QSRC[k]) QSRC[k] = "bars"; });
   function series(side, K, a, z) { const o = OQ[side + "|" + Number(K)] || {}, s = [], e = { 11: null, 18: null }; let last = null;
     for (let m = -5; m <= z; m++) { if (o[m]) last = (o[m].bid + o[m].ask) / 2; if (last == null) continue; [11, 18].forEach(n => { const k = 2 / (n + 1); e[n] = e[n] === null ? last : k * last + (1 - k) * e[n]; });
       if (m >= a && o[m]) s.push([m, r2(last), r2(o[m].bid), r2(e[11]), r2(e[18])]); } return s; }
@@ -52,7 +67,7 @@ for (const day of Object.keys(byDay).sort()) {
     return { aMid: r2(aMid), iv: q0 ? q0.iv : null, best: best > -9 ? r2(best) : null, worst: worst < 9 ? r2(worst) : null, hit30: null, hit50: null, after: after > -9 ? r2(after) : null }; }
   const today = byDay[day].map(t => { const side = t.side === "call" ? "C" : "P", fill = Math.floor(t.m), exit = Math.min(Math.floor(t.exit_m), N - 1);
     return { src: "you", setup: "you", how: null, side: t.side, strike: t.strike, sig: fill, m: fill, exit_m: exit, paid: t.paid, sold: t.sold, why: t.why, per: t.per, ct: t.ct, pnl: t.pnl,
-      tin: t.tin, tout: t.tout, opt: series(side, t.strike, fill - 10, exit + 20), c30: c30(side, t.strike), path: pathOf(side, t.strike, fill, exit, t.paid), fake: null, box: null, level: null, levelPx: null }; });
+      tin: t.tin, tout: t.tout, qsrc: QSRC[side + "|" + Number(t.strike)] || "quotes", opt: series(side, t.strike, fill - 10, exit + 20), c30: c30(side, t.strike), path: pathOf(side, t.strike, fill, exit, t.paid), fake: null, box: null, level: null, levelPx: null }; });
   today.sort((a, b) => a.m - b.m || (a.tin < b.tin ? -1 : 1)).forEach((c, i) => { c.date = day; c.n = i + 1; out.cards.push(c); });
   out.daily.push({ date: day, weekday: out.days[day].weekday, card: r2(today.reduce((a, c) => a + c.pnl, 0)), cardN: today.length, card1: 0, opt: 0, optN: 0, forward: false });
 }

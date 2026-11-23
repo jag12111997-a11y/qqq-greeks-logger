@@ -440,7 +440,8 @@
       }
       var dot = function (m, v, col) { g.fillStyle = css('--panel'); g.beginPath(); g.arc(X(m), Y(v), 7, 0, 7); g.fill(); g.fillStyle = css(col); g.beginPath(); g.arc(X(m), Y(v), 5, 0, 7); g.fill(); };
       dot(c.m, entry, '--you'); if (c.why !== 'open' && sold != null && c.exit_m != null) dot(c.exit_m, sold, c.pnl > 0 ? '--win' : '--loss');
-      document.getElementById('rp-opt-n').textContent = pts.length ? 'Mid (white) · bid (grey) · option EMA 11 (red) / 18 (blue) · best bid while held ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—') + ' · worst ' + (P.worst != null ? (P.worst >= 0 ? '+' : '') + q2(P.worst) : '—') + ' a contract.' : 'No quotes were logged for this strike.';
+      var QN = c.qsrc === 'bars' ? ' The logger\u2019s quotes froze for this strike, so this line is Alpaca\u2019s real 1-min TRADE prices (no bid/ask; minutes with no trade are gaps).' : c.qsrc === 'frozen' ? ' The logger\u2019s quotes froze for this strike (same bid/ask while QQQ moved), so those minutes are hidden instead of drawing a fake line. Real trade prices are being backfilled.' : '';
+      document.getElementById('rp-opt-n').textContent = (pts.length ? 'Mid (white) · bid (grey) · option EMA 11 (red) / 18 (blue) · best bid while held ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—') + ' · worst ' + (P.worst != null ? (P.worst >= 0 ? '+' : '') + q2(P.worst) : '—') + ' a contract.' : 'No usable quotes for this strike.') + QN;
       drawOpt30(c);
     }
 
