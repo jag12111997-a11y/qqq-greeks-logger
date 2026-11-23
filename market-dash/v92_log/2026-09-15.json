@@ -110,7 +110,7 @@
   "baseline_usd": null
  },
  "shadow_duo": {
-  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
+  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) + volume layer (gap breaks / confirmed node bounces, since Nov 22) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
   "self_check": {
    "old": {
     "on": true,
@@ -119,6 +119,10 @@
    "new": {
     "on": true,
     "why": "last 10 active mornings $12/trade vs random $5/trade"
+   },
+   "vol": {
+    "on": true,
+    "why": "last 10 active mornings $6/trade vs random $-0/trade"
    }
   },
   "legs": [],
@@ -133,5 +137,11 @@
    "combo": 0,
    "both": 0
   }
+ },
+ "shadow_vol": {
+  "rule": "volume layer (paper): GAP BREAK = 1-min close $0.25 through one of the bot's weekly thin gaps → buy the break · NODE BOUNCE = touch a volume node / POC, then 30% of R back within 10 min → buy the bounce · max 2 each a morning, not when v11 already bought that side within 10 min · v11 contract + exits",
+  "R": 0.58,
+  "trades": [],
+  "usd": 0
  }
 }

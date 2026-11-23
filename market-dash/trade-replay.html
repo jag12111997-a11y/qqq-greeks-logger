@@ -140,7 +140,7 @@
     var mmdd = function (d) { return new Date(d + 'T12:00:00Z').toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }); };
     var LAB = { trap: 'Trap', gap: 'Gap-and-go', fw: 'Fade the week', vb: 'VIX bounce', 'failed poke (B)': 'Failed poke', fp: 'Failed poke', flip: 'Flip',
       'box scalp': 'Box', 'Playbook home run': 'Playbook', 'Tulip v3.2': 'Tulip', 'turn entry': 'Turn entry', sniper: 'Sniper', 'calls checkpoint': 'Calls checkpoint',
-      orb: 'Opening-range break', orbfade: 'Failed break, faded', ext: 'New-extreme break', pop: 'Pop', add: 'Add +1', lotto: 'Lotto' };
+      orb: 'Opening-range break', orbfade: 'Failed break, faded', ext: 'New-extreme break', pop: 'Pop', add: 'Add +1', lotto: 'Lotto', gapbreak: 'Gap break', nodebounce: 'Node bounce' };
     var lab = function (c) { var s = c.setup || ''; if (s.indexOf('re-') === 0) return 'Re-entry (' + (LAB[s.slice(3)] || s.slice(3)) + ')'; return LAB[s] || s; };
     var WHY = { 'sold with the main trade': 'with the main trade', stop: 'stopped', 'trail (3 ticks)': 'trail', trail: 'trail', 'time exit': 'time exit', time: 'time exit', target: 'target', 'broke box': 'broke the box', crossback: 'back through red 304',
       'hit 304': 'reached red 304', 'gave way to a v9.2 setup': 'gave way', open: 'open', yield: 'gave way' };
@@ -187,7 +187,7 @@
     document.querySelectorAll('#rp-lines .lchip').forEach(function (b) { b.addEventListener('click', function () { LT[b.dataset.k] = !LT[b.dataset.k]; b.setAttribute('aria-pressed', LT[b.dataset.k]); try { localStorage.setItem('rp-lines', JSON.stringify(LT)); } catch (e) {} drawMain(); }); });
 
     // ---------- filters + strip (newest month first) ----------
-    var FILT = [['all', 'All'], ['win', 'Wins'], ['loss', 'Losses'], ['open', 'Open now'], ['card', 'Card'], ['option', 'Options'], ['newbot', 'New bot + add-ons'], ['Opening-range break', 'Opening-range break'], ['Failed break, faded', 'Failed break, faded'], ['New-extreme break', 'New-extreme break'], ['Pop', 'Pop'], ['Add +1', 'Add +1'], ['Lotto', 'Lotto'], ['Trap', 'Trap'], ['Gap-and-go', 'Gap-and-go'], ['Fade the week', 'Fade the week'],
+    var FILT = [['all', 'All'], ['win', 'Wins'], ['loss', 'Losses'], ['open', 'Open now'], ['card', 'Card'], ['option', 'Options'], ['newbot', 'New bot + add-ons'], ['Opening-range break', 'Opening-range break'], ['Failed break, faded', 'Failed break, faded'], ['New-extreme break', 'New-extreme break'], ['Pop', 'Pop'], ['Add +1', 'Add +1'], ['Lotto', 'Lotto'], ['Gap break', 'Gap break (volume)'], ['Node bounce', 'Node bounce (volume)'], ['Trap', 'Trap'], ['Gap-and-go', 'Gap-and-go'], ['Fade the week', 'Fade the week'],
       ['VIX bounce', 'VIX bounce'], ['Failed poke', 'Failed poke'], ['flipre', 'Flip / re-entry'], ['Box', 'Box'], ['Playbook', 'Playbook'], ['Tulip', 'Tulip'], ['Turn entry', 'Turn entry'], ['Sniper', 'Sniper'],
       ['Calls checkpoint', 'Calls checkpoint'], ['flipped', 'Flipped options'], ['stopped', 'Stopped']];
     var filter = 'all';
@@ -200,7 +200,7 @@
     }
     function tagsOf(c) { var t = [];
       t.push('<span class="tag ' + (c.src === 'option' ? 'opt' : '') + '">' + esc(lab(c)) + '</span>');
-      if (c.src === 'newbot') t.push('<span class="tag nb">' + (c.kind === 'trade' ? 'new bot (v11)' : (c.lane === 'old' ? 'on an old-bot trade' : 'on a new-bot trade')) + '</span>');
+      if (c.src === 'newbot') t.push('<span class="tag nb">' + (c.kind === 'trade' ? (c.lane === 'vol' ? 'volume layer' : 'new bot (v11)') : (c.lane === 'old' ? 'on an old-bot trade' : c.lane === 'vol' ? 'on a volume-layer trade' : 'on a new-bot trade')) + '</span>');
       if (c.src === 'option') t.push('<span class="tag opt">' + (c.how === 'flip' ? 'option · flipped' : c.how === 'agree' ? 'option · with card' : 'option · box first') + '</span>');
       if (c.ct > 1) t.push('<span class="tag">' + c.ct + '×</span>');
       t.push('<span class="tag ' + (c.why === 'open' ? 'live' : c.why === 'stop' ? 'bad' : c.pnl > 0 ? 'ok' : 'warn') + '">' + esc(c.why === 'open' ? 'open now' : why(c)) + '</span>');
@@ -340,6 +340,8 @@
           orbfade: 'Failed opening-range break: price broke out, then closed back inside within 10 min → bought the other way (the master switch said fade)',
           ext: 'New-extreme break: a level breaks to a new day high/low once 40–100% of the implied move is used',
           pop: 'Pop: 15% of the 10-day range in 3 min, with the 20-min candle (only when GARCH > 22%)',
+          gapbreak: 'Gap break (volume layer): a 1-min close $0.25 through one of the bot\'s weekly thin volume gaps → bought the break',
+          nodebounce: 'Node bounce (volume layer): touched a weekly volume node / POC, then moved 30% of R back the way it came within 10 min → bought the bounce',
           add: 'Add +1: the ' + (c.lane === 'old' ? 'old bot\'s' : 'new bot\'s') + ' trade reached +$0.30 → bought 1 more of the same contract, sold with it',
           lotto: 'Momentum lotto: the ' + (c.lane === 'old' ? 'old bot\'s' : 'new bot\'s') + ' trade reached +$0.30 → the cheapest same-side contract asking $0.30–0.80, sold with the main trade' };
         ok(true, NBR[c.setup] || lab(c), 'paper only · combo layer (Nov 22)');

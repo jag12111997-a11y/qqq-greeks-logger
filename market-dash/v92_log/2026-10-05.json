@@ -279,7 +279,7 @@
   "baseline_usd": -44.8
  },
  "shadow_duo": {
-  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
+  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) + volume layer (gap breaks / confirmed node bounces, since Nov 22) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
   "self_check": {
    "old": {
     "on": true,
@@ -288,6 +288,10 @@
    "new": {
     "on": true,
     "why": "last 10 active mornings $53/trade vs random $-1/trade"
+   },
+   "vol": {
+    "on": true,
+    "why": "last 10 active mornings $2/trade vs random $-4/trade"
    }
   },
   "legs": [
@@ -332,18 +336,107 @@
     "why": "stop",
     "usd": -21.3,
     "setup": "new bot (v11) · opening-range break"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "nodebounce",
+    "side": "put",
+    "strike": 752,
+    "filled": "6:45",
+    "exit": "7:05",
+    "paid": 1.25,
+    "sold": 1.67,
+    "why": "trail",
+    "usd": 40.7,
+    "setup": "volume layer · confirmed bounce off volume node 753.25"
+   },
+   {
+    "lane": "vol",
+    "kind": "add",
+    "rule": "add",
+    "side": "put",
+    "strike": 752,
+    "filled": "6:47",
+    "exit": "7:05",
+    "paid": 1.67,
+    "sold": 1.67,
+    "usd": -1.3,
+    "setup": "volume layer · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "vol",
+    "kind": "lotto",
+    "rule": "lotto",
+    "side": "put",
+    "strike": 747,
+    "filled": "6:47",
+    "exit": "7:05",
+    "paid": 0.43,
+    "sold": 0.36,
+    "usd": -8.3,
+    "setup": "volume layer · LOTTO $0.30–0.80 at +$0.30"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "nodebounce",
+    "side": "put",
+    "strike": 751,
+    "filled": "7:17",
+    "exit": "7:24",
+    "paid": 0.78,
+    "sold": 0.58,
+    "why": "stop",
+    "usd": -21.3,
+    "setup": "volume layer · confirmed bounce off volume node 753.25"
    }
   ],
   "sat_out": [],
   "usd": {
-   "combo": -94.9,
-   "lotto": -94.9,
-   "add": -94.9,
-   "both": -94.9
+   "combo": -75.5,
+   "lotto": -83.8,
+   "add": -76.8,
+   "both": -85.1
   },
   "max_cash": {
    "combo": 196,
-   "both": 196
+   "both": 335
   }
+ },
+ "shadow_vol": {
+  "rule": "volume layer (paper): GAP BREAK = 1-min close $0.25 through one of the bot's weekly thin gaps → buy the break · NODE BOUNCE = touch a volume node / POC, then 30% of R back within 10 min → buy the bounce · max 2 each a morning, not when v11 already bought that side within 10 min · v11 contract + exits",
+  "R": 0.68,
+  "trades": [
+   {
+    "rule": "nodebounce",
+    "setup": "confirmed bounce off volume node 753.25",
+    "side": "put",
+    "signal": "6:44",
+    "filled": "6:45",
+    "strike": 752,
+    "paid": 1.25,
+    "exit": "7:05",
+    "sold": 1.67,
+    "why": "trail",
+    "usd": 40.7,
+    "best": 0.86
+   },
+   {
+    "rule": "nodebounce",
+    "setup": "confirmed bounce off volume node 753.25",
+    "side": "put",
+    "signal": "7:17",
+    "filled": "7:17",
+    "strike": 751,
+    "paid": 0.78,
+    "exit": "7:24",
+    "sold": 0.58,
+    "why": "stop",
+    "usd": -21.3,
+    "best": 0
+   }
+  ],
+  "usd": 19.4
  }
 }

@@ -168,6 +168,12 @@
     if (vixChg >= 2.5) return { mode: "fade", name: "calm vol bid" };
     return { mode: "fade", name: "vol stall" };
   }
-  var api = { runDay: runDay, regime: regime, CFG: CFG };
+  // Nov 22: one trade at minute m on side s with the layer's contract + exits (used by the volume layer, volume_paper_log.js)
+  function tradeAt(D, s, m) {
+    var B = bars(D), p = pick(D, s, m); if (!p) return null;
+    var r = manage(D, B, s, p.K, p.j, p.x[3]);
+    return { side: s, m: m, mf: p.j, K: Number(p.K), paid: p.x[3], out: r.out, sold: r.px, why: r.why, hw: r.hw, usd: Math.round(((r.px - p.x[3]) * 100 - CFG.FEE) * 10) / 10 };
+  }
+  var api = { runDay: runDay, regime: regime, CFG: CFG, tradeAt: tradeAt, bars: bars };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.V10 = api;
 })(this);

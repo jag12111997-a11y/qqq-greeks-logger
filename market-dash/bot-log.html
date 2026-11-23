@@ -17,7 +17,7 @@ th.grp{color:var(--gold);text-align:center;border-bottom:1px solid var(--line)}
 .pos{color:var(--up)}.neg{color:var(--down)}.dim{color:var(--mute)}
 .tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:10.5px;margin-right:6px;border:1px solid var(--line)}
 .L-card{color:#ffd166;border-color:rgba(255,209,102,.4)}.L-v95{color:#ff9a3c;border-color:rgba(255,154,60,.4)}.L-opt{color:#3fd3ff;border-color:rgba(63,211,255,.4)}
-.L-hiv{color:#ff7ac8;border-color:rgba(255,122,200,.4)}.L-bf{color:#7cff6b;border-color:rgba(124,255,107,.4)}.L-v10{color:#ffffff;border-color:rgba(255,255,255,.5);background:rgba(255,43,224,.18)}.L-v11{color:#0c0710;border-color:#f5c542;background:#f5c542}.L-duo{color:#0c0710;border-color:#4df0ff;background:#4df0ff}
+.L-hiv{color:#ff7ac8;border-color:rgba(255,122,200,.4)}.L-bf{color:#7cff6b;border-color:rgba(124,255,107,.4)}.L-v10{color:#ffffff;border-color:rgba(255,255,255,.5);background:rgba(255,43,224,.18)}.L-v11{color:#0c0710;border-color:#f5c542;background:#f5c542}.L-duo{color:#0c0710;border-color:#4df0ff;background:#4df0ff}.L-vol{color:#0c0710;border-color:#b388ff;background:#b388ff}
 .day{border:1px solid var(--line);border-radius:8px;background:var(--panel);margin:6px 0;padding:8px 10px}
 .day .hd{display:flex;justify-content:space-between;gap:10px}
 .day .hd b{font-weight:600}
@@ -37,7 +37,8 @@ var LAYERS=[
   {k:'bf',name:'Big-fish layer',cls:'L-bf',trades:function(d){return (d.shadow_bigfish&&d.shadow_bigfish.trades)||[];},usd:function(t){return t.usd;}},
   {k:'v10',name:'v10 auction',cls:'L-v10',trades:function(d){return (d.shadow_v10&&d.shadow_v10.trades)||[];},usd:function(t){return t.usd;}},
   {k:'v11',name:'v11 regime',cls:'L-v11',trades:function(d){return (d.shadow_v11&&d.shadow_v11.trades)||[];},usd:function(t){return t.usd;}},
-  {k:'combo',name:'Combo v9.2+v11 +add +lotto',cls:'L-duo',trades:function(d){return (d.shadow_duo&&d.shadow_duo.legs)||[];},usd:function(t){return t.usd;}}];
+  {k:'vol',name:'Volume layer',cls:'L-vol',trades:function(d){return (d.shadow_vol&&d.shadow_vol.trades)||[];},usd:function(t){return t.usd;}},
+  {k:'combo',name:'Combo v9.2+v11+vol +add +lotto',cls:'L-duo',trades:function(d){return (d.shadow_duo&&d.shadow_duo.legs)||[];},usd:function(t){return t.usd;}}];
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function usd(v){v=Math.round(v);return (v<0?'−$':'+$')+Math.abs(v).toLocaleString();}
 function cl(v){return v>0.5?'pos':v<-0.5?'neg':'dim';}
@@ -86,7 +87,7 @@ function render(ix,D,fwdFrom){
   var lastDuo=null;D.forEach(function(d){if(d.shadow_duo)lastDuo=d.shadow_duo;});
   function sc(x){return x?(x.on?'<span class="pos">ON</span>':'<span class="neg">SITTING OUT</span>')+' <span class="dim">('+esc(x.why)+')</span>':'—';}
   function four(o){return 'combo <span class="'+cl(o.combo)+'">'+usd(o.combo)+'</span> · +lotto <span class="'+cl(o.lotto)+'">'+usd(o.lotto)+'</span> · +add <span class="'+cl(o.add)+'">'+usd(o.add)+'</span> · +both <span class="'+cl(o.both)+'">'+usd(o.both)+'</span>';}
-  if(dB.n||dL.n) h+='<div class="verdict"><span class="tag L-duo">Combo</span>old bot (v9.2) + new bot (v11) every morning, opposite sides allowed; when a trade hits +$0.30 it ADDS +1 contract and buys a $0.30–0.80 LOTTO, both sold with the main trade (the table row = +both).<br>Built Nov 22 ('+dB.n+' mornings, in-sample): '+four(dB)+' · most cash at once '+usd(dB.cash).replace('+','')+'<br>Forward from Mon Nov 23 ('+dL.n+' mornings): '+(dL.n?four(dL):'<span class="dim">starts Monday</span>')+'<br>Self-check now — old bot: '+sc(lastDuo&&lastDuo.self_check.old)+' · new bot: '+sc(lastDuo&&lastDuo.self_check.new)+'</div>';
+  if(dB.n||dL.n) h+='<div class="verdict"><span class="tag L-duo">Combo</span>old bot (v9.2) + new bot (v11) + volume layer (gap breaks + confirmed node bounces, added Nov 22) every morning, opposite sides allowed; when a trade hits +$0.30 it ADDS +1 contract and buys a $0.30–0.80 LOTTO, both sold with the main trade (the table row = +both).<br>Built Nov 22 ('+dB.n+' mornings, in-sample): '+four(dB)+' · most cash at once '+usd(dB.cash).replace('+','')+'<br>Forward from Mon Nov 23 ('+dL.n+' mornings): '+(dL.n?four(dL):'<span class="dim">starts Monday</span>')+'<br>Self-check now — old bot: '+sc(lastDuo&&lastDuo.self_check.old)+' · new bot: '+sc(lastDuo&&lastDuo.self_check.new)+' · volume layer: '+sc(lastDuo&&lastDuo.self_check.vol)+'</div>';
   if(vB.n||vL.n) h+='<div class="verdict"><span class="tag L-v10">v10 auction</span>vs random entries with the same exits · backtest <span class="'+cl(vB.v)+'">'+usd(vB.v)+'</span> vs random <span class="'+cl(vB.b)+'">'+usd(vB.b)+'</span> ('+vB.n+' mornings) · live <span class="'+cl(vL.v)+'">'+usd(vL.v)+'</span> vs random <span class="'+cl(vL.b)+'">'+usd(vL.b)+'</span> ('+vL.n+' mornings). <b>Built Nov 21 from these November mornings, so they are not a fair test</b> — its real forward test starts Mon Nov 23. Paper only — the card does not trade it.</div>';
   // live log
   function dayBox(d){

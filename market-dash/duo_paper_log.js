@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* 3v3 COMBO ("duo") — nightly paper log (added Nov 22, 2026). PAPER ONLY — nothing here places orders.
-   Combo = the old bot (v9.2 card trades) + the new bot (v11 trades), both every morning, opposite sides allowed.
+   Combo = the old bot (v9.2 card trades) + the new bot (v11 trades) + the volume layer (shadow_vol, added Nov 22), every morning,
+   opposite sides allowed.
    Add-ons, both fired when a trade first gets to +$0.30 (bid − paid) and both sold at the main trade's exit:
      ADD   = +1 more of the same contract at the ask
      LOTTO = the cheapest same-side 0DTE asking $0.30–0.80 (held max 45 min)
@@ -65,25 +66,25 @@ function sellWithMain(O, s, K, j0, mainExit) {
 }
 const r1 = v => Math.round(v * 10) / 10;
 const files = fs.readdirSync(OUT).filter(f => /^\d{4}-\d\d-\d\d\.json$/.test(f)).sort();
-const H = { old: [], new: [] }, written = [], idx = {};
+const H = { old: [], new: [], vol: [] }, written = [], idx = {}, LANES = ["old", "new", "vol"];
 for (const f of files) {
   const p = path.join(OUT, f), doc = readJSON(p); if (!doc) continue;
   const day = doc.date || f.slice(0, 10), v11 = doc.shadow_v11; if (!v11) continue;
-  const lanes = { old: (doc.trades || []).filter(t => t.filled), new: (v11.trades || []).filter(t => t.filled) };
+  const lanes = { old: (doc.trades || []).filter(t => t.filled), new: (v11.trades || []).filter(t => t.filled), vol: ((doc.shadow_vol || {}).trades || []).filter(t => t.filled) };
   const rnd = v11.baseline_usd || 0;
   // self-check, from earlier mornings only
   const on = {};
-  ["old", "new"].forEach(k => {
+  LANES.forEach(k => {
     const act = H[k].filter(h => h.n > 0).slice(-WIN);
     if (act.length < MIN_ACTIVE) { on[k] = { on: true, why: "warming up (" + act.length + " of " + MIN_ACTIVE + " active mornings)" }; return; }
     const lane = act.reduce((a, h) => a + h.usd, 0) / act.reduce((a, h) => a + h.n, 0), rr = act.reduce((a, h) => a + h.rnd, 0) / (3 * act.length);
     on[k] = { on: lane >= rr, why: "last " + act.length + " active mornings $" + lane.toFixed(0) + "/trade vs random $" + rr.toFixed(0) + "/trade" };
   });
-  ["old", "new"].forEach(k => H[k].push({ usd: lanes[k].reduce((a, t) => a + (t.usd || 0), 0), n: lanes[k].length, rnd }));
+  LANES.forEach(k => H[k].push({ usd: lanes[k].reduce((a, t) => a + (t.usd || 0), 0), n: lanes[k].length, rnd }));
   const O = optBook(day), legs = [], sat = [];
-  ["old", "new"].forEach(k => lanes[k].forEach(t => {
+  LANES.forEach(k => lanes[k].forEach(t => {
     const s = t.side === "call" ? "C" : "P", T = { s, K: String(t.strike), a: toM(t.filled), b: t.exit ? toM(t.exit) : 146, paid: t.paid };
-    const name = k === "old" ? "old bot (v9.2)" : "new bot (v11)";
+    const name = k === "old" ? "old bot (v9.2)" : k === "vol" ? "volume layer" : "new bot (v11)";
     const base = { lane: k, kind: "trade", rule: t.rule || t.setup || "", side: t.side, strike: t.strike, filled: t.filled, exit: t.exit, paid: t.paid, sold: t.sold, why: t.why, usd: t.usd, setup: name + " · " + (t.setup || t.rule || "") };
     if (!on[k].on) { sat.push(base); return; }
     legs.push(base);
@@ -97,7 +98,7 @@ for (const f of files) {
   const sum = F => r1(legs.filter(F).reduce((a, l) => a + l.usd, 0));
   const cash = F => { let mx = 0; for (let m = 0; m < 150; m++) { let c = 0; legs.filter(F).forEach(l => { const a = toM(l.filled), b = l.exit ? toM(l.exit) : 146; if (a <= m && m < b) c += l.paid * 100; }); mx = Math.max(mx, c); } return Math.round(mx); };
   const duo = {
-    rule: "COMBO (paper): old bot (v9.2 card) + new bot (v11) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
+    rule: "COMBO (paper): old bot (v9.2 card) + new bot (v11) + volume layer (gap breaks / confirmed node bounces, since Nov 22) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
     self_check: on,
     legs, sat_out: sat,
     usd: { combo: sum(l => l.kind === "trade"), lotto: sum(l => l.kind !== "add"), add: sum(l => l.kind !== "lotto"), both: sum(() => true) },

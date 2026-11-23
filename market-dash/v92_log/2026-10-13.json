@@ -200,7 +200,7 @@
   "baseline_usd": -35.2
  },
  "shadow_duo": {
-  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
+  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) + volume layer (gap breaks / confirmed node bounces, since Nov 22) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
   "self_check": {
    "old": {
     "on": true,
@@ -209,6 +209,10 @@
    "new": {
     "on": true,
     "why": "last 10 active mornings $6/trade vs random $-4/trade"
+   },
+   "vol": {
+    "on": true,
+    "why": "last 10 active mornings $1/trade vs random $-6/trade"
    }
   },
   "legs": [
@@ -225,18 +229,135 @@
     "why": "stop",
     "usd": -35.3,
     "setup": "new bot (v11) · failed opening-range break, faded · ORH"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "gapbreak",
+    "side": "call",
+    "strike": 741,
+    "filled": "6:33",
+    "exit": "7:14",
+    "paid": 0.9,
+    "sold": 2.85,
+    "why": "trail",
+    "usd": 193.7,
+    "setup": "volume layer · broke through thin gap 739.50"
+   },
+   {
+    "lane": "vol",
+    "kind": "add",
+    "rule": "add",
+    "side": "call",
+    "strike": 741,
+    "filled": "6:35",
+    "exit": "7:14",
+    "paid": 1.34,
+    "sold": 2.85,
+    "usd": 149.7,
+    "setup": "volume layer · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "vol",
+    "kind": "lotto",
+    "rule": "lotto",
+    "side": "call",
+    "strike": 744,
+    "filled": "6:35",
+    "exit": "7:14",
+    "paid": 0.42,
+    "sold": 1.05,
+    "usd": 61.7,
+    "setup": "volume layer · LOTTO $0.30–0.80 at +$0.30"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "nodebounce",
+    "side": "call",
+    "strike": 743,
+    "filled": "7:55",
+    "exit": "8:22",
+    "paid": 0.54,
+    "sold": 0.37,
+    "why": "stop",
+    "usd": -18.3,
+    "setup": "volume layer · confirmed bounce off volume POC 741.00"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "nodebounce",
+    "side": "call",
+    "strike": 742,
+    "filled": "8:12",
+    "exit": "8:25",
+    "paid": 0.85,
+    "sold": 0.63,
+    "why": "stop",
+    "usd": -23.3,
+    "setup": "volume layer · confirmed bounce off volume POC 741.00"
    }
   ],
   "sat_out": [],
   "usd": {
-   "combo": -35.3,
-   "lotto": -35.3,
-   "add": -35.3,
-   "both": -35.3
+   "combo": 116.8,
+   "lotto": 178.5,
+   "add": 266.5,
+   "both": 328.2
   },
   "max_cash": {
-   "combo": 108,
-   "both": 108
+   "combo": 198,
+   "both": 374
   }
+ },
+ "shadow_vol": {
+  "rule": "volume layer (paper): GAP BREAK = 1-min close $0.25 through one of the bot's weekly thin gaps → buy the break · NODE BOUNCE = touch a volume node / POC, then 30% of R back within 10 min → buy the bounce · max 2 each a morning, not when v11 already bought that side within 10 min · v11 contract + exits",
+  "R": 0.53,
+  "trades": [
+   {
+    "rule": "gapbreak",
+    "setup": "broke through thin gap 739.50",
+    "side": "call",
+    "signal": "6:33",
+    "filled": "6:33",
+    "strike": 741,
+    "paid": 0.9,
+    "exit": "7:14",
+    "sold": 2.85,
+    "why": "trail",
+    "usd": 193.7,
+    "best": 2.68
+   },
+   {
+    "rule": "nodebounce",
+    "setup": "confirmed bounce off volume POC 741.00",
+    "side": "call",
+    "signal": "7:55",
+    "filled": "7:55",
+    "strike": 743,
+    "paid": 0.54,
+    "exit": "8:22",
+    "sold": 0.37,
+    "why": "stop",
+    "usd": -18.3,
+    "best": 0.06
+   },
+   {
+    "rule": "nodebounce",
+    "setup": "confirmed bounce off volume POC 741.00",
+    "side": "call",
+    "signal": "8:12",
+    "filled": "8:12",
+    "strike": 742,
+    "paid": 0.85,
+    "exit": "8:25",
+    "sold": 0.63,
+    "why": "stop",
+    "usd": -23.3,
+    "best": 0.15
+   }
+  ],
+  "usd": 152.1
  }
 }

@@ -274,7 +274,7 @@
   "baseline_usd": 31.2
  },
  "shadow_duo": {
-  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
+  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) + volume layer (gap breaks / confirmed node bounces, since Nov 22) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
   "self_check": {
    "old": {
     "on": true,
@@ -283,6 +283,10 @@
    "new": {
     "on": true,
     "why": "last 10 active mornings $53/trade vs random $1/trade"
+   },
+   "vol": {
+    "on": false,
+    "why": "last 10 active mornings $-7/trade vs random $-1/trade"
    }
   },
   "legs": [
@@ -355,7 +359,64 @@
     "setup": "new bot (v11) · opening-range break"
    }
   ],
-  "sat_out": [],
+  "sat_out": [
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "gapbreak",
+    "side": "put",
+    "strike": 736,
+    "filled": "7:04",
+    "exit": "7:17",
+    "paid": 0.94,
+    "sold": 1.41,
+    "why": "trail",
+    "usd": 45.7,
+    "setup": "volume layer · broke through thin gap 737.75"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "nodebounce",
+    "side": "call",
+    "strike": 738,
+    "filled": "7:13",
+    "exit": "7:29",
+    "paid": 0.87,
+    "sold": 0.8,
+    "why": "trail",
+    "usd": -8.3,
+    "setup": "volume layer · confirmed bounce off volume node 735.50"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "gapbreak",
+    "side": "call",
+    "strike": 735,
+    "filled": "8:04",
+    "exit": "8:17",
+    "paid": 1.08,
+    "sold": 1.07,
+    "why": "trail",
+    "usd": -2.3,
+    "setup": "volume layer · broke through thin gap 733.50"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "nodebounce",
+    "side": "put",
+    "strike": 734,
+    "filled": "8:40",
+    "exit": "8:45",
+    "paid": 0.83,
+    "sold": 1.32,
+    "why": "time",
+    "usd": 47.7,
+    "setup": "volume layer · confirmed bounce off volume node 735.50"
+   }
+  ],
   "usd": {
    "combo": 155.1,
    "lotto": 194.8,
@@ -366,5 +427,68 @@
    "combo": 237,
    "both": 355
   }
+ },
+ "shadow_vol": {
+  "rule": "volume layer (paper): GAP BREAK = 1-min close $0.25 through one of the bot's weekly thin gaps → buy the break · NODE BOUNCE = touch a volume node / POC, then 30% of R back within 10 min → buy the bounce · max 2 each a morning, not when v11 already bought that side within 10 min · v11 contract + exits",
+  "R": 0.59,
+  "trades": [
+   {
+    "rule": "gapbreak",
+    "setup": "broke through thin gap 737.75",
+    "side": "put",
+    "signal": "7:04",
+    "filled": "7:04",
+    "strike": 736,
+    "paid": 0.94,
+    "exit": "7:17",
+    "sold": 1.41,
+    "why": "trail",
+    "usd": 45.7,
+    "best": 0.81
+   },
+   {
+    "rule": "nodebounce",
+    "setup": "confirmed bounce off volume node 735.50",
+    "side": "call",
+    "signal": "7:13",
+    "filled": "7:13",
+    "strike": 738,
+    "paid": 0.87,
+    "exit": "7:29",
+    "sold": 0.8,
+    "why": "trail",
+    "usd": -8.3,
+    "best": 0.37
+   },
+   {
+    "rule": "gapbreak",
+    "setup": "broke through thin gap 733.50",
+    "side": "call",
+    "signal": "8:03",
+    "filled": "8:04",
+    "strike": 735,
+    "paid": 1.08,
+    "exit": "8:17",
+    "sold": 1.07,
+    "why": "trail",
+    "usd": -2.3,
+    "best": 0.43
+   },
+   {
+    "rule": "nodebounce",
+    "setup": "confirmed bounce off volume node 735.50",
+    "side": "put",
+    "signal": "8:40",
+    "filled": "8:40",
+    "strike": 734,
+    "paid": 0.83,
+    "exit": "8:45",
+    "sold": 1.32,
+    "why": "time",
+    "usd": 47.7,
+    "best": 0.53
+   }
+  ],
+  "usd": 82.8
  }
 }

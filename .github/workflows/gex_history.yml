@@ -77,6 +77,7 @@ jobs:
           node market-dash/night_fetch.js > /tmp/night_written.txt || true   # high-IV layer: night-before numbers (relay, read-only)
           node market-dash/v92_paper_log.js > /tmp/v92_written.txt || true
           node market-dash/v10_paper_log.js >> /tmp/v92_written.txt || true   # v10 auction layer (paper only): adds shadow_v10 to the new day
+          node market-dash/volume_paper_log.js >> /tmp/v92_written.txt || true   # volume layer (paper only): gap breaks + confirmed node bounces off the bot's weekly volume levels -> shadow_vol (before the combo)
           node market-dash/duo_paper_log.js >> /tmp/v92_written.txt || true   # combo (paper only): old bot + v11 + add/lotto + self-check -> shadow_duo
           node market-dash/vprofile_build.js >> /tmp/v92_written.txt || true   # volume profile saved nightly (1-min candles, $0.25) + volume at your levels -> vprofile.json + bot_levels.json (run before the levels scorer)
           node market-dash/levels_paper_log.js >> /tmp/v92_written.txt || true   # your levels (paper only): weekly volume-profile lines scored vs site levels + random -> levels_log.json
