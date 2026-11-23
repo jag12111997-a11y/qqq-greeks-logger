@@ -142,6 +142,33 @@ def score_day(date, fills, cancels, note):
     held = [f for f in wins if f["t1"] - f["t0"] >= 480]
     chk("Held a winner (8+ min)", bool(held) if wins else False,
         ("held %s for %d min, %+.0f" % (hm(held[0]["t0"]), (held[0]["t1"] - held[0]["t0"]) // 60, held[0]["pnl"])) if held else ("winners cut early" if wins else "no winners"))
+    # Nov 23: sat out on time — once you're up $60+ and the 20-min candles have flipped colour (the last two FINISHED candles are opposite
+    # colours = the tape is rotating, not trending), stop. Agreed Nov 19 from Nov 12 / Nov 18: the money came early, half went back in the chop.
+    # The stop moment = the first trade exit (or candle close) where both are true; any entry after it fails the check.
+    def col(kk):
+        a, b = bars.get(kk * 20), next((bars[j] for j in range(kk * 20 + 19, kk * 20 - 1, -1) if j in bars), None)
+        return None if (kk < 0 or not a or not b) else (1 if b[1] > a[0] else -1)
+    def flipped(sec):                       # last two finished 20-min candles at this moment are opposite colours
+        k = int((sec - 6.5 * 3600) // 1200)
+        a, b = col(k - 2), col(k - 1)
+        return a is not None and b is not None and a != b
+    R2 = "Sat out on time (+$60 on a flipping tape)"
+    if not bars:
+        chk(R2, None, "no QQQ bars yet")
+    else:
+        ev = sorted([(f["t1"], f["pnl"]) for f in fills] + [(6.5 * 3600 + 1200 * k, 0.0) for k in range(2, 20)])   # exits + every candle close
+        cum, hit = 0.0, None
+        for t, p in ev:
+            cum += p
+            if cum >= 60 and flipped(t) and t < 9 * 3600:
+                hit = (t, cum)
+                break
+        if not hit:
+            chk(R2, None, "never up $60 on a flipping tape")
+        else:
+            after = [g for g in fills if g["t0"] > hit[0]]
+            chk(R2, not after, ("up %+.0f at %s with the candles flipping, then %d more trade%s (%+.0f)" % (hit[1], hm(hit[0]), len(after), "" if len(after) == 1 else "s", sum(g["pnl"] for g in after)))
+                if after else "up %+.0f at %s with the candles flipping — stopped" % (hit[1], hm(hit[0])))
     big = [f for f in fills if f["ct"] > 2]
     chk("Size 2 contracts or less", not big, "%d entries at 3+" % len(big) if big else "1–2 contracts")
     chk("Logged the day", True if note else None, "ramble logged" if note else "logging started Nov 17")

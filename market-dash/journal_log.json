@@ -11,9 +11,9 @@
    "first": "6:31",
    "last": "7:49",
    "best": "7:07 P 621 +242",
-   "score": 4.5,
+   "score": 4.2,
    "kept": 5,
-   "of": 11,
+   "of": 12,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -61,6 +61,11 @@
      "why": "held 7:07 for 19 min, +242"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": false,
+     "why": "up +202 at 7:27 with the candles flipping, then 1 more trade (-3)"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -94,9 +99,9 @@
    "first": "6:30",
    "last": "7:32",
    "best": "7:10 P 659 +298",
-   "score": 4.5,
-   "kept": 5,
-   "of": 11,
+   "score": 5.0,
+   "kept": 6,
+   "of": 12,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -144,6 +149,11 @@
      "why": "held 7:10 for 22 min, +298"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": true,
+     "why": "up +161 at 8:10 with the candles flipping \u2014 stopped"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -179,9 +189,9 @@
    "first": "6:31",
    "last": "8:28",
    "best": "6:34 P 649.0 +87",
-   "score": 4.5,
+   "score": 4.2,
    "kept": 5,
-   "of": 11,
+   "of": 12,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -229,6 +239,11 @@
      "why": "held 6:35 for 12 min, +53"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": false,
+     "why": "up +96 at 7:10 with the candles flipping, then 9 more trades (-48)"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -259,9 +274,9 @@
    "first": "7:31",
    "last": "9:19",
    "best": "7:31 P 651 +206",
-   "score": 6.4,
+   "score": 5.8,
    "kept": 7,
-   "of": 11,
+   "of": 12,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -307,6 +322,11 @@
      "rule": "Held a winner (8+ min)",
      "ok": true,
      "why": "held 7:31 for 11 min, +206"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": false,
+     "why": "up +182 at 8:10 with the candles flipping, then 9 more trades (-10)"
     },
     {
      "rule": "Size 2 contracts or less",
@@ -389,6 +409,11 @@
      "why": "held 6:52 for 37 min, +64"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -419,9 +444,9 @@
    "first": "6:34",
    "last": "7:20",
    "best": "6:55 put 677.0 +139",
-   "score": 3.3,
-   "kept": 3,
-   "of": 9,
+   "score": 4.0,
+   "kept": 4,
+   "of": 10,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -469,6 +494,11 @@
      "why": "held 6:55 for 8 min, +102"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": true,
+     "why": "up +249 at 8:30 with the candles flipping \u2014 stopped"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -499,9 +529,9 @@
    "first": "6:31",
    "last": "7:25",
    "best": "6:34 call 691.0 +68",
-   "score": 4.4,
+   "score": 4.0,
    "kept": 4,
-   "of": 9,
+   "of": 10,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -547,6 +577,11 @@
      "rule": "Held a winner (8+ min)",
      "ok": true,
      "why": "held 6:35 for 13 min, +35"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": false,
+     "why": "up +81 at 7:10 with the candles flipping, then 3 more trades (-48)"
     },
     {
      "rule": "Size 2 contracts or less",
@@ -629,6 +664,11 @@
      "why": "held 6:37 for 82 min, +29"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -659,9 +699,9 @@
    "first": "6:32",
    "last": "7:25",
    "best": "6:54 call 680.0 +92",
-   "score": 7.8,
-   "kept": 7,
-   "of": 9,
+   "score": 8.0,
+   "kept": 8,
+   "of": 10,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -707,6 +747,11 @@
      "rule": "Held a winner (8+ min)",
      "ok": true,
      "why": "held 6:33 for 9 min, +17"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": true,
+     "why": "up +148 at 7:30 with the candles flipping \u2014 stopped"
     },
     {
      "rule": "Size 2 contracts or less",
@@ -789,6 +834,11 @@
      "why": "held 7:51 for 8 min, +99"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -819,9 +869,9 @@
    "first": "6:36",
    "last": "7:23",
    "best": "6:36 call 667.0 +92",
-   "score": 6.7,
+   "score": 6.0,
    "kept": 6,
-   "of": 9,
+   "of": 10,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -867,6 +917,11 @@
      "rule": "Held a winner (8+ min)",
      "ok": false,
      "why": "winners cut early"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": false,
+     "why": "up +71 at 7:10 with the candles flipping, then 1 more trade (-14)"
     },
     {
      "rule": "Size 2 contracts or less",
@@ -949,6 +1004,11 @@
      "why": "winners cut early"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -1027,6 +1087,11 @@
      "rule": "Held a winner (8+ min)",
      "ok": false,
      "why": "winners cut early"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
     },
     {
      "rule": "Size 2 contracts or less",
@@ -1109,6 +1174,11 @@
      "why": "held 7:34 for 10 min, +15"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -1189,6 +1259,11 @@
      "why": "winners cut early"
     },
     {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
+    },
+    {
      "rule": "Size 2 contracts or less",
      "ok": true,
      "why": "1\u20132 contracts"
@@ -1219,9 +1294,9 @@
    "pnl": 414.0,
    "trades": 69,
    "wins": 17,
-   "score": 4.7,
-   "kept": 26,
-   "of": 55,
+   "score": 4.6,
+   "kept": 27,
+   "of": 59,
    "best2": 540.0,
    "rest": -126.0,
    "first20": -228.0,
@@ -1238,25 +1313,25 @@
     {
      "date": "2026-11-17",
      "pnl": 172.0,
-     "score": 6.4,
+     "score": 5.8,
      "trades": 11
     },
     {
      "date": "2026-11-18",
      "pnl": 46.0,
-     "score": 4.5,
+     "score": 4.2,
      "trades": 17
     },
     {
      "date": "2026-11-19",
      "pnl": 161.0,
-     "score": 4.5,
+     "score": 5.0,
      "trades": 11
     },
     {
      "date": "2026-11-20",
      "pnl": 199.0,
-     "score": 4.5,
+     "score": 4.2,
      "trades": 15
     }
    ],
@@ -1304,6 +1379,10 @@
     "Logged the day": [
      5,
      5
+    ],
+    "Sat out on time (+$60 on a flipping tape)": [
+     1,
+     4
     ]
    },
    "sized": {
@@ -1324,9 +1403,9 @@
    "pnl": 474.0,
    "trades": 51,
    "wins": 20,
-   "score": 5.5,
-   "kept": 25,
-   "of": 45,
+   "score": 5.6,
+   "kept": 27,
+   "of": 48,
    "best2": 241.0,
    "rest": 233.0,
    "first20": 67.0,
@@ -1343,7 +1422,7 @@
     {
      "date": "2026-11-10",
      "pnl": 148.0,
-     "score": 7.8,
+     "score": 8.0,
      "trades": 8
     },
     {
@@ -1355,13 +1434,13 @@
     {
      "date": "2026-11-12",
      "pnl": 52.0,
-     "score": 4.4,
+     "score": 4.0,
      "trades": 12
     },
     {
      "date": "2026-11-13",
      "pnl": 249.0,
-     "score": 3.3,
+     "score": 4.0,
      "trades": 11
     }
    ],
@@ -1401,6 +1480,10 @@
     "Size 2 contracts or less": [
      5,
      5
+    ],
+    "Sat out on time (+$60 on a flipping tape)": [
+     2,
+     3
     ]
    },
    "sized": {
@@ -1421,9 +1504,9 @@
    "pnl": 133.0,
    "trades": 48,
    "wins": 18,
-   "score": 5.6,
+   "score": 5.4,
    "kept": 25,
-   "of": 45,
+   "of": 46,
    "best2": 147.0,
    "rest": -14.0,
    "first20": 184.0,
@@ -1458,7 +1541,7 @@
     {
      "date": "2026-11-06",
      "pnl": 57.0,
-     "score": 6.7,
+     "score": 6.0,
      "trades": 7
     }
    ],
@@ -1498,6 +1581,10 @@
     "Size 2 contracts or less": [
      5,
      5
+    ],
+    "Sat out on time (+$60 on a flipping tape)": [
+     0,
+     1
     ]
    },
    "sized": {
