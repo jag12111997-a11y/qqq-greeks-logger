@@ -1,0 +1,49 @@
+name: Research - Baby hold-out bars
+
+# Pulls an untouched older window (QQQ 1-min bars + 0DTE option bars) for Baby 3v3's out-of-sample test as a run artifact (not committed).
+# Nothing on the website reads these files. 
+on:
+  workflow_dispatch:
+    inputs:
+      first:
+        description: 'First day YYYY-MM-DD'
+        required: true
+        default: '2026-01-02'
+      last:
+        description: 'Last day YYYY-MM-DD'
+        required: true
+        default: '2026-07-13'
+
+concurrency:
+  group: gex-history
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Pull hold-out bars
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+        run: |
+          python research_holdout_bars.py "${{ inputs.first }}" "${{ inputs.last }}" > /tmp/written.txt
+          wc -l /tmp/written.txt
+      - name: Upload as run artifact (not committed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: holdout
+          path: research/holdout/
+          retention-days: 30
