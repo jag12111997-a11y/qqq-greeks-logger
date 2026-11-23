@@ -9033,6 +9033,15 @@
         else if (p && p.fear != null) out.push("Fear " + '<b style="color:var(' + (p.fear < 45 ? "--down" : p.fear > 55 ? "--up" : "--flat") + ')">' + p.fear + "</b>");
         if (p && p.qqq_vol) out.push("QQQ vol " + b((p.qqq_vol / 1e6).toFixed(1) + "M"));
         // Nov 15: sector leaders / laggards removed from the strip (asked)
+        // Nov 23: room to the next level above / below (dealer walls, gamma flip, top OI strike + your weekly volume-profile lines).
+        // Plan rule: under $8 of room = take the money, don't open the same direction again.
+        (function () { var g2 = Q.gex, px = window.__ccLast || (g2 && g2.spot); if (!px) return; var L = [];
+          if (g2 && g2.levels) { [["call_wall", "call wall"], ["put_wall", "put wall"], ["highest_oi_strike", "top OI"]].forEach(function (q) { if (g2.levels[q[0]] != null) L.push([g2.levels[q[0]], q[1]]); }); }
+          if (g2 && g2.gamma_flip != null) L.push([g2.gamma_flip, "gamma flip"]);
+          ((window.__myLvWeek && window.__myLvWeek.levels) || []).forEach(function (l) { L.push([l.px, "your " + String(l.color).replace(" dashed", "")]); });
+          var up = null, dn = null; L.forEach(function (q) { if (q[0] > px + 0.05 && (!up || q[0] < up[0])) up = q; if (q[0] < px - 0.05 && (!dn || q[0] > dn[0])) dn = q; });
+          var f = function (q, arrow) { if (!q) return arrow + " —"; var r = Math.abs(q[0] - px); return arrow + ' <b style="color:' + (r < 8 ? "#ff9f0a" : "var(--txt)") + '">$' + r.toFixed(2) + "</b> to " + q[0].toFixed(2) + " " + esc(q[1]); };
+          out.push('<span title="Room to the next level from QQQ ' + px.toFixed(2) + '. Orange = under $8: take the money, don\'t open the same direction again.">room ' + f(up, "▲") + " · " + f(dn, "▼") + "</span>"); })();
         var g = Q.gex; if (g && g.regime) out.push("GEX " + '<b style="color:var(' + (/NEG/i.test(g.regime) ? "--down" : "--up") + ')">' + (/NEG/i.test(g.regime) ? "neg" : "pos") + "</b>");
         out.push(window.__hdrNews());
         if (_st) out.push('<span id="v92st" style="color:#fcb103">' + _st + "</span>");   // Nov 18: the bot's line, last (was the game plan card)
@@ -9066,7 +9075,7 @@
         else if (dayMs < open) tail = "opens in " + _dur(open - dayMs);
         else if (dayMs >= close) tail = "day done · see you 6:30";
         else { var k = Math.floor((dayMs - open) / 1200e3), end = Math.min(open + (k + 1) * 1200e3, close);
-          tail = '<b style="color:var(--accent)">candle #' + (k + 1) + '</b> of 8 · ' + _dur(end - dayMs) + " left" + (window.__ccStreak || ""); }
+          tail = '<b style="color:var(--accent)">candle #' + (k + 1) + '</b> of 8 · ' + _dur(end - dayMs) + " left" + (window.__ccStreak || "") + (window.__ccRange || ""); }
         return clock + "  ·  " + tail;
       };
       (function tick() { var el = document.getElementById("cclock"); if (el) el.innerHTML = window.__cclockTxt(); requestAnimationFrame(tick); })();
@@ -9080,14 +9089,25 @@
             var p = {}; _ccPT.formatToParts(new Date(c.time * 1000)).forEach(function (x) { p[x.type] = x.value; });
             var d = p.year + p.month + p.day, m = (Number(p.hour) % 24) * 60 + Number(p.minute) - 390; if (m < 0 || m >= 150) return;
             if (d !== today) { if (today && d < today) return; today = d; K = {}; }
-            var k = Math.floor(m / 20); if (!K[k]) K[k] = { o: c.open, c: c.close }; else K[k].c = c.close; });
+            var k = Math.floor(m / 20); window.__ccLastM = m; window.__ccLast = c.close;
+            if (!K[k]) K[k] = { o: c.open, c: c.close, h: c.high, l: c.low }; else { K[k].c = c.close; K[k].h = Math.max(K[k].h, c.high); K[k].l = Math.min(K[k].l, c.low); } });
           var ks = Object.keys(K).map(Number).sort(function (a, b) { return a - b; }); if (!ks.length) { window.__ccStreak = ""; return; }
           var col = function (q) { return q.c > q.o ? 1 : q.c < q.o ? -1 : 0; }, last = col(K[ks[ks.length - 1]]), n = 0;
           for (var i = ks.length - 1; i >= 0 && col(K[ks[i]]) === last && last !== 0; i--) n++;
           window.__ccStreak = last ? '  ·  <b style="color:var(' + (last > 0 ? "--up" : "--down") + ')">' + (last > 0 ? "▲ " : "▼ ") + n + " " + (last > 0 ? "green" : "red") + " in a row</b>" : "  ·  flat candle";
+          // Nov 23: RANGE MODE — the last two FINISHED 20-min candles are opposite colours and the last one didn't close past the earlier
+          // candles' high/low (no follow-through). Same flip test as the Daily Log's "Sat out on time" check: up $60+ here = done for the day.
+          var fin = ks.filter(function (q) { return q < Math.floor((window.__ccLastM || 0) / 20); });
+          if (fin.length >= 2) {
+            var A = K[fin[fin.length - 2]], B2 = K[fin[fin.length - 1]], prev = fin.slice(0, -1).map(function (q) { return K[q]; });
+            var hi = Math.max.apply(null, prev.map(function (q) { return q.h; })), lo = Math.min.apply(null, prev.map(function (q) { return q.l; }));
+            var flip = col(A) !== 0 && col(B2) !== 0 && col(A) !== col(B2), held = B2.c <= hi && B2.c >= lo;
+            window.__ccRange = flip && held ? '  ·  <b style="color:#ff9f0a" title="Last two finished 20-min candles are opposite colours and price closed back inside the morning range: a rotating tape. Agreed rule: up $60+ on a tape like this = done for the day.">⇄ RANGE MODE · up $60+? done</b>' : "";
+          } else window.__ccRange = "";
         });
       };
       ccPull(); setInterval(ccPull, 60000);
+      fetch("my_levels.json?t=" + Date.now()).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j && j.weeks && j.weeks.length) window.__myLvWeek = j.weeks[0]; }).catch(function () {});
     }
     var _header =
       "<header><h1>ༀ</h1>" +
