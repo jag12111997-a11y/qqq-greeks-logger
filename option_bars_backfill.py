@@ -3,7 +3,7 @@
 On some mornings the logger's free "indicative" snapshot feed stops updating out-of-the-money strikes: the bid/ask stays the same all
 morning while QQQ moves (Nov 19: C682 stuck at 0.31/0.38, P660 at 6.16/6.24). This pulls Alpaca's historical 1-minute option BARS
 (real trade prints, OPRA, available for expired contracts) for those contracts and saves them next to the logger files:
-    data/<day>/am/qqq_option_bars_<day>.csv   (t_utc, side, strike, open, high, low, close, volume, vwap, trades)
+    market-dash/option_bars/<day>.csv   (t_utc, side, strike, open, high, low, close, volume, vwap, trades)
 my_replay_build.js uses them in place of a frozen quote line. Bars are trades, not bid/ask: a minute with no trade has no bar.
 
 Usage (repo root, ALPACA_API_KEY / ALPACA_API_SECRET in env):
@@ -69,7 +69,7 @@ def auto_days():
         if t.get("date") in logged and t.get("sym") != "XSP":
             by_day[t["date"]].append(t)
     for day, ts in by_day.items():
-        if (ROOT / "data" / day / "am" / f"qqq_option_bars_{day}.csv").exists():
+        if (ROOT / "market-dash" / "option_bars" / f"{day}.csv").exists():
             continue
         cache = {s: logger_rows(day, s) for s in ("call", "put")}
         if any(frozen(cache[t["side"]].get(float(t["strike"]), [])) for t in ts):
@@ -86,7 +86,7 @@ def main():
     for day, contracts in sorted(targets(days).items()):
         syms = {G.occ(day, side, k): (side, k) for side, k in contracts}
         bars = api.option_bars(sorted(syms), day)
-        f = ROOT / "data" / day / "am" / f"qqq_option_bars_{day}.csv"
+        f = ROOT / "market-dash" / "option_bars" / f"{day}.csv"
         f.parent.mkdir(parents=True, exist_ok=True)
         rows = {}
         if f.exists():

@@ -42,7 +42,7 @@ for (const day of Object.keys(byDay).sort()) {
   const Q = quotes(day), OQ = {}; Q.forEach(q => { if (!(q.bid > 0) || !(q.ask > 0)) return; const m = Math.floor((q.t - t0) / 60); if (m < -5 || m > N) return; (OQ[q.side + "|" + q.strike] = OQ[q.side + "|" + q.strike] || {})[m] = q; });
   // Nov 22: frozen-quote repair. On some mornings the logger's free feed stops updating out-of-the-money strikes (Nov 19: same bid/ask
   // all morning). A strike whose quotes never change is FROZEN: drop it, and use Alpaca's real 1-min trade bars instead when
-  // option_bars_backfill.py saved them (data/<day>/am/qqq_option_bars_<day>.csv; bid = ask = the bar's close, so it is a trade-price line).
+  // option_bars_backfill.py saved them (market-dash/option_bars/<day>.csv; bid = ask = the bar's close, so it is a trade-price line).
   const QSRC = {};
   // a run of 8+ snapshots with the same bid/ask while QQQ moved $1+ is frozen: drop those minutes
   Object.keys(OQ).forEach(k => { const ms = Object.keys(OQ[k]).map(Number).sort((a, b) => a - b); let i = 0;
@@ -51,7 +51,7 @@ for (const day of Object.keys(byDay).sort()) {
       if (run.length >= 8 && sp.length && Math.max(...sp) - Math.min(...sp) >= 1.0) { run.forEach(m => delete OQ[k][m]); QSRC[k] = "frozen"; }
       i = j + 1; }
     if (!Object.keys(OQ[k]).length) delete OQ[k]; });
-  (csv(path.join(ROOT, "data", day, "am", `qqq_option_bars_${day}.csv`)) || []).forEach(r => { const k = (r.side === "call" ? "C" : "P") + "|" + Number(r.strike);
+  (csv(path.join(MD, "option_bars", `${day}.csv`)) || []).forEach(r => { const k = (r.side === "call" ? "C" : "P") + "|" + Number(r.strike);
     if (OQ[k] && !QSRC[k]) return; const m = Math.floor((Date.parse(r.t_utc) / 1000 - t0) / 60), c = num(r.close); if (m < -5 || m > N || !(c > 0)) return;
     if (OQ[k] && OQ[k][m]) return;   // keep good logger quotes, fill only the frozen / missing minutes
     (OQ[k] = OQ[k] || {})[m] = { t: Date.parse(r.t_utc) / 1000, side: k[0], strike: Number(r.strike), bid: c, ask: c, iv: null, bar: true }; if (QSRC[k] === "frozen" || !QSRC[k]) QSRC[k] = "bars"; });

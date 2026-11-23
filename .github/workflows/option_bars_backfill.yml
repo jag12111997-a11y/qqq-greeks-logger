@@ -1,7 +1,7 @@
 name: Option bars - backfill frozen quotes
 
 # Pulls Alpaca's historical 1-minute option bars (real trade prints) for contracts the user traded on days when the logger's
-# quote feed froze, and saves data/<day>/am/qqq_option_bars_<day>.csv. Then rebuilds the My trades replay.
+# quote feed froze, and saves market-dash/option_bars/<day>.csv. Then rebuilds the My trades replay.
 #   days blank = auto: last 30 logged days where a traded contract's quotes froze and no bars file exists yet.
 on:
   workflow_dispatch:
