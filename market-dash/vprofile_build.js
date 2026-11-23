@@ -37,7 +37,33 @@ const P = {}, out = { updated: new Date().toISOString(), note: "volume at price 
 days.forEach(d => { const j = rj(path.join(MD, "history", d + ".json")); if (!j || !j.candles || j.candles.length < 300) return; P[d] = dayProfile(j.candles.slice(0, 390));
   const s = summarize(P[d]); if (s) { const o = Object.assign({}, s); delete o.pctAt; out.days[d] = o; } });
 const good = Object.keys(P).sort(), last20 = good.slice(-20), comp = {};
+// DAILY AUCTION (Nov 22): each day's value area vs the day before — where value moved, how the day opened and closed against it.
+//  value: HIGHER (VAL above yesterday's VAH) · LOWER (VAH below yesterday's VAL) · OVERLAP-UP / OVERLAP-DOWN (overlapping, POC moved up / down)
+//  · INSIDE (whole VA inside yesterday's) · OUTSIDE (VA wider on both sides). open / close: above / inside / below yesterday's / today's VA.
+good.forEach((d, i) => { if (!i || !out.days[d] || !out.days[good[i - 1]]) return;
+  const T = out.days[d], Y = out.days[good[i - 1]], j = rj(path.join(MD, "history", d + ".json")), c = j.candles.slice(0, 390);
+  const op = c[0].open, cl = c[c.length - 1].close, rel = (px, va) => px > va[1] ? "above" : px < va[0] ? "below" : "inside";
+  let value;
+  if (T.va[0] > Y.va[1]) value = "higher"; else if (T.va[1] < Y.va[0]) value = "lower";
+  else if (T.va[0] >= Y.va[0] && T.va[1] <= Y.va[1]) value = "inside"; else if (T.va[0] < Y.va[0] && T.va[1] > Y.va[1]) value = "outside";
+  else value = T.poc >= Y.poc ? "overlap-up" : "overlap-down";
+  T.auction = { value, poc_shift: r2(T.poc - Y.poc), va_width: r2(T.va[1] - T.va[0]), va_width_chg: r2((T.va[1] - T.va[0]) - (Y.va[1] - Y.va[0])),
+    open_vs_prior_va: rel(op, Y.va), close_vs_va: rel(cl, T.va), open: r2(op), close: r2(cl), prior_va: Y.va, prior_poc: Y.poc };
+});
 last20.forEach(d => Object.keys(P[d]).forEach(k => { comp[k] = (comp[k] || 0) + P[d][k]; }));
+// auction stats, rebuilt nightly over every logged day (what yesterday's profile said vs what today did)
+(() => { const st = { open: {}, r80: { tried: 0, crossed: 0, never: 0 }, after_value: {} };
+  good.forEach((d, i) => { const A = out.days[d] && out.days[d].auction; if (!A) return; const c = rj(path.join(MD, "history", d + ".json")).candles.slice(0, 390), va = A.prior_va, up = A.close > A.open;
+    const o = st.open[A.open_vs_prior_va] = st.open[A.open_vs_prior_va] || { days: 0, back_inside: 0, closed_up: 0 };
+    o.days++; if (up) o.closed_up++; if (c.some(b => b.close >= va[0] && b.close <= va[1])) o.back_inside++;
+    if (A.open_vs_prior_va !== "inside") { let run = 0, done = false;
+      for (let m = 0; m < c.length && !done; m++) { run = (c[m].close >= va[0] && c[m].close <= va[1]) ? run + 1 : 0;
+        if (run >= 30) { st.r80.tried++; done = true; const far = A.open_vs_prior_va === "above" ? va[0] : va[1];
+          if (c.slice(m).some(b => A.open_vs_prior_va === "above" ? b.low <= far : b.high >= far)) st.r80.crossed++; } }
+      if (!done) st.r80.never++; }
+    const P2 = i > 0 && out.days[good[i - 1]] && out.days[good[i - 1]].auction;
+    if (P2) { const v = st.after_value[P2.value] = st.after_value[P2.value] || { days: 0, closed_up: 0, poc_up: 0 }; v.days++; if (up) v.closed_up++; if (A.poc_shift > 0) v.poc_up++; } });
+  out.auction_stats = st; })();
 const C = summarize(comp); if (C) { const o = Object.assign({}, C); delete o.pctAt; o.from = last20[0]; o.to = last20[last20.length - 1]; out.composite = o; }
 // the user's levels: volume within $0.25 of each line per day of its week, and its place in the 20-day composite at the time
 const mondayOf = d => { const t = new Date(d + "T12:00:00Z"), w = t.getUTCDay(); t.setUTCDate(t.getUTCDate() - ((w + 6) % 7)); return t.toISOString().slice(0, 10); };
