@@ -85,6 +85,21 @@ mine.forEach(w => {
   out.weeks.push({ week: w.week, days: wd, levels, mine: tally([].concat(...levels.map(l => l.touches))), byColor, site: tally(siteW), random: tally(randW),
     site_days: wd.map(d => ({ day: d, R: byDay[d].R, site: byDay[d].site })) });
 });
+// the bot's own weekly volume levels (bot_levels.json from vprofile_build.js), scored the same way, by type, vs random lines
+const BLW = (rj(path.join(MD, "bot_levels.json")) || { weeks: [] }).weeks, botEp = {}, botRand = [];
+out.bot_weeks = BLW.map(w => {
+  const wd = good.filter(d => mondayOf(d) === w.week && byDay[d]);
+  const levels = w.levels.map(l => { const touches = [], cl = [];
+    wd.forEach(d => { const s = score(C[d], l.px, byDay[d].R); s.touches.forEach(t => touches.push(Object.assign({ day: d }, t))); if (s.closest != null) cl.push(s.closest); });
+    (botEp[l.type] = botEp[l.type] || []).push(...touches);
+    return Object.assign({}, l, { touches, closest: cl.length ? Math.min(...cl) : null }); });
+  wd.forEach(d => { const i = good.indexOf(d), p5 = good.slice(Math.max(0, i - 5), i), lo = Math.min(...p5.map(x => Math.min(...C[x].map(q => q.low)))), hi = Math.max(...p5.map(x => Math.max(...C[x].map(q => q.high)))), rnd = mulberry(Number(d.replace(/-/g, "")) + 7);
+    for (let k = 0; k < N_RANDOM; k++) botRand.push(...score(C[d], r2(lo + rnd() * (hi - lo)), byDay[d].R).touches); });
+  return { week: w.week, from: w.from, to: w.to, days: wd, levels, all: tally([].concat(...levels.map(l => l.touches))) };
+});
+out.bot_all = {}; Object.keys(botEp).forEach(k => { out.bot_all[k] = tally(botEp[k]); });
+out.bot_all["ALL bot levels"] = tally([].concat(...Object.values(botEp)));
+out.bot_random = tally(botRand);
 const f = path.join(MD, "levels_log.json");
 fs.writeFileSync(f, JSON.stringify(out, null, 1));
 console.log(path.relative(ROOT, f));

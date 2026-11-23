@@ -50,3 +50,19 @@ const mondayOf = d => { const t = new Date(d + "T12:00:00Z"), w = t.getUTCDay();
         daily: wd.map(d => { let s = 0; [-BIN, 0, BIN].forEach(o => { s += P[d][r2(key(l.px) + o)] || 0; }); return { day: d, vol: Math.round(s) }; }) }; }) });
 });
 const f = path.join(MD, "vprofile.json"); fs.writeFileSync(f, JSON.stringify(out)); console.log(path.relative(ROOT, f));
+// BOT LEVELS (Nov 22): every week, the bot saves its own key levels from the 20 sessions BEFORE that Monday — POC, value area high/low,
+// the 10 biggest volume nodes, the 10 thinnest gaps — so they can be scored the same way as the user's lines (levels_paper_log.js).
+const weeks = {}; good.forEach(d => { weeks[mondayOf(d)] = 1; });
+const nextMon = (() => { const t = new Date(good[good.length - 1] + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() + ((8 - t.getUTCDay()) % 7 || 7)); return t.toISOString().slice(0, 10); })();
+weeks[nextMon] = 1;
+const BL = { updated: out.updated, note: "the bot's weekly volume levels, each built only from the 20 sessions before that Monday (no look-ahead)", weeks: [] };
+Object.keys(weeks).sort().forEach(m => {
+  const prior = good.filter(d => d < m).slice(-20); if (prior.length < 15) return;
+  const pc = {}; prior.forEach(d => Object.keys(P[d]).forEach(k => { pc[k] = (pc[k] || 0) + P[d][k]; }));
+  const S = summarize(pc); if (!S) return;
+  const lv = [{ px: S.poc, type: "POC" }, { px: S.va[1], type: "value area high" }, { px: S.va[0], type: "value area low" }];
+  S.nodes.forEach(x => { if (Math.abs(x - S.poc) > 0.5) lv.push({ px: x, type: "volume node" }); });
+  S.gaps.forEach(x => lv.push({ px: x, type: "thin gap" }));
+  BL.weeks.push({ week: m, from: prior[0], to: prior[prior.length - 1], levels: lv });
+});
+const fb = path.join(MD, "bot_levels.json"); fs.writeFileSync(fb, JSON.stringify(BL, null, 1)); console.log(path.relative(ROOT, fb));

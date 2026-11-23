@@ -78,8 +78,8 @@ jobs:
           node market-dash/v92_paper_log.js > /tmp/v92_written.txt || true
           node market-dash/v10_paper_log.js >> /tmp/v92_written.txt || true   # v10 auction layer (paper only): adds shadow_v10 to the new day
           node market-dash/duo_paper_log.js >> /tmp/v92_written.txt || true   # combo (paper only): old bot + v11 + add/lotto + self-check -> shadow_duo
+          node market-dash/vprofile_build.js >> /tmp/v92_written.txt || true   # volume profile saved nightly (1-min candles, $0.25) + volume at your levels -> vprofile.json + bot_levels.json (run before the levels scorer)
           node market-dash/levels_paper_log.js >> /tmp/v92_written.txt || true   # your levels (paper only): weekly volume-profile lines scored vs site levels + random -> levels_log.json
-          node market-dash/vprofile_build.js >> /tmp/v92_written.txt || true   # volume profile saved nightly (1-min candles, $0.25) + volume at your levels -> vprofile.json
           cat /tmp/night_written.txt >> /tmp/v92_written.txt
           cat /tmp/v92_written.txt
           python -c "from pathlib import Path; from publish_history import publish; p=[l.strip() for l in open('/tmp/v92_written.txt') if l.strip()]; print('published' if p and publish(Path('.').resolve(), p) else 'nothing new')"

@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23T06:56:29.234Z",
+ "updated": "2026-11-23T07:17:16.480Z",
  "rules": "touch = within $0.25 after being R away (R = 10% of the 10-day avg range) · held / broke = closes R back / through within 60 min · move = best move away on the side it came from within 30 min · random = 15 lines a day drawn between the last 5 days' low and high",
  "site_all": {
   "yesterday high": {
@@ -258,5 +258,7619 @@
    },
    "site_days": []
   }
- ]
+ ],
+ "bot_weeks": [
+  {
+   "week": "2026-08-10",
+   "from": "2026-07-14",
+   "to": "2026-08-07",
+   "days": [
+    "2026-08-10",
+    "2026-08-11",
+    "2026-08-12",
+    "2026-08-13",
+    "2026-08-14"
+   ],
+   "levels": [
+    {
+     "px": 720.5,
+     "type": "POC",
+     "touches": [
+      {
+       "day": "2026-08-10",
+       "t": "6:34",
+       "from": "above",
+       "res": "held",
+       "move": 2.57,
+       "at": "6:46"
+      },
+      {
+       "day": "2026-08-10",
+       "t": "9:43",
+       "from": "above",
+       "res": "held",
+       "move": 2.01,
+       "at": "10:07"
+      },
+      {
+       "day": "2026-08-10",
+       "t": "11:30",
+       "from": "above",
+       "res": "held",
+       "move": 1.38,
+       "at": "12:01"
+      },
+      {
+       "day": "2026-08-10",
+       "t": "12:52",
+       "from": "above",
+       "res": "chop",
+       "move": 0.66,
+       "at": null
+      },
+      {
+       "day": "2026-08-11",
+       "t": "6:33",
+       "from": "above",
+       "res": "broke",
+       "move": 1.09,
+       "at": "6:46"
+      },
+      {
+       "day": "2026-08-11",
+       "t": "6:59",
+       "from": "below",
+       "res": "broke",
+       "move": 0.66,
+       "at": "7:06"
+      },
+      {
+       "day": "2026-08-11",
+       "t": "7:44",
+       "from": "above",
+       "res": "held",
+       "move": 1.94,
+       "at": "7:48"
+      },
+      {
+       "day": "2026-08-11",
+       "t": "8:08",
+       "from": "above",
+       "res": "broke",
+       "move": 0.33,
+       "at": "8:39"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 723.75,
+     "type": "value area high",
+     "touches": [
+      {
+       "day": "2026-08-10",
+       "t": "7:06",
+       "from": "below",
+       "res": "held",
+       "move": 1.11,
+       "at": "7:54"
+      },
+      {
+       "day": "2026-08-10",
+       "t": "8:57",
+       "from": "below",
+       "res": "held",
+       "move": 1.38,
+       "at": "9:31"
+      },
+      {
+       "day": "2026-08-12",
+       "t": "6:40",
+       "from": "above",
+       "res": "held",
+       "move": 2.85,
+       "at": "6:46"
+      },
+      {
+       "day": "2026-08-12",
+       "t": "6:56",
+       "from": "above",
+       "res": "held",
+       "move": 1.97,
+       "at": "6:58"
+      },
+      {
+       "day": "2026-08-12",
+       "t": "7:04",
+       "from": "above",
+       "res": "held",
+       "move": 2.18,
+       "at": "7:08"
+      },
+      {
+       "day": "2026-08-12",
+       "t": "7:31",
+       "from": "above",
+       "res": "held",
+       "move": 1.85,
+       "at": "7:37"
+      },
+      {
+       "day": "2026-08-12",
+       "t": "7:51",
+       "from": "above",
+       "res": "chop",
+       "move": 1,
+       "at": null
+      },
+      {
+       "day": "2026-08-12",
+       "t": "12:25",
+       "from": "above",
+       "res": "chop",
+       "move": 0.48,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 676,
+     "type": "value area low",
+     "touches": [],
+     "closest": 39.5
+    },
+    {
+     "px": 715.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-08-11",
+       "t": "11:29",
+       "from": "above",
+       "res": "held",
+       "move": 2.24,
+       "at": "11:31"
+      }
+     ],
+     "closest": 0.25
+    },
+    {
+     "px": 709,
+     "type": "volume node",
+     "touches": [],
+     "closest": 6.5
+    },
+    {
+     "px": 700,
+     "type": "volume node",
+     "touches": [],
+     "closest": 15.5
+    },
+    {
+     "px": 696.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 18.75
+    },
+    {
+     "px": 689.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 26.25
+    },
+    {
+     "px": 681.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 33.75
+    },
+    {
+     "px": 678.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 37.25
+    },
+    {
+     "px": 670.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 45.25
+    },
+    {
+     "px": 666.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 49
+    },
+    {
+     "px": 716.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-08-11",
+       "t": "10:14",
+       "from": "above",
+       "res": "held",
+       "move": 1.67,
+       "at": "10:35"
+      },
+      {
+       "day": "2026-08-11",
+       "t": "11:21",
+       "from": "above",
+       "res": "chop",
+       "move": 0.53,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 713.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 2.25
+    },
+    {
+     "px": 710.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 4.75
+    },
+    {
+     "px": 702.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 13
+    },
+    {
+     "px": 698.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 16.75
+    },
+    {
+     "px": 693.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 22.25
+    },
+    {
+     "px": 687,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 28.5
+    },
+    {
+     "px": 680,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 35.5
+    },
+    {
+     "px": 672.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 43
+    },
+    {
+     "px": 663,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 52.5
+    }
+   ],
+   "all": {
+    "touches": 19,
+    "held": 12,
+    "broke": 3,
+    "chop": 4,
+    "held_pct": 63,
+    "avg_move": 1.47
+   }
+  },
+  {
+   "week": "2026-08-17",
+   "from": "2026-07-20",
+   "to": "2026-08-14",
+   "days": [
+    "2026-08-17",
+    "2026-08-18",
+    "2026-08-19",
+    "2026-08-20",
+    "2026-08-21"
+   ],
+   "levels": [
+    {
+     "px": 721.25,
+     "type": "POC",
+     "touches": [
+      {
+       "day": "2026-08-18",
+       "t": "6:31",
+       "from": "below",
+       "res": "held",
+       "move": 3.14,
+       "at": "6:32"
+      },
+      {
+       "day": "2026-08-18",
+       "t": "6:35",
+       "from": "below",
+       "res": "held",
+       "move": 3.14,
+       "at": "6:36"
+      },
+      {
+       "day": "2026-08-18",
+       "t": "6:38",
+       "from": "below",
+       "res": "held",
+       "move": 3.14,
+       "at": "6:44"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "6:32",
+       "from": "below",
+       "res": "held",
+       "move": 7.88,
+       "at": "6:33"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 733,
+     "type": "value area high",
+     "touches": [
+      {
+       "day": "2026-08-17",
+       "t": "6:41",
+       "from": "below",
+       "res": "held",
+       "move": 1.42,
+       "at": "6:45"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "6:48",
+       "from": "below",
+       "res": "held",
+       "move": 1.42,
+       "at": "7:07"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "7:10",
+       "from": "below",
+       "res": "held",
+       "move": 1.49,
+       "at": "7:20"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "7:43",
+       "from": "below",
+       "res": "broke",
+       "move": 0.49,
+       "at": "8:03"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "8:39",
+       "from": "above",
+       "res": "chop",
+       "move": 0.71,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 675.75,
+     "type": "value area low",
+     "touches": [],
+     "closest": 32.77
+    },
+    {
+     "px": 732.5,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-08-17",
+       "t": "6:32",
+       "from": "above",
+       "res": "held",
+       "move": 1.3,
+       "at": "6:51"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "7:01",
+       "from": "above",
+       "res": "held",
+       "move": 0.84,
+       "at": "7:58"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "8:41",
+       "from": "above",
+       "res": "held",
+       "move": 1.21,
+       "at": "8:51"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "9:05",
+       "from": "above",
+       "res": "chop",
+       "move": 0.53,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 715.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-08-19",
+       "t": "6:49",
+       "from": "above",
+       "res": "broke",
+       "move": 0.93,
+       "at": "6:51"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "6:53",
+       "from": "below",
+       "res": "held",
+       "move": 2.64,
+       "at": "7:08"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "7:29",
+       "from": "below",
+       "res": "broke",
+       "move": 0.64,
+       "at": "7:35"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "11:17",
+       "from": "above",
+       "res": "held",
+       "move": 2.22,
+       "at": "11:21"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "12:50",
+       "from": "above",
+       "res": "held",
+       "move": 0.9,
+       "at": "12:59"
+      },
+      {
+       "day": "2026-08-21",
+       "t": "8:41",
+       "from": "below",
+       "res": "held",
+       "move": 1.95,
+       "at": "8:46"
+      },
+      {
+       "day": "2026-08-21",
+       "t": "8:50",
+       "from": "below",
+       "res": "held",
+       "move": 1.95,
+       "at": "9:00"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 709,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-08-20",
+       "t": "11:07",
+       "from": "above",
+       "res": "held",
+       "move": 0.62,
+       "at": "11:56"
+      },
+      {
+       "day": "2026-08-21",
+       "t": "7:20",
+       "from": "above",
+       "res": "held",
+       "move": 2.62,
+       "at": "7:22"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 700,
+     "type": "volume node",
+     "touches": [],
+     "closest": 8.52
+    },
+    {
+     "px": 697,
+     "type": "volume node",
+     "touches": [],
+     "closest": 11.52
+    },
+    {
+     "px": 689.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 19.27
+    },
+    {
+     "px": 681.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 26.77
+    },
+    {
+     "px": 678.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 30.27
+    },
+    {
+     "px": 670.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 38.27
+    },
+    {
+     "px": 731,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-08-17",
+       "t": "10:12",
+       "from": "above",
+       "res": "broke",
+       "move": 0.62,
+       "at": "10:29"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "10:44",
+       "from": "below",
+       "res": "held",
+       "move": 1.37,
+       "at": "11:00"
+      },
+      {
+       "day": "2026-08-17",
+       "t": "11:50",
+       "from": "below",
+       "res": "held",
+       "move": 1.3,
+       "at": "12:12"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 728,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 1.27
+    },
+    {
+     "px": 716.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-08-18",
+       "t": "7:54",
+       "from": "above",
+       "res": "held",
+       "move": 0.74,
+       "at": "8:28"
+      },
+      {
+       "day": "2026-08-18",
+       "t": "11:08",
+       "from": "above",
+       "res": "held",
+       "move": 1.55,
+       "at": "11:18"
+      },
+      {
+       "day": "2026-08-18",
+       "t": "12:54",
+       "from": "above",
+       "res": "held",
+       "move": 1.21,
+       "at": "12:58"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "6:48",
+       "from": "above",
+       "res": "broke",
+       "move": 1.07,
+       "at": "6:49"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "7:37",
+       "from": "below",
+       "res": "broke",
+       "move": 0.77,
+       "at": "7:53"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "8:40",
+       "from": "above",
+       "res": "held",
+       "move": 2.58,
+       "at": "8:44"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "9:56",
+       "from": "above",
+       "res": "broke",
+       "move": 0.6,
+       "at": "10:21"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "10:28",
+       "from": "below",
+       "res": "broke",
+       "move": 0.81,
+       "at": "11:02"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "11:04",
+       "from": "above",
+       "res": "broke",
+       "move": 0.75,
+       "at": "11:07"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "11:13",
+       "from": "below",
+       "res": "held",
+       "move": 1.37,
+       "at": "11:15"
+      },
+      {
+       "day": "2026-08-19",
+       "t": "11:29",
+       "from": "below",
+       "res": "chop",
+       "move": 0.56,
+       "at": null
+      },
+      {
+       "day": "2026-08-19",
+       "t": "12:35",
+       "from": "above",
+       "res": "broke",
+       "move": 0.81,
+       "at": "12:46"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 710.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-08-20",
+       "t": "8:34",
+       "from": "above",
+       "res": "held",
+       "move": 1.44,
+       "at": "8:51"
+      },
+      {
+       "day": "2026-08-20",
+       "t": "10:27",
+       "from": "above",
+       "res": "held",
+       "move": 1,
+       "at": "10:50"
+      },
+      {
+       "day": "2026-08-20",
+       "t": "10:59",
+       "from": "above",
+       "res": "broke",
+       "move": 0.34,
+       "at": "11:05"
+      },
+      {
+       "day": "2026-08-20",
+       "t": "12:05",
+       "from": "below",
+       "res": "broke",
+       "move": 0.51,
+       "at": "12:36"
+      },
+      {
+       "day": "2026-08-20",
+       "t": "12:45",
+       "from": "above",
+       "res": "held",
+       "move": 1.04,
+       "at": "12:49"
+      },
+      {
+       "day": "2026-08-20",
+       "t": "12:55",
+       "from": "above",
+       "res": "chop",
+       "move": 0.67,
+       "at": null
+      },
+      {
+       "day": "2026-08-21",
+       "t": "6:53",
+       "from": "above",
+       "res": "held",
+       "move": 1.47,
+       "at": "6:56"
+      },
+      {
+       "day": "2026-08-21",
+       "t": "6:58",
+       "from": "above",
+       "res": "held",
+       "move": 1.47,
+       "at": "6:59"
+      },
+      {
+       "day": "2026-08-21",
+       "t": "7:02",
+       "from": "above",
+       "res": "held",
+       "move": 1.47,
+       "at": "7:05"
+      },
+      {
+       "day": "2026-08-21",
+       "t": "7:13",
+       "from": "above",
+       "res": "broke",
+       "move": 0.87,
+       "at": "7:18"
+      },
+      {
+       "day": "2026-08-21",
+       "t": "7:22",
+       "from": "below",
+       "res": "broke",
+       "move": 0.88,
+       "at": "7:28"
+      },
+      {
+       "day": "2026-08-21",
+       "t": "7:29",
+       "from": "above",
+       "res": "held",
+       "move": 1.35,
+       "at": "7:43"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 702.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 5.77
+    },
+    {
+     "px": 698.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 9.77
+    },
+    {
+     "px": 693.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 15.27
+    },
+    {
+     "px": 687,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 21.52
+    },
+    {
+     "px": 672.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 36.02
+    },
+    {
+     "px": 663,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 45.52
+    }
+   ],
+   "all": {
+    "touches": 49,
+    "held": 31,
+    "broke": 14,
+    "chop": 4,
+    "held_pct": 63,
+    "avg_move": 1.42
+   }
+  },
+  {
+   "week": "2026-08-24",
+   "from": "2026-07-27",
+   "to": "2026-08-21",
+   "days": [
+    "2026-08-24",
+    "2026-08-25",
+    "2026-08-26",
+    "2026-08-27",
+    "2026-08-28"
+   ],
+   "levels": [
+    {
+     "px": 717.75,
+     "type": "POC",
+     "touches": [
+      {
+       "day": "2026-08-27",
+       "t": "6:30",
+       "from": "below",
+       "res": "held",
+       "move": 3.23,
+       "at": "6:31"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "6:44",
+       "from": "below",
+       "res": "broke",
+       "move": 3.23,
+       "at": "6:45"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "6:46",
+       "from": "above",
+       "res": "broke",
+       "move": 1.08,
+       "at": "6:47"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "6:51",
+       "from": "below",
+       "res": "held",
+       "move": 3.23,
+       "at": "6:55"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "7:05",
+       "from": "below",
+       "res": "held",
+       "move": 1.32,
+       "at": "7:06"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "7:07",
+       "from": "below",
+       "res": "held",
+       "move": 1.32,
+       "at": "7:08"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "7:10",
+       "from": "below",
+       "res": "broke",
+       "move": 0.73,
+       "at": "7:15"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "7:16",
+       "from": "above",
+       "res": "held",
+       "move": 1.54,
+       "at": "7:17"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "7:30",
+       "from": "above",
+       "res": "held",
+       "move": 1.24,
+       "at": "7:33"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "7:39",
+       "from": "above",
+       "res": "held",
+       "move": 1.62,
+       "at": "7:49"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "7:53",
+       "from": "above",
+       "res": "held",
+       "move": 1.84,
+       "at": "7:58"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "8:30",
+       "from": "above",
+       "res": "held",
+       "move": 1.25,
+       "at": "8:32"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "8:34",
+       "from": "above",
+       "res": "broke",
+       "move": 1.56,
+       "at": "8:45"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "8:50",
+       "from": "below",
+       "res": "broke",
+       "move": 0.8,
+       "at": "8:52"
+      },
+      {
+       "day": "2026-08-27",
+       "t": "11:14",
+       "from": "above",
+       "res": "held",
+       "move": 0.78,
+       "at": "12:04"
+      },
+      {
+       "day": "2026-08-28",
+       "t": "7:11",
+       "from": "above",
+       "res": "held",
+       "move": 4.04,
+       "at": "7:17"
+      },
+      {
+       "day": "2026-08-28",
+       "t": "8:56",
+       "from": "above",
+       "res": "held",
+       "move": 1.07,
+       "at": "9:07"
+      },
+      {
+       "day": "2026-08-28",
+       "t": "9:11",
+       "from": "above",
+       "res": "broke",
+       "move": 1.04,
+       "at": "9:18"
+      },
+      {
+       "day": "2026-08-28",
+       "t": "9:47",
+       "from": "below",
+       "res": "held",
+       "move": 2.66,
+       "at": "9:54"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 733,
+     "type": "value area high",
+     "touches": [],
+     "closest": 8.88
+    },
+    {
+     "px": 676,
+     "type": "value area low",
+     "touches": [],
+     "closest": 26.7
+    },
+    {
+     "px": 732.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 8.38
+    },
+    {
+     "px": 730,
+     "type": "volume node",
+     "touches": [],
+     "closest": 5.88
+    },
+    {
+     "px": 721.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-08-27",
+       "t": "12:57",
+       "from": "below",
+       "res": "chop",
+       "move": 0.39,
+       "at": null
+      },
+      {
+       "day": "2026-08-28",
+       "t": "6:40",
+       "from": "below",
+       "res": "held",
+       "move": 3.14,
+       "at": "6:49"
+      },
+      {
+       "day": "2026-08-28",
+       "t": "7:00",
+       "from": "below",
+       "res": "held",
+       "move": 4.47,
+       "at": "7:01"
+      },
+      {
+       "day": "2026-08-28",
+       "t": "7:34",
+       "from": "below",
+       "res": "broke",
+       "move": 0.58,
+       "at": "7:43"
+      },
+      {
+       "day": "2026-08-28",
+       "t": "8:40",
+       "from": "above",
+       "res": "broke",
+       "move": 0.72,
+       "at": "8:46"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 700,
+     "type": "volume node",
+     "touches": [],
+     "closest": 2.7
+    },
+    {
+     "px": 697,
+     "type": "volume node",
+     "touches": [],
+     "closest": 5.7
+    },
+    {
+     "px": 688.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 13.95
+    },
+    {
+     "px": 681.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 20.95
+    },
+    {
+     "px": 678.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 24.45
+    },
+    {
+     "px": 670.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 32.45
+    },
+    {
+     "px": 728,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 3.88
+    },
+    {
+     "px": 706.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-08-24",
+       "t": "6:31",
+       "from": "above",
+       "res": "held",
+       "move": 1.02,
+       "at": "6:31"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "7:41",
+       "from": "below",
+       "res": "held",
+       "move": 1.84,
+       "at": "7:43"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "7:48",
+       "from": "below",
+       "res": "held",
+       "move": 1.84,
+       "at": "7:53"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "8:29",
+       "from": "below",
+       "res": "broke",
+       "move": 0.43,
+       "at": "8:37"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "10:35",
+       "from": "above",
+       "res": "held",
+       "move": 0.95,
+       "at": "11:01"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "12:36",
+       "from": "above",
+       "res": "chop",
+       "move": 0.56,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 704.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-08-24",
+       "t": "6:42",
+       "from": "above",
+       "res": "broke",
+       "move": 1.35,
+       "at": "6:44"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "6:47",
+       "from": "below",
+       "res": "held",
+       "move": 1.8,
+       "at": "6:49"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "6:55",
+       "from": "below",
+       "res": "held",
+       "move": 1.67,
+       "at": "7:02"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "7:21",
+       "from": "below",
+       "res": "held",
+       "move": 1.05,
+       "at": "7:25"
+      },
+      {
+       "day": "2026-08-24",
+       "t": "7:28",
+       "from": "below",
+       "res": "broke",
+       "move": 0.85,
+       "at": "7:33"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 702.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 0.45
+    },
+    {
+     "px": 698.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 4.2
+    },
+    {
+     "px": 693.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 9.45
+    },
+    {
+     "px": 687,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 15.7
+    },
+    {
+     "px": 680,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 22.7
+    },
+    {
+     "px": 672.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 30.2
+    },
+    {
+     "px": 663,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 39.7
+    }
+   ],
+   "all": {
+    "touches": 35,
+    "held": 22,
+    "broke": 11,
+    "chop": 2,
+    "held_pct": 63,
+    "avg_move": 1.61
+   }
+  },
+  {
+   "week": "2026-08-31",
+   "from": "2026-08-03",
+   "to": "2026-08-28",
+   "days": [
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04"
+   ],
+   "levels": [
+    {
+     "px": 718,
+     "type": "POC",
+     "touches": [
+      {
+       "day": "2026-09-03",
+       "t": "8:29",
+       "from": "below",
+       "res": "held",
+       "move": 1.06,
+       "at": "8:37"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "8:59",
+       "from": "below",
+       "res": "held",
+       "move": 1.4,
+       "at": "9:04"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "9:57",
+       "from": "below",
+       "res": "held",
+       "move": 1.66,
+       "at": "10:02"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "10:51",
+       "from": "below",
+       "res": "broke",
+       "move": 0.37,
+       "at": "11:04"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "12:00",
+       "from": "above",
+       "res": "broke",
+       "move": 0.57,
+       "at": "12:51"
+      },
+      {
+       "day": "2026-09-04",
+       "t": "7:43",
+       "from": "above",
+       "res": "broke",
+       "move": 0.4,
+       "at": "7:56"
+      },
+      {
+       "day": "2026-09-04",
+       "t": "7:57",
+       "from": "below",
+       "res": "held",
+       "move": 1.07,
+       "at": "8:20"
+      },
+      {
+       "day": "2026-09-04",
+       "t": "8:42",
+       "from": "below",
+       "res": "held",
+       "move": 1,
+       "at": "8:47"
+      },
+      {
+       "day": "2026-09-04",
+       "t": "9:01",
+       "from": "below",
+       "res": "broke",
+       "move": 0.57,
+       "at": "9:21"
+      },
+      {
+       "day": "2026-09-04",
+       "t": "10:09",
+       "from": "above",
+       "res": "broke",
+       "move": 0.41,
+       "at": "10:30"
+      },
+      {
+       "day": "2026-09-04",
+       "t": "11:35",
+       "from": "below",
+       "res": "chop",
+       "move": 0.57,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 733,
+     "type": "value area high",
+     "touches": [],
+     "closest": 11.14
+    },
+    {
+     "px": 710.25,
+     "type": "value area low",
+     "touches": [
+      {
+       "day": "2026-09-01",
+       "t": "7:41",
+       "from": "below",
+       "res": "held",
+       "move": 1.24,
+       "at": "8:06"
+      },
+      {
+       "day": "2026-09-01",
+       "t": "8:29",
+       "from": "below",
+       "res": "broke",
+       "move": 0.4,
+       "at": "8:38"
+      },
+      {
+       "day": "2026-09-01",
+       "t": "9:14",
+       "from": "above",
+       "res": "broke",
+       "move": 0.45,
+       "at": "9:20"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "6:32",
+       "from": "above",
+       "res": "held",
+       "move": 3.6,
+       "at": "6:33"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "6:36",
+       "from": "above",
+       "res": "held",
+       "move": 3.6,
+       "at": "6:37"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 732.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 10.64
+    },
+    {
+     "px": 730,
+     "type": "volume node",
+     "touches": [],
+     "closest": 8.14
+    },
+    {
+     "px": 710.75,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-09-01",
+       "t": "7:47",
+       "from": "below",
+       "res": "held",
+       "move": 1.75,
+       "at": "7:52"
+      },
+      {
+       "day": "2026-09-01",
+       "t": "8:30",
+       "from": "below",
+       "res": "broke",
+       "move": 0.69,
+       "at": "8:44"
+      },
+      {
+       "day": "2026-09-01",
+       "t": "9:06",
+       "from": "above",
+       "res": "broke",
+       "move": 0.67,
+       "at": "9:17"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "6:31",
+       "from": "above",
+       "res": "broke",
+       "move": 3.1,
+       "at": "6:36"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "6:37",
+       "from": "below",
+       "res": "broke",
+       "move": 0.68,
+       "at": "6:38"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "7:02",
+       "from": "above",
+       "res": "held",
+       "move": 2.81,
+       "at": "7:02"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "7:07",
+       "from": "above",
+       "res": "held",
+       "move": 2.81,
+       "at": "7:11"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "7:56",
+       "from": "above",
+       "res": "held",
+       "move": 5.97,
+       "at": "7:56"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 700,
+     "type": "volume node",
+     "touches": [],
+     "closest": 4.66
+    },
+    {
+     "px": 697,
+     "type": "volume node",
+     "touches": [],
+     "closest": 7.66
+    },
+    {
+     "px": 692.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 12.16
+    },
+    {
+     "px": 728,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 6.14
+    },
+    {
+     "px": 714.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-08-31",
+       "t": "6:35",
+       "from": "above",
+       "res": "held",
+       "move": 1.88,
+       "at": "6:42"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "6:43",
+       "from": "above",
+       "res": "held",
+       "move": 1.88,
+       "at": "6:47"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "7:02",
+       "from": "above",
+       "res": "broke",
+       "move": 0.71,
+       "at": "7:24"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "7:35",
+       "from": "below",
+       "res": "broke",
+       "move": 0.7,
+       "at": "7:42"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "7:47",
+       "from": "above",
+       "res": "held",
+       "move": 1.03,
+       "at": "7:57"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "7:59",
+       "from": "above",
+       "res": "held",
+       "move": 1.06,
+       "at": "8:00"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "8:02",
+       "from": "above",
+       "res": "held",
+       "move": 1.06,
+       "at": "8:06"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "8:08",
+       "from": "above",
+       "res": "held",
+       "move": 1.06,
+       "at": "8:21"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "8:30",
+       "from": "above",
+       "res": "broke",
+       "move": 0.75,
+       "at": "9:04"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "9:10",
+       "from": "below",
+       "res": "broke",
+       "move": 0.75,
+       "at": "9:50"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "10:25",
+       "from": "above",
+       "res": "held",
+       "move": 1.37,
+       "at": "10:41"
+      },
+      {
+       "day": "2026-08-31",
+       "t": "11:35",
+       "from": "above",
+       "res": "held",
+       "move": 0.69,
+       "at": "12:22"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "8:00",
+       "from": "below",
+       "res": "broke",
+       "move": 0.7,
+       "at": "8:04"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 712,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-09-01",
+       "t": "8:45",
+       "from": "below",
+       "res": "held",
+       "move": 1.71,
+       "at": "9:06"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "6:38",
+       "from": "below",
+       "res": "broke",
+       "move": 1.13,
+       "at": "6:39"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "6:56",
+       "from": "above",
+       "res": "held",
+       "move": 1.55,
+       "at": "6:59"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "7:00",
+       "from": "above",
+       "res": "broke",
+       "move": 1.56,
+       "at": "7:01"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "7:03",
+       "from": "below",
+       "res": "held",
+       "move": 1.33,
+       "at": "7:04"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "7:12",
+       "from": "below",
+       "res": "broke",
+       "move": 0.59,
+       "at": "7:17"
+      },
+      {
+       "day": "2026-09-03",
+       "t": "7:32",
+       "from": "above",
+       "res": "held",
+       "move": 2.28,
+       "at": "7:58"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 702,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 2.66
+    },
+    {
+     "px": 698.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 6.16
+    },
+    {
+     "px": 691,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 13.66
+    }
+   ],
+   "all": {
+    "touches": 44,
+    "held": 24,
+    "broke": 19,
+    "chop": 1,
+    "held_pct": 55,
+    "avg_move": 1.38
+   }
+  },
+  {
+   "week": "2026-09-07",
+   "from": "2026-08-10",
+   "to": "2026-09-04",
+   "days": [
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+   ],
+   "levels": [
+    {
+     "px": 717.75,
+     "type": "POC",
+     "touches": [
+      {
+       "day": "2026-09-08",
+       "t": "6:42",
+       "from": "above",
+       "res": "broke",
+       "move": 0.54,
+       "at": "6:44"
+      },
+      {
+       "day": "2026-09-08",
+       "t": "6:45",
+       "from": "below",
+       "res": "held",
+       "move": 2.18,
+       "at": "6:52"
+      },
+      {
+       "day": "2026-09-08",
+       "t": "6:55",
+       "from": "below",
+       "res": "held",
+       "move": 2.18,
+       "at": "7:01"
+      },
+      {
+       "day": "2026-09-08",
+       "t": "7:21",
+       "from": "below",
+       "res": "broke",
+       "move": 0.72,
+       "at": "7:50"
+      },
+      {
+       "day": "2026-09-08",
+       "t": "11:49",
+       "from": "above",
+       "res": "held",
+       "move": 1.8,
+       "at": "11:49"
+      },
+      {
+       "day": "2026-09-08",
+       "t": "12:48",
+       "from": "above",
+       "res": "held",
+       "move": 0.87,
+       "at": "12:49"
+      },
+      {
+       "day": "2026-09-08",
+       "t": "12:50",
+       "from": "above",
+       "res": "chop",
+       "move": 0.87,
+       "at": null
+      },
+      {
+       "day": "2026-09-09",
+       "t": "6:41",
+       "from": "below",
+       "res": "held",
+       "move": 1.35,
+       "at": "6:43"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "6:49",
+       "from": "below",
+       "res": "broke",
+       "move": 0.88,
+       "at": "6:58"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "7:16",
+       "from": "above",
+       "res": "broke",
+       "move": 0.77,
+       "at": "7:21"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "7:28",
+       "from": "below",
+       "res": "broke",
+       "move": 0.42,
+       "at": "8:00"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "8:01",
+       "from": "above",
+       "res": "broke",
+       "move": 1.2,
+       "at": "8:05"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "8:32",
+       "from": "below",
+       "res": "held",
+       "move": 1.53,
+       "at": "8:35"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 732.75,
+     "type": "value area high",
+     "touches": [],
+     "closest": 10.86
+    },
+    {
+     "px": 706.75,
+     "type": "value area low",
+     "touches": [
+      {
+       "day": "2026-09-10",
+       "t": "6:33",
+       "from": "above",
+       "res": "held",
+       "move": 3.61,
+       "at": "6:33"
+      }
+     ],
+     "closest": 0.11
+    },
+    {
+     "px": 732.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 10.61
+    },
+    {
+     "px": 730,
+     "type": "volume node",
+     "touches": [],
+     "closest": 8.11
+    },
+    {
+     "px": 724.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 2.36
+    },
+    {
+     "px": 713.75,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-09-11",
+       "t": "6:31",
+       "from": "above",
+       "res": "held",
+       "move": 3.3,
+       "at": "6:32"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "7:47",
+       "from": "above",
+       "res": "held",
+       "move": 2.54,
+       "at": "7:48"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "7:55",
+       "from": "above",
+       "res": "held",
+       "move": 2.98,
+       "at": "7:57"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 710.75,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-09-10",
+       "t": "7:24",
+       "from": "below",
+       "res": "broke",
+       "move": 1.01,
+       "at": "7:35"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "7:43",
+       "from": "above",
+       "res": "held",
+       "move": 1.08,
+       "at": "7:56"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "8:01",
+       "from": "above",
+       "res": "held",
+       "move": 0.97,
+       "at": "8:05"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "8:09",
+       "from": "above",
+       "res": "held",
+       "move": 1.23,
+       "at": "8:10"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "8:15",
+       "from": "above",
+       "res": "held",
+       "move": 1.23,
+       "at": "8:27"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "8:30",
+       "from": "above",
+       "res": "held",
+       "move": 1.23,
+       "at": "8:36"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "8:39",
+       "from": "above",
+       "res": "held",
+       "move": 0.88,
+       "at": "8:43"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "8:46",
+       "from": "above",
+       "res": "broke",
+       "move": 0.49,
+       "at": "8:56"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "8:59",
+       "from": "below",
+       "res": "held",
+       "move": 1.42,
+       "at": "9:07"
+      },
+      {
+       "day": "2026-09-10",
+       "t": "9:44",
+       "from": "below",
+       "res": "held",
+       "move": 0.65,
+       "at": "10:37"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 727,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 5.11
+    },
+    {
+     "px": 722.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 0.61
+    },
+    {
+     "px": 715.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-09-09",
+       "t": "6:30",
+       "from": "above",
+       "res": "held",
+       "move": 3.81,
+       "at": "6:30"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "8:11",
+       "from": "above",
+       "res": "held",
+       "move": 1.73,
+       "at": "8:18"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "8:21",
+       "from": "above",
+       "res": "broke",
+       "move": 1.73,
+       "at": "8:23"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "8:30",
+       "from": "below",
+       "res": "broke",
+       "move": 0.5,
+       "at": "8:36"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "8:38",
+       "from": "above",
+       "res": "held",
+       "move": 1.73,
+       "at": "8:39"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "8:41",
+       "from": "above",
+       "res": "held",
+       "move": 1.38,
+       "at": "8:43"
+      },
+      {
+       "day": "2026-09-09",
+       "t": "9:09",
+       "from": "above",
+       "res": "held",
+       "move": 0.69,
+       "at": "9:38"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 1.8,
+       "at": "6:31"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "6:33",
+       "from": "below",
+       "res": "held",
+       "move": 1.16,
+       "at": "6:36"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "6:37",
+       "from": "below",
+       "res": "broke",
+       "move": 1.16,
+       "at": "6:44"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "6:45",
+       "from": "above",
+       "res": "held",
+       "move": 1.8,
+       "at": "6:45"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "6:48",
+       "from": "above",
+       "res": "held",
+       "move": 1.8,
+       "at": "6:49"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "6:51",
+       "from": "above",
+       "res": "held",
+       "move": 1.8,
+       "at": "6:55"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "7:03",
+       "from": "above",
+       "res": "broke",
+       "move": 1.58,
+       "at": "7:06"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "7:09",
+       "from": "below",
+       "res": "broke",
+       "move": 0.83,
+       "at": "7:19"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "7:33",
+       "from": "above",
+       "res": "broke",
+       "move": 0.66,
+       "at": "7:43"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "7:48",
+       "from": "below",
+       "res": "held",
+       "move": 1.62,
+       "at": "7:48"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "8:03",
+       "from": "below",
+       "res": "broke",
+       "move": 0.66,
+       "at": "8:06"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "8:09",
+       "from": "above",
+       "res": "held",
+       "move": 2.38,
+       "at": "8:16"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "9:29",
+       "from": "above",
+       "res": "held",
+       "move": 0.97,
+       "at": "9:33"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "9:36",
+       "from": "above",
+       "res": "held",
+       "move": 1.16,
+       "at": "9:44"
+      },
+      {
+       "day": "2026-09-11",
+       "t": "12:10",
+       "from": "above",
+       "res": "chop",
+       "move": 0.63,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 712.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 0.44
+    }
+   ],
+   "all": {
+    "touches": 49,
+    "held": 31,
+    "broke": 16,
+    "chop": 2,
+    "held_pct": 63,
+    "avg_move": 1.42
+   }
+  },
+  {
+   "week": "2026-09-14",
+   "from": "2026-08-14",
+   "to": "2026-09-11",
+   "days": [
+    "2026-09-14",
+    "2026-09-15",
+    "2026-09-16",
+    "2026-09-17",
+    "2026-09-18"
+   ],
+   "levels": [
+    {
+     "px": 717.5,
+     "type": "POC",
+     "touches": [
+      {
+       "day": "2026-09-17",
+       "t": "12:44",
+       "from": "below",
+       "res": "chop",
+       "move": 0.91,
+       "at": null
+      },
+      {
+       "day": "2026-09-18",
+       "t": "6:55",
+       "from": "above",
+       "res": "broke",
+       "move": 0.69,
+       "at": "7:03"
+      },
+      {
+       "day": "2026-09-18",
+       "t": "7:10",
+       "from": "below",
+       "res": "held",
+       "move": 1.62,
+       "at": "7:13"
+      },
+      {
+       "day": "2026-09-18",
+       "t": "7:39",
+       "from": "below",
+       "res": "held",
+       "move": 1.38,
+       "at": "7:41"
+      },
+      {
+       "day": "2026-09-18",
+       "t": "7:51",
+       "from": "below",
+       "res": "held",
+       "move": 0.95,
+       "at": "8:14"
+      },
+      {
+       "day": "2026-09-18",
+       "t": "8:26",
+       "from": "below",
+       "res": "held",
+       "move": 1.24,
+       "at": "8:38"
+      },
+      {
+       "day": "2026-09-18",
+       "t": "10:25",
+       "from": "below",
+       "res": "chop",
+       "move": 0.65,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 719.75,
+     "type": "value area high",
+     "touches": [
+      {
+       "day": "2026-09-18",
+       "t": "6:40",
+       "from": "below",
+       "res": "held",
+       "move": 3.35,
+       "at": "6:43"
+      },
+      {
+       "day": "2026-09-18",
+       "t": "11:53",
+       "from": "below",
+       "res": "held",
+       "move": 0.7,
+       "at": "12:30"
+      },
+      {
+       "day": "2026-09-18",
+       "t": "12:43",
+       "from": "below",
+       "res": "broke",
+       "move": 0.38,
+       "at": "12:55"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 708,
+     "type": "value area low",
+     "touches": [
+      {
+       "day": "2026-09-14",
+       "t": "7:10",
+       "from": "below",
+       "res": "held",
+       "move": 3.35,
+       "at": "7:15"
+      },
+      {
+       "day": "2026-09-14",
+       "t": "8:27",
+       "from": "below",
+       "res": "broke",
+       "move": 0.62,
+       "at": "8:32"
+      },
+      {
+       "day": "2026-09-14",
+       "t": "8:33",
+       "from": "above",
+       "res": "held",
+       "move": 2.65,
+       "at": "8:33"
+      },
+      {
+       "day": "2026-09-15",
+       "t": "6:30",
+       "from": "above",
+       "res": "held",
+       "move": 1.53,
+       "at": "6:38"
+      },
+      {
+       "day": "2026-09-15",
+       "t": "7:04",
+       "from": "above",
+       "res": "broke",
+       "move": 0.52,
+       "at": "7:11"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "6:31",
+       "from": "above",
+       "res": "held",
+       "move": 2.3,
+       "at": "6:42"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:32",
+       "from": "above",
+       "res": "broke",
+       "move": 2.62,
+       "at": "11:35"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:38",
+       "from": "below",
+       "res": "broke",
+       "move": 3.98,
+       "at": "11:40"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:48",
+       "from": "above",
+       "res": "broke",
+       "move": 0.48,
+       "at": "11:50"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 729.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 8.02
+    },
+    {
+     "px": 708.75,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-09-14",
+       "t": "8:32",
+       "from": "below",
+       "res": "broke",
+       "move": 1.32,
+       "at": "8:34"
+      },
+      {
+       "day": "2026-09-14",
+       "t": "9:05",
+       "from": "above",
+       "res": "held",
+       "move": 2.4,
+       "at": "9:11"
+      },
+      {
+       "day": "2026-09-15",
+       "t": "6:33",
+       "from": "below",
+       "res": "held",
+       "move": 1.19,
+       "at": "6:33"
+      },
+      {
+       "day": "2026-09-15",
+       "t": "6:35",
+       "from": "below",
+       "res": "held",
+       "move": 0.87,
+       "at": "7:05"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "6:30",
+       "from": "below",
+       "res": "held",
+       "move": 1.11,
+       "at": "6:32"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "6:35",
+       "from": "below",
+       "res": "held",
+       "move": 1.11,
+       "at": "6:36"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "6:41",
+       "from": "below",
+       "res": "broke",
+       "move": 0.46,
+       "at": "6:47"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "7:06",
+       "from": "above",
+       "res": "held",
+       "move": 1.39,
+       "at": "7:07"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "7:12",
+       "from": "above",
+       "res": "held",
+       "move": 1.39,
+       "at": "7:14"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "7:37",
+       "from": "above",
+       "res": "held",
+       "move": 2.29,
+       "at": "7:38"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "10:41",
+       "from": "above",
+       "res": "held",
+       "move": 2.9,
+       "at": "10:53"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:01",
+       "from": "above",
+       "res": "held",
+       "move": 2.9,
+       "at": "11:02"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:27",
+       "from": "above",
+       "res": "held",
+       "move": 1.87,
+       "at": "11:29"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:31",
+       "from": "above",
+       "res": "broke",
+       "move": 1.87,
+       "at": "11:32"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:33",
+       "from": "below",
+       "res": "held",
+       "move": 4.73,
+       "at": "11:33"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:40",
+       "from": "below",
+       "res": "broke",
+       "move": 5.53,
+       "at": "11:42"
+      },
+      {
+       "day": "2026-09-16",
+       "t": "11:46",
+       "from": "above",
+       "res": "broke",
+       "move": 0.84,
+       "at": "11:48"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 731.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 9.52
+    },
+    {
+     "px": 727,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 5.27
+    },
+    {
+     "px": 724.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 3.02
+    },
+    {
+     "px": 712.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-09-14",
+       "t": "9:48",
+       "from": "below",
+       "res": "held",
+       "move": 1.19,
+       "at": "9:50"
+      },
+      {
+       "day": "2026-09-14",
+       "t": "10:12",
+       "from": "below",
+       "res": "held",
+       "move": 1.14,
+       "at": "10:13"
+      },
+      {
+       "day": "2026-09-14",
+       "t": "10:29",
+       "from": "below",
+       "res": "held",
+       "move": 0.44,
+       "at": "11:28"
+      },
+      {
+       "day": "2026-09-14",
+       "t": "11:34",
+       "from": "below",
+       "res": "held",
+       "move": 0.96,
+       "at": "11:46"
+      },
+      {
+       "day": "2026-09-14",
+       "t": "11:47",
+       "from": "below",
+       "res": "held",
+       "move": 1.5,
+       "at": "11:58"
+      }
+     ],
+     "closest": 0
+    }
+   ],
+   "all": {
+    "touches": 41,
+    "held": 27,
+    "broke": 12,
+    "chop": 2,
+    "held_pct": 66,
+    "avg_move": 1.69
+   }
+  },
+  {
+   "week": "2026-09-21",
+   "from": "2026-08-21",
+   "to": "2026-09-18",
+   "days": [
+    "2026-09-21",
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-24",
+    "2026-09-25"
+   ],
+   "levels": [
+    {
+     "px": 716.75,
+     "type": "POC",
+     "touches": [],
+     "closest": 11.06
+    },
+    {
+     "px": 719.75,
+     "type": "value area high",
+     "touches": [],
+     "closest": 8.06
+    },
+    {
+     "px": 706.75,
+     "type": "value area low",
+     "touches": [],
+     "closest": 21.06
+    },
+    {
+     "px": 709.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 18.31
+    },
+    {
+     "px": 712.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 15.31
+    }
+   ],
+   "all": {
+    "touches": 0,
+    "held": 0,
+    "broke": 0,
+    "chop": 0,
+    "held_pct": null,
+    "avg_move": null
+   }
+  },
+  {
+   "week": "2026-09-28",
+   "from": "2026-08-28",
+   "to": "2026-09-25",
+   "days": [
+    "2026-09-28",
+    "2026-09-29",
+    "2026-09-30",
+    "2026-10-01",
+    "2026-10-02"
+   ],
+   "levels": [
+    {
+     "px": 716.5,
+     "type": "POC",
+     "touches": [],
+     "closest": 15.13
+    },
+    {
+     "px": 745,
+     "type": "value area high",
+     "touches": [
+      {
+       "day": "2026-09-30",
+       "t": "8:49",
+       "from": "below",
+       "res": "held",
+       "move": 1.31,
+       "at": "8:54"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "9:11",
+       "from": "below",
+       "res": "held",
+       "move": 1.94,
+       "at": "9:17"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 704.25,
+     "type": "value area low",
+     "touches": [],
+     "closest": 27.38
+    },
+    {
+     "px": 744.75,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-09-30",
+       "t": "7:06",
+       "from": "below",
+       "res": "held",
+       "move": 2.57,
+       "at": "7:09"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "7:57",
+       "from": "below",
+       "res": "held",
+       "move": 2.02,
+       "at": "7:58"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "8:49",
+       "from": "below",
+       "res": "held",
+       "move": 1.06,
+       "at": "8:54"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "9:00",
+       "from": "below",
+       "res": "held",
+       "move": 1.07,
+       "at": "9:28"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "10:46",
+       "from": "below",
+       "res": "held",
+       "move": 4.31,
+       "at": "10:48"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 741,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-09-28",
+       "t": "6:32",
+       "from": "below",
+       "res": "held",
+       "move": 3.78,
+       "at": "6:34"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "6:30",
+       "from": "below",
+       "res": "broke",
+       "move": 1.24,
+       "at": "6:31"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "6:33",
+       "from": "above",
+       "res": "held",
+       "move": 3.3,
+       "at": "6:49"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "6:53",
+       "from": "above",
+       "res": "held",
+       "move": 3.73,
+       "at": "6:54"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "12:54",
+       "from": "above",
+       "res": "broke",
+       "move": 0.95,
+       "at": "12:59"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "6:31",
+       "from": "above",
+       "res": "held",
+       "move": 2.92,
+       "at": "6:32"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "6:36",
+       "from": "above",
+       "res": "held",
+       "move": 2.58,
+       "at": "6:36"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "6:44",
+       "from": "above",
+       "res": "held",
+       "move": 1.64,
+       "at": "6:52"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "6:56",
+       "from": "above",
+       "res": "held",
+       "move": 0.92,
+       "at": "6:57"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "7:00",
+       "from": "above",
+       "res": "broke",
+       "move": 0.51,
+       "at": "7:00"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "7:39",
+       "from": "below",
+       "res": "held",
+       "move": 4.33,
+       "at": "7:41"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "10:20",
+       "from": "below",
+       "res": "broke",
+       "move": 0.63,
+       "at": "10:24"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "11:05",
+       "from": "above",
+       "res": "held",
+       "move": 2.61,
+       "at": "11:18"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "11:20",
+       "from": "above",
+       "res": "held",
+       "move": 2.66,
+       "at": "11:23"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 735.5,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-09-28",
+       "t": "7:12",
+       "from": "above",
+       "res": "held",
+       "move": 2.04,
+       "at": "7:16"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "7:37",
+       "from": "above",
+       "res": "broke",
+       "move": 0.63,
+       "at": "7:42"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "8:36",
+       "from": "below",
+       "res": "held",
+       "move": 1.45,
+       "at": "8:41"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "8:55",
+       "from": "below",
+       "res": "broke",
+       "move": 0.45,
+       "at": "9:16"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "9:44",
+       "from": "above",
+       "res": "held",
+       "move": 1.32,
+       "at": "9:48"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "9:56",
+       "from": "above",
+       "res": "held",
+       "move": 1.5,
+       "at": "10:23"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "10:53",
+       "from": "above",
+       "res": "held",
+       "move": 2.34,
+       "at": "11:00"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 728.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 3.38
+    },
+    {
+     "px": 709,
+     "type": "volume node",
+     "touches": [],
+     "closest": 22.63
+    },
+    {
+     "px": 704.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 26.88
+    },
+    {
+     "px": 743,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-09-30",
+       "t": "6:59",
+       "from": "below",
+       "res": "broke",
+       "move": 0.64,
+       "at": "7:01"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "7:10",
+       "from": "above",
+       "res": "held",
+       "move": 1.13,
+       "at": "7:20"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "7:25",
+       "from": "above",
+       "res": "held",
+       "move": 1.49,
+       "at": "7:53"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "8:01",
+       "from": "above",
+       "res": "held",
+       "move": 1.1,
+       "at": "8:29"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "8:44",
+       "from": "above",
+       "res": "held",
+       "move": 2.1,
+       "at": "8:48"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "9:32",
+       "from": "above",
+       "res": "held",
+       "move": 1.27,
+       "at": "9:43"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "10:15",
+       "from": "above",
+       "res": "broke",
+       "move": 0.48,
+       "at": "10:26"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "10:32",
+       "from": "below",
+       "res": "broke",
+       "move": 0.44,
+       "at": "10:49"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "11:06",
+       "from": "above",
+       "res": "held",
+       "move": 1.06,
+       "at": "11:12"
+      },
+      {
+       "day": "2026-09-30",
+       "t": "11:20",
+       "from": "above",
+       "res": "chop",
+       "move": 0.46,
+       "at": null
+      },
+      {
+       "day": "2026-09-30",
+       "t": "12:37",
+       "from": "above",
+       "res": "broke",
+       "move": 0.62,
+       "at": "12:50"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "6:30",
+       "from": "below",
+       "res": "held",
+       "move": 2.66,
+       "at": "6:30"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "6:33",
+       "from": "below",
+       "res": "held",
+       "move": 4.9,
+       "at": "6:35"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "6:37",
+       "from": "below",
+       "res": "held",
+       "move": 5.39,
+       "at": "6:41"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "10:25",
+       "from": "below",
+       "res": "broke",
+       "move": 1.01,
+       "at": "10:31"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "10:32",
+       "from": "above",
+       "res": "held",
+       "move": 1.67,
+       "at": "10:44"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "10:54",
+       "from": "above",
+       "res": "broke",
+       "move": 0.86,
+       "at": "11:00"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "11:28",
+       "from": "below",
+       "res": "chop",
+       "move": 0.79,
+       "at": null
+      },
+      {
+       "day": "2026-10-01",
+       "t": "12:54",
+       "from": "above",
+       "res": "broke",
+       "move": 0.52,
+       "at": "12:58"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 737.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-09-28",
+       "t": "6:44",
+       "from": "above",
+       "res": "held",
+       "move": 1.49,
+       "at": "6:53"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "7:03",
+       "from": "above",
+       "res": "broke",
+       "move": 0.65,
+       "at": "7:08"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "7:22",
+       "from": "below",
+       "res": "held",
+       "move": 6.12,
+       "at": "7:25"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "9:20",
+       "from": "below",
+       "res": "broke",
+       "move": 1.1,
+       "at": "9:25"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "9:32",
+       "from": "above",
+       "res": "held",
+       "move": 1.41,
+       "at": "9:34"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "9:41",
+       "from": "above",
+       "res": "broke",
+       "move": 0.39,
+       "at": "10:07"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "10:11",
+       "from": "below",
+       "res": "broke",
+       "move": 0.99,
+       "at": "10:11"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "10:18",
+       "from": "above",
+       "res": "chop",
+       "move": 0.95,
+       "at": null
+      },
+      {
+       "day": "2026-09-28",
+       "t": "12:25",
+       "from": "below",
+       "res": "held",
+       "move": 1.94,
+       "at": "12:30"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "6:34",
+       "from": "above",
+       "res": "broke",
+       "move": 1.17,
+       "at": "6:40"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "6:47",
+       "from": "below",
+       "res": "broke",
+       "move": 1.15,
+       "at": "6:55"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "6:59",
+       "from": "above",
+       "res": "held",
+       "move": 2.17,
+       "at": "7:16"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "7:20",
+       "from": "above",
+       "res": "held",
+       "move": 2.38,
+       "at": "7:21"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "8:08",
+       "from": "above",
+       "res": "broke",
+       "move": 0.99,
+       "at": "8:23"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "8:34",
+       "from": "below",
+       "res": "held",
+       "move": 1.26,
+       "at": "8:46"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "8:47",
+       "from": "below",
+       "res": "held",
+       "move": 1.29,
+       "at": "8:52"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "11:07",
+       "from": "below",
+       "res": "held",
+       "move": 1.36,
+       "at": "11:09"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "11:19",
+       "from": "below",
+       "res": "broke",
+       "move": 0.6,
+       "at": "11:40"
+      },
+      {
+       "day": "2026-09-29",
+       "t": "12:14",
+       "from": "above",
+       "res": "chop",
+       "move": 0.84,
+       "at": null
+      },
+      {
+       "day": "2026-10-01",
+       "t": "7:05",
+       "from": "above",
+       "res": "held",
+       "move": 2.64,
+       "at": "7:08"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "7:19",
+       "from": "above",
+       "res": "held",
+       "move": 3.11,
+       "at": "7:26"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "7:28",
+       "from": "above",
+       "res": "held",
+       "move": 3.11,
+       "at": "7:30"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "7:31",
+       "from": "above",
+       "res": "held",
+       "move": 3.11,
+       "at": "7:32"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "8:01",
+       "from": "above",
+       "res": "broke",
+       "move": 2.03,
+       "at": "8:08"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "8:13",
+       "from": "below",
+       "res": "broke",
+       "move": 0.94,
+       "at": "8:16"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "8:32",
+       "from": "above",
+       "res": "broke",
+       "move": 0.96,
+       "at": "8:35"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "8:37",
+       "from": "below",
+       "res": "held",
+       "move": 1.17,
+       "at": "8:43"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "8:48",
+       "from": "below",
+       "res": "held",
+       "move": 1.16,
+       "at": "8:51"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "8:55",
+       "from": "below",
+       "res": "broke",
+       "move": 0.54,
+       "at": "9:06"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "9:13",
+       "from": "above",
+       "res": "held",
+       "move": 1.9,
+       "at": "9:17"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "9:20",
+       "from": "above",
+       "res": "held",
+       "move": 1.9,
+       "at": "9:24"
+      },
+      {
+       "day": "2026-10-01",
+       "t": "9:53",
+       "from": "above",
+       "res": "held",
+       "move": 3.79,
+       "at": "10:02"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 733.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-09-28",
+       "t": "7:43",
+       "from": "above",
+       "res": "broke",
+       "move": 1.54,
+       "at": "7:47"
+      },
+      {
+       "day": "2026-09-28",
+       "t": "8:00",
+       "from": "below",
+       "res": "broke",
+       "move": 0.65,
+       "at": "8:07"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 730.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 1.13
+    },
+    {
+     "px": 727,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 4.63
+    },
+    {
+     "px": 724.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 6.88
+    },
+    {
+     "px": 713,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 18.63
+    },
+    {
+     "px": 706.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 25.38
+    }
+   ],
+   "all": {
+    "touches": 81,
+    "held": 50,
+    "broke": 27,
+    "chop": 4,
+    "held_pct": 62,
+    "avg_move": 1.74
+   }
+  },
+  {
+   "week": "2026-10-05",
+   "from": "2026-09-04",
+   "to": "2026-10-02",
+   "days": [
+    "2026-10-05",
+    "2026-10-06",
+    "2026-10-07",
+    "2026-10-08",
+    "2026-10-09"
+   ],
+   "levels": [
+    {
+     "px": 716.5,
+     "type": "POC",
+     "touches": [],
+     "closest": 26.73
+    },
+    {
+     "px": 745,
+     "type": "value area high",
+     "touches": [
+      {
+       "day": "2026-10-08",
+       "t": "10:23",
+       "from": "above",
+       "res": "broke",
+       "move": 1.83,
+       "at": "10:26"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "10:31",
+       "from": "below",
+       "res": "broke",
+       "move": 0.69,
+       "at": "10:33"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "10:48",
+       "from": "above",
+       "res": "held",
+       "move": 2.67,
+       "at": "10:57"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "11:00",
+       "from": "above",
+       "res": "held",
+       "move": 3.76,
+       "at": "11:05"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 704.25,
+     "type": "value area low",
+     "touches": [],
+     "closest": 38.98
+    },
+    {
+     "px": 753.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-05",
+       "t": "6:43",
+       "from": "below",
+       "res": "held",
+       "move": 2.51,
+       "at": "6:46"
+      },
+      {
+       "day": "2026-10-05",
+       "t": "7:16",
+       "from": "below",
+       "res": "chop",
+       "move": 0.69,
+       "at": null
+      },
+      {
+       "day": "2026-10-07",
+       "t": "6:30",
+       "from": "above",
+       "res": "held",
+       "move": 1.58,
+       "at": "6:30"
+      },
+      {
+       "day": "2026-10-07",
+       "t": "6:37",
+       "from": "above",
+       "res": "broke",
+       "move": 0.94,
+       "at": "6:38"
+      },
+      {
+       "day": "2026-10-07",
+       "t": "6:44",
+       "from": "below",
+       "res": "held",
+       "move": 1.5,
+       "at": "6:46"
+      },
+      {
+       "day": "2026-10-07",
+       "t": "6:50",
+       "from": "below",
+       "res": "broke",
+       "move": 0.78,
+       "at": "6:58"
+      },
+      {
+       "day": "2026-10-07",
+       "t": "7:02",
+       "from": "above",
+       "res": "held",
+       "move": 1.84,
+       "at": "7:19"
+      },
+      {
+       "day": "2026-10-07",
+       "t": "7:53",
+       "from": "above",
+       "res": "held",
+       "move": 2.37,
+       "at": "7:58"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "6:30",
+       "from": "above",
+       "res": "held",
+       "move": 1.7,
+       "at": "6:33"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "6:40",
+       "from": "above",
+       "res": "held",
+       "move": 1.25,
+       "at": "6:46"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "6:48",
+       "from": "above",
+       "res": "broke",
+       "move": 1.51,
+       "at": "6:54"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "6:57",
+       "from": "below",
+       "res": "broke",
+       "move": 0.47,
+       "at": "7:05"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "8:35",
+       "from": "above",
+       "res": "broke",
+       "move": 0.43,
+       "at": "8:55"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "9:00",
+       "from": "below",
+       "res": "held",
+       "move": 0.96,
+       "at": "9:03"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "9:08",
+       "from": "below",
+       "res": "broke",
+       "move": 0.67,
+       "at": "9:17"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "9:38",
+       "from": "above",
+       "res": "held",
+       "move": 0.83,
+       "at": "9:41"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "9:42",
+       "from": "above",
+       "res": "broke",
+       "move": 0.78,
+       "at": "9:47"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 749.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-08",
+       "t": "9:50",
+       "from": "above",
+       "res": "broke",
+       "move": 1.17,
+       "at": "9:54"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "9:55",
+       "from": "below",
+       "res": "held",
+       "move": 4.03,
+       "at": "9:56"
+      },
+      {
+       "day": "2026-10-09",
+       "t": "6:44",
+       "from": "above",
+       "res": "held",
+       "move": 0.95,
+       "at": "7:30"
+      },
+      {
+       "day": "2026-10-09",
+       "t": "7:40",
+       "from": "above",
+       "res": "held",
+       "move": 1.61,
+       "at": "7:50"
+      },
+      {
+       "day": "2026-10-09",
+       "t": "8:07",
+       "from": "above",
+       "res": "held",
+       "move": 1.14,
+       "at": "8:17"
+      },
+      {
+       "day": "2026-10-09",
+       "t": "8:29",
+       "from": "above",
+       "res": "held",
+       "move": 1.51,
+       "at": "8:38"
+      },
+      {
+       "day": "2026-10-09",
+       "t": "9:00",
+       "from": "above",
+       "res": "held",
+       "move": 1.84,
+       "at": "9:04"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 744.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-08",
+       "t": "10:26",
+       "from": "above",
+       "res": "held",
+       "move": 2.58,
+       "at": "10:32"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 741,
+     "type": "volume node",
+     "touches": [],
+     "closest": 2.23
+    },
+    {
+     "px": 738.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 4.98
+    },
+    {
+     "px": 728.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 14.98
+    },
+    {
+     "px": 709.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 33.73
+    },
+    {
+     "px": 704.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 38.48
+    },
+    {
+     "px": 748.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-08",
+       "t": "9:53",
+       "from": "above",
+       "res": "broke",
+       "move": 0.9,
+       "at": "10:00"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "10:02",
+       "from": "below",
+       "res": "held",
+       "move": 5.02,
+       "at": "10:03"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "10:13",
+       "from": "below",
+       "res": "held",
+       "move": 5.02,
+       "at": "10:16"
+      },
+      {
+       "day": "2026-10-08",
+       "t": "11:24",
+       "from": "below",
+       "res": "held",
+       "move": 2.03,
+       "at": "11:33"
+      },
+      {
+       "day": "2026-10-09",
+       "t": "7:11",
+       "from": "above",
+       "res": "held",
+       "move": 2.26,
+       "at": "7:12"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 742.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 0.73
+    },
+    {
+     "px": 739.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 3.73
+    },
+    {
+     "px": 730.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 12.73
+    },
+    {
+     "px": 727,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 16.23
+    },
+    {
+     "px": 724.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 18.48
+    },
+    {
+     "px": 722.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 20.73
+    },
+    {
+     "px": 713,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 30.23
+    },
+    {
+     "px": 706.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 36.48
+    }
+   ],
+   "all": {
+    "touches": 34,
+    "held": 22,
+    "broke": 11,
+    "chop": 1,
+    "held_pct": 65,
+    "avg_move": 1.76
+   }
+  },
+  {
+   "week": "2026-10-12",
+   "from": "2026-09-14",
+   "to": "2026-10-09",
+   "days": [
+    "2026-10-12",
+    "2026-10-13",
+    "2026-10-14",
+    "2026-10-15",
+    "2026-10-16"
+   ],
+   "levels": [
+    {
+     "px": 741,
+     "type": "POC",
+     "touches": [
+      {
+       "day": "2026-10-13",
+       "t": "6:37",
+       "from": "below",
+       "res": "broke",
+       "move": 0.42,
+       "at": "6:38"
+      },
+      {
+       "day": "2026-10-13",
+       "t": "7:54",
+       "from": "above",
+       "res": "held",
+       "move": 1.12,
+       "at": "7:58"
+      },
+      {
+       "day": "2026-10-13",
+       "t": "8:11",
+       "from": "above",
+       "res": "held",
+       "move": 1.12,
+       "at": "8:12"
+      },
+      {
+       "day": "2026-10-13",
+       "t": "8:21",
+       "from": "above",
+       "res": "broke",
+       "move": 0.62,
+       "at": "8:30"
+      },
+      {
+       "day": "2026-10-13",
+       "t": "8:54",
+       "from": "below",
+       "res": "broke",
+       "move": 0.39,
+       "at": "9:00"
+      },
+      {
+       "day": "2026-10-13",
+       "t": "10:52",
+       "from": "above",
+       "res": "held",
+       "move": 2.34,
+       "at": "10:57"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 760.75,
+     "type": "value area high",
+     "touches": [],
+     "closest": 10.96
+    },
+    {
+     "px": 704.25,
+     "type": "value area low",
+     "touches": [],
+     "closest": 2.98
+    },
+    {
+     "px": 760.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 10.96
+    },
+    {
+     "px": 753.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 3.71
+    },
+    {
+     "px": 749.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-12",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 0.54,
+       "at": "6:31"
+      },
+      {
+       "day": "2026-10-12",
+       "t": "6:38",
+       "from": "below",
+       "res": "held",
+       "move": 3.08,
+       "at": "6:41"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 744.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 0.3
+    },
+    {
+     "px": 738.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-14",
+       "t": "6:30",
+       "from": "below",
+       "res": "held",
+       "move": 2.35,
+       "at": "6:31"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "6:32",
+       "from": "below",
+       "res": "held",
+       "move": 2.35,
+       "at": "6:35"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "6:38",
+       "from": "below",
+       "res": "broke",
+       "move": 2.35,
+       "at": "6:40"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "6:44",
+       "from": "above",
+       "res": "held",
+       "move": 2.28,
+       "at": "6:46"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "6:52",
+       "from": "above",
+       "res": "broke",
+       "move": 0.98,
+       "at": "6:55"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 728.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-14",
+       "t": "10:41",
+       "from": "above",
+       "res": "held",
+       "move": 0.89,
+       "at": "10:47"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "10:50",
+       "from": "above",
+       "res": "broke",
+       "move": 1.04,
+       "at": "11:00"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "11:02",
+       "from": "below",
+       "res": "broke",
+       "move": 1.07,
+       "at": "11:13"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "11:23",
+       "from": "above",
+       "res": "broke",
+       "move": 0.79,
+       "at": "11:40"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "11:48",
+       "from": "below",
+       "res": "held",
+       "move": 1.86,
+       "at": "12:00"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "12:19",
+       "from": "below",
+       "res": "broke",
+       "move": 0.66,
+       "at": "12:24"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "12:38",
+       "from": "above",
+       "res": "held",
+       "move": 1.16,
+       "at": "12:40"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "12:45",
+       "from": "above",
+       "res": "held",
+       "move": 1.16,
+       "at": "12:52"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "12:55",
+       "from": "above",
+       "res": "chop",
+       "move": 0.8,
+       "at": null
+      },
+      {
+       "day": "2026-10-15",
+       "t": "12:16",
+       "from": "below",
+       "res": "broke",
+       "move": 0.65,
+       "at": "12:46"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "12:50",
+       "from": "above",
+       "res": "chop",
+       "move": 0.78,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 716.75,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-15",
+       "t": "6:53",
+       "from": "above",
+       "res": "broke",
+       "move": 4.7,
+       "at": "6:54"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "6:58",
+       "from": "below",
+       "res": "broke",
+       "move": 1.18,
+       "at": "7:00"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "8:22",
+       "from": "above",
+       "res": "held",
+       "move": 2.17,
+       "at": "8:26"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "8:57",
+       "from": "above",
+       "res": "broke",
+       "move": 1.09,
+       "at": "9:02"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "9:07",
+       "from": "below",
+       "res": "held",
+       "move": 1.16,
+       "at": "9:08"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "9:10",
+       "from": "below",
+       "res": "held",
+       "move": 1.16,
+       "at": "9:34"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "9:38",
+       "from": "below",
+       "res": "held",
+       "move": 3.79,
+       "at": "9:42"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 709.5,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-16",
+       "t": "11:43",
+       "from": "above",
+       "res": "broke",
+       "move": 0.95,
+       "at": "11:55"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "11:59",
+       "from": "below",
+       "res": "held",
+       "move": 2.27,
+       "at": "12:03"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "12:11",
+       "from": "below",
+       "res": "broke",
+       "move": 1.27,
+       "at": "12:14"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "12:17",
+       "from": "above",
+       "res": "held",
+       "move": 1.63,
+       "at": "12:25"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "12:31",
+       "from": "above",
+       "res": "broke",
+       "move": 1.14,
+       "at": "12:42"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "12:48",
+       "from": "below",
+       "res": "broke",
+       "move": 0.7,
+       "at": "12:56"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 704.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 2.48
+    },
+    {
+     "px": 758.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 8.71
+    },
+    {
+     "px": 752,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 2.21
+    },
+    {
+     "px": 748.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-12",
+       "t": "6:31",
+       "from": "above",
+       "res": "broke",
+       "move": 1.2,
+       "at": "6:34"
+      },
+      {
+       "day": "2026-10-12",
+       "t": "6:35",
+       "from": "below",
+       "res": "broke",
+       "move": 0.95,
+       "at": "6:39"
+      },
+      {
+       "day": "2026-10-12",
+       "t": "6:41",
+       "from": "above",
+       "res": "broke",
+       "move": 0.85,
+       "at": "6:53"
+      },
+      {
+       "day": "2026-10-12",
+       "t": "6:55",
+       "from": "below",
+       "res": "held",
+       "move": 2.83,
+       "at": "7:02"
+      },
+      {
+       "day": "2026-10-12",
+       "t": "9:07",
+       "from": "below",
+       "res": "held",
+       "move": 1.64,
+       "at": "9:09"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 739.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-13",
+       "t": "6:35",
+       "from": "above",
+       "res": "held",
+       "move": 4.7,
+       "at": "6:36"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "6:40",
+       "from": "below",
+       "res": "held",
+       "move": 3.6,
+       "at": "6:44"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "6:46",
+       "from": "below",
+       "res": "held",
+       "move": 3.89,
+       "at": "6:52"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 730.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-14",
+       "t": "9:12",
+       "from": "above",
+       "res": "broke",
+       "move": 1.2,
+       "at": "9:24"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "9:25",
+       "from": "below",
+       "res": "held",
+       "move": 1.25,
+       "at": "9:31"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "9:34",
+       "from": "below",
+       "res": "broke",
+       "move": 0.68,
+       "at": "9:40"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "9:54",
+       "from": "above",
+       "res": "held",
+       "move": 1.49,
+       "at": "9:57"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "10:05",
+       "from": "above",
+       "res": "broke",
+       "move": 0.5,
+       "at": "10:25"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 726.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-14",
+       "t": "11:01",
+       "from": "above",
+       "res": "held",
+       "move": 2.54,
+       "at": "11:02"
+      },
+      {
+       "day": "2026-10-14",
+       "t": "12:01",
+       "from": "above",
+       "res": "held",
+       "move": 2.57,
+       "at": "12:11"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "10:41",
+       "from": "below",
+       "res": "held",
+       "move": 2.56,
+       "at": "10:54"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "12:05",
+       "from": "below",
+       "res": "broke",
+       "move": 0.46,
+       "at": "12:12"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 724.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-15",
+       "t": "8:04",
+       "from": "below",
+       "res": "held",
+       "move": 1.19,
+       "at": "8:07"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "8:09",
+       "from": "below",
+       "res": "broke",
+       "move": 1.07,
+       "at": "8:13"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "8:23",
+       "from": "above",
+       "res": "broke",
+       "move": 0.7,
+       "at": "8:31"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "8:32",
+       "from": "below",
+       "res": "held",
+       "move": 1.12,
+       "at": "8:33"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "8:35",
+       "from": "below",
+       "res": "held",
+       "move": 1.12,
+       "at": "8:45"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "8:47",
+       "from": "below",
+       "res": "held",
+       "move": 1.12,
+       "at": "8:55"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "8:57",
+       "from": "below",
+       "res": "broke",
+       "move": 1.86,
+       "at": "9:00"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "9:03",
+       "from": "above",
+       "res": "broke",
+       "move": 0.59,
+       "at": "9:18"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "9:36",
+       "from": "below",
+       "res": "held",
+       "move": 1.78,
+       "at": "9:38"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "9:45",
+       "from": "below",
+       "res": "held",
+       "move": 1.78,
+       "at": "9:47"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "10:09",
+       "from": "below",
+       "res": "broke",
+       "move": 0.58,
+       "at": "10:35"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "11:03",
+       "from": "above",
+       "res": "broke",
+       "move": 0.54,
+       "at": "11:20"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "11:35",
+       "from": "below",
+       "res": "broke",
+       "move": 0.87,
+       "at": "11:57"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 1.46,
+       "at": "6:35"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 722.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-15",
+       "t": "7:42",
+       "from": "below",
+       "res": "broke",
+       "move": 0.58,
+       "at": "7:47"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "7:48",
+       "from": "above",
+       "res": "held",
+       "move": 3.85,
+       "at": "7:57"
+      },
+      {
+       "day": "2026-10-15",
+       "t": "9:30",
+       "from": "above",
+       "res": "held",
+       "move": 2.17,
+       "at": "9:34"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "6:37",
+       "from": "above",
+       "res": "held",
+       "move": 1.4,
+       "at": "6:44"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "6:48",
+       "from": "above",
+       "res": "broke",
+       "move": 0.65,
+       "at": "6:51"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "6:55",
+       "from": "below",
+       "res": "held",
+       "move": 2.48,
+       "at": "6:55"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "7:03",
+       "from": "below",
+       "res": "held",
+       "move": 2.48,
+       "at": "7:03"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "7:14",
+       "from": "below",
+       "res": "held",
+       "move": 2.27,
+       "at": "7:19"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "7:22",
+       "from": "below",
+       "res": "held",
+       "move": 2.27,
+       "at": "7:24"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "7:35",
+       "from": "below",
+       "res": "broke",
+       "move": 2.33,
+       "at": "7:47"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "7:51",
+       "from": "above",
+       "res": "broke",
+       "move": 1.11,
+       "at": "7:53"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 713.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-16",
+       "t": "10:04",
+       "from": "above",
+       "res": "broke",
+       "move": 0.94,
+       "at": "10:15"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "10:28",
+       "from": "below",
+       "res": "held",
+       "move": 1.59,
+       "at": "10:31"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "10:32",
+       "from": "below",
+       "res": "broke",
+       "move": 2.6,
+       "at": "10:41"
+      },
+      {
+       "day": "2026-10-16",
+       "t": "10:43",
+       "from": "above",
+       "res": "broke",
+       "move": 0.75,
+       "at": "10:51"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 707,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-16",
+       "t": "12:07",
+       "from": "above",
+       "res": "held",
+       "move": 4.13,
+       "at": "12:08"
+      }
+     ],
+     "closest": 0.23
+    }
+   ],
+   "all": {
+    "touches": 84,
+    "held": 42,
+    "broke": 40,
+    "chop": 2,
+    "held_pct": 50,
+    "avg_move": 1.6
+   }
+  },
+  {
+   "week": "2026-10-19",
+   "from": "2026-09-21",
+   "to": "2026-10-16",
+   "days": [
+    "2026-10-19",
+    "2026-10-20",
+    "2026-10-21",
+    "2026-10-22",
+    "2026-10-23"
+   ],
+   "levels": [
+    {
+     "px": 741,
+     "type": "POC",
+     "touches": [],
+     "closest": 13.05
+    },
+    {
+     "px": 760.75,
+     "type": "value area high",
+     "touches": [],
+     "closest": 32.8
+    },
+    {
+     "px": 710,
+     "type": "value area low",
+     "touches": [
+      {
+       "day": "2026-10-22",
+       "t": "7:27",
+       "from": "above",
+       "res": "broke",
+       "move": 0.65,
+       "at": "7:32"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "8:24",
+       "from": "below",
+       "res": "held",
+       "move": 3.32,
+       "at": "8:28"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "9:00",
+       "from": "below",
+       "res": "held",
+       "move": 1.41,
+       "at": "9:05"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "9:09",
+       "from": "below",
+       "res": "held",
+       "move": 2.36,
+       "at": "9:31"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 760.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 32.8
+    },
+    {
+     "px": 753.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 25.55
+    },
+    {
+     "px": 738.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 10.3
+    },
+    {
+     "px": 728.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 0.3
+    },
+    {
+     "px": 724,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-19",
+       "t": "8:27",
+       "from": "below",
+       "res": "held",
+       "move": 0.86,
+       "at": "9:00"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "7:50",
+       "from": "below",
+       "res": "broke",
+       "move": 1.25,
+       "at": "8:32"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "11:59",
+       "from": "above",
+       "res": "broke",
+       "move": 1.89,
+       "at": "12:02"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "12:06",
+       "from": "below",
+       "res": "broke",
+       "move": 1.2,
+       "at": "12:25"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 718,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-19",
+       "t": "6:39",
+       "from": "above",
+       "res": "held",
+       "move": 2.17,
+       "at": "6:41"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "6:54",
+       "from": "above",
+       "res": "broke",
+       "move": 3.73,
+       "at": "7:03"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "7:05",
+       "from": "below",
+       "res": "broke",
+       "move": 1.04,
+       "at": "7:13"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "11:26",
+       "from": "above",
+       "res": "held",
+       "move": 1.82,
+       "at": "11:40"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "12:58",
+       "from": "above",
+       "res": "chop",
+       "move": 0.72,
+       "at": null
+      },
+      {
+       "day": "2026-10-20",
+       "t": "7:07",
+       "from": "below",
+       "res": "broke",
+       "move": 0.43,
+       "at": "7:15"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "8:13",
+       "from": "above",
+       "res": "held",
+       "move": 2.31,
+       "at": "8:15"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "8:32",
+       "from": "above",
+       "res": "held",
+       "move": 2.18,
+       "at": "8:41"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "9:17",
+       "from": "above",
+       "res": "held",
+       "move": 2.02,
+       "at": "9:27"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "9:53",
+       "from": "above",
+       "res": "held",
+       "move": 1.56,
+       "at": "10:20"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "11:34",
+       "from": "above",
+       "res": "broke",
+       "move": 0.88,
+       "at": "12:23"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "12:31",
+       "from": "below",
+       "res": "held",
+       "move": 1.16,
+       "at": "12:38"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "12:44",
+       "from": "below",
+       "res": "chop",
+       "move": 1.16,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 709.75,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-22",
+       "t": "7:28",
+       "from": "above",
+       "res": "broke",
+       "move": 0.79,
+       "at": "7:34"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "8:23",
+       "from": "below",
+       "res": "held",
+       "move": 3.07,
+       "at": "8:28"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "9:00",
+       "from": "below",
+       "res": "held",
+       "move": 1.16,
+       "at": "9:05"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "9:07",
+       "from": "below",
+       "res": "held",
+       "move": 2.11,
+       "at": "9:31"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 758.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 30.55
+    },
+    {
+     "px": 752,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 24.05
+    },
+    {
+     "px": 748.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 20.3
+    },
+    {
+     "px": 739.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 11.55
+    },
+    {
+     "px": 733.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 5.3
+    },
+    {
+     "px": 726.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-21",
+       "t": "8:37",
+       "from": "below",
+       "res": "held",
+       "move": 0.63,
+       "at": "9:27"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "9:39",
+       "from": "below",
+       "res": "broke",
+       "move": 0.65,
+       "at": "9:39"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "10:34",
+       "from": "above",
+       "res": "held",
+       "move": 0.91,
+       "at": "11:30"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "11:47",
+       "from": "above",
+       "res": "broke",
+       "move": 0.81,
+       "at": "11:51"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "11:54",
+       "from": "below",
+       "res": "held",
+       "move": 3.73,
+       "at": "11:56"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "12:29",
+       "from": "below",
+       "res": "held",
+       "move": 1.02,
+       "at": "12:59"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 721.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-19",
+       "t": "7:18",
+       "from": "below",
+       "res": "held",
+       "move": 2.54,
+       "at": "7:30"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "7:46",
+       "from": "below",
+       "res": "held",
+       "move": 1.55,
+       "at": "7:49"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "7:55",
+       "from": "below",
+       "res": "broke",
+       "move": 0.85,
+       "at": "8:18"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "9:02",
+       "from": "above",
+       "res": "held",
+       "move": 0.98,
+       "at": "9:12"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "9:19",
+       "from": "above",
+       "res": "broke",
+       "move": 0.66,
+       "at": "9:47"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "7:27",
+       "from": "below",
+       "res": "held",
+       "move": 1.7,
+       "at": "8:12"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "6:31",
+       "from": "above",
+       "res": "broke",
+       "move": 1.45,
+       "at": "6:43"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "6:45",
+       "from": "below",
+       "res": "broke",
+       "move": 1.67,
+       "at": "6:49"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "6:51",
+       "from": "above",
+       "res": "held",
+       "move": 1.82,
+       "at": "7:02"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "7:05",
+       "from": "above",
+       "res": "broke",
+       "move": 1.14,
+       "at": "7:10"
+      },
+      {
+       "day": "2026-10-21",
+       "t": "7:23",
+       "from": "below",
+       "res": "broke",
+       "move": 0.72,
+       "at": "7:47"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 719.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-19",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 0.97,
+       "at": "6:55"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "7:13",
+       "from": "below",
+       "res": "broke",
+       "move": 0.7,
+       "at": "7:14"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "7:32",
+       "from": "above",
+       "res": "held",
+       "move": 2.53,
+       "at": "7:40"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "10:09",
+       "from": "above",
+       "res": "chop",
+       "move": 1.09,
+       "at": null
+      },
+      {
+       "day": "2026-10-19",
+       "t": "11:40",
+       "from": "below",
+       "res": "broke",
+       "move": 0.45,
+       "at": "12:05"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "12:07",
+       "from": "above",
+       "res": "held",
+       "move": 1.96,
+       "at": "12:23"
+      },
+      {
+       "day": "2026-10-19",
+       "t": "12:50",
+       "from": "above",
+       "res": "broke",
+       "move": 0.93,
+       "at": "12:58"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "7:15",
+       "from": "below",
+       "res": "broke",
+       "move": 0.71,
+       "at": "7:27"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "8:12",
+       "from": "above",
+       "res": "broke",
+       "move": 1.87,
+       "at": "8:13"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "8:15",
+       "from": "below",
+       "res": "held",
+       "move": 1.39,
+       "at": "8:32"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "8:41",
+       "from": "below",
+       "res": "held",
+       "move": 0.82,
+       "at": "9:18"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "9:27",
+       "from": "below",
+       "res": "held",
+       "move": 1.63,
+       "at": "9:53"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "10:20",
+       "from": "below",
+       "res": "chop",
+       "move": 0.62,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 714.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-20",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 1.93,
+       "at": "6:33"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "6:34",
+       "from": "below",
+       "res": "held",
+       "move": 3.86,
+       "at": "6:39"
+      },
+      {
+       "day": "2026-10-20",
+       "t": "6:53",
+       "from": "below",
+       "res": "broke",
+       "move": 1.11,
+       "at": "6:58"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "6:32",
+       "from": "below",
+       "res": "held",
+       "move": 2.5,
+       "at": "6:32"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "6:56",
+       "from": "below",
+       "res": "held",
+       "move": 3.48,
+       "at": "7:07"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 707.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-22",
+       "t": "7:48",
+       "from": "above",
+       "res": "held",
+       "move": 1.73,
+       "at": "7:59"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "8:06",
+       "from": "above",
+       "res": "held",
+       "move": 2.74,
+       "at": "8:19"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "8:31",
+       "from": "above",
+       "res": "held",
+       "move": 2.94,
+       "at": "8:36"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "8:40",
+       "from": "above",
+       "res": "held",
+       "move": 2.94,
+       "at": "8:50"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "9:40",
+       "from": "above",
+       "res": "broke",
+       "move": 0.35,
+       "at": "9:45"
+      },
+      {
+       "day": "2026-10-22",
+       "t": "9:59",
+       "from": "below",
+       "res": "held",
+       "move": 2.12,
+       "at": "10:03"
+      },
+      {
+       "day": "2026-10-23",
+       "t": "7:39",
+       "from": "below",
+       "res": "broke",
+       "move": 0.81,
+       "at": "7:50"
+      },
+      {
+       "day": "2026-10-23",
+       "t": "8:03",
+       "from": "above",
+       "res": "held",
+       "move": 1.06,
+       "at": "8:34"
+      },
+      {
+       "day": "2026-10-23",
+       "t": "8:37",
+       "from": "above",
+       "res": "held",
+       "move": 1.56,
+       "at": "8:57"
+      },
+      {
+       "day": "2026-10-23",
+       "t": "9:14",
+       "from": "above",
+       "res": "broke",
+       "move": 0.79,
+       "at": "10:08"
+      }
+     ],
+     "closest": 0
+    }
+   ],
+   "all": {
+    "touches": 70,
+    "held": 38,
+    "broke": 28,
+    "chop": 4,
+    "held_pct": 54,
+    "avg_move": 1.57
+   }
+  },
+  {
+   "week": "2026-10-26",
+   "from": "2026-09-28",
+   "to": "2026-10-23",
+   "days": [
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29",
+    "2026-10-30"
+   ],
+   "levels": [
+    {
+     "px": 743.25,
+     "type": "POC",
+     "touches": [],
+     "closest": 17.11
+    },
+    {
+     "px": 761,
+     "type": "value area high",
+     "touches": [],
+     "closest": 34.86
+    },
+    {
+     "px": 703.5,
+     "type": "value area low",
+     "touches": [],
+     "closest": 2.08
+    },
+    {
+     "px": 760.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 34.61
+    },
+    {
+     "px": 753.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 27.36
+    },
+    {
+     "px": 749.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 23.11
+    },
+    {
+     "px": 746,
+     "type": "volume node",
+     "touches": [],
+     "closest": 19.86
+    },
+    {
+     "px": 737.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 11.61
+    },
+    {
+     "px": 728.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 2.11
+    },
+    {
+     "px": 718.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-27",
+       "t": "6:40",
+       "from": "below",
+       "res": "held",
+       "move": 4.05,
+       "at": "6:43"
+      },
+      {
+       "day": "2026-10-27",
+       "t": "7:53",
+       "from": "below",
+       "res": "broke",
+       "move": 0.57,
+       "at": "8:14"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "8:33",
+       "from": "below",
+       "res": "held",
+       "move": 2.5,
+       "at": "8:36"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 709.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-10-26",
+       "t": "6:38",
+       "from": "below",
+       "res": "held",
+       "move": 3.55,
+       "at": "6:40"
+      },
+      {
+       "day": "2026-10-26",
+       "t": "7:14",
+       "from": "below",
+       "res": "broke",
+       "move": 0.72,
+       "at": "7:19"
+      },
+      {
+       "day": "2026-10-26",
+       "t": "7:25",
+       "from": "above",
+       "res": "held",
+       "move": 4.62,
+       "at": "7:38"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 704.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 1.08
+    },
+    {
+     "px": 758.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 32.36
+    },
+    {
+     "px": 752,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 25.86
+    },
+    {
+     "px": 747.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 21.61
+    },
+    {
+     "px": 744.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 18.61
+    },
+    {
+     "px": 740.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 14.36
+    },
+    {
+     "px": 733.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 7.11
+    },
+    {
+     "px": 727,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 0.86
+    },
+    {
+     "px": 714.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-26",
+       "t": "8:00",
+       "from": "below",
+       "res": "held",
+       "move": 1.02,
+       "at": "8:49"
+      },
+      {
+       "day": "2026-10-26",
+       "t": "10:16",
+       "from": "below",
+       "res": "held",
+       "move": 2.52,
+       "at": "10:29"
+      },
+      {
+       "day": "2026-10-27",
+       "t": "6:30",
+       "from": "above",
+       "res": "held",
+       "move": 3.44,
+       "at": "6:33"
+      },
+      {
+       "day": "2026-10-27",
+       "t": "6:49",
+       "from": "above",
+       "res": "held",
+       "move": 1.78,
+       "at": "7:28"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "6:32",
+       "from": "above",
+       "res": "broke",
+       "move": 1.3,
+       "at": "6:33"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "6:42",
+       "from": "below",
+       "res": "held",
+       "move": 2.25,
+       "at": "6:48"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "6:58",
+       "from": "below",
+       "res": "broke",
+       "move": 1.15,
+       "at": "7:01"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "7:10",
+       "from": "above",
+       "res": "held",
+       "move": 2.08,
+       "at": "7:17"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "7:27",
+       "from": "above",
+       "res": "held",
+       "move": 2.08,
+       "at": "7:31"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "7:41",
+       "from": "above",
+       "res": "broke",
+       "move": 2.02,
+       "at": "7:48"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "7:56",
+       "from": "below",
+       "res": "broke",
+       "move": 0.92,
+       "at": "8:09"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "9:24",
+       "from": "above",
+       "res": "held",
+       "move": 1.08,
+       "at": "9:59"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "10:06",
+       "from": "above",
+       "res": "broke",
+       "move": 0.51,
+       "at": "10:46"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "12:31",
+       "from": "below",
+       "res": "held",
+       "move": 2.08,
+       "at": "12:37"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "12:50",
+       "from": "below",
+       "res": "chop",
+       "move": 0.85,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 711.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-26",
+       "t": "7:41",
+       "from": "below",
+       "res": "broke",
+       "move": 0.75,
+       "at": "7:47"
+      },
+      {
+       "day": "2026-10-26",
+       "t": "9:42",
+       "from": "above",
+       "res": "held",
+       "move": 2.18,
+       "at": "9:59"
+      },
+      {
+       "day": "2026-10-26",
+       "t": "12:53",
+       "from": "above",
+       "res": "chop",
+       "move": 0.79,
+       "at": null
+      },
+      {
+       "day": "2026-10-29",
+       "t": "6:35",
+       "from": "above",
+       "res": "held",
+       "move": 5.17,
+       "at": "6:36"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "6:38",
+       "from": "above",
+       "res": "held",
+       "move": 5.17,
+       "at": "6:41"
+      },
+      {
+       "day": "2026-10-29",
+       "t": "11:41",
+       "from": "above",
+       "res": "held",
+       "move": 1.8,
+       "at": "11:51"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 706.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-10-26",
+       "t": "6:30",
+       "from": "above",
+       "res": "held",
+       "move": 3.07,
+       "at": "6:33"
+      },
+      {
+       "day": "2026-10-26",
+       "t": "6:57",
+       "from": "above",
+       "res": "held",
+       "move": 4.19,
+       "at": "7:10"
+      }
+     ],
+     "closest": 0
+    }
+   ],
+   "all": {
+    "touches": 29,
+    "held": 19,
+    "broke": 8,
+    "chop": 2,
+    "held_pct": 66,
+    "avg_move": 2.21
+   }
+  },
+  {
+   "week": "2026-11-02",
+   "from": "2026-10-05",
+   "to": "2026-10-30",
+   "days": [
+    "2026-11-02",
+    "2026-11-03",
+    "2026-11-04",
+    "2026-11-05",
+    "2026-11-06"
+   ],
+   "levels": [
+    {
+     "px": 721.5,
+     "type": "POC",
+     "touches": [],
+     "closest": 20.05
+    },
+    {
+     "px": 761,
+     "type": "value area high",
+     "touches": [],
+     "closest": 59.55
+    },
+    {
+     "px": 702.5,
+     "type": "value area low",
+     "touches": [],
+     "closest": 1.05
+    },
+    {
+     "px": 760.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 59.3
+    },
+    {
+     "px": 753.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 52.05
+    },
+    {
+     "px": 746,
+     "type": "volume node",
+     "touches": [],
+     "closest": 44.55
+    },
+    {
+     "px": 728.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 26.8
+    },
+    {
+     "px": 718,
+     "type": "volume node",
+     "touches": [],
+     "closest": 16.55
+    },
+    {
+     "px": 713,
+     "type": "volume node",
+     "touches": [],
+     "closest": 11.55
+    },
+    {
+     "px": 709.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 7.8
+    },
+    {
+     "px": 704.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 3.05
+    },
+    {
+     "px": 689.5,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-11-02",
+       "t": "9:46",
+       "from": "above",
+       "res": "held",
+       "move": 3,
+       "at": "9:49"
+      },
+      {
+       "day": "2026-11-02",
+       "t": "10:40",
+       "from": "above",
+       "res": "broke",
+       "move": 1.08,
+       "at": "10:59"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "6:30",
+       "from": "below",
+       "res": "broke",
+       "move": 1.63,
+       "at": "6:30"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "6:32",
+       "from": "above",
+       "res": "broke",
+       "move": 10,
+       "at": "6:34"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "6:35",
+       "from": "below",
+       "res": "broke",
+       "move": 1.43,
+       "at": "6:37"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "8:06",
+       "from": "above",
+       "res": "held",
+       "move": 4.46,
+       "at": "8:06"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "8:27",
+       "from": "above",
+       "res": "held",
+       "move": 7.6,
+       "at": "8:29"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 758.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 57.05
+    },
+    {
+     "px": 752,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 50.55
+    },
+    {
+     "px": 749.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 48.05
+    },
+    {
+     "px": 744.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 42.8
+    },
+    {
+     "px": 738.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 37.05
+    },
+    {
+     "px": 735,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 33.55
+    },
+    {
+     "px": 711,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 9.55
+    },
+    {
+     "px": 706.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 5.05
+    },
+    {
+     "px": 699.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-02",
+       "t": "7:27",
+       "from": "below",
+       "res": "held",
+       "move": 3.6,
+       "at": "7:32"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "7:00",
+       "from": "below",
+       "res": "broke",
+       "move": 3.25,
+       "at": "7:13"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "7:19",
+       "from": "above",
+       "res": "broke",
+       "move": 1.2,
+       "at": "7:22"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 691.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-02",
+       "t": "9:30",
+       "from": "above",
+       "res": "broke",
+       "move": 1.06,
+       "at": "9:45"
+      },
+      {
+       "day": "2026-11-02",
+       "t": "9:49",
+       "from": "below",
+       "res": "broke",
+       "move": 1,
+       "at": "10:06"
+      },
+      {
+       "day": "2026-11-02",
+       "t": "10:13",
+       "from": "above",
+       "res": "broke",
+       "move": 0.91,
+       "at": "10:34"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "6:31",
+       "from": "below",
+       "res": "held",
+       "move": 3.38,
+       "at": "6:32"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "6:37",
+       "from": "below",
+       "res": "broke",
+       "move": 0.81,
+       "at": "6:38"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "8:04",
+       "from": "above",
+       "res": "held",
+       "move": 2.71,
+       "at": "8:09"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "8:21",
+       "from": "above",
+       "res": "broke",
+       "move": 3.74,
+       "at": "8:26"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "8:30",
+       "from": "below",
+       "res": "broke",
+       "move": 0.82,
+       "at": "8:31"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "8:38",
+       "from": "above",
+       "res": "held",
+       "move": 5.85,
+       "at": "8:40"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "12:44",
+       "from": "above",
+       "res": "held",
+       "move": 1.22,
+       "at": "12:48"
+      },
+      {
+       "day": "2026-11-04",
+       "t": "12:50",
+       "from": "above",
+       "res": "chop",
+       "move": 1.1,
+       "at": null
+      }
+     ],
+     "closest": 0
+    }
+   ],
+   "all": {
+    "touches": 21,
+    "held": 8,
+    "broke": 12,
+    "chop": 1,
+    "held_pct": 38,
+    "avg_move": 2.85
+   }
+  },
+  {
+   "week": "2026-11-09",
+   "from": "2026-10-12",
+   "to": "2026-11-06",
+   "days": [
+    "2026-11-09",
+    "2026-11-10",
+    "2026-11-11",
+    "2026-11-12",
+    "2026-11-13"
+   ],
+   "levels": [
+    {
+     "px": 721.5,
+     "type": "POC",
+     "touches": [],
+     "closest": 25.93
+    },
+    {
+     "px": 746,
+     "type": "value area high",
+     "touches": [],
+     "closest": 50.43
+    },
+    {
+     "px": 650.5,
+     "type": "value area low",
+     "touches": [],
+     "closest": 11.52
+    },
+    {
+     "px": 728.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 32.68
+    },
+    {
+     "px": 718,
+     "type": "volume node",
+     "touches": [],
+     "closest": 22.43
+    },
+    {
+     "px": 713,
+     "type": "volume node",
+     "touches": [],
+     "closest": 17.43
+    },
+    {
+     "px": 709.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 13.68
+    },
+    {
+     "px": 704.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 8.93
+    },
+    {
+     "px": 695,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-11-11",
+       "t": "9:36",
+       "from": "below",
+       "res": "held",
+       "move": 1.74,
+       "at": "10:02"
+      },
+      {
+       "day": "2026-11-11",
+       "t": "10:21",
+       "from": "below",
+       "res": "held",
+       "move": 0.65,
+       "at": "11:07"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 685.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-11-11",
+       "t": "6:42",
+       "from": "above",
+       "res": "held",
+       "move": 1.94,
+       "at": "7:07"
+      },
+      {
+       "day": "2026-11-11",
+       "t": "7:11",
+       "from": "above",
+       "res": "held",
+       "move": 3.43,
+       "at": "7:26"
+      },
+      {
+       "day": "2026-11-12",
+       "t": "6:36",
+       "from": "below",
+       "res": "broke",
+       "move": 1.32,
+       "at": "6:39"
+      },
+      {
+       "day": "2026-11-12",
+       "t": "6:50",
+       "from": "above",
+       "res": "held",
+       "move": 3.17,
+       "at": "6:51"
+      },
+      {
+       "day": "2026-11-12",
+       "t": "6:57",
+       "from": "above",
+       "res": "held",
+       "move": 2.58,
+       "at": "6:58"
+      },
+      {
+       "day": "2026-11-12",
+       "t": "7:01",
+       "from": "above",
+       "res": "held",
+       "move": 1.99,
+       "at": "7:40"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "6:36",
+       "from": "above",
+       "res": "broke",
+       "move": 1.22,
+       "at": "6:49"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 658.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 3.77
+    },
+    {
+     "px": 651.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 10.52
+    },
+    {
+     "px": 744.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 48.93
+    },
+    {
+     "px": 738.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 42.93
+    },
+    {
+     "px": 735,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 39.43
+    },
+    {
+     "px": 701,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 5.43
+    },
+    {
+     "px": 682.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-12",
+       "t": "6:33",
+       "from": "below",
+       "res": "broke",
+       "move": 1.21,
+       "at": "6:36"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "6:49",
+       "from": "above",
+       "res": "broke",
+       "move": 2.17,
+       "at": "6:55"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 676.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-09",
+       "t": "7:51",
+       "from": "below",
+       "res": "broke",
+       "move": 1.29,
+       "at": "7:58"
+      },
+      {
+       "day": "2026-11-09",
+       "t": "8:05",
+       "from": "above",
+       "res": "broke",
+       "move": 0.77,
+       "at": "8:27"
+      },
+      {
+       "day": "2026-11-09",
+       "t": "8:48",
+       "from": "below",
+       "res": "broke",
+       "move": 0.66,
+       "at": "9:15"
+      },
+      {
+       "day": "2026-11-09",
+       "t": "9:42",
+       "from": "above",
+       "res": "chop",
+       "move": 1.22,
+       "at": null
+      },
+      {
+       "day": "2026-11-09",
+       "t": "11:28",
+       "from": "above",
+       "res": "held",
+       "move": 4.49,
+       "at": "11:38"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "6:55",
+       "from": "below",
+       "res": "broke",
+       "move": 1.14,
+       "at": "6:58"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "7:23",
+       "from": "above",
+       "res": "broke",
+       "move": 1.69,
+       "at": "7:41"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "7:10",
+       "from": "above",
+       "res": "broke",
+       "move": 1.47,
+       "at": "7:14"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "9:06",
+       "from": "below",
+       "res": "chop",
+       "move": 1.53,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 674,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-09",
+       "t": "7:10",
+       "from": "below",
+       "res": "broke",
+       "move": 1.52,
+       "at": "7:31"
+      },
+      {
+       "day": "2026-11-09",
+       "t": "7:39",
+       "from": "above",
+       "res": "held",
+       "move": 4.85,
+       "at": "7:43"
+      },
+      {
+       "day": "2026-11-09",
+       "t": "8:36",
+       "from": "above",
+       "res": "held",
+       "move": 3.31,
+       "at": "8:38"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "6:35",
+       "from": "below",
+       "res": "broke",
+       "move": 1.71,
+       "at": "6:54"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "7:44",
+       "from": "above",
+       "res": "broke",
+       "move": 1.21,
+       "at": "7:51"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "8:00",
+       "from": "below",
+       "res": "held",
+       "move": 1.81,
+       "at": "8:36"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "12:22",
+       "from": "below",
+       "res": "broke",
+       "move": 0.68,
+       "at": "12:51"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "7:14",
+       "from": "above",
+       "res": "held",
+       "move": 2.39,
+       "at": "7:15"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "7:18",
+       "from": "above",
+       "res": "held",
+       "move": 1.95,
+       "at": "7:32"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "7:34",
+       "from": "above",
+       "res": "held",
+       "move": 2.3,
+       "at": "7:51"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "7:54",
+       "from": "above",
+       "res": "broke",
+       "move": 1.43,
+       "at": "8:05"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "8:07",
+       "from": "below",
+       "res": "held",
+       "move": 2.32,
+       "at": "8:21"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "8:24",
+       "from": "below",
+       "res": "broke",
+       "move": 0.84,
+       "at": "8:28"
+      },
+      {
+       "day": "2026-11-13",
+       "t": "8:37",
+       "from": "above",
+       "res": "held",
+       "move": 3.1,
+       "at": "9:05"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 670.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-09",
+       "t": "6:44",
+       "from": "below",
+       "res": "broke",
+       "move": 1.13,
+       "at": "6:51"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "6:30",
+       "from": "above",
+       "res": "held",
+       "move": 8.42,
+       "at": "6:34"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "8:47",
+       "from": "above",
+       "res": "broke",
+       "move": 0.63,
+       "at": "9:35"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "10:32",
+       "from": "below",
+       "res": "broke",
+       "move": 0.71,
+       "at": "11:07"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 667.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-09",
+       "t": "6:36",
+       "from": "below",
+       "res": "broke",
+       "move": 1.64,
+       "at": "6:43"
+      },
+      {
+       "day": "2026-11-10",
+       "t": "9:37",
+       "from": "above",
+       "res": "held",
+       "move": 2.57,
+       "at": "9:53"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 664.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-09",
+       "t": "6:32",
+       "from": "below",
+       "res": "broke",
+       "move": 1.28,
+       "at": "6:33"
+      }
+     ],
+     "closest": 0
+    }
+   ],
+   "all": {
+    "touches": 41,
+    "held": 18,
+    "broke": 21,
+    "chop": 2,
+    "held_pct": 44,
+    "avg_move": 1.99
+   }
+  },
+  {
+   "week": "2026-11-16",
+   "from": "2026-10-19",
+   "to": "2026-11-13",
+   "days": [
+    "2026-11-16",
+    "2026-11-17",
+    "2026-11-18",
+    "2026-11-19",
+    "2026-11-20"
+   ],
+   "levels": [
+    {
+     "px": 685.5,
+     "type": "POC",
+     "touches": [],
+     "closest": 9.01
+    },
+    {
+     "px": 722.75,
+     "type": "value area high",
+     "touches": [],
+     "closest": 46.26
+    },
+    {
+     "px": 650.5,
+     "type": "value area low",
+     "touches": [
+      {
+       "day": "2026-11-17",
+       "t": "7:43",
+       "from": "above",
+       "res": "broke",
+       "move": 5.99,
+       "at": "7:47"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "7:56",
+       "from": "below",
+       "res": "broke",
+       "move": 1.96,
+       "at": "7:58"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "8:46",
+       "from": "above",
+       "res": "held",
+       "move": 5.27,
+       "at": "8:46"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "9:04",
+       "from": "above",
+       "res": "held",
+       "move": 6.93,
+       "at": "9:05"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:03",
+       "from": "above",
+       "res": "broke",
+       "move": 7.61,
+       "at": "9:05"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:07",
+       "from": "below",
+       "res": "held",
+       "move": 2.39,
+       "at": "9:16"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:20",
+       "from": "below",
+       "res": "broke",
+       "move": 1.56,
+       "at": "9:21"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "10:06",
+       "from": "above",
+       "res": "broke",
+       "move": 2.44,
+       "at": "10:14"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "10:21",
+       "from": "below",
+       "res": "broke",
+       "move": 2,
+       "at": "10:33"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "10:43",
+       "from": "above",
+       "res": "broke",
+       "move": 0.77,
+       "at": "10:50"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "10:54",
+       "from": "below",
+       "res": "held",
+       "move": 3.03,
+       "at": "10:55"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "10:57",
+       "from": "below",
+       "res": "held",
+       "move": 3.03,
+       "at": "11:01"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "11:22",
+       "from": "below",
+       "res": "held",
+       "move": 2.44,
+       "at": "11:50"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 721.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 45.01
+    },
+    {
+     "px": 713,
+     "type": "volume node",
+     "touches": [],
+     "closest": 36.51
+    },
+    {
+     "px": 707.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 31.26
+    },
+    {
+     "px": 704.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 28.01
+    },
+    {
+     "px": 694,
+     "type": "volume node",
+     "touches": [],
+     "closest": 17.51
+    },
+    {
+     "px": 677.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 1.01
+    },
+    {
+     "px": 674.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-11-19",
+       "t": "6:32",
+       "from": "below",
+       "res": "held",
+       "move": 4.2,
+       "at": "6:39"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "6:43",
+       "from": "below",
+       "res": "held",
+       "move": 4.3,
+       "at": "6:46"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "6:49",
+       "from": "below",
+       "res": "held",
+       "move": 7.5,
+       "at": "6:54"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "8:54",
+       "from": "below",
+       "res": "held",
+       "move": 27.09,
+       "at": "8:54"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 658.25,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-11-17",
+       "t": "7:10",
+       "from": "above",
+       "res": "held",
+       "move": 2.53,
+       "at": "7:11"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "7:18",
+       "from": "above",
+       "res": "held",
+       "move": 1.85,
+       "at": "7:23"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "7:29",
+       "from": "above",
+       "res": "broke",
+       "move": 0.71,
+       "at": "7:32"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "6:35",
+       "from": "above",
+       "res": "broke",
+       "move": 4.55,
+       "at": "6:38"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "6:39",
+       "from": "below",
+       "res": "held",
+       "move": 4.45,
+       "at": "6:40"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "6:53",
+       "from": "below",
+       "res": "broke",
+       "move": 1.83,
+       "at": "6:58"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "7:11",
+       "from": "above",
+       "res": "held",
+       "move": 3.69,
+       "at": "7:11"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "7:25",
+       "from": "above",
+       "res": "broke",
+       "move": 1.93,
+       "at": "7:40"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "7:57",
+       "from": "below",
+       "res": "held",
+       "move": 5.2,
+       "at": "8:12"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "9:06",
+       "from": "below",
+       "res": "held",
+       "move": 2.1,
+       "at": "9:13"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "9:17",
+       "from": "below",
+       "res": "broke",
+       "move": 0.87,
+       "at": "9:23"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "9:51",
+       "from": "above",
+       "res": "held",
+       "move": 2.07,
+       "at": "10:31"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "11:06",
+       "from": "above",
+       "res": "held",
+       "move": 2.07,
+       "at": "11:27"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "11:32",
+       "from": "above",
+       "res": "chop",
+       "move": 0.94,
+       "at": null
+      },
+      {
+       "day": "2026-11-19",
+       "t": "7:37",
+       "from": "above",
+       "res": "held",
+       "move": 4.53,
+       "at": "7:43"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "7:45",
+       "from": "above",
+       "res": "held",
+       "move": 4.53,
+       "at": "7:57"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "8:51",
+       "from": "above",
+       "res": "broke",
+       "move": 18.24,
+       "at": "8:52"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "8:54",
+       "from": "below",
+       "res": "held",
+       "move": 11.09,
+       "at": "8:57"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:32",
+       "from": "below",
+       "res": "held",
+       "move": 7.48,
+       "at": "9:37"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 651.5,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-11-17",
+       "t": "7:42",
+       "from": "above",
+       "res": "broke",
+       "move": 4.99,
+       "at": "7:46"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "7:57",
+       "from": "below",
+       "res": "broke",
+       "move": 1.29,
+       "at": "7:59"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "8:35",
+       "from": "above",
+       "res": "held",
+       "move": 1.7,
+       "at": "9:05"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "12:00",
+       "from": "above",
+       "res": "held",
+       "move": 2.45,
+       "at": "12:19"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:02",
+       "from": "above",
+       "res": "broke",
+       "move": 6.4,
+       "at": "9:03"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:09",
+       "from": "below",
+       "res": "held",
+       "move": 3.27,
+       "at": "9:10"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:20",
+       "from": "below",
+       "res": "broke",
+       "move": 2.56,
+       "at": "9:21"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "10:00",
+       "from": "above",
+       "res": "broke",
+       "move": 1.8,
+       "at": "10:07"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "10:26",
+       "from": "below",
+       "res": "held",
+       "move": 3,
+       "at": "10:47"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "11:26",
+       "from": "below",
+       "res": "held",
+       "move": 4.11,
+       "at": "11:39"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "11:41",
+       "from": "below",
+       "res": "held",
+       "move": 7.05,
+       "at": "11:49"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 724.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 48.26
+    },
+    {
+     "px": 716,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 39.51
+    },
+    {
+     "px": 710.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 34.01
+    },
+    {
+     "px": 706.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 30.01
+    },
+    {
+     "px": 701,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 24.51
+    },
+    {
+     "px": 688.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 12.26
+    },
+    {
+     "px": 682.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 6.26
+    },
+    {
+     "px": 676,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-19",
+       "t": "8:54",
+       "from": "below",
+       "res": "held",
+       "move": 28.84,
+       "at": "8:54"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 664.25,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-16",
+       "t": "7:06",
+       "from": "above",
+       "res": "held",
+       "move": 1.93,
+       "at": "7:13"
+      },
+      {
+       "day": "2026-11-16",
+       "t": "7:16",
+       "from": "above",
+       "res": "held",
+       "move": 2.32,
+       "at": "7:45"
+      },
+      {
+       "day": "2026-11-16",
+       "t": "9:58",
+       "from": "above",
+       "res": "broke",
+       "move": 0.64,
+       "at": "10:28"
+      },
+      {
+       "day": "2026-11-16",
+       "t": "10:49",
+       "from": "below",
+       "res": "held",
+       "move": 1.1,
+       "at": "11:32"
+      },
+      {
+       "day": "2026-11-16",
+       "t": "11:55",
+       "from": "below",
+       "res": "held",
+       "move": 3.47,
+       "at": "12:11"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "7:22",
+       "from": "above",
+       "res": "broke",
+       "move": 1.6,
+       "at": "7:30"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "8:36",
+       "from": "below",
+       "res": "held",
+       "move": 17.07,
+       "at": "8:49"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "8:54",
+       "from": "below",
+       "res": "held",
+       "move": 17.09,
+       "at": "8:54"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 653.75,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-17",
+       "t": "7:40",
+       "from": "above",
+       "res": "broke",
+       "move": 2.74,
+       "at": "7:41"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "8:00",
+       "from": "below",
+       "res": "broke",
+       "move": 1.29,
+       "at": "8:09"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "8:16",
+       "from": "above",
+       "res": "broke",
+       "move": 1.08,
+       "at": "8:32"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "9:05",
+       "from": "below",
+       "res": "broke",
+       "move": 2.84,
+       "at": "9:17"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "9:46",
+       "from": "above",
+       "res": "held",
+       "move": 1.46,
+       "at": "10:24"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "10:43",
+       "from": "above",
+       "res": "held",
+       "move": 1.56,
+       "at": "11:14"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "11:25",
+       "from": "above",
+       "res": "broke",
+       "move": 0.86,
+       "at": "11:57"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "12:21",
+       "from": "below",
+       "res": "broke",
+       "move": 1.04,
+       "at": "12:36"
+      },
+      {
+       "day": "2026-11-17",
+       "t": "12:40",
+       "from": "above",
+       "res": "held",
+       "move": 3.42,
+       "at": "12:57"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "6:50",
+       "from": "above",
+       "res": "held",
+       "move": 9.05,
+       "at": "6:52"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "8:20",
+       "from": "above",
+       "res": "held",
+       "move": 3.31,
+       "at": "8:23"
+      },
+      {
+       "day": "2026-11-18",
+       "t": "8:41",
+       "from": "above",
+       "res": "held",
+       "move": 4.66,
+       "at": "8:59"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:00",
+       "from": "above",
+       "res": "broke",
+       "move": 4.15,
+       "at": "9:02"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:22",
+       "from": "below",
+       "res": "broke",
+       "move": 1.71,
+       "at": "9:24"
+      },
+      {
+       "day": "2026-11-19",
+       "t": "9:39",
+       "from": "above",
+       "res": "broke",
+       "move": 1.62,
+       "at": "9:58"
+      }
+     ],
+     "closest": 0
+    }
+   ],
+   "all": {
+    "touches": 71,
+    "held": 41,
+    "broke": 29,
+    "chop": 1,
+    "held_pct": 58,
+    "avg_move": 4.54
+   }
+  },
+  {
+   "week": "2026-11-23",
+   "from": "2026-10-26",
+   "to": "2026-11-20",
+   "days": [],
+   "levels": [
+    {
+     "px": 658.25,
+     "type": "POC",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 722.25,
+     "type": "value area high",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 620.25,
+     "type": "value area low",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 721.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 713,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 694,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 685.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 677.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 674.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 661,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 651.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 620.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 718.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 710.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 704.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 702,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 643.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 638.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 632.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 626,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 618.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 611.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    }
+   ],
+   "all": {
+    "touches": 0,
+    "held": 0,
+    "broke": 0,
+    "chop": 0,
+    "held_pct": null,
+    "avg_move": null
+   }
+  }
+ ],
+ "bot_all": {
+  "POC": {
+   "touches": 68,
+   "held": 39,
+   "broke": 24,
+   "chop": 5,
+   "held_pct": 57,
+   "avg_move": 1.46
+  },
+  "value area high": {
+   "touches": 22,
+   "held": 15,
+   "broke": 4,
+   "chop": 3,
+   "held_pct": 68,
+   "avg_move": 1.59
+  },
+  "value area low": {
+   "touches": 32,
+   "held": 17,
+   "broke": 15,
+   "chop": 0,
+   "held_pct": 53,
+   "avg_move": 2.63
+  },
+  "volume node": {
+   "touches": 216,
+   "held": 137,
+   "broke": 71,
+   "chop": 8,
+   "held_pct": 63,
+   "avg_move": 2.3
+  },
+  "thin gap": {
+   "touches": 330,
+   "held": 177,
+   "broke": 137,
+   "chop": 16,
+   "held_pct": 54,
+   "avg_move": 1.85
+  },
+  "ALL bot levels": {
+   "touches": 668,
+   "held": 385,
+   "broke": 251,
+   "chop": 32,
+   "held_pct": 58,
+   "avg_move": 1.99
+  }
+ },
+ "bot_random": {
+  "touches": 1260,
+  "held": 766,
+  "broke": 426,
+  "chop": 68,
+  "held_pct": 61,
+  "avg_move": 1.91
+ }
 }

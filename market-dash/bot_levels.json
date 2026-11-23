@@ -1,0 +1,1302 @@
+{
+ "updated": "2026-11-23T07:17:15.853Z",
+ "note": "the bot's weekly volume levels, each built only from the 20 sessions before that Monday (no look-ahead)",
+ "weeks": [
+  {
+   "week": "2026-08-10",
+   "from": "2026-07-14",
+   "to": "2026-08-07",
+   "levels": [
+    {
+     "px": 720.5,
+     "type": "POC"
+    },
+    {
+     "px": 723.75,
+     "type": "value area high"
+    },
+    {
+     "px": 676,
+     "type": "value area low"
+    },
+    {
+     "px": 715.25,
+     "type": "volume node"
+    },
+    {
+     "px": 709,
+     "type": "volume node"
+    },
+    {
+     "px": 700,
+     "type": "volume node"
+    },
+    {
+     "px": 696.75,
+     "type": "volume node"
+    },
+    {
+     "px": 689.25,
+     "type": "volume node"
+    },
+    {
+     "px": 681.75,
+     "type": "volume node"
+    },
+    {
+     "px": 678.25,
+     "type": "volume node"
+    },
+    {
+     "px": 670.25,
+     "type": "volume node"
+    },
+    {
+     "px": 666.5,
+     "type": "volume node"
+    },
+    {
+     "px": 716.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 713.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 710.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 702.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 698.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 693.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 687,
+     "type": "thin gap"
+    },
+    {
+     "px": 680,
+     "type": "thin gap"
+    },
+    {
+     "px": 672.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 663,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-08-17",
+   "from": "2026-07-20",
+   "to": "2026-08-14",
+   "levels": [
+    {
+     "px": 721.25,
+     "type": "POC"
+    },
+    {
+     "px": 733,
+     "type": "value area high"
+    },
+    {
+     "px": 675.75,
+     "type": "value area low"
+    },
+    {
+     "px": 732.5,
+     "type": "volume node"
+    },
+    {
+     "px": 715.25,
+     "type": "volume node"
+    },
+    {
+     "px": 709,
+     "type": "volume node"
+    },
+    {
+     "px": 700,
+     "type": "volume node"
+    },
+    {
+     "px": 697,
+     "type": "volume node"
+    },
+    {
+     "px": 689.25,
+     "type": "volume node"
+    },
+    {
+     "px": 681.75,
+     "type": "volume node"
+    },
+    {
+     "px": 678.25,
+     "type": "volume node"
+    },
+    {
+     "px": 670.25,
+     "type": "volume node"
+    },
+    {
+     "px": 731,
+     "type": "thin gap"
+    },
+    {
+     "px": 728,
+     "type": "thin gap"
+    },
+    {
+     "px": 716.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 710.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 702.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 698.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 693.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 687,
+     "type": "thin gap"
+    },
+    {
+     "px": 672.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 663,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-08-24",
+   "from": "2026-07-27",
+   "to": "2026-08-21",
+   "levels": [
+    {
+     "px": 717.75,
+     "type": "POC"
+    },
+    {
+     "px": 733,
+     "type": "value area high"
+    },
+    {
+     "px": 676,
+     "type": "value area low"
+    },
+    {
+     "px": 732.5,
+     "type": "volume node"
+    },
+    {
+     "px": 730,
+     "type": "volume node"
+    },
+    {
+     "px": 721.25,
+     "type": "volume node"
+    },
+    {
+     "px": 700,
+     "type": "volume node"
+    },
+    {
+     "px": 697,
+     "type": "volume node"
+    },
+    {
+     "px": 688.75,
+     "type": "volume node"
+    },
+    {
+     "px": 681.75,
+     "type": "volume node"
+    },
+    {
+     "px": 678.25,
+     "type": "volume node"
+    },
+    {
+     "px": 670.25,
+     "type": "volume node"
+    },
+    {
+     "px": 728,
+     "type": "thin gap"
+    },
+    {
+     "px": 706.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 704.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 702.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 698.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 693.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 687,
+     "type": "thin gap"
+    },
+    {
+     "px": 680,
+     "type": "thin gap"
+    },
+    {
+     "px": 672.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 663,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-08-31",
+   "from": "2026-08-03",
+   "to": "2026-08-28",
+   "levels": [
+    {
+     "px": 718,
+     "type": "POC"
+    },
+    {
+     "px": 733,
+     "type": "value area high"
+    },
+    {
+     "px": 710.25,
+     "type": "value area low"
+    },
+    {
+     "px": 732.5,
+     "type": "volume node"
+    },
+    {
+     "px": 730,
+     "type": "volume node"
+    },
+    {
+     "px": 710.75,
+     "type": "volume node"
+    },
+    {
+     "px": 700,
+     "type": "volume node"
+    },
+    {
+     "px": 697,
+     "type": "volume node"
+    },
+    {
+     "px": 692.5,
+     "type": "volume node"
+    },
+    {
+     "px": 728,
+     "type": "thin gap"
+    },
+    {
+     "px": 714.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 712,
+     "type": "thin gap"
+    },
+    {
+     "px": 702,
+     "type": "thin gap"
+    },
+    {
+     "px": 698.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 691,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-09-07",
+   "from": "2026-08-10",
+   "to": "2026-09-04",
+   "levels": [
+    {
+     "px": 717.75,
+     "type": "POC"
+    },
+    {
+     "px": 732.75,
+     "type": "value area high"
+    },
+    {
+     "px": 706.75,
+     "type": "value area low"
+    },
+    {
+     "px": 732.5,
+     "type": "volume node"
+    },
+    {
+     "px": 730,
+     "type": "volume node"
+    },
+    {
+     "px": 724.25,
+     "type": "volume node"
+    },
+    {
+     "px": 713.75,
+     "type": "volume node"
+    },
+    {
+     "px": 710.75,
+     "type": "volume node"
+    },
+    {
+     "px": 727,
+     "type": "thin gap"
+    },
+    {
+     "px": 722.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 715.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 712.5,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-09-14",
+   "from": "2026-08-14",
+   "to": "2026-09-11",
+   "levels": [
+    {
+     "px": 717.5,
+     "type": "POC"
+    },
+    {
+     "px": 719.75,
+     "type": "value area high"
+    },
+    {
+     "px": 708,
+     "type": "value area low"
+    },
+    {
+     "px": 729.75,
+     "type": "volume node"
+    },
+    {
+     "px": 708.75,
+     "type": "volume node"
+    },
+    {
+     "px": 731.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 727,
+     "type": "thin gap"
+    },
+    {
+     "px": 724.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 712.5,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-09-21",
+   "from": "2026-08-21",
+   "to": "2026-09-18",
+   "levels": [
+    {
+     "px": 716.75,
+     "type": "POC"
+    },
+    {
+     "px": 719.75,
+     "type": "value area high"
+    },
+    {
+     "px": 706.75,
+     "type": "value area low"
+    },
+    {
+     "px": 709.5,
+     "type": "volume node"
+    },
+    {
+     "px": 712.5,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-09-28",
+   "from": "2026-08-28",
+   "to": "2026-09-25",
+   "levels": [
+    {
+     "px": 716.5,
+     "type": "POC"
+    },
+    {
+     "px": 745,
+     "type": "value area high"
+    },
+    {
+     "px": 704.25,
+     "type": "value area low"
+    },
+    {
+     "px": 744.75,
+     "type": "volume node"
+    },
+    {
+     "px": 741,
+     "type": "volume node"
+    },
+    {
+     "px": 735.5,
+     "type": "volume node"
+    },
+    {
+     "px": 728.25,
+     "type": "volume node"
+    },
+    {
+     "px": 709,
+     "type": "volume node"
+    },
+    {
+     "px": 704.75,
+     "type": "volume node"
+    },
+    {
+     "px": 743,
+     "type": "thin gap"
+    },
+    {
+     "px": 737.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 733.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 730.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 727,
+     "type": "thin gap"
+    },
+    {
+     "px": 724.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 713,
+     "type": "thin gap"
+    },
+    {
+     "px": 706.25,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-10-05",
+   "from": "2026-09-04",
+   "to": "2026-10-02",
+   "levels": [
+    {
+     "px": 716.5,
+     "type": "POC"
+    },
+    {
+     "px": 745,
+     "type": "value area high"
+    },
+    {
+     "px": 704.25,
+     "type": "value area low"
+    },
+    {
+     "px": 753.25,
+     "type": "volume node"
+    },
+    {
+     "px": 749.25,
+     "type": "volume node"
+    },
+    {
+     "px": 744.25,
+     "type": "volume node"
+    },
+    {
+     "px": 741,
+     "type": "volume node"
+    },
+    {
+     "px": 738.25,
+     "type": "volume node"
+    },
+    {
+     "px": 728.25,
+     "type": "volume node"
+    },
+    {
+     "px": 709.5,
+     "type": "volume node"
+    },
+    {
+     "px": 704.75,
+     "type": "volume node"
+    },
+    {
+     "px": 748.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 742.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 739.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 730.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 727,
+     "type": "thin gap"
+    },
+    {
+     "px": 724.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 722.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 713,
+     "type": "thin gap"
+    },
+    {
+     "px": 706.75,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-10-12",
+   "from": "2026-09-14",
+   "to": "2026-10-09",
+   "levels": [
+    {
+     "px": 741,
+     "type": "POC"
+    },
+    {
+     "px": 760.75,
+     "type": "value area high"
+    },
+    {
+     "px": 704.25,
+     "type": "value area low"
+    },
+    {
+     "px": 760.75,
+     "type": "volume node"
+    },
+    {
+     "px": 753.5,
+     "type": "volume node"
+    },
+    {
+     "px": 749.25,
+     "type": "volume node"
+    },
+    {
+     "px": 744.5,
+     "type": "volume node"
+    },
+    {
+     "px": 738.25,
+     "type": "volume node"
+    },
+    {
+     "px": 728.25,
+     "type": "volume node"
+    },
+    {
+     "px": 716.75,
+     "type": "volume node"
+    },
+    {
+     "px": 709.5,
+     "type": "volume node"
+    },
+    {
+     "px": 704.75,
+     "type": "volume node"
+    },
+    {
+     "px": 758.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 752,
+     "type": "thin gap"
+    },
+    {
+     "px": 748.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 739.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 730.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 726.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 724.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 722.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 713.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 707,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-10-19",
+   "from": "2026-09-21",
+   "to": "2026-10-16",
+   "levels": [
+    {
+     "px": 741,
+     "type": "POC"
+    },
+    {
+     "px": 760.75,
+     "type": "value area high"
+    },
+    {
+     "px": 710,
+     "type": "value area low"
+    },
+    {
+     "px": 760.75,
+     "type": "volume node"
+    },
+    {
+     "px": 753.5,
+     "type": "volume node"
+    },
+    {
+     "px": 738.25,
+     "type": "volume node"
+    },
+    {
+     "px": 728.25,
+     "type": "volume node"
+    },
+    {
+     "px": 724,
+     "type": "volume node"
+    },
+    {
+     "px": 718,
+     "type": "volume node"
+    },
+    {
+     "px": 709.75,
+     "type": "volume node"
+    },
+    {
+     "px": 758.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 752,
+     "type": "thin gap"
+    },
+    {
+     "px": 748.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 739.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 733.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 726.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 721.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 719.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 714.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 707.25,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-10-26",
+   "from": "2026-09-28",
+   "to": "2026-10-23",
+   "levels": [
+    {
+     "px": 743.25,
+     "type": "POC"
+    },
+    {
+     "px": 761,
+     "type": "value area high"
+    },
+    {
+     "px": 703.5,
+     "type": "value area low"
+    },
+    {
+     "px": 760.75,
+     "type": "volume node"
+    },
+    {
+     "px": 753.5,
+     "type": "volume node"
+    },
+    {
+     "px": 749.25,
+     "type": "volume node"
+    },
+    {
+     "px": 746,
+     "type": "volume node"
+    },
+    {
+     "px": 737.75,
+     "type": "volume node"
+    },
+    {
+     "px": 728.25,
+     "type": "volume node"
+    },
+    {
+     "px": 718.25,
+     "type": "volume node"
+    },
+    {
+     "px": 709.25,
+     "type": "volume node"
+    },
+    {
+     "px": 704.5,
+     "type": "volume node"
+    },
+    {
+     "px": 758.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 752,
+     "type": "thin gap"
+    },
+    {
+     "px": 747.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 744.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 740.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 733.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 727,
+     "type": "thin gap"
+    },
+    {
+     "px": 714.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 711.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 706.5,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-11-02",
+   "from": "2026-10-05",
+   "to": "2026-10-30",
+   "levels": [
+    {
+     "px": 721.5,
+     "type": "POC"
+    },
+    {
+     "px": 761,
+     "type": "value area high"
+    },
+    {
+     "px": 702.5,
+     "type": "value area low"
+    },
+    {
+     "px": 760.75,
+     "type": "volume node"
+    },
+    {
+     "px": 753.5,
+     "type": "volume node"
+    },
+    {
+     "px": 746,
+     "type": "volume node"
+    },
+    {
+     "px": 728.25,
+     "type": "volume node"
+    },
+    {
+     "px": 718,
+     "type": "volume node"
+    },
+    {
+     "px": 713,
+     "type": "volume node"
+    },
+    {
+     "px": 709.25,
+     "type": "volume node"
+    },
+    {
+     "px": 704.5,
+     "type": "volume node"
+    },
+    {
+     "px": 689.5,
+     "type": "volume node"
+    },
+    {
+     "px": 758.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 752,
+     "type": "thin gap"
+    },
+    {
+     "px": 749.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 744.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 738.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 735,
+     "type": "thin gap"
+    },
+    {
+     "px": 711,
+     "type": "thin gap"
+    },
+    {
+     "px": 706.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 699.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 691.25,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-11-09",
+   "from": "2026-10-12",
+   "to": "2026-11-06",
+   "levels": [
+    {
+     "px": 721.5,
+     "type": "POC"
+    },
+    {
+     "px": 746,
+     "type": "value area high"
+    },
+    {
+     "px": 650.5,
+     "type": "value area low"
+    },
+    {
+     "px": 728.25,
+     "type": "volume node"
+    },
+    {
+     "px": 718,
+     "type": "volume node"
+    },
+    {
+     "px": 713,
+     "type": "volume node"
+    },
+    {
+     "px": 709.25,
+     "type": "volume node"
+    },
+    {
+     "px": 704.5,
+     "type": "volume node"
+    },
+    {
+     "px": 695,
+     "type": "volume node"
+    },
+    {
+     "px": 685.25,
+     "type": "volume node"
+    },
+    {
+     "px": 658.25,
+     "type": "volume node"
+    },
+    {
+     "px": 651.5,
+     "type": "volume node"
+    },
+    {
+     "px": 744.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 738.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 735,
+     "type": "thin gap"
+    },
+    {
+     "px": 701,
+     "type": "thin gap"
+    },
+    {
+     "px": 682.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 676.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 674,
+     "type": "thin gap"
+    },
+    {
+     "px": 670.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 667.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 664.25,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-11-16",
+   "from": "2026-10-19",
+   "to": "2026-11-13",
+   "levels": [
+    {
+     "px": 685.5,
+     "type": "POC"
+    },
+    {
+     "px": 722.75,
+     "type": "value area high"
+    },
+    {
+     "px": 650.5,
+     "type": "value area low"
+    },
+    {
+     "px": 721.5,
+     "type": "volume node"
+    },
+    {
+     "px": 713,
+     "type": "volume node"
+    },
+    {
+     "px": 707.75,
+     "type": "volume node"
+    },
+    {
+     "px": 704.5,
+     "type": "volume node"
+    },
+    {
+     "px": 694,
+     "type": "volume node"
+    },
+    {
+     "px": 677.5,
+     "type": "volume node"
+    },
+    {
+     "px": 674.25,
+     "type": "volume node"
+    },
+    {
+     "px": 658.25,
+     "type": "volume node"
+    },
+    {
+     "px": 651.5,
+     "type": "volume node"
+    },
+    {
+     "px": 724.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 716,
+     "type": "thin gap"
+    },
+    {
+     "px": 710.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 706.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 701,
+     "type": "thin gap"
+    },
+    {
+     "px": 688.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 682.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 676,
+     "type": "thin gap"
+    },
+    {
+     "px": 664.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 653.75,
+     "type": "thin gap"
+    }
+   ]
+  },
+  {
+   "week": "2026-11-23",
+   "from": "2026-10-26",
+   "to": "2026-11-20",
+   "levels": [
+    {
+     "px": 658.25,
+     "type": "POC"
+    },
+    {
+     "px": 722.25,
+     "type": "value area high"
+    },
+    {
+     "px": 620.25,
+     "type": "value area low"
+    },
+    {
+     "px": 721.75,
+     "type": "volume node"
+    },
+    {
+     "px": 713,
+     "type": "volume node"
+    },
+    {
+     "px": 694,
+     "type": "volume node"
+    },
+    {
+     "px": 685.5,
+     "type": "volume node"
+    },
+    {
+     "px": 677.5,
+     "type": "volume node"
+    },
+    {
+     "px": 674.25,
+     "type": "volume node"
+    },
+    {
+     "px": 661,
+     "type": "volume node"
+    },
+    {
+     "px": 651.5,
+     "type": "volume node"
+    },
+    {
+     "px": 620.5,
+     "type": "volume node"
+    },
+    {
+     "px": 718.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 710.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 704.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 702,
+     "type": "thin gap"
+    },
+    {
+     "px": 643.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 638.5,
+     "type": "thin gap"
+    },
+    {
+     "px": 632.75,
+     "type": "thin gap"
+    },
+    {
+     "px": 626,
+     "type": "thin gap"
+    },
+    {
+     "px": 618.25,
+     "type": "thin gap"
+    },
+    {
+     "px": 611.75,
+     "type": "thin gap"
+    }
+   ]
+  }
+ ]
+}
