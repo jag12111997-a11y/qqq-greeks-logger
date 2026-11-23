@@ -8,6 +8,7 @@ Bars are trades, not bid/ask. Nothing on the website reads these files.
 
 Usage (repo root, ALPACA_API_KEY / ALPACA_API_SECRET in env):
     python research_holdout_bars.py 2026-01-02 2026-07-13
+    python research_holdout_bars.py vix only                (just the Cboe VIX history)
 Prints written paths. The workflow uploads research/holdout/ as a run artifact; nothing is committed."""
 import csv
 import datetime as dt
@@ -63,8 +64,22 @@ def gz(path, fields, rows):
         w.writerows(rows)
 
 
+def vix():
+    """Cboe's public daily VIX history (open/high/low/close since 1990) -> research/holdout/vix_history.csv."""
+    import requests
+    r = requests.get("https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv", timeout=60)
+    r.raise_for_status()
+    f = OUT / "vix_history.csv"
+    f.write_text(r.text)
+    print(f.relative_to(ROOT).as_posix())
+
+
 def main():
     first, last = sys.argv[1], sys.argv[2]
+    OUT.mkdir(parents=True, exist_ok=True)
+    vix()
+    if first == "vix":
+        return
     api = G.Alpaca(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_API_SECRET"])
     OUT.mkdir(parents=True, exist_ok=True)
     s = dt.datetime(2025, 1, 1, tzinfo=NY)
