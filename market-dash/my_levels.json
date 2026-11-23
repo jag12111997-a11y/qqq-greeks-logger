@@ -1,0 +1,30 @@
+{
+ "note": "Your weekly key levels from the volume profile (Webull). Colors are groups, not meanings yet (e.g. blue may be large nodes, yellow medium). Paper scoring only — nothing here touches the card or live trading. Add a new week at the top each weekend.",
+ "weeks": [
+  {
+   "week": "2026-11-23",
+   "added": "2026-11-22",
+   "source": "user screenshots, QQQ 7-min chart, Sun Nov 22 10:40 PM PT",
+   "levels": [
+    {"px": 689.02, "color": "blue"},
+    {"px": 684.38, "color": "orange dashed"},
+    {"px": 677.94, "color": "yellow"},
+    {"px": 670.46, "color": "orange dashed"},
+    {"px": 661.82, "color": "yellow"},
+    {"px": 658.23, "color": "blue"},
+    {"px": 652.52, "color": "orange dashed"},
+    {"px": 649.88, "color": "red"},
+    {"px": 645.28, "color": "blue"},
+    {"px": 641.46, "color": "orange dashed"},
+    {"px": 636.54, "color": "red"},
+    {"px": 632.34, "color": "yellow"},
+    {"px": 627.48, "color": "red", "note": "label hidden in the screenshot; read from the chart scale (~627.5)"},
+    {"px": 621.79, "color": "blue"},
+    {"px": 613.28, "color": "orange dashed"},
+    {"px": 606.79, "color": "red"},
+    {"px": 584.13, "color": "blue"},
+    {"px": 564.89, "color": "blue"}
+   ]
+  }
+ ]
+}

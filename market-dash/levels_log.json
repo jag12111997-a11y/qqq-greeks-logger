@@ -1,0 +1,262 @@
+{
+ "updated": "2026-11-23T06:56:29.234Z",
+ "rules": "touch = within $0.25 after being R away (R = 10% of the 10-day avg range) · held / broke = closes R back / through within 60 min · move = best move away on the side it came from within 30 min · random = 15 lines a day drawn between the last 5 days' low and high",
+ "site_all": {
+  "yesterday high": {
+   "touches": 135,
+   "held": 79,
+   "broke": 50,
+   "chop": 6,
+   "held_pct": 59,
+   "avg_move": 2.37
+  },
+  "yesterday low": {
+   "touches": 153,
+   "held": 86,
+   "broke": 61,
+   "chop": 6,
+   "held_pct": 56,
+   "avg_move": 1.84
+  },
+  "yesterday close": {
+   "touches": 187,
+   "held": 106,
+   "broke": 71,
+   "chop": 10,
+   "held_pct": 57,
+   "avg_move": 1.83
+  },
+  "call wall": {
+   "touches": 191,
+   "held": 111,
+   "broke": 64,
+   "chop": 16,
+   "held_pct": 58,
+   "avg_move": 1.99
+  },
+  "put wall": {
+   "touches": 171,
+   "held": 93,
+   "broke": 70,
+   "chop": 8,
+   "held_pct": 54,
+   "avg_move": 1.81
+  },
+  "value area low": {
+   "touches": 153,
+   "held": 94,
+   "broke": 54,
+   "chop": 5,
+   "held_pct": 61,
+   "avg_move": 1.91
+  },
+  "value area high": {
+   "touches": 183,
+   "held": 114,
+   "broke": 59,
+   "chop": 10,
+   "held_pct": 62,
+   "avg_move": 1.9
+  },
+  "gamma flip": {
+   "touches": 53,
+   "held": 28,
+   "broke": 19,
+   "chop": 6,
+   "held_pct": 53,
+   "avg_move": 2.02
+  },
+  "ALL site levels": {
+   "touches": 1226,
+   "held": 711,
+   "broke": 448,
+   "chop": 67,
+   "held_pct": 58,
+   "avg_move": 1.94
+  }
+ },
+ "random_all": {
+  "touches": 1617,
+  "held": 994,
+  "broke": 510,
+  "chop": 113,
+  "held_pct": 61,
+  "avg_move": 1.94
+ },
+ "weeks": [
+  {
+   "week": "2026-11-23",
+   "days": [],
+   "levels": [
+    {
+     "px": 689.02,
+     "color": "blue",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 684.38,
+     "color": "orange dashed",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 677.94,
+     "color": "yellow",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 670.46,
+     "color": "orange dashed",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 661.82,
+     "color": "yellow",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 658.23,
+     "color": "blue",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 652.52,
+     "color": "orange dashed",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 649.88,
+     "color": "red",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 645.28,
+     "color": "blue",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 641.46,
+     "color": "orange dashed",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 636.54,
+     "color": "red",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 632.34,
+     "color": "yellow",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 627.48,
+     "color": "red",
+     "note": "label hidden in the screenshot; read from the chart scale (~627.5)",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 621.79,
+     "color": "blue",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 613.28,
+     "color": "orange dashed",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 606.79,
+     "color": "red",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 584.13,
+     "color": "blue",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 564.89,
+     "color": "blue",
+     "touches": [],
+     "closest": null
+    }
+   ],
+   "mine": {
+    "touches": 0,
+    "held": 0,
+    "broke": 0,
+    "chop": 0,
+    "held_pct": null,
+    "avg_move": null
+   },
+   "byColor": {
+    "blue": {
+     "touches": 0,
+     "held": 0,
+     "broke": 0,
+     "chop": 0,
+     "held_pct": null,
+     "avg_move": null
+    },
+    "orange dashed": {
+     "touches": 0,
+     "held": 0,
+     "broke": 0,
+     "chop": 0,
+     "held_pct": null,
+     "avg_move": null
+    },
+    "yellow": {
+     "touches": 0,
+     "held": 0,
+     "broke": 0,
+     "chop": 0,
+     "held_pct": null,
+     "avg_move": null
+    },
+    "red": {
+     "touches": 0,
+     "held": 0,
+     "broke": 0,
+     "chop": 0,
+     "held_pct": null,
+     "avg_move": null
+    }
+   },
+   "site": {
+    "touches": 0,
+    "held": 0,
+    "broke": 0,
+    "chop": 0,
+    "held_pct": null,
+    "avg_move": null
+   },
+   "random": {
+    "touches": 0,
+    "held": 0,
+    "broke": 0,
+    "chop": 0,
+    "held_pct": null,
+    "avg_move": null
+   },
+   "site_days": []
+  }
+ ]
+}
