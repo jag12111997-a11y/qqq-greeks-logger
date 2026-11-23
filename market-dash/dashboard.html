@@ -3828,7 +3828,7 @@
   // real data remount. The ordinary 60-second quote refresh no longer remounts
   // the chart at all while the user is working in it.
   var QQQ_VIEW_STATE = { userAdjusted: false, logicalRange: null };
-  var QQQ_LAYERS = { core: true, ranges: true, flow: true };
+  var QQQ_LAYERS = { core: true, ranges: true, flow: true, mylv: true, vp: true };
   // Session mode (GEX Chart day picker). date=null means all history, as before.
   var QQQ_SESSION = { date: null, past: false, noGex: false };
   var QQQ_SESS_FMT = null;
@@ -3841,7 +3841,7 @@
   var QQQ_CHART_VIEW = { mode: "raw", ema: true, pane: "adl" };
   try {
     var _ql = JSON.parse(localStorage.getItem("md:qqq-layers") || "{}");
-    ["core", "ranges", "flow"].forEach(function (k) {
+    ["core", "ranges", "flow", "mylv", "vp"].forEach(function (k) {
       if (typeof _ql[k] === "boolean") QQQ_LAYERS[k] = _ql[k];
     });
   } catch (eQqqLayers) {}
@@ -4213,7 +4213,7 @@
       '</div>' +
       '<div class="qqq-chart-controls"><span class="label">Overlays</span>' +
         layerButton("core", "GEX history + odds") + layerButton("ranges", "Expected ranges") +
-        layerButton("flow", "Vanna / charm / theta history") + "</div>" +
+        layerButton("flow", "Vanna / charm / theta history") + layerButton("mylv", "My levels") + layerButton("vp", "Volume profile") + "</div>" +
       '<div class="qqq-chart-shell"><div id="qqq-tv-chart" class="qqq-chart-canvas" ' +
       'role="img" aria-label="Interactive live QQQ price chart with GEX, expected range, vanna, charm and theta overlays"></div>' +
       '</div>' +
@@ -5145,6 +5145,8 @@
         tog("sigma", '<span style="color:' + GXC.sigma + '">±1σ / ±2σ</span>', S.sigma) +
         tog("garch", '<span style="color:' + GXC.garch + '">GARCH 68%</span>', S.garch) +
         tog("", '<span style="color:' + GXC.van + '">Vanna / charm / theta</span>', QQQ_LAYERS.flow, 'data-qqq-layer="flow"') +
+        tog("", '<span style="color:#4da3ff">My levels</span> <span style="color:#5f6368">(weekly volume-profile lines)</span>', QQQ_LAYERS.mylv, 'data-qqq-layer="mylv"') +
+        tog("", '<span style="color:#9682ff">Volume profile</span> <span style="color:#5f6368">(last 20 sessions)</span>', QQQ_LAYERS.vp, 'data-qqq-layer="vp"') +
         tog("spot", '<span style="color:' + GXC.spot + '">Spot line</span>', S.spot) +
         tog("", '<span style="color:#29b6f6">EMA 9</span> / <span style="color:#ff9f0a">EMA 20</span>', QQQ_CHART_VIEW.ema, 'data-qqq-ema="ema"') +
         '</div>' +
@@ -5555,6 +5557,7 @@
   }
 
   function destroyQqqChart() {
+    try { var vpc = document.getElementById("qqq-vp-canvas"); if (vpc) vpc.remove(); } catch (eVpc) {}
     if (!QQQ_TV) return;
     try {
       if (QQQ_VIEW_STATE.userAdjusted && QQQ_TV.chart && QQQ_TV.chart.timeScale) {
@@ -5668,6 +5671,7 @@
       if (QQQ_TV && QQQ_TV.series === series) {
         QQQ_TV.alignPending = false;
         alignQqqGexProfile(series, chart);
+        try { qqqVpDraw(); } catch (eVpDraw) {}
       }
     });
   }
@@ -5862,6 +5866,64 @@
     return BOT_LOG[day];
   }
   window.__qqqBotMarks = botPaint; window.__QQQ_BOT = QQQ_BOT;
+  // Nov 22: the user's weekly volume-profile lines (my_levels.json) as price lines in their colors, and the saved 20-session volume
+  // profile (vprofile.json, built nightly from the 1-min candles) drawn as sideways bars on the right of the chart. Toggles: My levels /
+  // Volume profile (Overlays row + chart settings). Display only — nothing here feeds the card or any trade.
+  var QQQ_USER = { lv: null, vp: null, loading: false };
+  var QQQ_LV_COLORS = { blue: "#4da3ff", yellow: "#f5c542", red: "#ff5a5a", "orange dashed": "#ff8a2a", orange: "#ff8a2a", green: "#3ddc84", purple: "#b388ff", white: "#e8e8f0" };
+  function qqqUserLoad() {
+    if (QQQ_USER.loading || QQQ_USER.lv) return;
+    QQQ_USER.loading = true;
+    Promise.all(["my_levels.json", "vprofile.json"].map(function (f) {
+      return fetch(f + "?t=" + Date.now()).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    })).then(function (a) { QQQ_USER.lv = a[0] || { weeks: [] }; QQQ_USER.vp = a[1] || {}; QQQ_USER.loading = false; qqqUserLayers(); });
+  }
+  function qqqUserLayers() {
+    var T = QQQ_TV, TV = window.LightweightCharts; if (!T || !T.series || !TV) return;
+    if (!QQQ_USER.lv) { qqqUserLoad(); return; }
+    (T.userLines || []).forEach(function (l) { try { T.series.removePriceLine(l); } catch (eRm) {} });
+    T.userLines = [];
+    var W = QQQ_USER.lv.weeks && QQQ_USER.lv.weeks[0];
+    if (QQQ_LAYERS.mylv && W && W.levels) W.levels.forEach(function (l) {
+      var c = QQQ_LV_COLORS[l.color] || "#bbbbcc";
+      try { T.userLines.push(T.series.createPriceLine({ price: l.px, color: c, lineWidth: 2,
+        lineStyle: String(l.color).indexOf("dashed") >= 0 ? TV.LineStyle.Dashed : TV.LineStyle.Solid,
+        axisLabelVisible: true, axisLabelColor: c, axisLabelTextColor: "#0c0c14", title: "" })); } catch (eLv) {}
+    });
+    qqqVpDraw();
+  }
+  function qqqVpDraw() {
+    var T = QQQ_TV, old = document.getElementById("qqq-vp-canvas");
+    var P = QQQ_USER.vp && QQQ_USER.vp.composite;
+    if (!T || !T.series || !T.el || !QQQ_LAYERS.vp || !P) { if (old) old.remove(); return; }
+    var el = T.el, shell = el.parentNode; if (!shell) return;
+    var cv = old;
+    if (!cv) { cv = document.createElement("canvas"); cv.id = "qqq-vp-canvas"; cv.style.cssText = "position:absolute;left:0;top:0;pointer-events:none;z-index:3"; shell.appendChild(cv); }
+    var psW = 74, tsH = 26, paneH;
+    try { psW = T.chart.priceScale("right").width() || psW; } catch (ePs) {}
+    try { tsH = T.chart.timeScale().height() || tsH; } catch (eTs) {}
+    paneH = el.clientHeight - tsH;
+    try { var panes = T.chart.panes(); if (panes && panes.length > 1 && panes[0].getHeight) paneH = panes[0].getHeight(); } catch (ePane) {}
+    var W = Math.max(0, el.clientWidth - psW), H = Math.max(0, paneH), dpr = window.devicePixelRatio || 1;
+    cv.style.left = el.offsetLeft + "px"; cv.style.top = el.offsetTop + "px"; cv.style.width = W + "px"; cv.style.height = H + "px";
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    var k = 2, mx = 0, rows = [];
+    for (var i = 0; i < P.vol.length; i += k) { var sv = 0; for (var j = i; j < Math.min(P.vol.length, i + k); j++) sv += P.vol[j]; rows.push([P.lo + i * P.step, sv]); mx = Math.max(mx, sv); }
+    var maxW = Math.min(220, W * 0.28);
+    rows.forEach(function (r) {
+      var y1 = T.series.priceToCoordinate(r[0] + k * P.step), y2 = T.series.priceToCoordinate(r[0]);
+      if (y1 == null || y2 == null) return;
+      var top = Math.min(y1, y2), h = Math.max(1, Math.abs(y2 - y1) - 0.5); if (top > H || top + h < 0) return;
+      var inVA = r[0] >= P.va[0] && r[0] <= P.va[1], bw = mx ? r[1] / mx * maxW : 0;
+      g.fillStyle = inVA ? "rgba(150,130,255,.34)" : "rgba(150,130,255,.15)"; g.fillRect(W - bw, top, bw, h);
+    });
+    var yp = T.series.priceToCoordinate(P.poc);
+    g.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
+    if (yp != null && yp >= 0 && yp <= H) { g.strokeStyle = "rgba(255,255,255,.55)"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(W - maxW - 12, yp); g.lineTo(W, yp); g.stroke(); g.setLineDash([]);
+      g.fillStyle = "rgba(255,255,255,.75)"; g.fillText("POC " + P.poc.toFixed(2), W - maxW - 12, yp - 3); }
+    g.fillStyle = "rgba(200,190,255,.65)"; g.fillText("volume · 20 sessions", Math.max(4, W - maxW), 12);
+  }
   function mountQqqChart(e, chartModel) {
     destroyQqqChart();
     var el = document.getElementById("qqq-tv-chart");
@@ -6181,6 +6243,7 @@
                quoteTime: M.quoteTime === null ? null : Math.floor(M.quoteTime / 60000) * 60,
                el: el, interactionHandler: interactionHandler, alignPending:false };
     scheduleQqqGexAlignment(series, chart);
+    try { qqqUserLayers(); } catch (eUserLayers) {}
   }
 
   // Chart label overlay removed (2026-08-31) — reverted to plain TradingView chart.
