@@ -253,7 +253,7 @@
     function trapLine(D) { var mp = D.map || {}; if (mp.yday_low == null) return null; return mp.yesterday === 'green' ? mp.yday_low - 1 : mp.yday_high + 1; }
     function drawMain() {
       var c = sel.card; if (!c) return; var D = DAYS[c.date], cv = document.getElementById('rp-main'), S = setup(cv), g = S[0], w = S[1], h = S[2], n = D.candles.length;
-      var a = Math.max(0, Math.floor(c.m) - 40), z = Math.min(n - 1, Math.ceil(exitOf(c)) + 20);
+      var a = Math.max(0, Math.floor(c.m) - 40), z = Math.min(n - 1, Math.ceil(Math.max(exitOf(c), (c.trail && c.trail.out) || 0)) + 20);
       var padL = 6, padR = 78, top = 8, ph = Math.round(h * 0.74), vTop = ph + 20, vh = h - vTop - 18;
       var vis = D.candles.slice(a, z + 1);
       var lo = Math.min.apply(null, vis.map(function (x) { return x[2]; })), hi = Math.max.apply(null, vis.map(function (x) { return x[1]; }));
@@ -301,6 +301,17 @@
         g.fillStyle = css('--fg'); g.font = '600 11px ' + css('--display'); var tx = Math.min(x + 6, w - padR - g.measureText(txt).width - 4); g.fillText(txt, Math.max(padL, tx), top + 12 + row * 14); g.font = '11px ' + css('--mono');
       };
       C.forEach(function (o) { if (o === c || o.date !== c.date || o.m < a || o.m > z) return; g.fillStyle = css(o.src === 'option' ? '--accent' : '--you'); g.globalAlpha = 0.8; g.beginPath(); g.arc(X(o.m), Y(px(o.m)), 4, 0, 7); g.fill(); g.globalAlpha = 1; });
+      // Nov 23: the +$0.30 trail on the same entry — amber step line = the 3-min break level it watched after +$0.30, ◆ = trail on, ▽ = trail sell
+      var TR = c.trail, AMB = '#ffb020';
+      if (TR && TR.arm != null && TR.line && TR.line.length) {
+        g.strokeStyle = AMB; g.lineWidth = 1.6; g.setLineDash([5, 3]); g.beginPath(); var st2 = false;
+        TR.line.forEach(function (q) { if (q[0] < a || q[0] > z || !inR(q[1])) { st2 = false; return; } var y = Y(q[1]); if (!st2) { g.moveTo(X(q[0]) - cw / 2, y); st2 = true; } else g.lineTo(X(q[0]) - cw / 2, y); g.lineTo(X(Math.min(z, q[0] + 3)) - cw / 2, y); });
+        g.stroke(); g.setLineDash([]); var lq = TR.line[TR.line.length - 1]; if (inR(lq[1])) labels.push([Y(lq[1]), '3-min break ' + lq[1].toFixed(2), '--fg']);
+      }
+      if (TR && TR.arm != null && TR.arm >= a && TR.arm <= z) { var xa = X(TR.arm), ya = Y(px(TR.arm)); g.fillStyle = AMB; g.beginPath(); g.moveTo(xa, ya - 7); g.lineTo(xa + 6, ya); g.lineTo(xa, ya + 7); g.lineTo(xa - 6, ya); g.closePath(); g.fill();
+        g.fillStyle = css('--fg'); g.font = '600 10.5px ' + css('--display'); g.fillText('TRAIL ON +0.30 · ' + pt(TR.arm), Math.min(xa + 8, w - padR - 120), ya - 10); g.font = '11px ' + css('--mono'); }
+      if (TR && TR.out != null && TR.out >= a && TR.out <= z && TR.why !== 'stop') { var xo = X(TR.out), yo = Y(px(TR.out)); g.strokeStyle = AMB; g.lineWidth = 2; g.beginPath(); g.moveTo(xo, yo + 8); g.lineTo(xo - 7, yo - 5); g.lineTo(xo + 7, yo - 5); g.closePath(); g.stroke();
+        g.fillStyle = AMB; g.font = '600 10.5px ' + css('--display'); var tt = 'TRAIL SELL ' + q2(TR.px) + ' · ' + pt(TR.out) + ' · ' + usd(TR.pnl); g.fillText(tt, Math.max(padL, Math.min(xo + 8, w - padR - g.measureText(tt).width - 4)), yo + 20); g.font = '11px ' + css('--mono'); }
       tri(c.m, true, '--you', 'BUY ' + c.ct + '× ' + (c.side === 'call' ? 'C' : 'P') + c.strike + ' @ ' + q2(c.paid) + ' · ' + pt(c.m), 0);
       if (c.why !== 'open' && c.exit_m != null && c.exit_m <= z) tri(c.exit_m, false, c.pnl > 0 ? '--win' : '--loss', 'SELL · ' + why(c) + ' · ' + pt(c.exit_m) + ' · ' + usd(c.pnl), 1);
       labels.sort(function (p, q) { return p[0] - q[0]; }); var prevY = -99; g.font = '600 10.5px ' + css('--display');
@@ -411,10 +422,11 @@
     function drawOpt() {
       var c = sel.card, cv = document.getElementById('rp-opt'), S = setup(cv), g = S[0], w = S[1], h = S[2], P = c.path || {};
       document.getElementById('rp-opt-t').textContent = (c.side === 'call' ? 'Call ' : 'Put ') + c.strike + ' · ' + c.ct + '× · ' + lab(c);
-      var O = c.opt || [], a = Math.floor(c.m) - 10, z = Math.ceil(c.why === 'open' || c.exit_m == null ? (O.length ? O[O.length - 1][0] : c.m + 10) : c.exit_m) + 15, entry = c.paid, aMid = P.aMid != null ? P.aMid : entry;
+      var O = c.opt || [], a = Math.floor(c.m) - 10, z = Math.ceil(Math.max(c.why === 'open' || c.exit_m == null ? (O.length ? O[O.length - 1][0] : c.m + 10) : c.exit_m, (c.trail && c.trail.out) || 0)) + 15, entry = c.paid, aMid = P.aMid != null ? P.aMid : entry;
       var pts = O.filter(function (o) { return o[0] >= a && o[0] <= z; });
       var lines = [];
       if (c.src === 'card' || c.how === 'flip') lines = [[aMid - 0.50, '--loss', 'stop −0.50', true], [aMid + 0.30, '--shake', '+0.30 → stop up', true], [aMid + 0.50, '--win', '+0.50 → trail', true]];
+      else if (c.src === 'you' && c.trail) lines = [[entry - 0.15, '--loss', 'trail plan: stop −0.15', true], [entry + 0.30, '--shake', '+0.30 → trail on', true]];
       else if (c.setup === 'box scalp') lines = [[aMid - 0.30, '--loss', 'stop −0.30', true], [entry + 0.30, '--win', 'target +0.30', true]];
       else if (c.setup === 'Tulip v3.2') lines = [[aMid - 0.30, '--loss', 'stop −0.30', true], [entry + 2.00, '--win', 'target +2.00', true]];
       else if (c.setup === 'Playbook home run') lines = [[aMid - 0.30, '--loss', 'stop −0.30', true], [aMid + 1.20, '--win', 'trail from +1.20', true]];
@@ -440,6 +452,8 @@
       }
       var dot = function (m, v, col) { g.fillStyle = css('--panel'); g.beginPath(); g.arc(X(m), Y(v), 7, 0, 7); g.fill(); g.fillStyle = css(col); g.beginPath(); g.arc(X(m), Y(v), 5, 0, 7); g.fill(); };
       dot(c.m, entry, '--you'); if (c.why !== 'open' && sold != null && c.exit_m != null) dot(c.exit_m, sold, c.pnl > 0 ? '--win' : '--loss');
+      if (c.trail && c.trail.out != null && c.trail.px != null && c.trail.px >= lo && c.trail.px <= hi) { g.strokeStyle = '#ffb020'; g.lineWidth = 2.5; g.beginPath(); g.arc(X(c.trail.out), Y(c.trail.px), 6, 0, 7); g.stroke();
+        g.fillStyle = '#ffb020'; g.font = '600 10px ' + css('--display'); g.fillText('trail ' + q2(c.trail.px), Math.min(X(c.trail.out) + 8, w - padR - 50), Y(c.trail.px) - 8); g.font = '11px ' + css('--mono'); }
       var QN = c.qsrc === 'bars' ? ' The logger\u2019s quotes froze for this strike, so this line is Alpaca\u2019s real 1-min TRADE prices (no bid/ask; minutes with no trade are gaps).' : c.qsrc === 'frozen' ? ' The logger\u2019s quotes froze for this strike (same bid/ask while QQQ moved), so those minutes are hidden instead of drawing a fake line. Real trade prices are being backfilled.' : '';
       document.getElementById('rp-opt-n').textContent = (pts.length ? 'Mid (white) · bid (grey) · option EMA 11 (red) / 18 (blue) · best bid while held ' + (P.best != null ? (P.best >= 0 ? '+' : '') + q2(P.best) : '—') + ' · worst ' + (P.worst != null ? (P.worst >= 0 ? '+' : '') + q2(P.worst) : '—') + ' a contract.' : 'No usable quotes for this strike.') + QN;
       drawOpt30(c);
@@ -453,6 +467,9 @@
       var h = '<p class="eyebrow">' + c.weekday + ' ' + mmdd(c.date) + ' · ' + (c.src === 'you' ? 'your' : 'bot') + ' trade ' + (dayC.indexOf(c) + 1) + ' of ' + dayC.length + ' that day</p><div class="verdict">' + verdict + '</div>';
       h += '<p class="note">' + (c.src === 'you' ? 'You: ' : c.src === 'option' ? 'Option (' + esc(lab(c)) + '): ' : 'Card (' + esc(lab(c)) + '): ') + 'bought ' + c.ct + ' ' + c.side + (c.ct > 1 ? 's' : '') + ' ' + c.strike + ' at ' + q2(c.paid) + ' (' + pt(c.m) + ' PT)' +
         (c.why === 'open' ? ', still open.' : ' and sold' + (c.sold != null ? ' at ' + q2(c.sold) : '') + ' (' + pt(c.exit_m) + ' PT) · ' + why(c) + ' · <b class="' + cl(c.pnl) + '">' + usd(c.pnl) + '</b>') + '</p>';
+      if (c.trail) { var T2 = c.trail; h += '<p class="note" style="border-left:3px solid #ffb020;padding-left:8px"><b style="color:#ffb020">+$0.30 trail, same entry:</b> ' +
+        (T2.why === 'stop' ? 'stopped $0.15 under at ' + pt(T2.out) + ' (' + q2(T2.px) + ')' : (T2.arm != null ? 'trail on at ' + pt(T2.arm) + ', sold at ' + q2(T2.px) + ' ' + pt(T2.out) + ' (' + (T2.why === 'trail' ? '3-min candle broke' : 'time limit') + ')' : 'never reached +$0.30, out at ' + q2(T2.px) + ' ' + pt(T2.out))) +
+        ' → <b class="' + cl(T2.pnl) + '">' + usd(T2.pnl) + '</b> vs you <b class="' + cl(c.pnl) + '">' + usd(c.pnl) + '</b>' + (c.qsrc === 'bars' ? ' <span class="mut">(trade prices, not bid)</span>' : '') + '</p>'; }
       h += '<p class="eyebrow">' + (c.src === 'you' ? 'Your checklist (from your own stats)' : 'The bot\'s rules') + ' · ' + kept + ' kept' + (broke ? ', ' + broke + ' missed' : '') + '</p><div class="rules">' + rs.map(function (r) {
         var s = r.ok === true ? '<span class="ok">✓</span>' : r.ok === false ? '<span class="no">✗</span>' : '<span class="na">–</span>';
         return s + '<span>' + esc(r.label) + '<span class="d">' + esc(r.d) + '</span></span>'; }).join('') + '</div>';
@@ -481,6 +498,8 @@
         ['Card (as sized)', usd(cardT), cardN + ' trades · 3× when your lines agree', cl(cardT)],
         ['Options', usd(optT), optN + ' trades · in the card\'s direction', cl(optT)],
         ['Worst drawdown', '−$' + Math.round(dd).toLocaleString('en-US'), 'by morning, card + options', 'neg'],
+        (function () { var T3 = C.filter(function (q) { return q.trail; }), tp = T3.reduce(function (a2, q) { return a2 + q.trail.pnl; }, 0), yp = T3.reduce(function (a2, q) { return a2 + q.pnl; }, 0);
+          return ['+$0.30 trail, same entries', usd(tp), T3.length + ' trades with prices · you ' + usd(yp) + ' · trail better on ' + T3.filter(function (q) { return q.trail.pnl > q.pnl + 0.5; }).length, cl(tp)]; })(),
         ['Since Nov 2 (live)', usd(fwT), fw.length + ' mornings the research never saw', cl(fwT)],
       ].map(function (x) { return '<div class="kpi"><small>' + x[0] + '</small><b class="' + (x[3] || '') + '">' + x[1] + '</b><span>' + x[2] + '</span></div>'; }).join('');
       var rows = DAILY.slice().reverse();

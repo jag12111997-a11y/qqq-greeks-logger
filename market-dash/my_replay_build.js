@@ -65,9 +65,27 @@ for (const day of Object.keys(byDay).sort()) {
     for (let m = fill + 1; m <= exit; m++) { const q = o[m]; if (!q) continue; best = Math.max(best, q.bid - paid); worst = Math.min(worst, q.bid - paid); }
     for (let m = exit + 1; m <= exit + 30; m++) { const q = o[m]; if (q) after = Math.max(after, q.bid - paid); }
     return { aMid: r2(aMid), iv: q0 ? q0.iv : null, best: best > -9 ? r2(best) : null, worst: worst < 9 ? r2(worst) : null, hit30: null, hit50: null, after: after > -9 ? r2(after) : null }; }
+  // Nov 23: what the +$0.30 trail would have done with the same entry (plan: claude/3v3_entry_exit_plan.txt). Before +$0.30 a hard stop
+  // $0.15 under what you paid; at +$0.30 the trail turns on; then at each 3-min QQQ candle close a call sells when the candle closes
+  // under the previous 3-min candle's low (a put: over its high). Sold at the bid, max 2 hours, 1 contract × your size, before fees.
+  function trailOf(side, K, fill, paid, ct) {
+    const o = OQ[side + "|" + Number(K)] || {}, sg = side === "C" ? 1 : -1, end = Math.min(fill + 120, N - 1), line = [];
+    const three = j => { const seg = []; for (let k = j - 2; k <= j; k++) if (bars[k]) seg.push(bars[k]); return seg.length ? { c: seg[seg.length - 1].close, h: Math.max(...seg.map(b => b.high)), l: Math.min(...seg.map(b => b.low)) } : null; };
+    let arm = null, last = null;
+    for (let j = fill + 1; j <= end; j++) {
+      const q = o[j]; if (!q) continue; last = [j, q.bid];
+      if (arm === null && q.bid <= paid - 0.15) return { arm: null, out: j, px: r2(q.bid), why: "stop", pnl: r2((q.bid - paid) * 100 * ct), line };
+      if (arm === null && q.bid - paid >= 0.30) arm = j;
+      if (arm !== null && j % 3 === 2 && j >= 5) { const cur = three(j), prv = three(j - 3); if (!cur || !prv) continue;
+        line.push([j - 2, r2(sg > 0 ? prv.l : prv.h)]);
+        if ((sg > 0 && cur.c < prv.l) || (sg < 0 && cur.c > prv.h)) return { arm, out: j, px: r2(q.bid), why: "trail", pnl: r2((q.bid - paid) * 100 * ct), line }; }
+    }
+    if (!last) return null;
+    return { arm, out: last[0], px: r2(last[1]), why: "time", pnl: r2((last[1] - paid) * 100 * ct), line };
+  }
   const today = byDay[day].map(t => { const side = t.side === "call" ? "C" : "P", fill = Math.floor(t.m), exit = Math.min(Math.floor(t.exit_m), N - 1);
     return { src: "you", setup: "you", how: null, side: t.side, strike: t.strike, sig: fill, m: fill, exit_m: exit, paid: t.paid, sold: t.sold, why: t.why, per: t.per, ct: t.ct, pnl: t.pnl,
-      tin: t.tin, tout: t.tout, qsrc: QSRC[side + "|" + Number(t.strike)] || "quotes", opt: series(side, t.strike, fill - 10, exit + 20), c30: c30(side, t.strike), path: pathOf(side, t.strike, fill, exit, t.paid), fake: null, box: null, level: null, levelPx: null }; });
+      tin: t.tin, tout: t.tout, qsrc: QSRC[side + "|" + Number(t.strike)] || "quotes", opt: series(side, t.strike, fill - 10, exit + 20), c30: c30(side, t.strike), path: pathOf(side, t.strike, fill, exit, t.paid), trail: t.paid ? trailOf(side, t.strike, fill, t.paid, t.ct || 1) : null, fake: null, box: null, level: null, levelPx: null }; });
   today.sort((a, b) => a.m - b.m || (a.tin < b.tin ? -1 : 1)).forEach((c, i) => { c.date = day; c.n = i + 1; out.cards.push(c); });
   out.daily.push({ date: day, weekday: out.days[day].weekday, card: r2(today.reduce((a, c) => a + c.pnl, 0)), cardN: today.length, card1: 0, opt: 0, optN: 0, forward: false });
 }
