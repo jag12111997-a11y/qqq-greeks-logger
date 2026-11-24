@@ -1156,5 +1156,257 @@
     "lim": 0.77
    }
   ]
+ },
+ "2026-11-24": {
+  "fills": [
+   {
+    "side": "C",
+    "strike": 653,
+    "ct": 1,
+    "t0": 23433,
+    "t1": 23471,
+    "buy": 1.13,
+    "sell": 0.97,
+    "stop": 0.98,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 653,
+    "ct": 1,
+    "t0": 23523,
+    "t1": 23601,
+    "buy": 0.7,
+    "sell": 0.55,
+    "stop": 0.55,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 622,
+    "ct": 1,
+    "t0": 23723,
+    "t1": 23758,
+    "buy": 1.03,
+    "sell": 0.89,
+    "stop": 0.9,
+    "pnl": -14.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 622,
+    "ct": 1,
+    "t0": 23775,
+    "t1": 23827,
+    "buy": 1.0,
+    "sell": 0.86,
+    "stop": 0.87,
+    "pnl": -14.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 622,
+    "ct": 1,
+    "t0": 23886,
+    "t1": 24044,
+    "buy": 0.9,
+    "sell": 0.75,
+    "stop": 0.75,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 622,
+    "ct": 1,
+    "t0": 24067,
+    "t1": 24103,
+    "buy": 0.8,
+    "sell": 0.64,
+    "stop": 0.65,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 622,
+    "ct": 1,
+    "t0": 24226,
+    "t1": 24377,
+    "buy": 0.55,
+    "sell": 0.4,
+    "stop": 0.41,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 656,
+    "ct": 1,
+    "t0": 24387,
+    "t1": 24560,
+    "buy": 0.45,
+    "sell": 0.3,
+    "stop": 0.31,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 622,
+    "ct": 1,
+    "t0": 24575,
+    "t1": 24668,
+    "buy": 0.5,
+    "sell": 0.34,
+    "stop": 0.35,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 656,
+    "ct": 1,
+    "t0": 24683,
+    "t1": 24728,
+    "buy": 0.58,
+    "sell": 0.42,
+    "stop": 0.43,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 625,
+    "ct": 1,
+    "t0": 25007,
+    "t1": 25061,
+    "buy": 0.72,
+    "sell": 0.56,
+    "stop": 0.57,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 654,
+    "ct": 1,
+    "t0": 25076,
+    "t1": 25332,
+    "buy": 0.54,
+    "sell": 0.39,
+    "stop": 0.39,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 625,
+    "ct": 1,
+    "t0": 25269,
+    "t1": 31792,
+    "buy": 0.5,
+    "sell": 0.34,
+    "stop": 0.35,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 625,
+    "ct": 1,
+    "t0": 25672,
+    "t1": 31792,
+    "buy": 0.78,
+    "sell": 0.35,
+    "stop": 0.35,
+    "pnl": -43.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 625,
+    "ct": 1,
+    "t0": 26083,
+    "t1": 31792,
+    "buy": 0.46,
+    "sell": 0.35,
+    "stop": 0.35,
+    "pnl": -11.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 629,
+    "ct": 1,
+    "t0": 31990,
+    "t1": 32728,
+    "buy": 0.98,
+    "sell": 0.83,
+    "stop": 0.83,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 629,
+    "ct": 1,
+    "t0": 32326,
+    "t1": 32728,
+    "buy": 1.18,
+    "sell": 0.84,
+    "stop": 0.83,
+    "pnl": -34.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 629,
+    "ct": 1,
+    "t0": 32558,
+    "t1": 32735,
+    "buy": 0.9,
+    "sell": 0.74,
+    "stop": 0.75,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 640,
+    "ct": 4,
+    "t0": 32765,
+    "t1": 34353,
+    "buy": 0.99,
+    "sell": 2.13,
+    "stop": null,
+    "pnl": 456.0,
+    "expired": false
+   }
+  ],
+  "cancels": [
+   {
+    "side": "C",
+    "strike": 656,
+    "t": 24380,
+    "lim": 0.56
+   },
+   {
+    "side": "P",
+    "strike": 622,
+    "t": 24542,
+    "lim": 0.53
+   },
+   {
+    "side": "C",
+    "strike": 656,
+    "t": 24634,
+    "lim": 0.53
+   }
+  ]
  }
 }

@@ -3,6 +3,93 @@
  "rules_updated": "2026-11-17",
  "entries": [
   {
+   "date": "2026-11-24",
+   "pnl": 138.0,
+   "trades": 19,
+   "wins": 1,
+   "losses": 18,
+   "first": "6:30",
+   "last": "9:32",
+   "best": "9:06 C 640 +456",
+   "score": 3.6,
+   "kept": 4,
+   "of": 11,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "19 trades"
+    },
+    {
+     "rule": "No entry against the 20-min candle",
+     "ok": false,
+     "why": "6 against: 6:32 call, 6:43 put, 6:49 put, 7:01 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2, #8 had 9, 5, 4"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": false,
+     "why": "4 adds into red"
+    },
+    {
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
+     "why": "median stop $0.15 under entry"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:35 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": true,
+     "why": "none"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": false,
+     "why": "7 entries 6:30\u20136:45, both sides"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 9:06 for 26 min, +456"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "never up $60 on a flipping tape"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": false,
+     "why": "1 entries at 3+"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": true,
+     "why": "ramble logged"
+    }
+   ],
+   "summary": "Day after the $500 day. I kept trying to win back my $500 loss and I wasn't trading correctly. I loaded $600 during the session just so I could keep trying. Ping-pong morning: a $6 box from 6:30 to 7:15, candles moving so slow that decay killed my options. I held the P625 puts for so long \u2014 I knew it was dead and I couldn't let it go. I felt mad and like a loser, like how I used to feel before I was profitable. Down \u2212$318 before one trade (C640 \u00d74 at 9:06) brought it back to green.",
+   "right": "Every stop was clean at about \u2212$0.15 and never moved. Probes were 1 contract. My reads were right: the 7:15\u20138:15 grind down (P625) and the 9:06 bounce off 633 (C640). I saw the reversal, punched it, and sold it at 2.13 \u2014 +$456. Finished green +$138.",
+   "fix": "Daily stop \u2212$75 was hit at 6:41 (6th probe); I was \u2212$318 before the last trade. 12 probes in 28 minutes, 9 in the first 20-min candle (max 2). The first 15 minutes went nowhere (\u2212$0.20) = range-day warning. P625 \u00d73 each reached +$0.30 and peaked 1.31 at 7:49 (about +$219) \u2014 never sold, stopped at 0.35 for \u2212$70. RULES: (1) let the $500 go \u2014 each day starts at zero, +$60 = done. (2) No deposits during market hours. (3) Flat first 15 minutes = range day, 2 probes max. (4) Up +$0.30 = the 3-min trail goes on, no exceptions. (5) Size up only after confirmation, never to win back a loss.",
+   "ramble": true,
+   "sized": {
+    "n": 1,
+    "pnl": 456.0,
+    "wins": 1,
+    "list": [
+     "9:06 C640 \u00d74 +456"
+    ]
+   }
+  },
+  {
    "date": "2026-11-23",
    "pnl": -505.0,
    "trades": 16,
@@ -1379,18 +1466,18 @@
  "weeks": [
   {
    "week": "2026-11-23",
-   "days": 1,
-   "green": 0,
-   "pnl": -505.0,
-   "trades": 16,
-   "wins": 0,
-   "score": 1.8,
-   "kept": 2,
-   "of": 11,
-   "best2": -13.0,
-   "rest": -492.0,
-   "first20": -142.0,
-   "after8": -363.0,
+   "days": 2,
+   "green": 1,
+   "pnl": -367.0,
+   "trades": 35,
+   "wins": 1,
+   "score": 2.7,
+   "kept": 6,
+   "of": 22,
+   "best2": 455.0,
+   "rest": -822.0,
+   "first20": -278.0,
+   "after8": -105.0,
    "days8": 0,
    "worst_low": -505.0,
    "daily": [
@@ -1399,62 +1486,68 @@
      "pnl": -505.0,
      "score": 1.8,
      "trades": 16
+    },
+    {
+     "date": "2026-11-24",
+     "pnl": 138.0,
+     "score": 3.6,
+     "trades": 19
     }
    ],
    "rules": {
     "8 trades or fewer": [
      0,
-     1
+     2
     ],
     "No entry against the 20-min candle": [
      0,
-     1
+     2
     ],
     "Max 2 entries per 20-min candle": [
      0,
-     1
+     2
     ],
     "Never add to a loser": [
      0,
-     1
+     2
     ],
     "Stops $0.15\u20130.20": [
-     1,
-     1
+     2,
+     2
     ],
     "Done after 3 losses in a row or \u2212$75": [
      0,
-     1
+     2
     ],
     "No chasing ($0.10+ past entry)": [
-     0,
-     1
+     1,
+     2
     ],
     "Waited for a setup (no open whiplash)": [
      0,
-     1
+     2
     ],
     "Held a winner (8+ min)": [
-     0,
-     1
+     1,
+     2
     ],
     "Size 2 contracts or less": [
      0,
-     1
+     2
     ],
     "Logged the day": [
-     1,
-     1
+     2,
+     2
     ]
    },
    "sized": {
-    "n": 4,
-    "pnl": -258.0,
-    "wins": 0
+    "n": 5,
+    "pnl": 198.0,
+    "wins": 1
    },
    "single": {
-    "n": 12,
-    "pnl": -247.0,
+    "n": 30,
+    "pnl": -565.0,
     "wins": 0
    }
   },
