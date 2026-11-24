@@ -1,14 +1,14 @@
 {
- "updated": "2026-11-23T07:17:16.480Z",
+ "updated": "2026-11-24T06:57:08.918Z",
  "rules": "touch = within $0.25 after being R away (R = 10% of the 10-day avg range) · held / broke = closes R back / through within 60 min · move = best move away on the side it came from within 30 min · random = 15 lines a day drawn between the last 5 days' low and high",
  "site_all": {
   "yesterday high": {
-   "touches": 135,
-   "held": 79,
+   "touches": 137,
+   "held": 81,
    "broke": 50,
    "chop": 6,
    "held_pct": 59,
-   "avg_move": 2.37
+   "avg_move": 2.5
   },
   "yesterday low": {
    "touches": 153,
@@ -51,12 +51,12 @@
    "avg_move": 1.91
   },
   "value area high": {
-   "touches": 183,
-   "held": 114,
+   "touches": 184,
+   "held": 115,
    "broke": 59,
    "chop": 10,
-   "held_pct": 62,
-   "avg_move": 1.9
+   "held_pct": 63,
+   "avg_move": 1.94
   },
   "gamma flip": {
    "touches": 53,
@@ -67,161 +67,358 @@
    "avg_move": 2.02
   },
   "ALL site levels": {
-   "touches": 1226,
-   "held": 711,
+   "touches": 1229,
+   "held": 714,
    "broke": 448,
    "chop": 67,
    "held_pct": 58,
-   "avg_move": 1.94
+   "avg_move": 1.96
   }
  },
  "random_all": {
-  "touches": 1617,
-  "held": 994,
-  "broke": 510,
+  "touches": 1640,
+  "held": 1008,
+  "broke": 519,
   "chop": 113,
   "held_pct": 61,
-  "avg_move": 1.94
+  "avg_move": 1.96
  },
  "weeks": [
   {
    "week": "2026-11-23",
-   "days": [],
+   "days": [
+    "2026-11-23"
+   ],
    "levels": [
     {
      "px": 689.02,
      "color": "blue",
      "touches": [],
-     "closest": null
+     "closest": 31.49
     },
     {
      "px": 684.38,
      "color": "orange dashed",
      "touches": [],
-     "closest": null
+     "closest": 26.85
     },
     {
      "px": 677.94,
      "color": "yellow",
      "touches": [],
-     "closest": null
+     "closest": 20.41
     },
     {
      "px": 670.46,
      "color": "orange dashed",
      "touches": [],
-     "closest": null
+     "closest": 12.93
     },
     {
      "px": 661.82,
      "color": "yellow",
      "touches": [],
-     "closest": null
+     "closest": 4.29
     },
     {
      "px": 658.23,
      "color": "blue",
      "touches": [],
-     "closest": null
+     "closest": 0.7
     },
     {
      "px": 652.52,
      "color": "orange dashed",
-     "touches": [],
-     "closest": null
+     "touches": [
+      {
+       "day": "2026-11-23",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 3.78,
+       "at": "6:34"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "7:15",
+       "from": "below",
+       "res": "broke",
+       "move": 1.11,
+       "at": "7:20"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "7:45",
+       "from": "above",
+       "res": "broke",
+       "move": 1.98,
+       "at": "8:02"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "8:05",
+       "from": "below",
+       "res": "held",
+       "move": 2.03,
+       "at": "8:37"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "9:00",
+       "from": "below",
+       "res": "held",
+       "move": 1.99,
+       "at": "9:41"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "10:18",
+       "from": "below",
+       "res": "held",
+       "move": 3.09,
+       "at": "10:37"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "11:04",
+       "from": "below",
+       "res": "held",
+       "move": 2.62,
+       "at": "11:10"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "12:16",
+       "from": "below",
+       "res": "held",
+       "move": 1.51,
+       "at": "12:52"
+      }
+     ],
+     "closest": 0
     },
     {
      "px": 649.88,
      "color": "red",
-     "touches": [],
-     "closest": null
+     "touches": [
+      {
+       "day": "2026-11-23",
+       "t": "6:34",
+       "from": "above",
+       "res": "broke",
+       "move": 1.32,
+       "at": "6:35"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "6:58",
+       "from": "below",
+       "res": "broke",
+       "move": 1.56,
+       "at": "7:13"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "8:04",
+       "from": "above",
+       "res": "held",
+       "move": 4.11,
+       "at": "8:05"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "8:37",
+       "from": "above",
+       "res": "broke",
+       "move": 2.47,
+       "at": "8:41"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "8:48",
+       "from": "below",
+       "res": "broke",
+       "move": 0.64,
+       "at": "8:58"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "9:42",
+       "from": "above",
+       "res": "broke",
+       "move": 2.19,
+       "at": "9:48"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "9:50",
+       "from": "below",
+       "res": "broke",
+       "move": 1.69,
+       "at": "10:01"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "10:38",
+       "from": "above",
+       "res": "held",
+       "move": 2.58,
+       "at": "11:04"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "11:11",
+       "from": "above",
+       "res": "held",
+       "move": 2.37,
+       "at": "11:13"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "11:36",
+       "from": "above",
+       "res": "broke",
+       "move": 1.85,
+       "at": "11:50"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "11:55",
+       "from": "below",
+       "res": "broke",
+       "move": 1.64,
+       "at": "12:15"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "12:54",
+       "from": "above",
+       "res": "chop",
+       "move": 1.49,
+       "at": null
+      }
+     ],
+     "closest": 0
     },
     {
      "px": 645.28,
      "color": "blue",
-     "touches": [],
-     "closest": null
+     "touches": [
+      {
+       "day": "2026-11-23",
+       "t": "6:35",
+       "from": "above",
+       "res": "held",
+       "move": 5.92,
+       "at": "6:35"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "6:39",
+       "from": "above",
+       "res": "held",
+       "move": 6.29,
+       "at": "6:50"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "6:51",
+       "from": "above",
+       "res": "broke",
+       "move": 10.33,
+       "at": "6:52"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "6:53",
+       "from": "below",
+       "res": "broke",
+       "move": 1.88,
+       "at": "6:55"
+      }
+     ],
+     "closest": 0
     },
     {
      "px": 641.46,
      "color": "orange dashed",
      "touches": [],
-     "closest": null
+     "closest": 0.49
     },
     {
      "px": 636.54,
      "color": "red",
      "touches": [],
-     "closest": null
+     "closest": 5.41
     },
     {
      "px": 632.34,
      "color": "yellow",
      "touches": [],
-     "closest": null
+     "closest": 9.61
     },
     {
      "px": 627.48,
      "color": "red",
      "note": "label hidden in the screenshot; read from the chart scale (~627.5)",
      "touches": [],
-     "closest": null
+     "closest": 14.47
     },
     {
      "px": 621.79,
      "color": "blue",
      "touches": [],
-     "closest": null
+     "closest": 20.16
     },
     {
      "px": 613.28,
      "color": "orange dashed",
      "touches": [],
-     "closest": null
+     "closest": 28.67
     },
     {
      "px": 606.79,
      "color": "red",
      "touches": [],
-     "closest": null
+     "closest": 35.16
     },
     {
      "px": 584.13,
      "color": "blue",
      "touches": [],
-     "closest": null
+     "closest": 57.82
     },
     {
      "px": 564.89,
      "color": "blue",
      "touches": [],
-     "closest": null
+     "closest": 77.06
     }
    ],
    "mine": {
-    "touches": 0,
-    "held": 0,
-    "broke": 0,
-    "chop": 0,
-    "held_pct": null,
-    "avg_move": null
+    "touches": 24,
+    "held": 10,
+    "broke": 13,
+    "chop": 1,
+    "held_pct": 42,
+    "avg_move": 2.77
    },
    "byColor": {
     "blue": {
-     "touches": 0,
-     "held": 0,
-     "broke": 0,
+     "touches": 4,
+     "held": 2,
+     "broke": 2,
      "chop": 0,
-     "held_pct": null,
-     "avg_move": null
+     "held_pct": 50,
+     "avg_move": 6.11
     },
     "orange dashed": {
-     "touches": 0,
-     "held": 0,
-     "broke": 0,
+     "touches": 8,
+     "held": 5,
+     "broke": 3,
      "chop": 0,
-     "held_pct": null,
-     "avg_move": null
+     "held_pct": 63,
+     "avg_move": 2.26
     },
     "yellow": {
      "touches": 0,
@@ -232,31 +429,103 @@
      "avg_move": null
     },
     "red": {
-     "touches": 0,
-     "held": 0,
-     "broke": 0,
-     "chop": 0,
-     "held_pct": null,
-     "avg_move": null
+     "touches": 12,
+     "held": 3,
+     "broke": 8,
+     "chop": 1,
+     "held_pct": 25,
+     "avg_move": 1.99
     }
    },
    "site": {
-    "touches": 0,
-    "held": 0,
+    "touches": 3,
+    "held": 3,
     "broke": 0,
     "chop": 0,
-    "held_pct": null,
-    "avg_move": null
+    "held_pct": 100,
+    "avg_move": 10.17
    },
    "random": {
-    "touches": 0,
-    "held": 0,
-    "broke": 0,
+    "touches": 23,
+    "held": 14,
+    "broke": 9,
     "chop": 0,
-    "held_pct": null,
-    "avg_move": null
+    "held_pct": 61,
+    "avg_move": 3.4
    },
-   "site_days": []
+   "site_days": [
+    {
+     "day": "2026-11-23",
+     "R": 1.86,
+     "site": [
+      {
+       "type": "yesterday high",
+       "px": 643.28,
+       "touches": [
+        {
+         "t": "6:40",
+         "from": "above",
+         "res": "held",
+         "move": 8.29,
+         "at": "6:41"
+        },
+        {
+         "t": "6:52",
+         "from": "above",
+         "res": "held",
+         "move": 13.06,
+         "at": "6:54"
+        }
+       ],
+       "closest": 0
+      },
+      {
+       "type": "yesterday low",
+       "px": 606.23,
+       "touches": [],
+       "closest": 35.72
+      },
+      {
+       "type": "yesterday close",
+       "px": 610.04,
+       "touches": [],
+       "closest": 31.91
+      },
+      {
+       "type": "value area low",
+       "px": 615.9,
+       "touches": [],
+       "closest": 26.05
+      },
+      {
+       "type": "value area high",
+       "px": 642.4,
+       "touches": [
+        {
+         "t": "6:41",
+         "from": "above",
+         "res": "held",
+         "move": 9.17,
+         "at": "6:41"
+        }
+       ],
+       "closest": 0
+      },
+      {
+       "type": "call wall",
+       "px": 660,
+       "touches": [],
+       "closest": 2.47
+      },
+      {
+       "type": "put wall",
+       "px": 660,
+       "touches": [],
+       "closest": 2.47
+      }
+     ]
+    }
+   ]
   }
  ],
  "bot_weeks": [
@@ -7670,10 +7939,274 @@
    "week": "2026-11-23",
    "from": "2026-10-26",
    "to": "2026-11-20",
-   "days": [],
+   "days": [
+    "2026-11-23"
+   ],
    "levels": [
     {
      "px": 658.25,
+     "type": "POC",
+     "touches": [],
+     "closest": 0.72
+    },
+    {
+     "px": 722.25,
+     "type": "value area high",
+     "touches": [],
+     "closest": 64.72
+    },
+    {
+     "px": 620.25,
+     "type": "value area low",
+     "touches": [],
+     "closest": 21.7
+    },
+    {
+     "px": 721.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": 64.22
+    },
+    {
+     "px": 713,
+     "type": "volume node",
+     "touches": [],
+     "closest": 55.47
+    },
+    {
+     "px": 694,
+     "type": "volume node",
+     "touches": [],
+     "closest": 36.47
+    },
+    {
+     "px": 685.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 27.97
+    },
+    {
+     "px": 677.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 19.97
+    },
+    {
+     "px": 674.25,
+     "type": "volume node",
+     "touches": [],
+     "closest": 16.72
+    },
+    {
+     "px": 661,
+     "type": "volume node",
+     "touches": [],
+     "closest": 3.47
+    },
+    {
+     "px": 651.5,
+     "type": "volume node",
+     "touches": [
+      {
+       "day": "2026-11-23",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 4.8,
+       "at": "6:34"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "7:05",
+       "from": "below",
+       "res": "held",
+       "move": 3.18,
+       "at": "7:08"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "7:11",
+       "from": "below",
+       "res": "broke",
+       "move": 1.61,
+       "at": "7:18"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "7:46",
+       "from": "above",
+       "res": "held",
+       "move": 2.49,
+       "at": "8:12"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "8:15",
+       "from": "above",
+       "res": "held",
+       "move": 2.26,
+       "at": "8:20"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "8:27",
+       "from": "above",
+       "res": "broke",
+       "move": 1.45,
+       "at": "8:38"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "8:55",
+       "from": "below",
+       "res": "held",
+       "move": 1.34,
+       "at": "9:44"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "9:55",
+       "from": "below",
+       "res": "held",
+       "move": 1.25,
+       "at": "10:39"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "11:03",
+       "from": "below",
+       "res": "held",
+       "move": 1.6,
+       "at": "11:37"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "12:00",
+       "from": "below",
+       "res": "held",
+       "move": 3.26,
+       "at": "12:06"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "12:13",
+       "from": "below",
+       "res": "broke",
+       "move": 0.87,
+       "at": "12:40"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "12:50",
+       "from": "above",
+       "res": "chop",
+       "move": 1.17,
+       "at": null
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 620.5,
+     "type": "volume node",
+     "touches": [],
+     "closest": 21.45
+    },
+    {
+     "px": 718.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 60.97
+    },
+    {
+     "px": 710.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 52.72
+    },
+    {
+     "px": 704.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 46.72
+    },
+    {
+     "px": 702,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 44.47
+    },
+    {
+     "px": 643.5,
+     "type": "thin gap",
+     "touches": [
+      {
+       "day": "2026-11-23",
+       "t": "6:40",
+       "from": "above",
+       "res": "held",
+       "move": 8.07,
+       "at": "6:41"
+      },
+      {
+       "day": "2026-11-23",
+       "t": "6:52",
+       "from": "above",
+       "res": "held",
+       "move": 12.84,
+       "at": "6:54"
+      }
+     ],
+     "closest": 0
+    },
+    {
+     "px": 638.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 3.45
+    },
+    {
+     "px": 632.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 9.2
+    },
+    {
+     "px": 626,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 15.95
+    },
+    {
+     "px": 618.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 23.7
+    },
+    {
+     "px": 611.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": 30.2
+    }
+   ],
+   "all": {
+    "touches": 14,
+    "held": 9,
+    "broke": 4,
+    "chop": 1,
+    "held_pct": 64,
+    "avg_move": 3.3
+   }
+  },
+  {
+   "week": "2026-11-30",
+   "from": "2026-10-27",
+   "to": "2026-11-23",
+   "days": [],
+   "levels": [
+    {
+     "px": 651.5,
      "type": "POC",
      "touches": [],
      "closest": null
@@ -7697,7 +8230,7 @@
      "closest": null
     },
     {
-     "px": 713,
+     "px": 714.75,
      "type": "volume node",
      "touches": [],
      "closest": null
@@ -7733,7 +8266,7 @@
      "closest": null
     },
     {
-     "px": 651.5,
+     "px": 658.25,
      "type": "volume node",
      "touches": [],
      "closest": null
@@ -7751,7 +8284,13 @@
      "closest": null
     },
     {
-     "px": 710.25,
+     "px": 708.75,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 706.5,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -7769,7 +8308,7 @@
      "closest": null
     },
     {
-     "px": 643.5,
+     "px": 642.5,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -7794,12 +8333,6 @@
     },
     {
      "px": 618.25,
-     "type": "thin gap",
-     "touches": [],
-     "closest": null
-    },
-    {
-     "px": 611.75,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -7841,36 +8374,36 @@
    "avg_move": 2.63
   },
   "volume node": {
-   "touches": 216,
-   "held": 137,
-   "broke": 71,
-   "chop": 8,
+   "touches": 228,
+   "held": 144,
+   "broke": 75,
+   "chop": 9,
    "held_pct": 63,
-   "avg_move": 2.3
+   "avg_move": 2.29
   },
   "thin gap": {
-   "touches": 330,
-   "held": 177,
+   "touches": 332,
+   "held": 179,
    "broke": 137,
    "chop": 16,
    "held_pct": 54,
-   "avg_move": 1.85
+   "avg_move": 1.9
   },
   "ALL bot levels": {
-   "touches": 668,
-   "held": 385,
-   "broke": 251,
-   "chop": 32,
+   "touches": 682,
+   "held": 394,
+   "broke": 255,
+   "chop": 33,
    "held_pct": 58,
-   "avg_move": 1.99
+   "avg_move": 2.01
   }
  },
  "bot_random": {
-  "touches": 1260,
-  "held": 766,
-  "broke": 426,
-  "chop": 68,
+  "touches": 1279,
+  "held": 776,
+  "broke": 434,
+  "chop": 69,
   "held_pct": 61,
-  "avg_move": 1.91
+  "avg_move": 1.94
  }
 }

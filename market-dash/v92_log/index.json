@@ -1,14 +1,14 @@
 {
- "updated_utc": "2026-11-21T03:55:58.536Z",
+ "updated_utc": "2026-11-24T06:56:58.448Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 81,
+   "mornings": 82,
    "usd": 3113.4
   },
   "forward": {
-   "mornings": 15,
+   "mornings": 16,
    "usd": -203.2,
    "green": 0,
    "red": 3
@@ -16,19 +16,19 @@
   "last10": {
    "usd": -182.9,
    "worst_dip": 182.9,
-   "from": "2026-11-09"
+   "from": "2026-11-10"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
    "all": {
     "usd": 3390,
     "vs_v92": 276.6,
-    "bounce_days": 19
+    "bounce_days": 20
    },
    "forward": {
     "usd": -194.8,
     "vs_v92": 8.4,
-    "bounce_days": 9
+    "bounce_days": 10
    }
   },
   "shadow_combo": {
@@ -38,7 +38,7 @@
    },
    "forward": {
     "usd": -228.8,
-    "mornings": 15
+    "mornings": 16
    },
    "last10": {
     "usd": -182.9
@@ -65,7 +65,7 @@
    "forward": {
     "usd_1ct": -89.1,
     "usd_sized": -454.9,
-    "mornings": 15
+    "mornings": 16
    },
    "last10": {
     "usd_1ct": -182.9,
@@ -84,7 +84,7 @@
     "addons_usd": 0,
     "addons": 0,
     "total_usd": -454.9,
-    "mornings": 15
+    "mornings": 16
    },
    "last10": {
     "addons_usd": 0,
@@ -94,14 +94,14 @@
   "shadow_hiv": {
    "note": "high-IV layer (on the card since Nov 9, its own section): pop put + bell put, only when option IV is over 35% at that minute. Scored on its own; total = card sized + options + layer. Keep only while it helps.",
    "all": {
-    "usd": 1516.7,
-    "trades": 17,
-    "total_usd": 16936.5
+    "usd": 1449.1,
+    "trades": 18,
+    "total_usd": 16868.9
    },
    "forward": {
     "from": "2026-11-09",
-    "usd": -226.2,
-    "trades": 7
+    "usd": -293.8,
+    "trades": 8
    }
   },
   "shadow_bigfish": {
@@ -109,8 +109,8 @@
    "all": {
     "usd": 451.2,
     "trades": 8,
-    "setup_days": 10,
-    "total_usd": 17387.7
+    "setup_days": 11,
+    "total_usd": 17320.1
    },
    "forward": {
     "from": "2026-11-10",
@@ -151,8 +151,8 @@
     "trades": 143
    },
    "hiv_layer": {
-    "sqn": 1.03,
-    "trades": 17
+    "sqn": 0.98,
+    "trades": 18
    },
    "big_fish": {
     "sqn": 1.23,
@@ -247,8 +247,8 @@
     "trades": 7
    },
    "hiv_layer": {
-    "sqn": 0.92,
-    "trades": 10
+    "sqn": 0.87,
+    "trades": 11
    },
    "big_fish": {
     "sqn": 1.24,
@@ -257,7 +257,7 @@
   }
  },
  "htf_next": {
-  "through": "2026-11-20",
+  "through": "2026-11-23",
   "daily": -1,
   "weekly": -1
  },
@@ -551,13 +551,13 @@
    "v10_baseline": -13,
    "v11_usd": 0,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": 0,
    "duo_lotto_usd": 0,
    "duo_add_usd": 0,
    "duo_both_usd": 0,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-08-11",
@@ -589,13 +589,13 @@
    "v10_baseline": -16.5,
    "v11_usd": 13.7,
    "v11_mode": "fast vol bid",
+   "vol_usd": 38.7,
    "duo_usd": 83.8,
    "duo_lotto_usd": 79.9,
    "duo_add_usd": 64.9,
    "duo_both_usd": 61,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 38.7
+   "duo_new_on": true
   },
   {
    "date": "2026-08-12",
@@ -627,13 +627,13 @@
    "v10_baseline": -59.7,
    "v11_usd": -30.3,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": -19.2,
    "duo_lotto_usd": -41.8,
    "duo_add_usd": -83.8,
    "duo_both_usd": -106.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-08-13",
@@ -665,13 +665,13 @@
    "v10_baseline": -18.1,
    "v11_usd": 317.4,
    "v11_mode": "vol release",
+   "vol_usd": 0,
    "duo_usd": 317.4,
    "duo_lotto_usd": 344.8,
    "duo_add_usd": 500.8,
    "duo_both_usd": 528.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-08-14",
@@ -703,13 +703,13 @@
    "v10_baseline": 11.1,
    "v11_usd": -22.6,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": 17.1,
    "duo_lotto_usd": -16.8,
    "duo_add_usd": -71.8,
    "duo_both_usd": -105.7,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-08-17",
@@ -741,13 +741,13 @@
    "v10_baseline": 13.1,
    "v11_usd": -17.3,
    "v11_mode": "vol stall",
+   "vol_usd": -37.6,
    "duo_usd": 43.2,
    "duo_lotto_usd": 97.6,
    "duo_add_usd": 127.6,
    "duo_both_usd": 182,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -37.6
+   "duo_new_on": true
   },
   {
    "date": "2026-08-18",
@@ -779,13 +779,13 @@
    "v10_baseline": -8.7,
    "v11_usd": 17.7,
    "v11_mode": "calm vol bid",
+   "vol_usd": -37.6,
    "duo_usd": -19.9,
    "duo_lotto_usd": -44.5,
    "duo_add_usd": -70.5,
    "duo_both_usd": -95.1,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -37.6
+   "duo_new_on": true
   },
   {
    "date": "2026-08-19",
@@ -817,13 +817,13 @@
    "v10_baseline": -37.2,
    "v11_usd": 0,
    "v11_mode": "calm vol bid",
+   "vol_usd": 4.1,
    "duo_usd": 4.1,
    "duo_lotto_usd": -20.5,
    "duo_add_usd": -69.5,
    "duo_both_usd": -94.1,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 4.1
+   "duo_new_on": true
   },
   {
    "date": "2026-08-20",
@@ -855,13 +855,13 @@
    "v10_baseline": -45.5,
    "v11_usd": -43.3,
    "v11_mode": "vol release",
+   "vol_usd": -10.3,
    "duo_usd": -53.6,
    "duo_lotto_usd": -53.6,
    "duo_add_usd": -53.6,
    "duo_both_usd": -53.6,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -10.3
+   "duo_new_on": true
   },
   {
    "date": "2026-08-21",
@@ -893,13 +893,13 @@
    "v10_baseline": -36.1,
    "v11_usd": -110.9,
    "v11_mode": "calm vol bid",
+   "vol_usd": 75.1,
    "duo_usd": 111.3,
    "duo_lotto_usd": 133.8,
    "duo_add_usd": 198.8,
    "duo_both_usd": 221.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 75.1
+   "duo_new_on": true
   },
   {
    "date": "2026-08-24",
@@ -931,13 +931,13 @@
    "v10_baseline": -29.1,
    "v11_usd": -74.6,
    "v11_mode": "vol release",
+   "vol_usd": -22.6,
    "duo_usd": 263.3,
    "duo_lotto_usd": 371.8,
    "duo_add_usd": 488.8,
    "duo_both_usd": 597.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -22.6
+   "duo_new_on": true
   },
   {
    "date": "2026-08-25",
@@ -969,13 +969,13 @@
    "v10_baseline": -29,
    "v11_usd": 119.4,
    "v11_mode": "calm vol bid",
+   "vol_usd": 0,
    "duo_usd": 219.1,
    "duo_lotto_usd": 240.5,
    "duo_add_usd": 346.5,
    "duo_both_usd": 367.9,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-08-26",
@@ -1007,13 +1007,13 @@
    "v10_baseline": 8.4,
    "v11_usd": 80.6,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": 80.6,
    "duo_lotto_usd": 96.3,
    "duo_add_usd": 138.2,
    "duo_both_usd": 153.9,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-08-27",
@@ -1045,13 +1045,13 @@
    "v10_baseline": -19.2,
    "v11_usd": 137.4,
    "v11_mode": "vol stall",
+   "vol_usd": -63.6,
    "duo_usd": 73.8,
    "duo_lotto_usd": 70.2,
    "duo_add_usd": 52.2,
    "duo_both_usd": 48.6,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -63.6
+   "duo_new_on": true
   },
   {
    "date": "2026-08-28",
@@ -1083,13 +1083,13 @@
    "v10_baseline": 13.3,
    "v11_usd": 59.4,
    "v11_mode": "vol release",
+   "vol_usd": 320.4,
    "duo_usd": 379.8,
    "duo_lotto_usd": 511.6,
    "duo_add_usd": 622.6,
    "duo_both_usd": 754.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 320.4
+   "duo_new_on": true
   },
   {
    "date": "2026-08-31",
@@ -1121,13 +1121,13 @@
    "v10_baseline": -36.2,
    "v11_usd": -36.3,
    "v11_mode": "vol stall",
+   "vol_usd": -26.6,
    "duo_usd": -62.9,
    "duo_lotto_usd": -79.2,
    "duo_add_usd": -96.2,
    "duo_both_usd": -112.5,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -26.6
+   "duo_new_on": true
   },
   {
    "date": "2026-09-01",
@@ -1159,13 +1159,13 @@
    "v10_baseline": 21.8,
    "v11_usd": -28.3,
    "v11_mode": "calm vol bid",
+   "vol_usd": -14.6,
    "duo_usd": 219.9,
    "duo_lotto_usd": 264.7,
    "duo_add_usd": 402.7,
    "duo_both_usd": 447.5,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -14.6
+   "duo_new_on": true
   },
   {
    "date": "2026-09-02",
@@ -1197,13 +1197,13 @@
    "v10_baseline": 26.4,
    "v11_usd": 179.7,
    "v11_mode": "calm vol bid",
+   "vol_usd": 0,
    "duo_usd": 129.8,
    "duo_lotto_usd": 189.2,
    "duo_add_usd": 258.2,
    "duo_both_usd": 317.6,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-03",
@@ -1235,13 +1235,13 @@
    "v10_baseline": 44.8,
    "v11_usd": 36.4,
    "v11_mode": "vol release",
+   "vol_usd": 42.8,
    "duo_usd": 79.2,
    "duo_lotto_usd": 71.3,
    "duo_add_usd": 86.3,
    "duo_both_usd": 78.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 42.8
+   "duo_new_on": true
   },
   {
    "date": "2026-09-04",
@@ -1273,13 +1273,13 @@
    "v10_baseline": 19.3,
    "v11_usd": 19.1,
    "v11_mode": "vol release",
+   "vol_usd": -46.6,
    "duo_usd": -27.5,
    "duo_lotto_usd": -52.1,
    "duo_add_usd": -64.1,
    "duo_both_usd": -88.7,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -46.6
+   "duo_new_on": true
   },
   {
    "date": "2026-09-08",
@@ -1311,13 +1311,13 @@
    "v10_baseline": -2,
    "v11_usd": -25.3,
    "v11_mode": "calm vol bid",
+   "vol_usd": -0.6,
    "duo_usd": -25.9,
    "duo_lotto_usd": -74.8,
    "duo_add_usd": -140.8,
    "duo_both_usd": -189.7,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -0.6
+   "duo_new_on": true
   },
   {
    "date": "2026-09-09",
@@ -1349,13 +1349,13 @@
    "v10_baseline": 33.2,
    "v11_usd": -60.6,
    "v11_mode": "calm vol bid",
+   "vol_usd": -48.9,
    "duo_usd": 127.5,
    "duo_lotto_usd": 122.3,
    "duo_add_usd": 187.2,
    "duo_both_usd": 182,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -48.9
+   "duo_new_on": true
   },
   {
    "date": "2026-09-10",
@@ -1387,13 +1387,13 @@
    "v10_baseline": -52.9,
    "v11_usd": 0,
    "v11_mode": "calm vol bid",
+   "vol_usd": -9.6,
    "duo_usd": -9.6,
    "duo_lotto_usd": -16.9,
    "duo_add_usd": -34.9,
    "duo_both_usd": -42.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -9.6
+   "duo_new_on": true
   },
   {
    "date": "2026-09-11",
@@ -1425,13 +1425,13 @@
    "v10_baseline": -29.5,
    "v11_usd": -33.6,
    "v11_mode": "calm vol bid",
+   "vol_usd": -2.9,
    "duo_usd": -63.7,
    "duo_lotto_usd": -108.2,
    "duo_add_usd": -155.2,
    "duo_both_usd": -199.7,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -2.9
+   "duo_new_on": true
   },
   {
    "date": "2026-09-14",
@@ -1463,13 +1463,13 @@
    "v10_baseline": 55.4,
    "v11_usd": 79.7,
    "v11_mode": "vol release",
+   "vol_usd": 0,
    "duo_usd": 407.1,
    "duo_lotto_usd": 594.2,
    "duo_add_usd": 719.2,
    "duo_both_usd": 906.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-15",
@@ -1501,13 +1501,13 @@
    "v10_baseline": null,
    "v11_usd": 0,
    "v11_mode": null,
+   "vol_usd": 0,
    "duo_usd": 0,
    "duo_lotto_usd": 0,
    "duo_add_usd": 0,
    "duo_both_usd": 0,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-16",
@@ -1539,13 +1539,13 @@
    "v10_baseline": -3.2,
    "v11_usd": 0,
    "v11_mode": "vol stall",
+   "vol_usd": -22.6,
    "duo_usd": -22.6,
    "duo_lotto_usd": -22.9,
    "duo_add_usd": -30.9,
    "duo_both_usd": -31.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -22.6
+   "duo_new_on": true
   },
   {
    "date": "2026-09-17",
@@ -1577,13 +1577,13 @@
    "v10_baseline": -4.6,
    "v11_usd": -28.3,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": -28.3,
    "duo_lotto_usd": -28.3,
    "duo_add_usd": -28.3,
    "duo_both_usd": -28.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-18",
@@ -1615,13 +1615,13 @@
    "v10_baseline": -19.2,
    "v11_usd": 45.7,
    "v11_mode": "vol release",
+   "vol_usd": -40.6,
    "duo_usd": 5.1,
    "duo_lotto_usd": -23.5,
    "duo_add_usd": -74.5,
    "duo_both_usd": -103.1,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -40.6
+   "duo_new_on": true
   },
   {
    "date": "2026-09-21",
@@ -1653,13 +1653,13 @@
    "v10_baseline": 53.5,
    "v11_usd": 511.4,
    "v11_mode": "vol release",
+   "vol_usd": 0,
    "duo_usd": 721.8,
    "duo_lotto_usd": 961.6,
    "duo_add_usd": 1239.6,
    "duo_both_usd": 1479.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-22",
@@ -1691,13 +1691,13 @@
    "v10_baseline": -38.8,
    "v11_usd": -33.6,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": -33.6,
    "duo_lotto_usd": -48.9,
    "duo_add_usd": -81.9,
    "duo_both_usd": -97.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-23",
@@ -1729,13 +1729,13 @@
    "v10_baseline": 27.4,
    "v11_usd": 182.7,
    "v11_mode": "vol release",
+   "vol_usd": 0,
    "duo_usd": 277.4,
    "duo_lotto_usd": 324.8,
    "duo_add_usd": 450.8,
    "duo_both_usd": 498.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-24",
@@ -1767,13 +1767,13 @@
    "v10_baseline": -21.2,
    "v11_usd": 9.7,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": 9.7,
    "duo_lotto_usd": 1.4,
    "duo_add_usd": -9.6,
    "duo_both_usd": -17.9,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-25",
@@ -1805,13 +1805,13 @@
    "v10_baseline": -32.9,
    "v11_usd": 72.7,
    "v11_mode": "calm vol bid",
+   "vol_usd": 0,
    "duo_usd": 165.4,
    "duo_lotto_usd": 185.8,
    "duo_add_usd": 221.8,
    "duo_both_usd": 242.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-09-28",
@@ -1843,13 +1843,13 @@
    "v10_baseline": 31.2,
    "v11_usd": -34.3,
    "v11_mode": "vol release",
+   "vol_usd": 82.8,
    "duo_usd": 155.1,
    "duo_lotto_usd": 194.8,
    "duo_add_usd": 326.8,
    "duo_both_usd": 366.5,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 82.8
+   "duo_new_on": true
   },
   {
    "date": "2026-09-29",
@@ -1881,13 +1881,13 @@
    "v10_baseline": -21.9,
    "v11_usd": 39.7,
    "v11_mode": "calm vol bid",
+   "vol_usd": 86.4,
    "duo_usd": 33.1,
    "duo_lotto_usd": 19.5,
    "duo_add_usd": 36.5,
    "duo_both_usd": 22.9,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 86.4
+   "duo_new_on": true
   },
   {
    "date": "2026-09-30",
@@ -1919,13 +1919,13 @@
    "v10_baseline": -43.6,
    "v11_usd": 0,
    "v11_mode": "vol stall",
+   "vol_usd": -19.2,
    "duo_usd": 14.2,
    "duo_lotto_usd": -46.3,
    "duo_add_usd": -158.3,
    "duo_both_usd": -218.8,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -19.2
+   "duo_new_on": true
   },
   {
    "date": "2026-10-01",
@@ -1957,13 +1957,13 @@
    "v10_baseline": -19.1,
    "v11_usd": -41.3,
    "v11_mode": "vol stall",
+   "vol_usd": 31.1,
    "duo_usd": 54.2,
    "duo_lotto_usd": 17.4,
    "duo_add_usd": -46.6,
    "duo_both_usd": -83.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 31.1
+   "duo_new_on": true
   },
   {
    "date": "2026-10-02",
@@ -1995,13 +1995,13 @@
    "v10_baseline": 20.8,
    "v11_usd": -60.6,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": -102.5,
    "duo_lotto_usd": -111.1,
    "duo_add_usd": -143.1,
    "duo_both_usd": -151.7,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-10-05",
@@ -2033,13 +2033,13 @@
    "v10_baseline": -44.8,
    "v11_usd": -21.3,
    "v11_mode": "vol release",
+   "vol_usd": 19.4,
    "duo_usd": -75.5,
    "duo_lotto_usd": -83.8,
    "duo_add_usd": -76.8,
    "duo_both_usd": -85.1,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 19.4
+   "duo_new_on": true
   },
   {
    "date": "2026-10-06",
@@ -2071,13 +2071,13 @@
    "v10_baseline": -18.3,
    "v11_usd": 22.7,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": 68.1,
    "duo_lotto_usd": 65.5,
    "duo_add_usd": 87.5,
    "duo_both_usd": 84.9,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-10-07",
@@ -2109,13 +2109,13 @@
    "v10_baseline": -20.9,
    "v11_usd": 26.4,
    "v11_mode": "vol stall",
+   "vol_usd": -10.6,
    "duo_usd": 143.6,
    "duo_lotto_usd": 88.5,
    "duo_add_usd": 32.5,
    "duo_both_usd": -22.6,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -10.6
+   "duo_new_on": true
   },
   {
    "date": "2026-10-08",
@@ -2147,13 +2147,13 @@
    "v10_baseline": 26.2,
    "v11_usd": 130.7,
    "v11_mode": "vol stall",
+   "vol_usd": -66.6,
    "duo_usd": 64.1,
    "duo_lotto_usd": 123.8,
    "duo_add_usd": 176.8,
    "duo_both_usd": 236.5,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -66.6
+   "duo_new_on": true
   },
   {
    "date": "2026-10-09",
@@ -2185,13 +2185,13 @@
    "v10_baseline": -49.2,
    "v11_usd": -25.3,
    "v11_mode": "vol stall",
+   "vol_usd": -59.6,
    "duo_usd": -84.9,
    "duo_lotto_usd": -84.9,
    "duo_add_usd": -84.9,
    "duo_both_usd": -84.9,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -59.6
+   "duo_new_on": true
   },
   {
    "date": "2026-10-12",
@@ -2223,13 +2223,13 @@
    "v10_baseline": -24.9,
    "v11_usd": 38.7,
    "v11_mode": "vol release",
+   "vol_usd": 7.4,
    "duo_usd": 132.2,
    "duo_lotto_usd": 135.7,
    "duo_add_usd": 146.7,
    "duo_both_usd": 150.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 7.4
+   "duo_new_on": true
   },
   {
    "date": "2026-10-13",
@@ -2261,13 +2261,13 @@
    "v10_baseline": -35.2,
    "v11_usd": -35.3,
    "v11_mode": "vol stall",
+   "vol_usd": 152.1,
    "duo_usd": 116.8,
    "duo_lotto_usd": 178.5,
    "duo_add_usd": 266.5,
    "duo_both_usd": 328.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 152.1
+   "duo_new_on": true
   },
   {
    "date": "2026-10-14",
@@ -2299,13 +2299,13 @@
    "v10_baseline": -34.9,
    "v11_usd": 131.7,
    "v11_mode": "vol stall",
+   "vol_usd": -103.9,
    "duo_usd": 27.8,
    "duo_lotto_usd": -25.4,
    "duo_add_usd": -126.4,
    "duo_both_usd": -179.6,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -103.9
+   "duo_new_on": true
   },
   {
    "date": "2026-10-15",
@@ -2337,13 +2337,13 @@
    "v10_baseline": -25.9,
    "v11_usd": 101.4,
    "v11_mode": "calm vol bid",
+   "vol_usd": -66.6,
    "duo_usd": 34.8,
    "duo_lotto_usd": 9.9,
    "duo_add_usd": -12.1,
    "duo_both_usd": -37,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -66.6
+   "duo_new_on": true
   },
   {
    "date": "2026-10-16",
@@ -2375,13 +2375,13 @@
    "v10_baseline": 11,
    "v11_usd": -49.9,
    "v11_mode": "vol stall",
+   "vol_usd": 109,
    "duo_usd": 332.8,
    "duo_lotto_usd": 338,
    "duo_add_usd": 454.9,
    "duo_both_usd": 460.1,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 109
+   "duo_new_on": true
   },
   {
    "date": "2026-10-19",
@@ -2413,13 +2413,13 @@
    "v10_baseline": -5.3,
    "v11_usd": -36.3,
    "v11_mode": "calm vol bid",
+   "vol_usd": -80.2,
    "duo_usd": -64.1,
    "duo_lotto_usd": -101,
    "duo_add_usd": -124,
    "duo_both_usd": -160.9,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -80.2
+   "duo_new_on": true
   },
   {
    "date": "2026-10-20",
@@ -2451,13 +2451,13 @@
    "v10_baseline": 63.5,
    "v11_usd": 352.7,
    "v11_mode": "vol release",
+   "vol_usd": 152.8,
    "duo_usd": 1030.2,
    "duo_lotto_usd": 1392.7,
    "duo_add_usd": 1875.7,
    "duo_both_usd": 2238.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 152.8
+   "duo_new_on": true
   },
   {
    "date": "2026-10-21",
@@ -2489,13 +2489,13 @@
    "v10_baseline": -6.4,
    "v11_usd": 0.7,
    "v11_mode": "vol release",
+   "vol_usd": -30.2,
    "duo_usd": -82.8,
    "duo_lotto_usd": -103.7,
    "duo_add_usd": -139.7,
    "duo_both_usd": -160.6,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -30.2
+   "duo_new_on": true
   },
   {
    "date": "2026-10-22",
@@ -2527,13 +2527,13 @@
    "v10_baseline": -23.9,
    "v11_usd": -96.6,
    "v11_mode": "vol release",
+   "vol_usd": 397.1,
    "duo_usd": 300.5,
    "duo_lotto_usd": 411.9,
    "duo_add_usd": 632.9,
    "duo_both_usd": 744.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 397.1
+   "duo_new_on": true
   },
   {
    "date": "2026-10-23",
@@ -2565,13 +2565,13 @@
    "v10_baseline": -44.4,
    "v11_usd": -68.3,
    "v11_mode": "calm vol bid",
+   "vol_usd": -14.6,
    "duo_usd": -137.2,
    "duo_lotto_usd": -146.5,
    "duo_add_usd": -147.5,
    "duo_both_usd": -156.8,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -14.6
+   "duo_new_on": true
   },
   {
    "date": "2026-10-26",
@@ -2603,13 +2603,13 @@
    "v10_baseline": 18.4,
    "v11_usd": -38.3,
    "v11_mode": "vol stall",
+   "vol_usd": 427.8,
    "duo_usd": 437.9,
    "duo_lotto_usd": 497.4,
    "duo_add_usd": 669.4,
    "duo_both_usd": 728.9,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 427.8
+   "duo_new_on": true
   },
   {
    "date": "2026-10-27",
@@ -2641,13 +2641,13 @@
    "v10_baseline": -22.5,
    "v11_usd": -4.6,
    "v11_mode": "vol release",
+   "vol_usd": 72.4,
    "duo_usd": 191.5,
    "duo_lotto_usd": 212.6,
    "duo_add_usd": 343.6,
    "duo_both_usd": 364.7,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 72.4
+   "duo_new_on": true
   },
   {
    "date": "2026-10-28",
@@ -2679,13 +2679,13 @@
    "v10_baseline": -25,
    "v11_usd": 58.7,
    "v11_mode": "vol release",
+   "vol_usd": 0,
    "duo_usd": 58.7,
    "duo_lotto_usd": 64.4,
    "duo_add_usd": 74.4,
    "duo_both_usd": 80.1,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-10-29",
@@ -2717,13 +2717,13 @@
    "v10_baseline": -1.6,
    "v11_usd": 0,
    "v11_mode": "vol stall",
+   "vol_usd": 140.1,
    "duo_usd": 84.8,
    "duo_lotto_usd": 74.9,
    "duo_add_usd": -0.1,
    "duo_both_usd": -10,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 140.1
+   "duo_new_on": true
   },
   {
    "date": "2026-10-30",
@@ -2755,13 +2755,13 @@
    "v10_baseline": 25.7,
    "v11_usd": 215.4,
    "v11_mode": "vol stall",
+   "vol_usd": 0,
    "duo_usd": 312.1,
    "duo_lotto_usd": 329.2,
    "duo_add_usd": 431.2,
    "duo_both_usd": 448.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-11-02",
@@ -2793,13 +2793,13 @@
    "v10_baseline": 60.5,
    "v11_usd": 106.4,
    "v11_mode": "fast vol bid",
+   "vol_usd": 260.7,
    "duo_usd": 367.1,
    "duo_lotto_usd": 408.2,
    "duo_add_usd": 631.2,
    "duo_both_usd": 672.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 260.7
+   "duo_new_on": true
   },
   {
    "date": "2026-11-03",
@@ -2831,13 +2831,13 @@
    "v10_baseline": -19,
    "v11_usd": 7.1,
    "v11_mode": "fast vol bid",
+   "vol_usd": 0,
    "duo_usd": -13.2,
    "duo_lotto_usd": -16.8,
    "duo_add_usd": 2.2,
    "duo_both_usd": -1.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-11-04",
@@ -2869,13 +2869,13 @@
    "v10_baseline": 18.2,
    "v11_usd": 27.1,
    "v11_mode": "vol stall",
+   "vol_usd": 725.8,
    "duo_usd": 752.9,
    "duo_lotto_usd": 790.1,
    "duo_add_usd": 1056.1,
    "duo_both_usd": 1093.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 725.8
+   "duo_new_on": true
   },
   {
    "date": "2026-11-05",
@@ -2907,13 +2907,13 @@
    "v10_baseline": 36.8,
    "v11_usd": 534.7,
    "v11_mode": "vol release",
+   "vol_usd": 0,
    "duo_usd": 534.7,
    "duo_lotto_usd": 679.4,
    "duo_add_usd": 1029.4,
    "duo_both_usd": 1174.1,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-11-06",
@@ -2945,13 +2945,13 @@
    "v10_baseline": -55.5,
    "v11_usd": -63.9,
    "v11_mode": "fast vol bid",
+   "vol_usd": 0,
    "duo_usd": -63.9,
    "duo_lotto_usd": -104.8,
    "duo_add_usd": -301.8,
    "duo_both_usd": -342.7,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
   },
   {
    "date": "2026-11-09",
@@ -2983,13 +2983,13 @@
    "v10_baseline": -39.9,
    "v11_usd": 242.4,
    "v11_mode": "vol release",
+   "vol_usd": 696.4,
    "duo_usd": 938.8,
    "duo_lotto_usd": 1062.6,
    "duo_add_usd": 1736.6,
    "duo_both_usd": 1860.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 696.4
+   "duo_new_on": true
   },
   {
    "date": "2026-11-10",
@@ -3021,13 +3021,13 @@
    "v10_baseline": 13.6,
    "v11_usd": 227.1,
    "v11_mode": "vol release",
+   "vol_usd": -80.6,
    "duo_usd": 146.5,
    "duo_lotto_usd": 115.3,
    "duo_add_usd": 123.3,
    "duo_both_usd": 92.1,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -80.6
+   "duo_new_on": true
   },
   {
    "date": "2026-11-11",
@@ -3059,13 +3059,13 @@
    "v10_baseline": 41.5,
    "v11_usd": 450.4,
    "v11_mode": "vol stall",
+   "vol_usd": 272.7,
    "duo_usd": 597.5,
    "duo_lotto_usd": 782.6,
    "duo_add_usd": 1186.6,
    "duo_both_usd": 1371.7,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 272.7
+   "duo_new_on": true
   },
   {
    "date": "2026-11-12",
@@ -3097,13 +3097,13 @@
    "v10_baseline": 3.1,
    "v11_usd": 618.1,
    "v11_mode": "vol release",
+   "vol_usd": -9.9,
    "duo_usd": 608.2,
    "duo_lotto_usd": 811.3,
    "duo_add_usd": 1157.3,
    "duo_both_usd": 1360.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -9.9
+   "duo_new_on": true
   },
   {
    "date": "2026-11-13",
@@ -3135,13 +3135,13 @@
    "v10_baseline": 70.7,
    "v11_usd": 958.1,
    "v11_mode": "fast vol bid",
+   "vol_usd": 20.1,
    "duo_usd": 978.2,
    "duo_lotto_usd": 1054.7,
    "duo_add_usd": 1636.7,
    "duo_both_usd": 1713.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 20.1
+   "duo_new_on": true
   },
   {
    "date": "2026-11-16",
@@ -3173,13 +3173,13 @@
    "v10_baseline": -19.9,
    "v11_usd": 10.7,
    "v11_mode": "fast vol bid",
+   "vol_usd": 172.7,
    "duo_usd": 183.4,
    "duo_lotto_usd": 186.8,
    "duo_add_usd": 269.8,
    "duo_both_usd": 273.2,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 172.7
+   "duo_new_on": true
   },
   {
    "date": "2026-11-17",
@@ -3211,13 +3211,13 @@
    "v10_baseline": 64.9,
    "v11_usd": 262.4,
    "v11_mode": "fast vol bid",
+   "vol_usd": 35.8,
    "duo_usd": 298.2,
    "duo_lotto_usd": 277.4,
    "duo_add_usd": 283.4,
    "duo_both_usd": 262.6,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 35.8
+   "duo_new_on": true
   },
   {
    "date": "2026-11-18",
@@ -3249,13 +3249,13 @@
    "v10_baseline": 20.8,
    "v11_usd": -73.6,
    "v11_mode": "fast vol bid",
+   "vol_usd": -100.9,
    "duo_usd": -174.5,
    "duo_lotto_usd": -192.4,
    "duo_add_usd": -257.4,
    "duo_both_usd": -275.3,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -100.9
+   "duo_new_on": true
   },
   {
    "date": "2026-11-19",
@@ -3287,13 +3287,13 @@
    "v10_baseline": null,
    "v11_usd": 0,
    "v11_mode": null,
+   "vol_usd": -219.9,
    "duo_usd": -277.2,
    "duo_lotto_usd": -286.5,
    "duo_add_usd": -277.5,
    "duo_both_usd": -286.8,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": -219.9
+   "duo_new_on": true
   },
   {
    "date": "2026-11-20",
@@ -3325,13 +3325,51 @@
    "v10_baseline": 83.9,
    "v11_usd": 157.8,
    "v11_mode": "fast vol bid",
+   "vol_usd": 0,
    "duo_usd": 157.8,
    "duo_lotto_usd": 229.6,
    "duo_add_usd": 215.6,
    "duo_both_usd": 287.4,
    "duo_old_on": true,
-   "duo_new_on": true,
-   "vol_usd": 0
+   "duo_new_on": true
+  },
+  {
+   "date": "2026-11-23",
+   "forward": true,
+   "n": 0,
+   "usd": 0,
+   "stops": 0,
+   "vix": 35.89,
+   "bounce_day": true,
+   "shadow_usd": 0,
+   "combo_usd": 0,
+   "ribbon_x3_usd": 0,
+   "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
+   "v95_usd": 0,
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0,
+   "opt_contracts": 0,
+   "hiv_usd": -67.6,
+   "hiv_n": 1,
+   "bf_usd": 0,
+   "bf_n": 0,
+   "bf_setup": true,
+   "v10_usd": -171.9,
+   "v10_baseline": 38.2,
+   "v11_usd": -171.9,
+   "v11_mode": "fast vol bid",
+   "vol_usd": 437.2,
+   "duo_usd": 265.3,
+   "duo_lotto_usd": 269.4,
+   "duo_add_usd": 522.4,
+   "duo_both_usd": 526.5,
+   "duo_old_on": true,
+   "duo_new_on": true
   }
  ]
 }
