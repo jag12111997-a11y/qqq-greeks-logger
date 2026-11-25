@@ -1,0 +1,561 @@
+{
+ "date": "2026-11-24",
+ "forward": true,
+ "engine": "v9.2 (market-dash/v92_engine.js)",
+ "units": "P&L in dollars at 1 contract, fees out; prices in 0.00",
+ "map": {
+  "yesterday": "green",
+  "last_week": "down",
+  "yday_high": 657.53,
+  "yday_low": 641.9501,
+  "yday_close": 650.87,
+  "trap": "calls below 640.95",
+  "gap": -10.28,
+  "gap_and_go_armed": "puts",
+  "value_area": [
+   648.6,
+   653.3
+  ],
+  "fade_week_value_ok": false,
+  "trap_zone_reached": "6:38"
+ },
+ "trades": [],
+ "usd": 0,
+ "stops": 0,
+ "generated_utc": "2026-11-25T05:24:58.440Z",
+ "shadow_v93_vix_bounce": {
+  "rule": "yesterday red + VIX close >= 16.5 -> also buy call EMA8 turns after 7:30, 1 per day",
+  "vix_yesterday": 26.62,
+  "bounce_day": false,
+  "trades": [],
+  "usd": 0,
+  "bounce_usd": 0
+ },
+ "shadow_combo": {
+  "rule": "v9.2 + sell after 3 EMA8 ticks against (not 1) + VIX bounce calls",
+  "trades": [],
+  "usd": 0,
+  "ribbon_rule": "watch only: 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees with the trade, else 1",
+  "ribbon_x3_usd": 0
+ },
+ "shadow_v95": {
+  "rule": "v9.5 candidate: combo + failed poke B (rejected at green 14, room to VWAP, trap-color days, gives way to trap/gap/fade) + 3 contracts on A trades when your lines agree (green 8 vs red 304; traps: stretched from the reds)",
+  "trades": [],
+  "usd_1ct": 0,
+  "usd_sized": 0,
+  "htf": {
+   "through": "2026-11-23",
+   "daily": -1,
+   "weekly": -1
+  }
+ },
+ "shadow_options": {
+  "rule": "options (live on the card): box · Playbook home run · Tulip v3.2 · turn entry · sniper · calls checkpoint. Card's latest side = direction; agreeing signals as fired; signals against it flipped to the card's side (card's ladder); before the card's first buy only the box; none after the card's 2nd stop; box + Playbook 2 contracts unless flipped.",
+  "trades": [],
+  "addons_usd": 0,
+  "addons_usd_1ct": 0,
+  "total_usd": 0
+ },
+ "shadow_hiv": {
+  "rule": "high-IV layer: POP PUT (after 6:50, QQQ $1.50+ over VWAP and +$1.50 in 15 min, IV over 35% at that minute; 25% stop, sell within 40 min) + BELL PUT (6:00->open down 0.15%+ after a red night, IV over 35% at 6:31; 1 contract, 25% stop, breakeven after +50%, hold to 8:56). Skips a pop while the bot holds a call.",
+  "night": {
+   "night_pct": -0.24,
+   "premarket_pct": -1.45,
+   "last30_pct": 0.58,
+   "gap_pct": -1.69
+  },
+  "lean": "calls — red all night (sellers usually tired by the open)",
+  "odds": {
+   "pct": 41,
+   "why": "fear market (20-day volatility 48%) + gap down 1.5%+",
+   "rv": 48.1,
+   "below50": true,
+   "event": null,
+   "base": 3.4
+  },
+  "bell": "no",
+  "trades": [
+   {
+    "rule": "pop put",
+    "side": "put",
+    "signal": "6:50",
+    "filled": "6:51",
+    "strike": 630,
+    "paid": 1.05,
+    "iv": 0.742,
+    "exit": "7:05",
+    "sold": 0.78,
+    "why": "stop (−25%)",
+    "usd": -29.6,
+    "contracts": 1
+   }
+  ],
+  "usd": -29.6
+ },
+ "shadow_bigfish": {
+  "rule": "gap vs week (queue #7a): last week down + open $2.50+ above yesterday's close → calls, same entry/exit (big fish wins if both). big fish: setup = (20-day return −8% or worse OR 5-day −3% or worse OR QQQ 20-day vol 26%+) AND gap 1%+; 6:35 close on the gap's side of the open; buy the ~$1.00 0DTE at 6:36 (no IV rule); out on the first 1-min close back across VWAP from 6:40, −35% stop, else 8:56. Skipped if the bell put holds the same side.",
+  "setup": {
+   "on": true,
+   "why": [
+    "20-day -8.6%",
+    "fear market (20-day vol 48%)"
+   ],
+   "gap_pct": -1.69,
+   "r5": -1.62,
+   "r20": -8.59,
+   "rv20": 48.1
+  },
+  "state": "fired",
+  "note": "BIG FISH FIRED · puts · hold until QQQ closes back above VWAP",
+  "trades": [
+   {
+    "rule": "big fish",
+    "side": "put",
+    "filled": "6:36",
+    "strike": 624,
+    "paid": 1.16,
+    "iv": 0.819,
+    "exit": "6:41",
+    "sold": 1.03,
+    "why": "QQQ closed back across VWAP",
+    "usd": -15.6,
+    "contracts": 1
+   }
+  ],
+  "usd": -15.6
+ },
+ "shadow_v10": {
+  "rule": "v10 auction layer (paper): ORB = first close outside 6:30–6:45 · EXT = level break that makes a new day high/low once 40–100% of the implied move is used · POP (GARCH > 22%) = 15% of the 10-day range in 3 min with the 20-min candle · never against the last 3-min move · delta 0.35, ask 0.40–3.00 · 25% stop, +$0.30 → 3-min trail, 60 min max · baseline = random entries, same exits",
+  "regime": {
+   "garch": 49.34,
+   "high_vol": true,
+   "atm_iv": 0.6611499999999999,
+   "implied_move": 26.68,
+   "range10": 14.82
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "call",
+    "signal": "6:45",
+    "filled": "6:45",
+    "strike": 644,
+    "paid": 2.31,
+    "exit": "6:56",
+    "sold": 2.5,
+    "why": "trail",
+    "usd": 17.7,
+    "best": 1.21
+   },
+   {
+    "rule": "pop",
+    "setup": "pop with the 20-min candle",
+    "side": "put",
+    "signal": "7:17",
+    "filled": "7:17",
+    "strike": 634,
+    "paid": 2.3,
+    "exit": "7:32",
+    "sold": 2.52,
+    "why": "trail",
+    "usd": 20.7,
+    "best": 1.26
+   },
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "put",
+    "signal": "7:25",
+    "filled": "7:25",
+    "strike": 633,
+    "paid": 2.28,
+    "exit": "7:32",
+    "sold": 2.15,
+    "why": "trail",
+    "usd": -14.3,
+    "best": 0.9
+   },
+   {
+    "rule": "pop",
+    "setup": "pop with the 20-min candle",
+    "side": "put",
+    "signal": "7:44",
+    "filled": "7:44",
+    "strike": 631,
+    "paid": 2.15,
+    "exit": "7:53",
+    "sold": 1.98,
+    "why": "trail",
+    "usd": -18.3,
+    "best": 0.94
+   }
+  ],
+  "usd": 5.8,
+  "baseline_usd": -53.4,
+  "baseline_trades": 2.5
+ },
+ "shadow_v11": {
+  "rule": "v11 = v10 + master switch: last evening's VIX change < −3.5% (vol release) or ≥ +2.5% with GARCH ≥ 22 (fast vol bid) → follow the opening-range break; otherwise (vol stall / calm vol bid) → don't chase it, buy the other way if it closes back inside within 10 min",
+  "regime": {
+   "name": "vol release",
+   "mode": "follow",
+   "vix_change": -25.829,
+   "garch": 49.34
+  },
+  "skip": null,
+  "trades": [
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "call",
+    "signal": "6:45",
+    "filled": "6:45",
+    "strike": 644,
+    "paid": 2.31,
+    "exit": "6:56",
+    "sold": 2.5,
+    "why": "trail",
+    "usd": 17.7,
+    "best": 1.21
+   },
+   {
+    "rule": "pop",
+    "setup": "pop with the 20-min candle",
+    "side": "put",
+    "signal": "7:17",
+    "filled": "7:17",
+    "strike": 634,
+    "paid": 2.3,
+    "exit": "7:32",
+    "sold": 2.52,
+    "why": "trail",
+    "usd": 20.7,
+    "best": 1.26
+   },
+   {
+    "rule": "orb",
+    "setup": "opening-range break",
+    "side": "put",
+    "signal": "7:25",
+    "filled": "7:25",
+    "strike": 633,
+    "paid": 2.28,
+    "exit": "7:32",
+    "sold": 2.15,
+    "why": "trail",
+    "usd": -14.3,
+    "best": 0.9
+   },
+   {
+    "rule": "pop",
+    "setup": "pop with the 20-min candle",
+    "side": "put",
+    "signal": "7:44",
+    "filled": "7:44",
+    "strike": 631,
+    "paid": 2.15,
+    "exit": "7:53",
+    "sold": 1.98,
+    "why": "trail",
+    "usd": -18.3,
+    "best": 0.94
+   }
+  ],
+  "usd": 5.8,
+  "baseline_usd": -53.4
+ },
+ "shadow_vol": {
+  "rule": "volume layer (paper): GAP BREAK = 1-min close $0.25 through one of the bot's weekly thin gaps → buy the break · NODE BOUNCE = touch a volume node / POC, then 30% of R back within 10 min → buy the bounce · max 2 each a morning, not when v11 already bought that side within 10 min · v11 contract + exits",
+  "R": 1.48,
+  "trades": [
+   {
+    "rule": "gapbreak",
+    "setup": "broke through thin gap 638.50",
+    "side": "put",
+    "signal": "6:31",
+    "filled": "6:31",
+    "strike": 634,
+    "paid": 2.96,
+    "exit": "6:44",
+    "sold": 2.29,
+    "why": "trail",
+    "usd": -68.3,
+    "best": 0.95
+   },
+   {
+    "rule": "gapbreak",
+    "setup": "broke through thin gap 632.75",
+    "side": "call",
+    "signal": "7:49",
+    "filled": "7:49",
+    "strike": 636,
+    "paid": 2.22,
+    "exit": "7:59",
+    "sold": 2.6,
+    "why": "trail",
+    "usd": 36.7,
+    "best": 1.15
+   }
+  ],
+  "usd": -31.6
+ },
+ "shadow_duo": {
+  "rule": "COMBO (paper): old bot (v9.2 card) + new bot (v11) + volume layer (gap breaks / confirmed node bounces, since Nov 22) every morning, opposite sides allowed · when a trade first gets to +$0.30: ADD +1 same contract and a LOTTO (cheapest same side asking $0.30–0.80), both sold with the main trade · self-check: a bot sits out when its last 10 active mornings make less per trade than random entries",
+  "self_check": {
+   "old": {
+    "on": true,
+    "why": "last 10 active mornings $36/trade vs random $2/trade"
+   },
+   "new": {
+    "on": true,
+    "why": "last 10 active mornings $107/trade vs random $9/trade"
+   },
+   "vol": {
+    "on": true,
+    "why": "last 10 active mornings $49/trade vs random $6/trade"
+   }
+  },
+  "legs": [
+   {
+    "lane": "new",
+    "kind": "trade",
+    "rule": "orb",
+    "side": "call",
+    "strike": 644,
+    "filled": "6:45",
+    "exit": "6:56",
+    "paid": 2.31,
+    "sold": 2.5,
+    "why": "trail",
+    "usd": 17.7,
+    "setup": "new bot (v11) · opening-range break"
+   },
+   {
+    "lane": "new",
+    "kind": "add",
+    "rule": "add",
+    "side": "call",
+    "strike": 644,
+    "filled": "6:48",
+    "exit": "6:56",
+    "paid": 3.39,
+    "sold": 2.5,
+    "usd": -90.3,
+    "setup": "new bot (v11) · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "lotto",
+    "rule": "lotto",
+    "side": "call",
+    "strike": 656,
+    "filled": "6:48",
+    "exit": "6:58",
+    "paid": 0.45,
+    "sold": 0.38,
+    "usd": -8.3,
+    "setup": "new bot (v11) · LOTTO $0.30–0.80 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "trade",
+    "rule": "pop",
+    "side": "put",
+    "strike": 634,
+    "filled": "7:17",
+    "exit": "7:32",
+    "paid": 2.3,
+    "sold": 2.52,
+    "why": "trail",
+    "usd": 20.7,
+    "setup": "new bot (v11) · pop with the 20-min candle"
+   },
+   {
+    "lane": "new",
+    "kind": "add",
+    "rule": "add",
+    "side": "put",
+    "strike": 634,
+    "filled": "7:23",
+    "exit": "7:32",
+    "paid": 2.94,
+    "sold": 2.52,
+    "usd": -43.3,
+    "setup": "new bot (v11) · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "lotto",
+    "rule": "lotto",
+    "side": "put",
+    "strike": 622,
+    "filled": "7:23",
+    "exit": "7:32",
+    "paid": 0.56,
+    "sold": 0.51,
+    "usd": -6.3,
+    "setup": "new bot (v11) · LOTTO $0.30–0.80 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "trade",
+    "rule": "orb",
+    "side": "put",
+    "strike": 633,
+    "filled": "7:25",
+    "exit": "7:32",
+    "paid": 2.28,
+    "sold": 2.15,
+    "why": "trail",
+    "usd": -14.3,
+    "setup": "new bot (v11) · opening-range break"
+   },
+   {
+    "lane": "new",
+    "kind": "add",
+    "rule": "add",
+    "side": "put",
+    "strike": 633,
+    "filled": "7:27",
+    "exit": "7:32",
+    "paid": 2.45,
+    "sold": 2.15,
+    "usd": -31.3,
+    "setup": "new bot (v11) · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "lotto",
+    "rule": "lotto",
+    "side": "put",
+    "strike": 621,
+    "filled": "7:27",
+    "exit": "7:32",
+    "paid": 0.46,
+    "sold": 0.44,
+    "usd": -3.3,
+    "setup": "new bot (v11) · LOTTO $0.30–0.80 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "trade",
+    "rule": "pop",
+    "side": "put",
+    "strike": 631,
+    "filled": "7:44",
+    "exit": "7:53",
+    "paid": 2.15,
+    "sold": 1.98,
+    "why": "trail",
+    "usd": -18.3,
+    "setup": "new bot (v11) · pop with the 20-min candle"
+   },
+   {
+    "lane": "new",
+    "kind": "add",
+    "rule": "add",
+    "side": "put",
+    "strike": 631,
+    "filled": "7:46",
+    "exit": "7:53",
+    "paid": 2.78,
+    "sold": 1.98,
+    "usd": -81.3,
+    "setup": "new bot (v11) · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "new",
+    "kind": "lotto",
+    "rule": "lotto",
+    "side": "put",
+    "strike": 619,
+    "filled": "7:46",
+    "exit": "7:53",
+    "paid": 0.51,
+    "sold": 0.38,
+    "usd": -14.3,
+    "setup": "new bot (v11) · LOTTO $0.30–0.80 at +$0.30"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "gapbreak",
+    "side": "put",
+    "strike": 634,
+    "filled": "6:31",
+    "exit": "6:44",
+    "paid": 2.96,
+    "sold": 2.29,
+    "why": "trail",
+    "usd": -68.3,
+    "setup": "volume layer · broke through thin gap 638.50"
+   },
+   {
+    "lane": "vol",
+    "kind": "add",
+    "rule": "add",
+    "side": "put",
+    "strike": 634,
+    "filled": "6:33",
+    "exit": "6:44",
+    "paid": 3.88,
+    "sold": 2.29,
+    "usd": -160.3,
+    "setup": "volume layer · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "vol",
+    "kind": "trade",
+    "rule": "gapbreak",
+    "side": "call",
+    "strike": 636,
+    "filled": "7:49",
+    "exit": "7:59",
+    "paid": 2.22,
+    "sold": 2.6,
+    "why": "trail",
+    "usd": 36.7,
+    "setup": "volume layer · broke through thin gap 632.75"
+   },
+   {
+    "lane": "vol",
+    "kind": "add",
+    "rule": "add",
+    "side": "call",
+    "strike": 636,
+    "filled": "7:51",
+    "exit": "7:59",
+    "paid": 2.8,
+    "sold": 2.6,
+    "usd": -21.3,
+    "setup": "volume layer · ADD +1 at +$0.30"
+   },
+   {
+    "lane": "vol",
+    "kind": "lotto",
+    "rule": "lotto",
+    "side": "call",
+    "strike": 646,
+    "filled": "7:51",
+    "exit": "7:59",
+    "paid": 0.34,
+    "sold": 0.28,
+    "usd": -7.3,
+    "setup": "volume layer · LOTTO $0.30–0.80 at +$0.30"
+   }
+  ],
+  "sat_out": [],
+  "usd": {
+   "combo": -25.8,
+   "lotto": -65.3,
+   "add": -453.6,
+   "both": -493.1
+  },
+  "max_cash": {
+   "combo": 458,
+   "both": 1099
+  }
+ }
+}

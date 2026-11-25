@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-24T06:57:08.918Z",
+ "updated": "2026-11-25T05:25:09.514Z",
  "rules": "touch = within $0.25 after being R away (R = 10% of the 10-day avg range) · held / broke = closes R back / through within 60 min · move = best move away on the side it came from within 30 min · random = 15 lines a day drawn between the last 5 days' low and high",
  "site_all": {
   "yesterday high": {
@@ -11,12 +11,12 @@
    "avg_move": 2.5
   },
   "yesterday low": {
-   "touches": 153,
-   "held": 86,
+   "touches": 156,
+   "held": 89,
    "broke": 61,
    "chop": 6,
-   "held_pct": 56,
-   "avg_move": 1.84
+   "held_pct": 57,
+   "avg_move": 1.94
   },
   "yesterday close": {
    "touches": 187,
@@ -35,12 +35,12 @@
    "avg_move": 1.99
   },
   "put wall": {
-   "touches": 171,
-   "held": 93,
-   "broke": 70,
+   "touches": 179,
+   "held": 99,
+   "broke": 72,
    "chop": 8,
-   "held_pct": 54,
-   "avg_move": 1.81
+   "held_pct": 55,
+   "avg_move": 1.85
   },
   "value area low": {
    "touches": 153,
@@ -59,35 +59,36 @@
    "avg_move": 1.94
   },
   "gamma flip": {
-   "touches": 53,
-   "held": 28,
-   "broke": 19,
-   "chop": 6,
-   "held_pct": 53,
-   "avg_move": 2.02
+   "touches": 65,
+   "held": 35,
+   "broke": 23,
+   "chop": 7,
+   "held_pct": 54,
+   "avg_move": 2.19
   },
   "ALL site levels": {
-   "touches": 1229,
-   "held": 714,
-   "broke": 448,
-   "chop": 67,
+   "touches": 1252,
+   "held": 730,
+   "broke": 454,
+   "chop": 68,
    "held_pct": 58,
-   "avg_move": 1.96
+   "avg_move": 1.99
   }
  },
  "random_all": {
-  "touches": 1640,
-  "held": 1008,
+  "touches": 1643,
+  "held": 1011,
   "broke": 519,
   "chop": 113,
-  "held_pct": 61,
-  "avg_move": 1.96
+  "held_pct": 62,
+  "avg_move": 1.97
  },
  "weeks": [
   {
    "week": "2026-11-23",
    "days": [
-    "2026-11-23"
+    "2026-11-23",
+    "2026-11-24"
    ],
    "levels": [
     {
@@ -335,6 +336,14 @@
        "res": "broke",
        "move": 1.88,
        "at": "6:55"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:01",
+       "from": "below",
+       "res": "held",
+       "move": 11.88,
+       "at": "9:01"
       }
      ],
      "closest": 0
@@ -342,116 +351,271 @@
     {
      "px": 641.46,
      "color": "orange dashed",
-     "touches": [],
-     "closest": 0.49
+     "touches": [
+      {
+       "day": "2026-11-24",
+       "t": "6:30",
+       "from": "below",
+       "res": "held",
+       "move": 5.61,
+       "at": "6:31"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "6:45",
+       "from": "below",
+       "res": "held",
+       "move": 4.09,
+       "at": "7:05"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:01",
+       "from": "below",
+       "res": "held",
+       "move": 8.06,
+       "at": "9:01"
+      }
+     ],
+     "closest": 0
     },
     {
      "px": 636.54,
      "color": "red",
-     "touches": [],
-     "closest": 5.41
+     "touches": [
+      {
+       "day": "2026-11-24",
+       "t": "6:33",
+       "from": "above",
+       "res": "held",
+       "move": 6.93,
+       "at": "6:34"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "6:36",
+       "from": "above",
+       "res": "held",
+       "move": 6.93,
+       "at": "6:41"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "7:21",
+       "from": "above",
+       "res": "broke",
+       "move": 1.84,
+       "at": "7:27"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "7:31",
+       "from": "below",
+       "res": "held",
+       "move": 4.26,
+       "at": "7:43"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "7:57",
+       "from": "below",
+       "res": "held",
+       "move": 5.39,
+       "at": "7:58"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:01",
+       "from": "below",
+       "res": "held",
+       "move": 3.14,
+       "at": "9:01"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:06",
+       "from": "below",
+       "res": "broke",
+       "move": 1.2,
+       "at": "9:11"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:17",
+       "from": "above",
+       "res": "held",
+       "move": 4.37,
+       "at": "9:29"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "11:05",
+       "from": "above",
+       "res": "held",
+       "move": 3.14,
+       "at": "11:15"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "11:39",
+       "from": "above",
+       "res": "broke",
+       "move": 1.3,
+       "at": "12:01"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "12:13",
+       "from": "below",
+       "res": "held",
+       "move": 2.27,
+       "at": "12:37"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "12:45",
+       "from": "below",
+       "res": "broke",
+       "move": 1.09,
+       "at": "12:51"
+      }
+     ],
+     "closest": 0
     },
     {
      "px": 632.34,
      "color": "yellow",
-     "touches": [],
-     "closest": 9.61
+     "touches": [
+      {
+       "day": "2026-11-24",
+       "t": "7:45",
+       "from": "above",
+       "res": "held",
+       "move": 4.11,
+       "at": "7:46"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "7:48",
+       "from": "above",
+       "res": "held",
+       "move": 4.11,
+       "at": "7:50"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "8:01",
+       "from": "above",
+       "res": "held",
+       "move": 2.92,
+       "at": "8:24"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "8:30",
+       "from": "above",
+       "res": "held",
+       "move": 3.66,
+       "at": "8:44"
+      }
+     ],
+     "closest": 0
     },
     {
      "px": 627.48,
      "color": "red",
      "note": "label hidden in the screenshot; read from the chart scale (~627.5)",
      "touches": [],
-     "closest": 14.47
+     "closest": 3.67
     },
     {
      "px": 621.79,
      "color": "blue",
      "touches": [],
-     "closest": 20.16
+     "closest": 9.36
     },
     {
      "px": 613.28,
      "color": "orange dashed",
      "touches": [],
-     "closest": 28.67
+     "closest": 17.87
     },
     {
      "px": 606.79,
      "color": "red",
      "touches": [],
-     "closest": 35.16
+     "closest": 24.36
     },
     {
      "px": 584.13,
      "color": "blue",
      "touches": [],
-     "closest": 57.82
+     "closest": 47.02
     },
     {
      "px": 564.89,
      "color": "blue",
      "touches": [],
-     "closest": 77.06
+     "closest": 66.26
     }
    ],
    "mine": {
-    "touches": 24,
-    "held": 10,
-    "broke": 13,
+    "touches": 44,
+    "held": 26,
+    "broke": 17,
     "chop": 1,
-    "held_pct": 42,
-    "avg_move": 2.77
+    "held_pct": 59,
+    "avg_move": 3.47
    },
    "byColor": {
     "blue": {
-     "touches": 4,
-     "held": 2,
+     "touches": 5,
+     "held": 3,
      "broke": 2,
      "chop": 0,
-     "held_pct": 50,
-     "avg_move": 6.11
+     "held_pct": 60,
+     "avg_move": 7.26
     },
     "orange dashed": {
-     "touches": 8,
-     "held": 5,
+     "touches": 11,
+     "held": 8,
      "broke": 3,
      "chop": 0,
-     "held_pct": 63,
-     "avg_move": 2.26
+     "held_pct": 73,
+     "avg_move": 3.26
     },
     "yellow": {
-     "touches": 0,
-     "held": 0,
+     "touches": 4,
+     "held": 4,
      "broke": 0,
      "chop": 0,
-     "held_pct": null,
-     "avg_move": null
+     "held_pct": 100,
+     "avg_move": 3.7
     },
     "red": {
-     "touches": 12,
-     "held": 3,
-     "broke": 8,
+     "touches": 24,
+     "held": 11,
+     "broke": 12,
      "chop": 1,
-     "held_pct": 25,
-     "avg_move": 1.99
+     "held_pct": 46,
+     "avg_move": 2.74
     }
    },
    "site": {
-    "touches": 3,
-    "held": 3,
-    "broke": 0,
-    "chop": 0,
-    "held_pct": 100,
-    "avg_move": 10.17
+    "touches": 26,
+    "held": 19,
+    "broke": 6,
+    "chop": 1,
+    "held_pct": 73,
+    "avg_move": 4.18
    },
    "random": {
-    "touches": 23,
-    "held": 14,
+    "touches": 26,
+    "held": 17,
     "broke": 9,
     "chop": 0,
-    "held_pct": 61,
-    "avg_move": 3.4
+    "held_pct": 65,
+    "avg_move": 3.95
    },
    "site_days": [
     {
@@ -522,6 +686,224 @@
        "px": 660,
        "touches": [],
        "closest": 2.47
+      }
+     ]
+    },
+    {
+     "day": "2026-11-24",
+     "R": 1.81,
+     "site": [
+      {
+       "type": "yesterday high",
+       "px": 657.53,
+       "touches": [],
+       "closest": 9.53
+      },
+      {
+       "type": "yesterday low",
+       "px": 641.95,
+       "touches": [
+        {
+         "t": "6:45",
+         "from": "below",
+         "res": "held",
+         "move": 4.58,
+         "at": "6:55"
+        },
+        {
+         "t": "6:58",
+         "from": "below",
+         "res": "held",
+         "move": 7.74,
+         "at": "7:05"
+        },
+        {
+         "t": "9:01",
+         "from": "below",
+         "res": "held",
+         "move": 8.55,
+         "at": "9:01"
+        }
+       ],
+       "closest": 0
+      },
+      {
+       "type": "yesterday close",
+       "px": 650.87,
+       "touches": [],
+       "closest": 2.87
+      },
+      {
+       "type": "value area low",
+       "px": 648.6,
+       "touches": [],
+       "closest": 0.6
+      },
+      {
+       "type": "value area high",
+       "px": 653.3,
+       "touches": [],
+       "closest": 5.3
+      },
+      {
+       "type": "call wall",
+       "px": 650,
+       "touches": [],
+       "closest": 2
+      },
+      {
+       "type": "put wall",
+       "px": 635,
+       "touches": [
+        {
+         "t": "7:27",
+         "from": "above",
+         "res": "held",
+         "move": 3.34,
+         "at": "7:31"
+        },
+        {
+         "t": "7:42",
+         "from": "above",
+         "res": "broke",
+         "move": 1.45,
+         "at": "7:44"
+        },
+        {
+         "t": "7:45",
+         "from": "below",
+         "res": "held",
+         "move": 3.85,
+         "at": "7:48"
+        },
+        {
+         "t": "7:51",
+         "from": "below",
+         "res": "held",
+         "move": 3.85,
+         "at": "8:01"
+        },
+        {
+         "t": "8:24",
+         "from": "below",
+         "res": "held",
+         "move": 3.47,
+         "at": "8:30"
+        },
+        {
+         "t": "8:47",
+         "from": "below",
+         "res": "held",
+         "move": 2.22,
+         "at": "8:59"
+        },
+        {
+         "t": "9:01",
+         "from": "below",
+         "res": "broke",
+         "move": 1.6,
+         "at": "9:08"
+        },
+        {
+         "t": "12:01",
+         "from": "above",
+         "res": "held",
+         "move": 2.06,
+         "at": "12:47"
+        }
+       ],
+       "closest": 0
+      },
+      {
+       "type": "gamma flip",
+       "px": 637.15,
+       "touches": [
+        {
+         "t": "6:31",
+         "from": "above",
+         "res": "held",
+         "move": 6.32,
+         "at": "6:34"
+        },
+        {
+         "t": "6:35",
+         "from": "above",
+         "res": "held",
+         "move": 6.32,
+         "at": "6:42"
+        },
+        {
+         "t": "7:08",
+         "from": "above",
+         "res": "held",
+         "move": 3.91,
+         "at": "7:09"
+        },
+        {
+         "t": "7:19",
+         "from": "above",
+         "res": "broke",
+         "move": 1.5,
+         "at": "7:27"
+        },
+        {
+         "t": "7:31",
+         "from": "below",
+         "res": "held",
+         "move": 4.87,
+         "at": "7:42"
+        },
+        {
+         "t": "9:01",
+         "from": "below",
+         "res": "held",
+         "move": 3.75,
+         "at": "9:01"
+        },
+        {
+         "t": "9:08",
+         "from": "below",
+         "res": "broke",
+         "move": 0.81,
+         "at": "9:30"
+        },
+        {
+         "t": "10:55",
+         "from": "above",
+         "res": "held",
+         "move": 2.53,
+         "at": "11:16"
+        },
+        {
+         "t": "11:36",
+         "from": "above",
+         "res": "broke",
+         "move": 0.69,
+         "at": "12:00"
+        },
+        {
+         "t": "12:16",
+         "from": "below",
+         "res": "held",
+         "move": 2.88,
+         "at": "12:22"
+        },
+        {
+         "t": "12:47",
+         "from": "below",
+         "res": "broke",
+         "move": 0.63,
+         "at": "12:52"
+        },
+        {
+         "t": "12:55",
+         "from": "above",
+         "res": "chop",
+         "move": 1.19,
+         "at": null
+        }
+       ],
+       "closest": 0
       }
      ]
     }
@@ -7940,7 +8322,8 @@
    "from": "2026-10-26",
    "to": "2026-11-20",
    "days": [
-    "2026-11-23"
+    "2026-11-23",
+    "2026-11-24"
    ],
    "levels": [
     {
@@ -7959,7 +8342,7 @@
      "px": 620.25,
      "type": "value area low",
      "touches": [],
-     "closest": 21.7
+     "closest": 10.9
     },
     {
      "px": 721.75,
@@ -8110,7 +8493,7 @@
      "px": 620.5,
      "type": "volume node",
      "touches": [],
-     "closest": 21.45
+     "closest": 10.65
     },
     {
      "px": 718.5,
@@ -8155,6 +8538,30 @@
        "res": "held",
        "move": 12.84,
        "at": "6:54"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "6:51",
+       "from": "below",
+       "res": "held",
+       "move": 6.56,
+       "at": "6:52"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "7:00",
+       "from": "below",
+       "res": "held",
+       "move": 9.65,
+       "at": "7:00"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:01",
+       "from": "below",
+       "res": "held",
+       "move": 10.1,
+       "at": "9:01"
       }
      ],
      "closest": 0
@@ -8162,47 +8569,161 @@
     {
      "px": 638.5,
      "type": "thin gap",
-     "touches": [],
-     "closest": 3.45
+     "touches": [
+      {
+       "day": "2026-11-24",
+       "t": "6:31",
+       "from": "above",
+       "res": "broke",
+       "move": 4.97,
+       "at": "6:38"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "6:40",
+       "from": "below",
+       "res": "broke",
+       "move": 2.2,
+       "at": "6:43"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "6:44",
+       "from": "above",
+       "res": "held",
+       "move": 4.97,
+       "at": "6:45"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "7:06",
+       "from": "above",
+       "res": "held",
+       "move": 2.56,
+       "at": "7:14"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "7:16",
+       "from": "above",
+       "res": "broke",
+       "move": 1.67,
+       "at": "7:22"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "7:33",
+       "from": "below",
+       "res": "held",
+       "move": 6.64,
+       "at": "7:35"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:01",
+       "from": "below",
+       "res": "held",
+       "move": 5.1,
+       "at": "9:01"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:10",
+       "from": "below",
+       "res": "broke",
+       "move": 1.85,
+       "at": "9:33"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "9:36",
+       "from": "above",
+       "res": "chop",
+       "move": 2.41,
+       "at": null
+      },
+      {
+       "day": "2026-11-24",
+       "t": "12:50",
+       "from": "below",
+       "res": "chop",
+       "move": 1.98,
+       "at": null
+      }
+     ],
+     "closest": 0
     },
     {
      "px": 632.75,
      "type": "thin gap",
-     "touches": [],
-     "closest": 9.2
+     "touches": [
+      {
+       "day": "2026-11-24",
+       "t": "7:44",
+       "from": "above",
+       "res": "held",
+       "move": 3.7,
+       "at": "7:52"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "8:00",
+       "from": "above",
+       "res": "held",
+       "move": 2.51,
+       "at": "8:24"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "8:29",
+       "from": "above",
+       "res": "held",
+       "move": 3.25,
+       "at": "8:47"
+      },
+      {
+       "day": "2026-11-24",
+       "t": "8:59",
+       "from": "above",
+       "res": "held",
+       "move": 15.25,
+       "at": "9:05"
+      }
+     ],
+     "closest": 0
     },
     {
      "px": 626,
      "type": "thin gap",
      "touches": [],
-     "closest": 15.95
+     "closest": 5.15
     },
     {
      "px": 618.25,
      "type": "thin gap",
      "touches": [],
-     "closest": 23.7
+     "closest": 12.9
     },
     {
      "px": 611.75,
      "type": "thin gap",
      "touches": [],
-     "closest": 30.2
+     "closest": 19.4
     }
    ],
    "all": {
-    "touches": 14,
-    "held": 9,
-    "broke": 4,
-    "chop": 1,
-    "held_pct": 64,
-    "avg_move": 3.3
+    "touches": 31,
+    "held": 20,
+    "broke": 8,
+    "chop": 3,
+    "held_pct": 65,
+    "avg_move": 4.24
    }
   },
   {
    "week": "2026-11-30",
-   "from": "2026-10-27",
-   "to": "2026-11-23",
+   "from": "2026-10-28",
+   "to": "2026-11-24",
    "days": [],
    "levels": [
     {
@@ -8212,7 +8733,7 @@
      "closest": null
     },
     {
-     "px": 722.25,
+     "px": 722,
      "type": "value area high",
      "touches": [],
      "closest": null
@@ -8224,13 +8745,7 @@
      "closest": null
     },
     {
-     "px": 721.75,
-     "type": "volume node",
-     "touches": [],
-     "closest": null
-    },
-    {
-     "px": 714.75,
+     "px": 722.25,
      "type": "volume node",
      "touches": [],
      "closest": null
@@ -8272,13 +8787,19 @@
      "closest": null
     },
     {
+     "px": 637.75,
+     "type": "volume node",
+     "touches": [],
+     "closest": null
+    },
+    {
      "px": 620.5,
      "type": "volume node",
      "touches": [],
      "closest": null
     },
     {
-     "px": 718.5,
+     "px": 718.75,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -8308,19 +8829,13 @@
      "closest": null
     },
     {
-     "px": 642.5,
+     "px": 682.75,
      "type": "thin gap",
      "touches": [],
      "closest": null
     },
     {
-     "px": 638.5,
-     "type": "thin gap",
-     "touches": [],
-     "closest": null
-    },
-    {
-     "px": 632.75,
+     "px": 643,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -8333,6 +8848,12 @@
     },
     {
      "px": 618.25,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 611.75,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -8382,28 +8903,28 @@
    "avg_move": 2.29
   },
   "thin gap": {
-   "touches": 332,
-   "held": 179,
-   "broke": 137,
-   "chop": 16,
+   "touches": 349,
+   "held": 190,
+   "broke": 141,
+   "chop": 18,
    "held_pct": 54,
-   "avg_move": 1.9
+   "avg_move": 2.06
   },
   "ALL bot levels": {
-   "touches": 682,
-   "held": 394,
-   "broke": 255,
-   "chop": 33,
+   "touches": 699,
+   "held": 405,
+   "broke": 259,
+   "chop": 35,
    "held_pct": 58,
-   "avg_move": 2.01
+   "avg_move": 2.09
   }
  },
  "bot_random": {
-  "touches": 1279,
-  "held": 776,
-  "broke": 434,
-  "chop": 69,
+  "touches": 1306,
+  "held": 793,
+  "broke": 440,
+  "chop": 73,
   "held_pct": 61,
-  "avg_move": 1.94
+  "avg_move": 1.98
  }
 }
