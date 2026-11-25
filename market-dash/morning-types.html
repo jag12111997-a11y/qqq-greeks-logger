@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Morning Types</title>
+<!-- Nov 25: what kind of mornings QQQ has been having (6:30-10:00 PT), from every saved session in history/.
+     regime_tracker.json is rebuilt nightly by regime_tracker.py (GEX History workflow). Read-only. -->
+<style>
+:root{--bg:#0c0710;--panel:#140c18;--line:rgba(176,64,143,.28);--fg:#ecdce8;--mute:rgba(220,190,210,.72);--up:#00e5cc;--down:#ff4d5e;--acc:#ff2be0;--gold:#f5c542;--font:ui-monospace,SFMono-Regular,Menlo,monospace}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--font)}
+.wrap{padding:14px 16px 40px;max-width:1100px}
+h2{font-size:12px;letter-spacing:.14em;color:var(--acc);margin:18px 0 8px;font-weight:600}
+.sub{color:var(--mute);font-size:11.5px;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{color:var(--mute);font-weight:500;font-size:11px;letter-spacing:.06em}
+td:first-child,th:first-child{text-align:left}
+.hot{color:var(--down);font-weight:600}.cold{color:var(--up)}.dim{color:var(--mute)}
+.verdict{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;background:var(--panel);font-size:12.5px}
+.big{font-size:20px;font-weight:700;color:var(--gold)}
+.t-reverse{color:#ff7ac8}.t-one{color:#00e5cc}.t-continue{color:#f5c542}.t-no{color:rgba(220,190,210,.72)}.t-late{color:#b388ff}
+.scroll{overflow-x:auto}
+.bar{display:inline-block;height:9px;border-radius:2px;vertical-align:middle;margin-right:1px}
+</style></head><body><div class="wrap" id="app">Loading morning types…</div>
+<script>
+(function () {
+  var app = document.getElementById("app");
+  var T = ["reverse", "one-way then box", "continue", "no move", "late move"];
+  var CLS = { "reverse": "t-reverse", "one-way then box": "t-one", "continue": "t-continue", "no move": "t-no", "late move": "t-late" };
+  var COL = { "reverse": "#ff7ac8", "one-way then box": "#00e5cc", "continue": "#f5c542", "no move": "#6b5a66", "late move": "#b388ff" };
+  var WHAT = { "reverse": "a big move, then a big move back", "one-way then box": "one move, then it sits", "continue": "move, pause, second leg same way",
+               "no move": "one box 6:30-10:00", "late move": "nothing until after 8:00" };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  fetch("regime_tracker.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    if (!j) { app.textContent = "regime_tracker.json not found yet."; return; }
+    var r20 = j.rolling["20"], N = j.normal_per20, s = j.streak;
+    var h = '<h2>MORNING TYPES · 6:30–10:00 PT</h2><div class="sub">Updated after ' + esc(j.updated) + ' · ' + j.mornings + ' saved mornings since ' + esc(j.first) +
+      ' · normal mix = 471 mornings Jan 2025–Nov 2026</div>';
+    var rev = r20["reverse"], one = r20["one-way then box"];
+    var read = rev >= 10 ? "Reversal tape: expect drives to get handed back. Probe small, take the trail, don't hold for more."
+             : one >= 9 ? "One-way tape: drives are sticking. This is when punching the add pays most."
+             : "Normal mix.";
+    h += '<div class="verdict"><span class="big">' + s.length + '</span> ' + esc(s.type) + ' morning' + (s.length > 1 ? 's' : '') + ' in a row' +
+      (s.type === "reverse" && s.length >= 5 ? ' <span class="hot">(before Nov 13 2026 the longest was 5)</span>' : '') +
+      '<br>Last 20: <b class="t-reverse">' + rev + ' reversals</b> vs about ' + N["reverse"] + ' normally · <b class="t-one">' + one + ' one-way</b> vs about ' + N["one-way then box"] +
+      '<br><span class="dim">' + read + '</span></div>';
+    h += '<div class="scroll"><table><tr><th>MORNING TYPE</th><th>LAST 5</th><th>LAST 10</th><th>LAST 20</th><th>NORMAL PER 20</th><th>WHAT IT LOOKS LIKE</th></tr>';
+    T.forEach(function (t) {
+      if (t === "late move" && !r20[t]) return;
+      var n = N[t], v = r20[t], cls = n === undefined ? "" : (v >= n * 1.5 && v - n >= 3 ? "hot" : (v <= n * 0.5 && n - v >= 3 ? "cold" : ""));
+      h += '<tr><td class="' + CLS[t] + '">' + t + '</td><td>' + j.rolling["5"][t] + '</td><td>' + j.rolling["10"][t] + '</td><td class="' + cls + '">' + v + '</td><td class="dim">' +
+        (n === undefined ? "rare" : "about " + n) + '</td><td class="dim" style="text-align:left">' + WHAT[t] + '</td></tr>';
+    });
+    h += '</table></div>';
+    var H = j.rolling20_history.slice(-60);
+    if (H.length) {
+      var mx = Math.max.apply(null, H.map(function (x) { return x.reverse; }).concat([10]));
+      h += '<h2>REVERSALS IN THE LAST 20 MORNINGS · over time</h2><div class="sub">Normal is about 7. Bar = one day.</div><div style="display:flex;align-items:flex-end;gap:2px;height:90px;border-bottom:1px solid var(--line)">';
+      H.forEach(function (x) { h += '<div title="' + x.date + ': ' + x.reverse + ' reversals" style="flex:1;background:' + (x.reverse >= 10 ? "#ff4d5e" : "#ff7ac8") + ';height:' + (x.reverse / mx * 100) + '%"></div>'; });
+      h += '</div><div class="sub" style="display:flex;justify-content:space-between"><span>' + H[0].date + '</span><span>' + H[H.length - 1].date + '</span></div>';
+    }
+    h += '<h2>EVERY MORNING</h2><div class="sub">Newest first. Moves are QQQ dollars from the start of the move. ' + esc(j.warmup_note || "") + '</div><div class="scroll"><table><tr><th>DAY</th><th>TYPE</th><th>HOW IT PLAYED</th><th>RANGE</th><th>BIG MOVE =</th><th style="text-align:left">THE MOVES</th></tr>';
+    j.days.slice().reverse().forEach(function (d) {
+      h += '<tr' + (d.warmup ? ' class="dim"' : '') + '><td>' + d.date + '</td><td class="' + CLS[d.type] + '">' + d.type + '</td><td class="dim">' + esc(d.scenario) + '</td><td>$' + d.range.toFixed(2) +
+        '</td><td class="dim">$' + d.big.toFixed(2) + '</td><td style="text-align:left">' + esc(d.moves.join(" · ") || "—") + '</td></tr>';
+    });
+    app.innerHTML = h + '</table></div>';
+  }).catch(function (e) { app.textContent = "Could not load: " + e; });
+})();
+</script></body></html>

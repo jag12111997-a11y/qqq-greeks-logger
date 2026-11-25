@@ -1,0 +1,1561 @@
+{
+ "updated": "2026-11-24",
+ "mornings": 95,
+ "first": "2026-07-14",
+ "normal_per20": {
+  "reverse": 6.8,
+  "one-way then box": 7.0,
+  "continue": 3.3,
+  "no move": 2.5
+ },
+ "normal_counts": {
+  "reverse": 161,
+  "one-way then box": 166,
+  "continue": 77,
+  "no move": 60,
+  "late move": 7,
+  "mornings": 471
+ },
+ "rolling": {
+  "5": {
+   "reverse": 5,
+   "one-way then box": 0,
+   "continue": 0,
+   "no move": 0,
+   "late move": 0
+  },
+  "10": {
+   "reverse": 8,
+   "one-way then box": 1,
+   "continue": 1,
+   "no move": 0,
+   "late move": 0
+  },
+  "20": {
+   "reverse": 14,
+   "one-way then box": 3,
+   "continue": 2,
+   "no move": 1,
+   "late move": 0
+  }
+ },
+ "streak": {
+  "type": "reverse",
+  "length": 8
+ },
+ "all_counts": {
+  "reverse": 30,
+  "one-way then box": 21,
+  "continue": 11,
+  "no move": 11,
+  "late move": 2
+ },
+ "warmup_note": "The first 20 saved mornings (Jul 14 on) have no full 20-day range yet, so their labels are rough; all_counts skips them.",
+ "rolling20_history": [
+  {
+   "date": "2026-08-10",
+   "reverse": 7,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-11",
+   "reverse": 6,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-12",
+   "reverse": 6,
+   "oneway": 7
+  },
+  {
+   "date": "2026-08-13",
+   "reverse": 5,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-14",
+   "reverse": 5,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-17",
+   "reverse": 4,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-18",
+   "reverse": 4,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-19",
+   "reverse": 5,
+   "oneway": 7
+  },
+  {
+   "date": "2026-08-20",
+   "reverse": 5,
+   "oneway": 7
+  },
+  {
+   "date": "2026-08-21",
+   "reverse": 5,
+   "oneway": 7
+  },
+  {
+   "date": "2026-08-24",
+   "reverse": 5,
+   "oneway": 7
+  },
+  {
+   "date": "2026-08-25",
+   "reverse": 4,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-26",
+   "reverse": 4,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-27",
+   "reverse": 4,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-28",
+   "reverse": 4,
+   "oneway": 8
+  },
+  {
+   "date": "2026-08-31",
+   "reverse": 4,
+   "oneway": 7
+  },
+  {
+   "date": "2026-09-01",
+   "reverse": 5,
+   "oneway": 6
+  },
+  {
+   "date": "2026-09-02",
+   "reverse": 5,
+   "oneway": 6
+  },
+  {
+   "date": "2026-09-03",
+   "reverse": 5,
+   "oneway": 5
+  },
+  {
+   "date": "2026-09-04",
+   "reverse": 5,
+   "oneway": 6
+  },
+  {
+   "date": "2026-09-08",
+   "reverse": 6,
+   "oneway": 6
+  },
+  {
+   "date": "2026-09-09",
+   "reverse": 6,
+   "oneway": 6
+  },
+  {
+   "date": "2026-09-10",
+   "reverse": 6,
+   "oneway": 7
+  },
+  {
+   "date": "2026-09-11",
+   "reverse": 6,
+   "oneway": 6
+  },
+  {
+   "date": "2026-09-14",
+   "reverse": 6,
+   "oneway": 6
+  },
+  {
+   "date": "2026-09-15",
+   "reverse": 6,
+   "oneway": 7
+  },
+  {
+   "date": "2026-09-16",
+   "reverse": 6,
+   "oneway": 7
+  },
+  {
+   "date": "2026-09-17",
+   "reverse": 5,
+   "oneway": 7
+  },
+  {
+   "date": "2026-09-18",
+   "reverse": 5,
+   "oneway": 8
+  },
+  {
+   "date": "2026-09-21",
+   "reverse": 4,
+   "oneway": 9
+  },
+  {
+   "date": "2026-09-22",
+   "reverse": 3,
+   "oneway": 10
+  },
+  {
+   "date": "2026-09-23",
+   "reverse": 4,
+   "oneway": 9
+  },
+  {
+   "date": "2026-09-24",
+   "reverse": 4,
+   "oneway": 9
+  },
+  {
+   "date": "2026-09-25",
+   "reverse": 5,
+   "oneway": 8
+  },
+  {
+   "date": "2026-09-28",
+   "reverse": 4,
+   "oneway": 8
+  },
+  {
+   "date": "2026-09-29",
+   "reverse": 5,
+   "oneway": 8
+  },
+  {
+   "date": "2026-09-30",
+   "reverse": 4,
+   "oneway": 9
+  },
+  {
+   "date": "2026-10-01",
+   "reverse": 5,
+   "oneway": 8
+  },
+  {
+   "date": "2026-10-02",
+   "reverse": 6,
+   "oneway": 8
+  },
+  {
+   "date": "2026-10-05",
+   "reverse": 6,
+   "oneway": 7
+  },
+  {
+   "date": "2026-10-06",
+   "reverse": 5,
+   "oneway": 7
+  },
+  {
+   "date": "2026-10-07",
+   "reverse": 5,
+   "oneway": 8
+  },
+  {
+   "date": "2026-10-08",
+   "reverse": 6,
+   "oneway": 7
+  },
+  {
+   "date": "2026-10-09",
+   "reverse": 6,
+   "oneway": 8
+  },
+  {
+   "date": "2026-10-12",
+   "reverse": 6,
+   "oneway": 9
+  },
+  {
+   "date": "2026-10-13",
+   "reverse": 7,
+   "oneway": 8
+  },
+  {
+   "date": "2026-10-14",
+   "reverse": 8,
+   "oneway": 7
+  },
+  {
+   "date": "2026-10-15",
+   "reverse": 9,
+   "oneway": 7
+  },
+  {
+   "date": "2026-10-16",
+   "reverse": 9,
+   "oneway": 6
+  },
+  {
+   "date": "2026-10-19",
+   "reverse": 9,
+   "oneway": 5
+  },
+  {
+   "date": "2026-10-20",
+   "reverse": 10,
+   "oneway": 4
+  },
+  {
+   "date": "2026-10-21",
+   "reverse": 9,
+   "oneway": 4
+  },
+  {
+   "date": "2026-10-22",
+   "reverse": 9,
+   "oneway": 4
+  },
+  {
+   "date": "2026-10-23",
+   "reverse": 8,
+   "oneway": 4
+  },
+  {
+   "date": "2026-10-26",
+   "reverse": 8,
+   "oneway": 5
+  },
+  {
+   "date": "2026-10-27",
+   "reverse": 7,
+   "oneway": 6
+  },
+  {
+   "date": "2026-10-28",
+   "reverse": 7,
+   "oneway": 5
+  },
+  {
+   "date": "2026-10-29",
+   "reverse": 7,
+   "oneway": 5
+  },
+  {
+   "date": "2026-10-30",
+   "reverse": 7,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-02",
+   "reverse": 8,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-03",
+   "reverse": 8,
+   "oneway": 6
+  },
+  {
+   "date": "2026-11-04",
+   "reverse": 8,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-05",
+   "reverse": 8,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-06",
+   "reverse": 9,
+   "oneway": 4
+  },
+  {
+   "date": "2026-11-09",
+   "reverse": 9,
+   "oneway": 4
+  },
+  {
+   "date": "2026-11-10",
+   "reverse": 9,
+   "oneway": 4
+  },
+  {
+   "date": "2026-11-11",
+   "reverse": 8,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-12",
+   "reverse": 7,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-13",
+   "reverse": 8,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-16",
+   "reverse": 9,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-17",
+   "reverse": 9,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-18",
+   "reverse": 10,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-19",
+   "reverse": 11,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-20",
+   "reverse": 12,
+   "oneway": 5
+  },
+  {
+   "date": "2026-11-23",
+   "reverse": 13,
+   "oneway": 4
+  },
+  {
+   "date": "2026-11-24",
+   "reverse": 14,
+   "oneway": 3
+  }
+ ],
+ "days": [
+  {
+   "date": "2026-07-14",
+   "warmup": true,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 4.77,
+   "range": 7.95,
+   "moves": [
+    "6:30 GRIND -5.09",
+    "7:49 TREND +4.80"
+   ]
+  },
+  {
+   "date": "2026-07-15",
+   "warmup": true,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 6.47,
+   "range": 14.13,
+   "moves": [
+    "7:07 TREND -11.73"
+   ]
+  },
+  {
+   "date": "2026-07-16",
+   "warmup": true,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 3.96,
+   "range": 6.6,
+   "moves": [
+    "6:31 TREND -6.06",
+    "6:49 TREND +5.31",
+    "8:39 TREND -4.51"
+   ]
+  },
+  {
+   "date": "2026-07-17",
+   "warmup": true,
+   "type": "continue",
+   "scenario": "BOX \u2192 BREAK \u2192 continues",
+   "big": 7.87,
+   "range": 15.01,
+   "moves": [
+    "6:44 TREND +11.45",
+    "8:04 TREND +7.99"
+   ]
+  },
+  {
+   "date": "2026-07-20",
+   "warmup": true,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 4.63,
+   "range": 7.72,
+   "moves": [
+    "6:44 TREND -6.20",
+    "7:58 TREND +5.60"
+   ]
+  },
+  {
+   "date": "2026-07-21",
+   "warmup": true,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 4.77,
+   "range": 6.99,
+   "moves": [
+    "7:10 TREND +6.58"
+   ]
+  },
+  {
+   "date": "2026-07-22",
+   "warmup": true,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 4.7,
+   "range": 6.09,
+   "moves": [
+    "6:30 GRIND +5.87"
+   ]
+  },
+  {
+   "date": "2026-07-23",
+   "warmup": true,
+   "type": "continue",
+   "scenario": "BOX \u2192 BREAK \u2192 continues",
+   "big": 4.63,
+   "range": 10.87,
+   "moves": [
+    "6:43 GRIND -5.41",
+    "7:37 TREND -7.50",
+    "8:30 TREND +6.84"
+   ]
+  },
+  {
+   "date": "2026-07-24",
+   "warmup": true,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 4.7,
+   "range": 9.08,
+   "moves": [
+    "6:34 TREND -6.77",
+    "7:45 BURST +4.93",
+    "8:09 TREND +6.44"
+   ]
+  },
+  {
+   "date": "2026-07-27",
+   "warmup": true,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 4.77,
+   "range": 16.35,
+   "moves": [
+    "6:35 TREND -15.60",
+    "7:44 TREND +5.62",
+    "8:05 TREND -4.89",
+    "8:37 GRIND +4.93"
+   ]
+  },
+  {
+   "date": "2026-07-28",
+   "warmup": true,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 5.06,
+   "range": 11.52,
+   "moves": [
+    "6:30 TREND -7.07",
+    "7:16 TREND +6.59",
+    "8:04 TREND +6.81"
+   ]
+  },
+  {
+   "date": "2026-07-29",
+   "warmup": true,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 5.34,
+   "range": 14.18,
+   "moves": [
+    "6:35 TREND -7.01",
+    "7:05 TREND -6.64",
+    "8:09 TREND -5.42"
+   ]
+  },
+  {
+   "date": "2026-07-30",
+   "warmup": true,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 5.91,
+   "range": 10.43,
+   "moves": [
+    "6:33 TREND +9.66"
+   ]
+  },
+  {
+   "date": "2026-07-31",
+   "warmup": true,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 6.26,
+   "range": 15.72,
+   "moves": [
+    "6:35 TREND -14.49",
+    "7:16 GRIND +6.67"
+   ]
+  },
+  {
+   "date": "2026-08-03",
+   "warmup": true,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 6.36,
+   "range": 12.88,
+   "moves": [
+    "6:32 TREND +12.01"
+   ]
+  },
+  {
+   "date": "2026-08-04",
+   "warmup": true,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 6.47,
+   "range": 13.07,
+   "moves": [
+    "6:30 TREND +12.36"
+   ]
+  },
+  {
+   "date": "2026-08-05",
+   "warmup": true,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 6.49,
+   "range": 9.06,
+   "moves": [
+    "6:48 TREND -8.48"
+   ]
+  },
+  {
+   "date": "2026-08-06",
+   "warmup": true,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 6.47,
+   "range": 10.82,
+   "moves": [
+    "6:32 TREND +9.53"
+   ]
+  },
+  {
+   "date": "2026-08-07",
+   "warmup": true,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 6.48,
+   "range": 6.99,
+   "moves": []
+  },
+  {
+   "date": "2026-08-10",
+   "warmup": true,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 6.47,
+   "range": 4.33,
+   "moves": []
+  },
+  {
+   "date": "2026-08-11",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 6.36,
+   "range": 5.45,
+   "moves": []
+  },
+  {
+   "date": "2026-08-12",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 6.36,
+   "range": 4.33,
+   "moves": []
+  },
+  {
+   "date": "2026-08-13",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 5.8,
+   "range": 9.73,
+   "moves": [
+    "6:31 TREND +9.50"
+   ]
+  },
+  {
+   "date": "2026-08-14",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 6.05,
+   "range": 6.07,
+   "moves": []
+  },
+  {
+   "date": "2026-08-17",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 5.59,
+   "range": 3.07,
+   "moves": []
+  },
+  {
+   "date": "2026-08-18",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 5.59,
+   "range": 6.21,
+   "moves": [
+    "6:40 GRIND -5.77"
+   ]
+  },
+  {
+   "date": "2026-08-19",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 5.59,
+   "range": 8.89,
+   "moves": [
+    "6:32 TREND -8.61",
+    "7:14 TREND +6.88"
+   ]
+  },
+  {
+   "date": "2026-08-20",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 5.59,
+   "range": 4.81,
+   "moves": []
+  },
+  {
+   "date": "2026-08-21",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 5.34,
+   "range": 6.47,
+   "moves": [
+    "6:30 TREND -5.78",
+    "7:19 TREND +6.16"
+   ]
+  },
+  {
+   "date": "2026-08-24",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 5.3,
+   "range": 7.09,
+   "moves": [
+    "6:30 TREND -6.77",
+    "7:12 TREND +6.16"
+   ]
+  },
+  {
+   "date": "2026-08-25",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 4.76,
+   "range": 6.59,
+   "moves": [
+    "6:48 TREND -4.90"
+   ]
+  },
+  {
+   "date": "2026-08-26",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 4.22,
+   "range": 4.23,
+   "moves": []
+  },
+  {
+   "date": "2026-08-27",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 4.07,
+   "range": 5.65,
+   "moves": [
+    "6:57 TREND +4.72"
+   ]
+  },
+  {
+   "date": "2026-08-28",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 3.92,
+   "range": 8.43,
+   "moves": [
+    "6:41 TREND -4.27",
+    "7:13 TREND +6.88",
+    "8:00 TREND -8.04"
+   ]
+  },
+  {
+   "date": "2026-08-31",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 3.92,
+   "range": 3.84,
+   "moves": []
+  },
+  {
+   "date": "2026-09-01",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 3.81,
+   "range": 6.68,
+   "moves": [
+    "6:41 TREND +5.10",
+    "8:49 TREND -4.25"
+   ]
+  },
+  {
+   "date": "2026-09-02",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 3.81,
+   "range": 4.7,
+   "moves": [
+    "6:57 TREND +4.26"
+   ]
+  },
+  {
+   "date": "2026-09-03",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 3.68,
+   "range": 8.24,
+   "moves": [
+    "6:36 BURST +3.72",
+    "7:40 TREND +6.37"
+   ]
+  },
+  {
+   "date": "2026-09-04",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 3.68,
+   "range": 5.08,
+   "moves": [
+    "6:59 TREND -4.86"
+   ]
+  },
+  {
+   "date": "2026-09-08",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 3.34,
+   "range": 6.32,
+   "moves": [
+    "6:30 TREND -4.75",
+    "7:11 TREND +5.21"
+   ]
+  },
+  {
+   "date": "2026-09-09",
+   "warmup": false,
+   "type": "late move",
+   "scenario": "LATE MOVE",
+   "big": 3.68,
+   "range": 5.68,
+   "moves": [
+    "8:00 TREND -4.56"
+   ]
+  },
+  {
+   "date": "2026-09-10",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 3.68,
+   "range": 5.2,
+   "moves": [
+    "6:58 TREND +4.21"
+   ]
+  },
+  {
+   "date": "2026-09-11",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 3.68,
+   "range": 4.0,
+   "moves": []
+  },
+  {
+   "date": "2026-09-14",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 3.52,
+   "range": 9.57,
+   "moves": [
+    "6:30 TREND +4.65",
+    "7:41 TREND +7.41"
+   ]
+  },
+  {
+   "date": "2026-09-15",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 3.57,
+   "range": 5.62,
+   "moves": [
+    "6:46 TREND -5.07"
+   ]
+  },
+  {
+   "date": "2026-09-16",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 3.57,
+   "range": 4.24,
+   "moves": [
+    "6:30 TREND +3.57"
+   ]
+  },
+  {
+   "date": "2026-09-17",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 3.39,
+   "range": 3.62,
+   "moves": []
+  },
+  {
+   "date": "2026-09-18",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 3.25,
+   "range": 4.46,
+   "moves": [
+    "6:31 TREND -3.52"
+   ]
+  },
+  {
+   "date": "2026-09-21",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 3.25,
+   "range": 11.58,
+   "moves": [
+    "6:30 TREND +11.41"
+   ]
+  },
+  {
+   "date": "2026-09-22",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 3.25,
+   "range": 5.66,
+   "moves": [
+    "6:30 TREND +5.49"
+   ]
+  },
+  {
+   "date": "2026-09-23",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 3.25,
+   "range": 8.94,
+   "moves": [
+    "6:30 TREND -8.62",
+    "7:26 TREND +4.16",
+    "7:59 TREND -3.64"
+   ]
+  },
+  {
+   "date": "2026-09-24",
+   "warmup": false,
+   "type": "late move",
+   "scenario": "LATE MOVE",
+   "big": 3.25,
+   "range": 7.79,
+   "moves": [
+    "8:30 TREND +7.31"
+   ]
+  },
+  {
+   "date": "2026-09-25",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 3.25,
+   "range": 6.27,
+   "moves": [
+    "6:55 TREND -5.26",
+    "7:17 TREND +3.83",
+    "8:51 TREND +4.93"
+   ]
+  },
+  {
+   "date": "2026-09-28",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 3.39,
+   "range": 9.79,
+   "moves": [
+    "6:32 TREND -3.53",
+    "7:22 TREND -5.51",
+    "7:47 TREND +3.70",
+    "8:43 TREND +5.98"
+   ]
+  },
+  {
+   "date": "2026-09-29",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 3.39,
+   "range": 5.24,
+   "moves": [
+    "6:30 BURST -3.76",
+    "6:43 TREND +3.58",
+    "7:54 TREND -3.75"
+   ]
+  },
+  {
+   "date": "2026-09-30",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 3.39,
+   "range": 5.34,
+   "moves": [
+    "6:40 TREND +3.69"
+   ]
+  },
+  {
+   "date": "2026-10-01",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 3.29,
+   "range": 7.67,
+   "moves": [
+    "6:54 BURST -4.27",
+    "7:22 TREND +3.42",
+    "7:39 TREND -4.07"
+   ]
+  },
+  {
+   "date": "2026-10-02",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 3.39,
+   "range": 7.01,
+   "moves": [
+    "6:56 TREND +3.73",
+    "7:28 TREND -6.71"
+   ]
+  },
+  {
+   "date": "2026-10-05",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 3.39,
+   "range": 5.51,
+   "moves": [
+    "6:30 BURST +3.59",
+    "7:00 TREND +3.45"
+   ]
+  },
+  {
+   "date": "2026-10-06",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 3.39,
+   "range": 3.76,
+   "moves": []
+  },
+  {
+   "date": "2026-10-07",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 3.29,
+   "range": 5.42,
+   "moves": [
+    "7:53 TREND +3.76"
+   ]
+  },
+  {
+   "date": "2026-10-08",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 3.23,
+   "range": 9.72,
+   "moves": [
+    "6:54 TREND +4.59",
+    "7:28 TREND -4.57",
+    "9:17 TREND -7.12"
+   ]
+  },
+  {
+   "date": "2026-10-09",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 3.23,
+   "range": 4.5,
+   "moves": [
+    "6:30 TREND -3.94"
+   ]
+  },
+  {
+   "date": "2026-10-12",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 3.23,
+   "range": 4.6,
+   "moves": [
+    "6:39 TREND -4.11"
+   ]
+  },
+  {
+   "date": "2026-10-13",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 3.12,
+   "range": 5.37,
+   "moves": [
+    "6:32 TREND +5.15",
+    "7:41 TREND -3.68",
+    "8:35 TREND +4.00"
+   ]
+  },
+  {
+   "date": "2026-10-14",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 3.12,
+   "range": 11.28,
+   "moves": [
+    "6:37 BURST +3.21",
+    "6:49 TREND -4.31",
+    "7:15 GRIND -3.48",
+    "8:18 TREND -5.80"
+   ]
+  },
+  {
+   "date": "2026-10-15",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 3.21,
+   "range": 10.67,
+   "moves": [
+    "6:31 GRIND +3.30",
+    "6:43 BURST -4.95",
+    "6:57 BURST +5.60",
+    "7:36 TREND +6.49",
+    "8:15 GRIND -3.38"
+   ]
+  },
+  {
+   "date": "2026-10-16",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 3.24,
+   "range": 11.16,
+   "moves": [
+    "6:30 BURST -3.72",
+    "6:44 GRIND -3.44",
+    "7:10 GRIND +3.48",
+    "7:47 TREND -6.68",
+    "8:47 GRIND -3.87"
+   ]
+  },
+  {
+   "date": "2026-10-19",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "BOX \u2192 BREAK \u2192 continues",
+   "big": 3.32,
+   "range": 7.98,
+   "moves": [
+    "7:03 TREND +4.55",
+    "7:32 TREND +5.10",
+    "8:37 TREND -4.48"
+   ]
+  },
+  {
+   "date": "2026-10-20",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 3.32,
+   "range": 12.36,
+   "moves": [
+    "6:30 BURST -4.57",
+    "6:44 TREND +11.72",
+    "7:58 BURST -4.40"
+   ]
+  },
+  {
+   "date": "2026-10-21",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "BOX \u2192 BREAK \u2192 continues",
+   "big": 3.36,
+   "range": 8.07,
+   "moves": [
+    "6:43 GRIND +3.45",
+    "7:39 TREND +5.20"
+   ]
+  },
+  {
+   "date": "2026-10-22",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "BOX \u2192 BREAK \u2192 continues",
+   "big": 3.36,
+   "range": 10.96,
+   "moves": [
+    "7:01 TREND -8.12",
+    "9:25 TREND -5.41"
+   ]
+  },
+  {
+   "date": "2026-10-23",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 3.8,
+   "range": 8.14,
+   "moves": [
+    "6:35 TREND +4.29",
+    "7:26 TREND +5.43"
+   ]
+  },
+  {
+   "date": "2026-10-26",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 4.17,
+   "range": 9.67,
+   "moves": [
+    "7:02 TREND +9.33"
+   ]
+  },
+  {
+   "date": "2026-10-27",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 4.17,
+   "range": 9.14,
+   "moves": [
+    "7:16 TREND +8.85"
+   ]
+  },
+  {
+   "date": "2026-10-28",
+   "warmup": false,
+   "type": "no move",
+   "scenario": "NO MOVE",
+   "big": 4.41,
+   "range": 4.43,
+   "moves": []
+  },
+  {
+   "date": "2026-10-29",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 4.41,
+   "range": 6.45,
+   "moves": [
+    "6:30 BURST -4.68",
+    "6:38 GRIND +4.91",
+    "7:52 TREND +4.99"
+   ]
+  },
+  {
+   "date": "2026-10-30",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 4.17,
+   "range": 8.96,
+   "moves": [
+    "7:00 TREND -5.48",
+    "7:25 TREND +4.78",
+    "7:41 TREND -7.69"
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 4.0,
+   "range": 9.89,
+   "moves": [
+    "6:37 TREND +5.46",
+    "7:29 TREND -9.57"
+   ]
+  },
+  {
+   "date": "2026-11-03",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 4.0,
+   "range": 5.51,
+   "moves": [
+    "7:00 TREND +4.29"
+   ]
+  },
+  {
+   "date": "2026-11-04",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 4.0,
+   "range": 13.58,
+   "moves": [
+    "6:34 BURST +10.58",
+    "6:56 TREND +5.67",
+    "7:14 TREND -8.61",
+    "8:00 GRIND -4.09",
+    "8:27 TREND +7.03"
+   ]
+  },
+  {
+   "date": "2026-11-05",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 4.46,
+   "range": 36.53,
+   "moves": [
+    "6:30 TREND -26.05",
+    "7:27 BURST +4.70",
+    "7:35 TREND -12.99",
+    "7:52 BURST +5.54",
+    "8:05 TREND +11.18",
+    "8:37 TREND -7.27",
+    "9:19 TREND -4.76"
+   ]
+  },
+  {
+   "date": "2026-11-06",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 4.84,
+   "range": 10.53,
+   "moves": [
+    "6:35 TREND +8.83",
+    "6:53 TREND -5.37",
+    "7:14 TREND -5.67",
+    "7:35 TREND +5.67",
+    "8:31 TREND -7.08"
+   ]
+  },
+  {
+   "date": "2026-11-09",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "OPEN DRIVE \u2192 boxes the rest",
+   "big": 4.96,
+   "range": 16.83,
+   "moves": [
+    "6:30 TREND +15.94"
+   ]
+  },
+  {
+   "date": "2026-11-10",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 5.07,
+   "range": 13.9,
+   "moves": [
+    "6:32 TREND +9.99",
+    "7:01 TREND -8.77",
+    "8:08 TREND -7.49"
+   ]
+  },
+  {
+   "date": "2026-11-11",
+   "warmup": false,
+   "type": "one-way then box",
+   "scenario": "BOX \u2192 BREAK \u2192 boxes the rest",
+   "big": 5.19,
+   "range": 11.3,
+   "moves": [
+    "6:48 TREND +10.55"
+   ]
+  },
+  {
+   "date": "2026-11-12",
+   "warmup": false,
+   "type": "continue",
+   "scenario": "OPEN DRIVE \u2192 continues",
+   "big": 5.44,
+   "range": 14.73,
+   "moves": [
+    "6:30 BURST +7.68",
+    "7:10 TREND +10.67"
+   ]
+  },
+  {
+   "date": "2026-11-13",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 5.44,
+   "range": 17.07,
+   "moves": [
+    "6:30 TREND -15.89",
+    "8:21 GRIND +5.85"
+   ]
+  },
+  {
+   "date": "2026-11-16",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 5.44,
+   "range": 9.08,
+   "moves": [
+    "6:43 TREND -8.27",
+    "7:25 TREND +5.56"
+   ]
+  },
+  {
+   "date": "2026-11-17",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 5.53,
+   "range": 16.72,
+   "moves": [
+    "6:59 TREND -15.22",
+    "7:53 TREND +8.42",
+    "8:09 TREND -5.67",
+    "8:51 TREND +7.26"
+   ]
+  },
+  {
+   "date": "2026-11-18",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 5.53,
+   "range": 9.75,
+   "moves": [
+    "6:30 TREND -7.79",
+    "6:48 BURST +7.12",
+    "7:20 TREND -6.09",
+    "8:54 TREND +9.01"
+   ]
+  },
+  {
+   "date": "2026-11-19",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 5.71,
+   "range": 29.33,
+   "moves": [
+    "7:04 TREND -15.66",
+    "7:39 TREND +7.35",
+    "8:40 BURST -9.15",
+    "8:55 BURST -11.05",
+    "9:18 BURST +9.41",
+    "9:31 GRIND -5.90"
+   ]
+  },
+  {
+   "date": "2026-11-20",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 5.83,
+   "range": 24.13,
+   "moves": [
+    "6:40 TREND +8.25",
+    "7:00 TREND -15.88",
+    "8:12 TREND -10.42"
+   ]
+  },
+  {
+   "date": "2026-11-23",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 5.97,
+   "range": 15.58,
+   "moves": [
+    "6:30 BURST -12.32",
+    "6:52 BURST +7.83",
+    "7:09 TREND +8.74",
+    "7:25 TREND -6.95",
+    "8:12 TREND -6.68"
+   ]
+  },
+  {
+   "date": "2026-11-24",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "BOX \u2192 BREAK \u2192 reverses",
+   "big": 6.49,
+   "range": 16.85,
+   "moves": [
+    "6:51 GRIND -11.27",
+    "8:59 TREND +7.28"
+   ]
+  }
+ ],
+ "note": "Normal: 20 mornings usually hold about 7 reversals and 7 one-way-then-box mornings. Longest reversal streak Jan 2025-Nov 2026 before Nov 13 2026 was 5."
+}
