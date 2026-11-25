@@ -245,7 +245,13 @@ def main():
         cancels_by[d] = v.get("cancels", [])
     out = [score_day(d, days[d], cancels_by.get(d), notes.get(d)) for d in sorted(days) if days[d]]
     with open(P("journal_log.json"), "w") as fh:
-        json.dump({"rules_since": "2026-11-16", "rules_updated": "2026-11-17", "entries": out[::-1],
+        json.dump({"rules_since": "2026-11-16", "rules_updated": "2026-11-17",
+                   # Nov 25: the user's exit rule (agreed in chat) — shown on the Daily Log and on every card from this date
+                   "exit_rule": {"since": "2026-11-25", "text": "LADDER + 2.00 — stop $0.15 under entry and a take-profit order at +2.00. "
+                                 "At +0.30 stop to breakeven, at +0.60 lock +0.30, keep stepping 0.30 behind. At +2.00 take it all; "
+                                 "if the trend holds (pullback under $1) re-enter a fresh $0.80–1.20 contract the same way. "
+                                 "Trend day = trade with it only, no fades. Flat first 15 min = 2 trades max. Daily stop −$75."},
+                   "entries": out[::-1],
                    "weeks": weeks_from(days, out)}, fh, indent=1)
     for e in out:
         print(e["date"], e["trades"], "%+.0f" % e["pnl"], "score", e["score"], "(%d/%d)" % (e["kept"], e["of"]))

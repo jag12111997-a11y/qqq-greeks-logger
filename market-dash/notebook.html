@@ -244,7 +244,7 @@ renderPastEntries();
       +'<span style="flex:1;font-size:12px">'+day(e.date)+(e.ramble?' <span style="color:#A8D8B4;font-size:10px">● logged</span>':'')+'</span>'
       +'<span style="font-size:12px;color:'+(e.pnl>=0?'#A8D8B4':'#FF5A2E')+'">'+pnl+'</span>'
       +'<span style="font-size:11px;color:var(--dim);min-width:86px;text-align:right">'+e.trades+' trades · '+e.wins+'W '+e.losses+'L</span></summary>'
-      +txt+(e.sized&&e.sized.n?'<div style="font-size:11px;margin:0 0 8px"><span style="color:#F4C95D">SIZED UP</span> '+E(e.sized.list.join(' · '))+' <span style="color:var(--dim)">= </span><b style="color:'+(e.sized.pnl>=0?'#A8D8B4':'#FF5A2E')+'">'+(e.sized.pnl<0?'−$':'+$')+Math.abs(Math.round(e.sized.pnl))+'</b></div>':'')
+      +txt+(window.JEXIT&&e.date>=window.JEXIT.since?'<div style="font-size:11px;margin:0 0 8px"><span style="color:#F4C95D">EXIT RULE</span> '+E(window.JEXIT.text)+'</div>':'')+(e.sized&&e.sized.n?'<div style="font-size:11px;margin:0 0 8px"><span style="color:#F4C95D">SIZED UP</span> '+E(e.sized.list.join(' · '))+' <span style="color:var(--dim)">= </span><b style="color:'+(e.sized.pnl>=0?'#A8D8B4':'#FF5A2E')+'">'+(e.sized.pnl<0?'−$':'+$')+Math.abs(Math.round(e.sized.pnl))+'</b></div>':'')
       +'<div style="border-top:1px solid var(--line);padding-top:6px">'+checks+'</div>'
       +'<div style="font-size:10px;color:var(--dim);margin-top:4px">'+e.kept+' of '+e.of+' rules kept'+(e.first?' · '+e.first+'–'+e.last+' PT':'')+'</div></details>';
   }
@@ -325,10 +325,12 @@ renderPastEntries();
   }
   fetch('journal_log.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var el=document.getElementById('jlog'); if(!el||!j||!j.entries||!j.entries.length) return;
+    window.JEXIT=j.exit_rule||null;   // Nov 25: ladder + 2.00 exit rule
     var es=j.entries, avg=function(x){var v=x.filter(function(e){return e.score!=null;});return v.length?(v.reduce(function(s,e){return s+e.score;},0)/v.length).toFixed(1):'–';};
     var cut=new Date(); cut.setDate(cut.getDate()-7); var wk=es.filter(function(e){return new Date(e.date+'T12:00:00')>=cut;});
     var more=es.length>5;
     el.innerHTML=weekHtml(j.weeks)+'<h2 class="nb-title" style="display:flex;gap:16px;align-items:baseline">Daily Log <span style="color:var(--txt);font-size:11px;text-transform:none;letter-spacing:0">last 7 days '+avg(wk)+'/10 · all '+avg(es)+'/10</span></h2>'
+      +(j.exit_rule?'<div style="border:1px solid #F4C95D55;border-left:3px solid #F4C95D;border-radius:6px;padding:8px 12px;margin:6px 0 10px;font-size:11.5px;line-height:1.5"><b style="color:#F4C95D">EXIT RULE</b> <span style="color:var(--dim)">since '+day(j.exit_rule.since)+'</span><br>'+E(j.exit_rule.text)+'</div>':'')
       +strip(es)+es.slice(0,5).map(function(e,i){return card(e,i===0);}).join('')
       +(more?'<details><summary style="cursor:pointer;font-size:11px;color:var(--dim);margin:4px 0 8px">Older days ('+(es.length-5)+')</summary>'+es.slice(5).map(function(e){return card(e,false);}).join('')+'</details>':'')
       +'<div style="font-size:10px;color:var(--dim)">Rules written '+day(j.rules_since)+' — earlier days scored against them for reference. P&L shown, not scored. Faded bars = no ramble.</div>';
