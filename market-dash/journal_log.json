@@ -3,6 +3,97 @@
  "rules_updated": "2026-11-17",
  "entries": [
   {
+   "date": "2026-11-25",
+   "pnl": 55.0,
+   "trades": 16,
+   "wins": 6,
+   "losses": 10,
+   "first": "6:31",
+   "last": "8:22",
+   "best": "6:56 C 628 +126",
+   "score": 3.3,
+   "kept": 4,
+   "of": 12,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "16 trades"
+    },
+    {
+     "rule": "No entry against the 20-min candle",
+     "ok": false,
+     "why": "5 against: 7:00 put, 7:06 put, 7:31 put, 7:39 put"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2, #4 had 4, 5, 4"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": false,
+     "why": "2 adds into red"
+    },
+    {
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
+     "why": "median stop $0.15 under entry"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:54 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": false,
+     "why": "3 chased fills"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": true,
+     "why": "calm open"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": true,
+     "why": "held 7:06 for 15 min, +43"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": false,
+     "why": "up +102 at 7:20 with the candles flipping, then 6 more trades (-90)"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": false,
+     "why": "1 entries at 3+"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": true,
+     "why": "ramble logged"
+    }
+   ],
+   "summary": "I was holding and I over-leveraged. I didn't cash out of a $140 trade and ended up \u2212$160, then I took another trade, made my money back and then some, and then I gave back $100 because it was pinned at 610. I know I'm being stubborn because last week I didn't hold on those puts that went to $1,000 and that hurts. I'm very disappointed with my trading this week, and because of the $500 loss I'm not trading correctly. \u2014 The tape: QQQ gapped down $21 (638.10 \u2192 617.10), flushed to 607.76 by 6:45, ripped to 619.38 at 7:00, dumped back to 610 by 7:27, then sat pinned 609\u2013614. The 9th reversal morning in a row.",
+   "right": "My reads were right twice. The C628 \u00d75 at 6:55\u20136:56 (0.56\u20130.64) caught the rip off the 607 low and I sold right at the 7:00 top: +$194. The P601 \u00d73 at 7:06\u20137:10 caught the dump: +$121. From \u2212$155 at 6:54 I was +$145 by 7:22. Every exit was a stop order. Finished +$55.",
+   "fix": "1) P601 stacked to 5 contracts in 4 minutes (1.08 \u2192 1.21 \u2192 1.40 \u00d72) at the open and held through the flush low instead of taking the +$140 \u2014 all 4 stopped at 0.93 at 6:54 for \u2212$137. On a reversal tape, +0.30 = the 3-min trail goes on. 2) After +$145 at 7:20 I gave back $90 in the 609\u2013614 pin: 5 more entries, ending with P594 \u00d74 at market at 7:51 (0.33 \u2192 0.15, \u2212$72). Pinned = done for the day. 3) 16 entries, up to 5 contracts at once. Regret from last week's $1,000 puts is steering the holding \u2014 let the trail decide, not regret. 4) Let the $500 go: each day starts at zero.",
+   "ramble": true,
+   "sized": {
+    "n": 5,
+    "pnl": 74.0,
+    "wins": 3,
+    "list": [
+     "6:35 P601 \u00d72 -94",
+     "6:56 C628 \u00d72 +126",
+     "6:56 C628 \u00d72 +36",
+     "7:10 P601 \u00d72 +78",
+     "7:51 P594 \u00d74 -72"
+    ]
+   }
+  },
+  {
    "date": "2026-11-24",
    "pnl": 138.0,
    "trades": 19,
@@ -23,7 +114,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "6 against: 6:32 call, 6:43 put, 6:49 put, 7:01 put"
+     "why": "5 against: 6:32 call, 6:43 put, 6:49 put, 7:01 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -1466,18 +1557,18 @@
  "weeks": [
   {
    "week": "2026-11-23",
-   "days": 2,
-   "green": 1,
-   "pnl": -367.0,
-   "trades": 35,
-   "wins": 1,
-   "score": 2.7,
-   "kept": 6,
-   "of": 22,
-   "best2": 455.0,
-   "rest": -822.0,
-   "first20": -278.0,
-   "after8": -105.0,
+   "days": 3,
+   "green": 2,
+   "pnl": -312.0,
+   "trades": 51,
+   "wins": 7,
+   "score": 2.9,
+   "kept": 10,
+   "of": 34,
+   "best2": 582.0,
+   "rest": -894.0,
+   "first20": -433.0,
+   "after8": -74.0,
    "days8": 0,
    "worst_low": -505.0,
    "daily": [
@@ -1492,63 +1583,73 @@
      "pnl": 138.0,
      "score": 3.6,
      "trades": 19
+    },
+    {
+     "date": "2026-11-25",
+     "pnl": 55.0,
+     "score": 3.3,
+     "trades": 16
     }
    ],
    "rules": {
     "8 trades or fewer": [
      0,
-     2
+     3
     ],
     "No entry against the 20-min candle": [
      0,
-     2
+     3
     ],
     "Max 2 entries per 20-min candle": [
      0,
-     2
+     3
     ],
     "Never add to a loser": [
      0,
-     2
+     3
     ],
     "Stops $0.15\u20130.20": [
-     2,
-     2
+     3,
+     3
     ],
     "Done after 3 losses in a row or \u2212$75": [
      0,
-     2
+     3
     ],
     "No chasing ($0.10+ past entry)": [
      1,
-     2
+     3
     ],
     "Waited for a setup (no open whiplash)": [
-     0,
-     2
+     1,
+     3
     ],
     "Held a winner (8+ min)": [
-     1,
-     2
+     2,
+     3
     ],
     "Size 2 contracts or less": [
      0,
-     2
+     3
     ],
     "Logged the day": [
-     2,
-     2
+     3,
+     3
+    ],
+    "Sat out on time (+$60 on a flipping tape)": [
+     0,
+     1
     ]
    },
    "sized": {
-    "n": 5,
-    "pnl": 198.0,
-    "wins": 1
+    "n": 10,
+    "pnl": 272.0,
+    "wins": 4
    },
    "single": {
-    "n": 30,
-    "pnl": -565.0,
-    "wins": 0
+    "n": 41,
+    "pnl": -584.0,
+    "wins": 3
    }
   },
   {
