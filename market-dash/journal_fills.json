@@ -1602,6 +1602,42 @@
     "stop": 0.15,
     "pnl": -72.0,
     "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 625,
+    "ct": 1,
+    "t0": 32939,
+    "t1": 33066,
+    "buy": 1.28,
+    "sell": 1.26,
+    "stop": null,
+    "pnl": -2.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 625,
+    "ct": 1,
+    "t0": 33140,
+    "t1": 33292,
+    "buy": 1.38,
+    "sell": 1.45,
+    "stop": null,
+    "pnl": 7.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 628,
+    "ct": 1,
+    "t0": 33336,
+    "t1": 33576,
+    "buy": 1.19,
+    "sell": 1.48,
+    "stop": null,
+    "pnl": 29.0,
+    "expired": false
    }
   ],
   "cancels": [
