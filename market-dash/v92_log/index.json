@@ -1,34 +1,34 @@
 {
- "updated_utc": "2026-11-25T05:24:58.510Z",
+ "updated_utc": "2026-11-26T04:58:46.607Z",
  "forward_from": "2026-11-02",
  "units": "dollars at 1 contract",
  "totals": {
   "all": {
-   "mornings": 83,
+   "mornings": 84,
    "usd": 3113.4
   },
   "forward": {
-   "mornings": 17,
+   "mornings": 18,
    "usd": -203.2,
    "green": 0,
    "red": 3
   },
   "last10": {
-   "usd": -182.9,
-   "worst_dip": 182.9,
-   "from": "2026-11-11"
+   "usd": -57.3,
+   "worst_dip": 57.3,
+   "from": "2026-11-12"
   },
   "shadow_v93_vix_bounce": {
    "note": "v9.2 + VIX bounce calls (paper only, not on the card)",
    "all": {
     "usd": 3390,
     "vs_v92": 276.6,
-    "bounce_days": 20
+    "bounce_days": 21
    },
    "forward": {
     "usd": -194.8,
     "vs_v92": 8.4,
-    "bounce_days": 10
+    "bounce_days": 11
    }
   },
   "shadow_combo": {
@@ -38,10 +38,10 @@
    },
    "forward": {
     "usd": -228.8,
-    "mornings": 17
+    "mornings": 18
    },
    "last10": {
-    "usd": -182.9
+    "usd": -57.3
    },
    "ribbon_watch": {
     "note": "combo with 3 contracts when the 5-min EMA 5/8/13/21 ribbon agrees, else 1 (paper only)",
@@ -65,11 +65,11 @@
    "forward": {
     "usd_1ct": -89.1,
     "usd_sized": -454.9,
-    "mornings": 17
+    "mornings": 18
    },
    "last10": {
-    "usd_1ct": -182.9,
-    "usd_sized": -548.7
+    "usd_1ct": -57.3,
+    "usd_sized": -171.9
    }
   },
   "shadow_options": {
@@ -84,38 +84,38 @@
     "addons_usd": 0,
     "addons": 0,
     "total_usd": -454.9,
-    "mornings": 17
+    "mornings": 18
    },
    "last10": {
     "addons_usd": 0,
-    "total_usd": -548.7
+    "total_usd": -171.9
    }
   },
   "shadow_hiv": {
    "note": "high-IV layer (on the card since Nov 9, its own section): pop put + bell put, only when option IV is over 35% at that minute. Scored on its own; total = card sized + options + layer. Keep only while it helps.",
    "all": {
-    "usd": 1419.5,
-    "trades": 19,
-    "total_usd": 16839.3
+    "usd": 1377.9,
+    "trades": 20,
+    "total_usd": 16797.7
    },
    "forward": {
     "from": "2026-11-09",
-    "usd": -323.4,
-    "trades": 9
+    "usd": -365,
+    "trades": 10
    }
   },
   "shadow_bigfish": {
    "note": "big-fish layer (on the card since Nov 10): setup days only (selloff/fear market + 1% gap), 6:35 agrees with the gap, ~$1.00 contract, hold to the VWAP cross, no IV rule. Scored on its own; total = card sized + options + high-IV layer + big fish.",
    "all": {
-    "usd": 435.6,
-    "trades": 9,
-    "setup_days": 12,
-    "total_usd": 17274.9
+    "usd": 439,
+    "trades": 10,
+    "setup_days": 13,
+    "total_usd": 17236.7
    },
    "forward": {
     "from": "2026-11-10",
-    "usd": -58.8,
-    "trades": 3
+    "usd": -55.4,
+    "trades": 4
    }
   }
  },
@@ -151,12 +151,12 @@
     "trades": 143
    },
    "hiv_layer": {
-    "sqn": 0.96,
-    "trades": 19
+    "sqn": 0.93,
+    "trades": 20
    },
    "big_fish": {
-    "sqn": 1.17,
-    "trades": 9
+    "sqn": 1.18,
+    "trades": 10
    },
    "by_setup_1ct": {
     "fw": {
@@ -247,17 +247,17 @@
     "trades": 7
    },
    "hiv_layer": {
-    "sqn": 0.85,
-    "trades": 12
+    "sqn": 0.82,
+    "trades": 13
    },
    "big_fish": {
     "sqn": 1.17,
-    "trades": 6
+    "trades": 7
    }
   }
  },
  "htf_next": {
-  "through": "2026-11-24",
+  "through": "2026-11-25",
   "daily": -1,
   "weekly": -1
  },
@@ -3406,6 +3406,44 @@
    "duo_lotto_usd": -65.3,
    "duo_add_usd": -453.6,
    "duo_both_usd": -493.1,
+   "duo_old_on": true,
+   "duo_new_on": true
+  },
+  {
+   "date": "2026-11-25",
+   "forward": true,
+   "n": 0,
+   "usd": 0,
+   "stops": 0,
+   "vix": 26.36,
+   "bounce_day": true,
+   "shadow_usd": 0,
+   "combo_usd": 0,
+   "ribbon_x3_usd": 0,
+   "ribbon_trades": 0,
+   "htf": {
+    "daily": -1,
+    "weekly": -1
+   },
+   "v95_usd": 0,
+   "v95_sized_usd": 0,
+   "opt_addons_usd": 0,
+   "opt_addons_n": 0,
+   "opt_contracts": 0,
+   "hiv_usd": -41.6,
+   "hiv_n": 1,
+   "bf_usd": 3.4,
+   "bf_n": 1,
+   "bf_setup": true,
+   "v10_usd": 98.1,
+   "v10_baseline": 24.8,
+   "v11_usd": 223.1,
+   "v11_mode": "vol stall",
+   "vol_usd": -17.6,
+   "duo_usd": 205.5,
+   "duo_lotto_usd": 180.6,
+   "duo_add_usd": 285.3,
+   "duo_both_usd": 260.4,
    "duo_old_on": true,
    "duo_new_on": true
   }

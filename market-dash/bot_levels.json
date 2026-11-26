@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25T05:25:08.643Z",
+ "updated": "2026-11-26T04:59:01.068Z",
  "note": "the bot's weekly volume levels, each built only from the 20 sessions before that Monday (no look-ahead)",
  "weeks": [
   {
@@ -1300,24 +1300,20 @@
   },
   {
    "week": "2026-11-30",
-   "from": "2026-10-28",
-   "to": "2026-11-24",
+   "from": "2026-10-29",
+   "to": "2026-11-25",
    "levels": [
     {
      "px": 651.5,
      "type": "POC"
     },
     {
-     "px": 722,
+     "px": 697,
      "type": "value area high"
     },
     {
-     "px": 620.25,
+     "px": 609.75,
      "type": "value area low"
-    },
-    {
-     "px": 722.25,
-     "type": "volume node"
     },
     {
      "px": 694,
@@ -1352,8 +1348,8 @@
      "type": "volume node"
     },
     {
-     "px": 718.75,
-     "type": "thin gap"
+     "px": 610.5,
+     "type": "volume node"
     },
     {
      "px": 708.75,
@@ -1376,7 +1372,15 @@
      "type": "thin gap"
     },
     {
+     "px": 666.5,
+     "type": "thin gap"
+    },
+    {
      "px": 643,
+     "type": "thin gap"
+    },
+    {
+     "px": 636.25,
      "type": "thin gap"
     },
     {
@@ -1384,11 +1388,7 @@
      "type": "thin gap"
     },
     {
-     "px": 618.25,
-     "type": "thin gap"
-    },
-    {
-     "px": 611.75,
+     "px": 618.5,
      "type": "thin gap"
     }
    ]
