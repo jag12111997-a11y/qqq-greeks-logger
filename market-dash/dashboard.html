@@ -9045,6 +9045,13 @@
         var g = Q.gex; if (g && g.regime) out.push("GEX " + '<b style="color:var(' + (/NEG/i.test(g.regime) ? "--down" : "--up") + ')">' + (/NEG/i.test(g.regime) ? "neg" : "pos") + "</b>");
         out.push(window.__hdrNews());
         if (_st) out.push('<span id="v92st" style="color:#fcb103">' + _st + "</span>");   // Nov 18: the bot's line, last (was the game plan card)
+        (function () {   // Nov 27: the 4 lights (same as the Journal) from the latest logged realized − implied spread
+          var lt = null;
+          for (var i = H.length - 1; i >= 0 && !lt; i--) { var x = H[i]; if (!x || x.partial) continue; var v = Number(get(x, "quant.realized_vs_implied.spread_pct", null)); if (get(x, "quant.realized_vs_implied.spread_pct", null) != null && isFinite(v)) lt = { v: v, d: x.entry_date, s: x.session }; }
+          if (!lt) return;
+          var L = lt.v < -5 ? ["⚫", "OFF", "#8E9C8F"] : lt.v < 3.5 ? ["🟡", "SMALL", "#F4C95D"] : lt.v < 15 ? ["🟢", "GO", "#A8D8B4"] : ["🔥", "CAREFUL", "#FF8A3D"];
+          out.push('<span title="Realized − implied vol spread from the ' + esc(String(lt.d) + " " + (lt.s || "")) + ' pull. ⚫ under −5 off · 🟡 −5 to 3.5 small · 🟢 3.5 to 15 go · 🔥 15+ careful">light ' + L[0] + ' <b style="color:' + L[2] + '">' + L[1] + "</b> " + (lt.v > 0 ? "+" : "") + lt.v.toFixed(1) + "</span>");
+        })();
         return out.join("  ·  ");
       };
       var hdrqPull = function () {
