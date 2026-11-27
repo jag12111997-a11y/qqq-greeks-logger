@@ -657,6 +657,35 @@ function _statsDeep(D) {
     '<div style="font-size:9px;color:' + SC.mute + '">' + L.length + ' decisions in this period (lots of the same strike bought within 5 min count as one). Times converted from the broker\'s ET to PT.</div></div>';
 }
 var PVIEW = 'perf'; try { var _pv = localStorage.getItem('tp:view'); if (['perf', 'stats', 'trades', 'journal'].indexOf(_pv) >= 0) PVIEW = _pv; } catch (e) {}
+// ===== Nov 27: HABITS — what each good habit made and each bad habit cost (habits.json, built by habits_build.py) =====
+var HAB=null;
+fetch('habits.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(j){if(j&&j.trades){HAB=j;if(PVIEW==='stats')document.getElementById('root').innerHTML=renderCombinedWidget();}}).catch(function(){});
+function _habits(){
+  if(!HAB) return '';
+  var f=PERF_FILTER['perf-combined']||'ALL',T=HAB.trades,Dy=HAB.days,cut='0000';
+  if(f!=='ALL'&&T.length){var last=T.reduce(function(m,t){return t.d>m?t.d:m;},''),c=new Date(last+'T12:00:00Z');
+    if(f==='YTD')c=new Date(last.slice(0,4)+'-01-01T00:00:00Z');else c.setUTCDate(c.getUTCDate()-({'1W':7,'1M':30,'3M':91,'6M':182}[f]||9999));cut=c.toISOString().slice(0,10);}
+  T=T.filter(function(t){return t.d>=cut;});Dy=Dy.filter(function(d){return d.d>=cut;});
+  var money=function(v){return (v<0?'−$':'+$')+Math.abs(Math.round(v)).toLocaleString();},col=function(v){return v>=0?SC.up:SC.dn;};
+  var agg=function(L){var p=L.reduce(function(s,x){return s+x.pnl;},0);return {n:L.length,p:p,a:L.length?p/L.length:0};};
+  var AVG={winner_030:function(t){return t.win;},winner_8min:function(t){return t.win;},small_loss:function(t){return t.loss;}};
+  var rows={good:[],bad:[],alarm:[]};
+  Object.keys(HAB.defs).forEach(function(k){var df=HAB.defs[k],day=df.scope==='day',src=day?Dy:T;
+    var hit=src.filter(function(x){return x.tags.indexOf(k)>=0;}),A=agg(hit),txt;
+    if(AVG[k]){var pool=T.filter(AVG[k]),rest=agg(pool.filter(function(x){return x.tags.indexOf(k)<0;}));
+      txt='<b style="color:'+col(A.a)+'">'+money(A.a)+' avg</b> <span style="color:'+SC.mute+'">vs '+money(rest.a)+' avg for '+df.vs+'</span>';}
+    else if(day) txt='<b style="color:'+col(A.p)+'">'+money(A.p)+'</b> <span style="color:'+SC.mute+'">· '+money(A.a)+'/day</span>';
+    else txt='<b style="color:'+col(A.p)+'">'+money(A.p)+'</b>';
+    rows[df.kind].push({lab:df.label,n:A.n,unit:day?'days':'trades',p:AVG[k]?A.a*1000:A.p,txt:txt});});
+  rows.good.sort(function(a,b){return b.p-a.p;});rows.bad.sort(function(a,b){return a.p-b.p;});
+  var li=function(r){return '<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid rgba(110,103,68,0.16);font-size:9.5px"><span style="color:'+SC.txt+'">'+r.lab+' <span style="color:'+SC.mute+'">('+r.n+' '+r.unit+')</span></span><span style="white-space:nowrap;text-align:right">'+(r.n?r.txt:'<span style="color:'+SC.mute+'">—</span>')+'</span></div>';};
+  var h='<div style="display:flex;flex-wrap:wrap;gap:10px">';
+  h+='<div style="flex:1;min-width:260px"><div style="color:'+SC.up+';font-size:9px;letter-spacing:.14em;margin-bottom:4px">GOOD HABITS · WHAT THEY MADE</div>'+rows.good.map(li).join('')+'</div>';
+  h+='<div style="flex:1;min-width:260px"><div style="color:'+SC.dn+';font-size:9px;letter-spacing:.14em;margin-bottom:4px">BAD HABITS · WHAT THEY COST</div>'+rows.bad.map(li).join('')+
+     rows.alarm.map(function(r){return '<div style="margin-top:6px;padding:5px 7px;border:1px solid rgba(240,56,31,0.45);border-radius:6px;font-size:9.5px"><span style="color:'+SC.dn+'">⚠ '+r.lab+'</span> <span style="color:'+SC.mute+'">('+r.n+' trades)</span> '+r.txt+'</div>';}).join('')+'</div>';
+  h+='</div><div style="font-size:8.5px;color:'+SC.mute+';margin-top:5px">A trade can carry several habits. Day habits count the whole day. Updates every time a day is logged · through '+(HAB.updated||'')+'.</div>';
+  return _sBox('HABITS · '+f, h);
+}
 function renderCombinedWidget(){
   if (PVIEW === 'trades' || PVIEW === 'journal') return '';
   var D=_getPerfData('perf-combined');
@@ -681,6 +710,7 @@ function renderCombinedWidget(){
     html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('MONTHLY')+_compactMonthly(D)+'</div>';
   } else {
     // Nov 16: visual stats + new angles; the old list views stay in a fold at the bottom
+    html+='<div style="grid-column:1/-1;padding:2px">'+_habits()+'</div>';   // Nov 27: what my habits made / cost
     html+='<div style="grid-column:1/-1;padding:2px">'+_statsDeep(D)+'</div>';
     html+='<div style="grid-column:1/-1;padding:2px">'+perfLabel('R DISTRIBUTION')+_compactRDist(D)+'</div>';
     html+='<div style="grid-column:1/-1">'+_pnlConcentration(D)+'</div>';

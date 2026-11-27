@@ -82,6 +82,7 @@ jobs:
           node market-dash/vprofile_build.js >> /tmp/v92_written.txt || true   # volume profile saved nightly (1-min candles, $0.25) + volume at your levels -> vprofile.json + bot_levels.json (run before the levels scorer)
           node market-dash/levels_paper_log.js >> /tmp/v92_written.txt || true   # your levels (paper only): weekly volume-profile lines scored vs site levels + random -> levels_log.json
           python market-dash/regime_tracker.py >> /tmp/v92_written.txt || true   # morning types (Nov 25): label each saved 6:30-10:00 morning + rolling 20 vs normal -> regime_tracker.json (morning-types.html)
+          python market-dash/habits_build.py >> /tmp/v92_written.txt || true   # habits (Nov 27): tag my trades with good / bad habits -> habits.json (Stats tab)
           python option_bars_backfill.py --auto > /tmp/bars_written.txt || true   # real trade prices for contracts whose logger quotes froze
           if [ -s /tmp/bars_written.txt ]; then cat /tmp/bars_written.txt >> /tmp/v92_written.txt; node market-dash/my_replay_build.js >/dev/null && echo market-dash/my_replay.js >> /tmp/v92_written.txt; fi
           cat /tmp/night_written.txt >> /tmp/v92_written.txt
