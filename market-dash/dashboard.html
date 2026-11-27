@@ -9014,12 +9014,30 @@
         return "news " + t.slice(0, 4).map(function (x) { return '<b style="color:' + (x.impact === "High" ? "#ff9f0a" : "var(--txt)") + '">' + ptTime(x.date) + " " + esc(x.title) + "</b>"; }).join(", ") + (t.length > 4 ? " +" + (t.length - 4) : "");
       };
       window.__hdrqHtml = function () {
-        var Q = window.__hdrq, out = [], b = function (t) { return '<b style="color:var(--txt)">' + t + "</b>"; },
+        // Nov 27: chip layout (option B from the header mockups) — light / GEX / fear / news on row 1, levels + bot on row 2.
+        // VIX, DXY and QQQ volume moved into the light chip's hover.
+        var Q = window.__hdrq, b = function (t) { return '<b style="color:var(--txt)">' + t + "</b>"; },
             _st = window.__v92Status ? window.__v92Status() : "",
-            pc = function (p) { return p == null ? "" : ' <span style="color:var(' + (p > 0 ? "--up" : p < 0 ? "--down" : "--flat") + ')">' + (p > 0 ? "+" : "") + p.toFixed(2) + "%</span>"; };
-        ["vix", "dxy"].forEach(function (k) { var j = Q[k]; out.push(k.toUpperCase() + " " + (j ? b(j.last.toFixed(2)) + pc(typeof j.pct === "number" ? j.pct : null) : "—")); });
-        var p = Q.pulse;
-        // Nov 17: our own Fear & Greed (CNN blocks the relay) — VIX and equity put/call, each ranked against every logged session since Jul 14
+            pc = function (p) { return p == null ? "" : " " + (p > 0 ? "+" : "") + p.toFixed(2) + "%"; },
+            chip = function (html, fg, bg, bd, title, round, id) {
+              return '<span' + (id ? ' id="' + id + '"' : "") + (title ? ' title="' + esc(title) + '"' : "") + ' style="display:inline-block;color:' + fg + ";background:" + bg + ";border:1px solid " + bd +
+                ";border-radius:" + (round ? "999px" : "8px") + ';padding:4px 10px;line-height:1.35;white-space:normal">' + html + "</span>"; },
+            RED = ["#ff8a95", "#2a1016", "#6e2632"], GRN = ["#7ff2e3", "#0d2423", "#1f6b63"], GRY = ["var(--dim)", "rgba(255,255,255,0.03)", "#3a2740"], PNK = ["#ff7ae6", "#241026", "#6b2a6e"];
+        var p = Q.pulse, extra = [];
+        ["vix", "dxy"].forEach(function (k) { var j = Q[k]; extra.push(k.toUpperCase() + " " + (j ? j.last.toFixed(2) + pc(typeof j.pct === "number" ? j.pct : null) : "—")); });
+        if (p && p.qqq_vol) extra.push("QQQ vol " + (p.qqq_vol / 1e6).toFixed(1) + "M");
+        var row1 = [], row2 = [];
+        // light (Nov 25/27): latest logged realized − implied spread
+        (function () {
+          var lt = null;
+          for (var i = H.length - 1; i >= 0 && !lt; i--) { var x = H[i]; if (!x || x.partial) continue; var raw = get(x, "quant.realized_vs_implied.spread_pct", null), v = Number(raw); if (raw != null && isFinite(v)) lt = { v: v, d: x.entry_date, s: x.session }; }
+          if (!lt) return;
+          var L = lt.v < -5 ? ["OFF", "#cfd8d0", "#1c201d", "#8E9C8F"] : lt.v < 3.5 ? ["SMALL", "#F4C95D", "#2a2410", "#8a7330"] : lt.v < 15 ? ["GO", "#A8D8B4", "#12241a", "#4f8a62"] : ["CAREFUL", "#FF8A3D", "#3a1d12", "#FF8A3D"];
+          row1.push(chip('◉ <b>' + L[0] + "</b> " + (lt.v > 0 ? "+" : "") + lt.v.toFixed(1), L[1], L[2], L[3],
+            "Light = realized − implied vol spread (" + lt.d + " " + (lt.s || "") + " pull). Under −5 off · −5 to 3.5 small · 3.5 to 15 go · 15+ careful.  " + extra.join(" · "), true));
+        })();
+        var g = Q.gex; if (g && g.regime) { var neg = /NEG/i.test(g.regime); row1.push(chip("GEX " + (neg ? "neg · runs" : "pos · stalls"), neg ? RED[0] : GRN[0], neg ? RED[1] : GRN[1], neg ? RED[2] : GRN[2], neg ? "Dealers short gamma: price tends to run." : "Dealers long gamma: price tends to stall.", true)); }
+        // Nov 17: our own Fear & Greed — VIX and equity put/call, each ranked against every logged session since Jul 14
         var fg = (function () {
           var vx = H.map(function (x) { return get(x, "markets.VIX.last", null); }).filter(function (v) { return v != null; }),
               pcs = H.map(function (x) { return get(x, "options.equity_pc", null); }).filter(function (v) { return v != null; });
@@ -9029,10 +9047,9 @@
           var sc = Math.round(100 - (rk(vx, v) + rk(pcs, pcv)) / 2);
           return { s: sc, lab: sc < 25 ? "extreme fear" : sc < 45 ? "fear" : sc <= 55 ? "neutral" : sc <= 75 ? "greed" : "extreme greed", v: v, pc: pcv, n: vx.length };
         })();
-        if (fg) out.push('<span title="Our own gauge: VIX ' + fg.v.toFixed(2) + ' and equity put/call ' + fg.pc.toFixed(2) + ' ranked against ' + fg.n + ' logged sessions. 0 = most fear, 100 = most greed.">Fear/Greed <b style="color:var(' + (fg.s < 45 ? "--down" : fg.s > 55 ? "--up" : "--flat") + ')">' + fg.s + " " + fg.lab + "</b></span>");
-        else if (p && p.fear != null) out.push("Fear " + '<b style="color:var(' + (p.fear < 45 ? "--down" : p.fear > 55 ? "--up" : "--flat") + ')">' + p.fear + "</b>");
-        if (p && p.qqq_vol) out.push("QQQ vol " + b((p.qqq_vol / 1e6).toFixed(1) + "M"));
-        // Nov 15: sector leaders / laggards removed from the strip (asked)
+        var fs = fg ? fg.s : (p && p.fear != null ? p.fear : null);
+        if (fs != null) { var C = fs < 45 ? RED : fs > 55 ? GRN : GRY; row1.push(chip((fg ? fg.lab : "fear") + " " + fs, C[0], C[1], C[2], fg ? "Our own gauge: VIX " + fg.v.toFixed(2) + " and equity put/call " + fg.pc.toFixed(2) + " ranked against " + fg.n + " logged sessions. 0 = most fear, 100 = most greed." : "", true)); }
+        row1.push(chip(window.__hdrNews().replace(/^news /, ""), GRY[0], GRY[1], GRY[2], "Today's US news (PT)", true));
         // Nov 23: room to the next level above / below (dealer walls, gamma flip, top OI strike + your weekly volume-profile lines).
         // Plan rule: under $8 of room = take the money, don't open the same direction again.
         (function () { var g2 = Q.gex, px = window.__ccLast || (g2 && g2.spot); if (!px) return; var L = [];
@@ -9040,19 +9057,13 @@
           if (g2 && g2.gamma_flip != null) L.push([g2.gamma_flip, "gamma flip"]);
           ((window.__myLvWeek && window.__myLvWeek.levels) || []).forEach(function (l) { L.push([l.px, "your " + String(l.color).replace(" dashed", "")]); });
           var up = null, dn = null; L.forEach(function (q) { if (q[0] > px + 0.05 && (!up || q[0] < up[0])) up = q; if (q[0] < px - 0.05 && (!dn || q[0] > dn[0])) dn = q; });
-          var f = function (q, arrow) { if (!q) return arrow + " —"; var r = Math.abs(q[0] - px); return arrow + ' <b style="color:' + (r < 8 ? "#ff9f0a" : "var(--txt)") + '">$' + r.toFixed(2) + "</b> to " + q[0].toFixed(2) + " " + esc(q[1]); };
-          out.push('<span title="Room to the next level from QQQ ' + px.toFixed(2) + '. Orange = under $8: take the money, don\'t open the same direction again.">room ' + f(up, "▲") + " · " + f(dn, "▼") + "</span>"); })();
-        var g = Q.gex; if (g && g.regime) out.push("GEX " + '<b style="color:var(' + (/NEG/i.test(g.regime) ? "--down" : "--up") + ')">' + (/NEG/i.test(g.regime) ? "neg" : "pos") + "</b>");
-        out.push(window.__hdrNews());
-        if (_st) out.push('<span id="v92st" style="color:#fcb103">' + _st + "</span>");   // Nov 18: the bot's line, last (was the game plan card)
-        (function () {   // Nov 27: the 4 lights (same as the Journal) from the latest logged realized − implied spread
-          var lt = null;
-          for (var i = H.length - 1; i >= 0 && !lt; i--) { var x = H[i]; if (!x || x.partial) continue; var v = Number(get(x, "quant.realized_vs_implied.spread_pct", null)); if (get(x, "quant.realized_vs_implied.spread_pct", null) != null && isFinite(v)) lt = { v: v, d: x.entry_date, s: x.session }; }
-          if (!lt) return;
-          var L = lt.v < -5 ? ["⚫", "OFF", "#8E9C8F"] : lt.v < 3.5 ? ["🟡", "SMALL", "#F4C95D"] : lt.v < 15 ? ["🟢", "GO", "#A8D8B4"] : ["🔥", "CAREFUL", "#FF8A3D"];
-          out.push('<span title="Realized − implied vol spread from the ' + esc(String(lt.d) + " " + (lt.s || "")) + ' pull. ⚫ under −5 off · 🟡 −5 to 3.5 small · 🟢 3.5 to 15 go · 🔥 15+ careful">light ' + L[0] + ' <b style="color:' + L[2] + '">' + L[1] + "</b> " + (lt.v > 0 ? "+" : "") + lt.v.toFixed(1) + "</span>");
-        })();
-        return out.join("  ·  ");
+          var tip = "Room to the next level from QQQ " + px.toFixed(2) + ". Orange = under $8: take the money, don't open the same direction again.";
+          var amt = function (q, sign) { var r = Math.abs(q[0] - px); return ' <b style="color:' + (r < 8 ? "#ff9f0a" : "#F4C95D") + '">' + sign + "$" + r.toFixed(2) + "</b>"; };
+          if (up) row2.push(chip("▲ " + up[0].toFixed(2) + " " + esc(up[1]) + amt(up, "+"), GRN[0], GRN[1], GRN[2], tip));
+          if (dn) row2.push(chip("▼ " + dn[0].toFixed(2) + " " + esc(dn[1]) + amt(dn, "−"), RED[0], RED[1], RED[2], tip)); })();
+        if (_st) row2.push(chip(_st, PNK[0], PNK[1], PNK[2], "The bot's read right now", false, "v92st"));   // Nov 18: the bot's line (v92Tick refreshes #v92st)
+        var rowCss = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:6px';
+        return '<div style="' + rowCss + '">' + row1.join("") + '</div><div style="' + rowCss + '">' + row2.join("") + "</div>";
       };
       var hdrqPull = function () {
         [["vix", "live/vix"], ["dxy", "live/dxy"], ["pulse", "live/pulse"], ["gex", "v1/gex_live.json"]].forEach(function (k) {
