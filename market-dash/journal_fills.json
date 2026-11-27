@@ -1660,5 +1660,257 @@
     "lim": 0.59
    }
   ]
+ },
+ "2026-11-27": {
+  "fills": [
+   {
+    "side": "P",
+    "strike": 634,
+    "ct": 1,
+    "t0": 23531,
+    "t1": 23816,
+    "buy": 0.86,
+    "sell": 1.13,
+    "stop": null,
+    "pnl": 27.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 634,
+    "ct": 2,
+    "t0": 23651,
+    "t1": 23778,
+    "buy": 1.28,
+    "sell": 1.47,
+    "stop": null,
+    "pnl": 38.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 632,
+    "ct": 1,
+    "t0": 23877,
+    "t1": 24211,
+    "buy": 1.02,
+    "sell": 1.01,
+    "stop": null,
+    "pnl": -1.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 632,
+    "ct": 2,
+    "t0": 23989,
+    "t1": 24211,
+    "buy": 1.43,
+    "sell": 1.01,
+    "stop": 1.02,
+    "pnl": -84.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "ct": 1,
+    "t0": 24260,
+    "t1": 24280,
+    "buy": 1.02,
+    "sell": 0.87,
+    "stop": 0.87,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "ct": 1,
+    "t0": 24302,
+    "t1": 24340,
+    "buy": 1.07,
+    "sell": 0.92,
+    "stop": 0.92,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "ct": 1,
+    "t0": 24359,
+    "t1": 24365,
+    "buy": 0.94,
+    "sell": 0.78,
+    "stop": 0.79,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 632,
+    "ct": 1,
+    "t0": 24390,
+    "t1": 24556,
+    "buy": 1.09,
+    "sell": 0.94,
+    "stop": 0.94,
+    "pnl": -15.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 632,
+    "ct": 2,
+    "t0": 24428,
+    "t1": 24443,
+    "buy": 1.45,
+    "sell": 1.27,
+    "stop": 1.3,
+    "pnl": -36.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "ct": 1,
+    "t0": 24632,
+    "t1": 24714,
+    "buy": 0.85,
+    "sell": 0.72,
+    "stop": 0.73,
+    "pnl": -13.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 629,
+    "ct": 1,
+    "t0": 24742,
+    "t1": 24791,
+    "buy": 0.56,
+    "sell": 0.4,
+    "stop": 0.41,
+    "pnl": -16.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "ct": 1,
+    "t0": 24840,
+    "t1": 25020,
+    "buy": 0.7,
+    "sell": 0.57,
+    "stop": 0.57,
+    "pnl": -13.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "ct": 1,
+    "t0": 25039,
+    "t1": 25134,
+    "buy": 0.7,
+    "sell": 0.56,
+    "stop": 0.55,
+    "pnl": -14.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 629,
+    "ct": 1,
+    "t0": 25151,
+    "t1": 25604,
+    "buy": 0.57,
+    "sell": 0.43,
+    "stop": 0.43,
+    "pnl": -14.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 629,
+    "ct": 1,
+    "t0": 25227,
+    "t1": 25604,
+    "buy": 0.66,
+    "sell": 0.42,
+    "stop": 0.43,
+    "pnl": -24.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "ct": 1,
+    "t0": 25608,
+    "t1": 26500,
+    "buy": 0.52,
+    "sell": 0.51,
+    "stop": null,
+    "pnl": -1.0,
+    "expired": false
+   },
+   {
+    "side": "P",
+    "strike": 631,
+    "ct": 1,
+    "t0": 26710,
+    "t1": 26857,
+    "buy": 0.16,
+    "sell": 0.15,
+    "stop": null,
+    "pnl": -1.0,
+    "expired": false
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "ct": 4,
+    "t0": 27334,
+    "t1": 27532,
+    "buy": 1.17,
+    "sell": 2.02,
+    "stop": null,
+    "pnl": 340.0,
+    "expired": false
+   }
+  ],
+  "cancels": [
+   {
+    "side": "P",
+    "strike": 631,
+    "t": 26668,
+    "lim": 0.16
+   },
+   {
+    "side": "P",
+    "strike": 629,
+    "t": 24733,
+    "lim": 0.5
+   },
+   {
+    "side": "P",
+    "strike": 631,
+    "t": 26637,
+    "lim": 0.16
+   },
+   {
+    "side": "C",
+    "strike": 645,
+    "t": 24793,
+    "lim": 0.84
+   },
+   {
+    "side": "P",
+    "strike": 632,
+    "t": 24371,
+    "lim": 1.04
+   }
+  ]
  }
 }

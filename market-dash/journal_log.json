@@ -7,6 +7,96 @@
  },
  "entries": [
   {
+   "date": "2026-11-27",
+   "pnl": 127.0,
+   "trades": 18,
+   "wins": 3,
+   "losses": 15,
+   "first": "6:32",
+   "last": "7:38",
+   "best": "7:35 C 645 +340",
+   "score": 2.0,
+   "kept": 2,
+   "of": 10,
+   "checks": [
+    {
+     "rule": "8 trades or fewer",
+     "ok": false,
+     "why": "18 trades"
+    },
+    {
+     "rule": "No entry against the 20-min candle",
+     "ok": null,
+     "why": "no QQQ bars yet"
+    },
+    {
+     "rule": "Max 2 entries per 20-min candle",
+     "ok": false,
+     "why": "candle #1, #2 had 9, 7"
+    },
+    {
+     "rule": "Never add to a loser",
+     "ok": false,
+     "why": "3 adds into red"
+    },
+    {
+     "rule": "Stops $0.15\u20130.20",
+     "ok": true,
+     "why": "median stop $0.15 under entry"
+    },
+    {
+     "rule": "Done after 3 losses in a row or \u2212$75",
+     "ok": false,
+     "why": "kept trading at 6:44 after 3 losses in a row"
+    },
+    {
+     "rule": "No chasing ($0.10+ past entry)",
+     "ok": false,
+     "why": "1 chased fills"
+    },
+    {
+     "rule": "Waited for a setup (no open whiplash)",
+     "ok": false,
+     "why": "5 entries 6:30\u20136:45, both sides"
+    },
+    {
+     "rule": "Held a winner (8+ min)",
+     "ok": false,
+     "why": "winners cut early"
+    },
+    {
+     "rule": "Sat out on time (+$60 on a flipping tape)",
+     "ok": null,
+     "why": "no QQQ bars yet"
+    },
+    {
+     "rule": "Size 2 contracts or less",
+     "ok": false,
+     "why": "1 entries at 3+"
+    },
+    {
+     "rule": "Logged the day",
+     "ok": true,
+     "why": "ramble logged"
+    }
+   ],
+   "summary": "Day after Thanksgiving (market closes 10:00 PT). Light was \ud83d\udd25 CAREFUL (+19.9). QQQ gapped up $11.79 (633.93 \u2192 645.72), sold off $9 to 636.72 by 7:05, chopped 637\u2013642 until 7:30, then ripped to 646.61 by 7:47.",
+   "right": "Opened with the gap-fade: P634 \u00d73 at 6:32\u20136:34, sold into the flush for +$65. Then the trade of the day: C645 \u00d74 at 1.17 at 7:35 on the rip, sold at 2.02 at 7:38 for +$340 \u2014 sized up only once the move was proving itself. Every loser after 6:44 was a clean $0.13\u20130.16 stop. Finished +$127 (+$124.51 after fees).",
+   "fix": "1) 6:37\u20137:27: 16 entries in the 637\u2013642 chop, flipping calls and puts every few minutes (C645 \u00d76, P632 \u00d74, P629 \u00d73): \u2212$278. Chop after the first move = sit until it breaks. 2) P632 \u00d72 at 1.43 at 6:39 added above the first P632 at 1.02 and stopped at 1.01: \u2212$84, the day's biggest loss. 3) The C645 \u00d74 was sold at +0.85 \u2014 the ladder would have held it into 646.61. 4) 18 entries; the plan is 8.",
+   "ramble": true,
+   "sized": {
+    "n": 4,
+    "pnl": 258.0,
+    "wins": 2,
+    "list": [
+     "6:34 P634 \u00d72 +38",
+     "6:39 P632 \u00d72 -84",
+     "6:47 P632 \u00d72 -36",
+     "7:35 C645 \u00d74 +340"
+    ]
+   }
+  },
+  {
    "date": "2026-11-25",
    "pnl": 89.0,
    "trades": 19,
@@ -1561,18 +1651,18 @@
  "weeks": [
   {
    "week": "2026-11-23",
-   "days": 3,
-   "green": 2,
-   "pnl": -278.0,
-   "trades": 54,
-   "wins": 9,
-   "score": 2.9,
-   "kept": 10,
-   "of": 34,
-   "best2": 582.0,
-   "rest": -860.0,
-   "first20": -433.0,
-   "after8": -40.0,
+   "days": 4,
+   "green": 3,
+   "pnl": -151.0,
+   "trades": 72,
+   "wins": 12,
+   "score": 2.7,
+   "kept": 12,
+   "of": 44,
+   "best2": 796.0,
+   "rest": -947.0,
+   "first20": -550.0,
+   "after8": 168.0,
    "days8": 0,
    "worst_low": -505.0,
    "daily": [
@@ -1593,12 +1683,18 @@
      "pnl": 89.0,
      "score": 3.3,
      "trades": 19
+    },
+    {
+     "date": "2026-11-27",
+     "pnl": 127.0,
+     "score": 2.0,
+     "trades": 18
     }
    ],
    "rules": {
     "8 trades or fewer": [
      0,
-     3
+     4
     ],
     "No entry against the 20-min candle": [
      0,
@@ -1606,39 +1702,39 @@
     ],
     "Max 2 entries per 20-min candle": [
      0,
-     3
+     4
     ],
     "Never add to a loser": [
      0,
-     3
+     4
     ],
     "Stops $0.15\u20130.20": [
-     3,
-     3
+     4,
+     4
     ],
     "Done after 3 losses in a row or \u2212$75": [
      0,
-     3
+     4
     ],
     "No chasing ($0.10+ past entry)": [
      1,
-     3
+     4
     ],
     "Waited for a setup (no open whiplash)": [
      1,
-     3
+     4
     ],
     "Held a winner (8+ min)": [
      2,
-     3
+     4
     ],
     "Size 2 contracts or less": [
      0,
-     3
+     4
     ],
     "Logged the day": [
-     3,
-     3
+     4,
+     4
     ],
     "Sat out on time (+$60 on a flipping tape)": [
      0,
@@ -1646,14 +1742,14 @@
     ]
    },
    "sized": {
-    "n": 10,
-    "pnl": 272.0,
-    "wins": 4
+    "n": 14,
+    "pnl": 530.0,
+    "wins": 6
    },
    "single": {
-    "n": 44,
-    "pnl": -550.0,
-    "wins": 5
+    "n": 58,
+    "pnl": -681.0,
+    "wins": 6
    }
   },
   {
