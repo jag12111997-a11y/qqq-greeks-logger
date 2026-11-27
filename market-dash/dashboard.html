@@ -9049,6 +9049,10 @@
         })();
         var fs = fg ? fg.s : (p && p.fear != null ? p.fear : null);
         if (fs != null) { var C = fs < 45 ? RED : fs > 55 ? GRN : GRY; row1.push(chip((fg ? fg.lab : "fear") + " " + fs, C[0], C[1], C[2], fg ? "Our own gauge: VIX " + fg.v.toFixed(2) + " and equity put/call " + fg.pc.toFixed(2) + " ranked against " + fg.n + " logged sessions. 0 = most fear, 100 = most greed." : "", true)); }
+        // VIX · DXY · QQQ volume back as their own chips (asked Nov 27)
+        ["vix", "dxy"].forEach(function (k) { var j = Q[k], pp = j && typeof j.pct === "number" ? j.pct : null;
+          row1.push(chip(k.toUpperCase() + " " + (j ? '<b style="color:var(--txt)">' + j.last.toFixed(2) + "</b>" + (pp == null ? "" : ' <span style="color:var(' + (pp > 0 ? "--up" : pp < 0 ? "--down" : "--flat") + ')">' + (pp > 0 ? "+" : "") + pp.toFixed(2) + "%</span>") : "—"), GRY[0], GRY[1], GRY[2], "", true)); });
+        if (p && p.qqq_vol) row1.push(chip('QQQ vol <b style="color:var(--txt)">' + (p.qqq_vol / 1e6).toFixed(1) + "M</b>", GRY[0], GRY[1], GRY[2], "", true));
         row1.push(chip(window.__hdrNews().replace(/^news /, ""), GRY[0], GRY[1], GRY[2], "Today's US news (PT)", true));
         // Nov 23: room to the next level above / below (dealer walls, gamma flip, top OI strike + your weekly volume-profile lines).
         // Plan rule: under $8 of room = take the money, don't open the same direction again.
