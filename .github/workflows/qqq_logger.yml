@@ -48,7 +48,13 @@ jobs:
         run: |
           DATE=$(TZ=America/Los_Angeles date +%F)
           F="data/$DATE/am/qqq_greeks_calls_${DATE}_am.csv"
-          if [ -f "$F" ] && [ "$(wc -l < "$F")" -gt 6 ]; then
+          # Nov 27: a GitHub-delayed run that starts outside 5:30 AM-1:00 PM PT must not log — on Thanksgiving a late run
+          # logged stale overnight quotes into the next day's file, and the real morning run then skipped as "already logged".
+          NOW=$(TZ=America/Los_Angeles date +%H%M)
+          if [ "$NOW" -lt 0530 ] || [ "$NOW" -gt 1300 ]; then
+            echo "Started at $NOW PT, outside 05:30-13:00 PT (a delayed run). Not logging."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ -f "$F" ] && [ "$(wc -l < "$F")" -gt 6 ]; then
             echo "Already logged: $F ($(wc -l < "$F") lines). Skipping this run."
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
