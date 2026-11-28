@@ -1,6 +1,6 @@
 {
-  "fetched_utc": "2026-11-28 04:34:21",
-  "fetched_pt": "2026-11-27 08:34 PM PT",
+  "fetched_utc": "2026-11-28 04:47:12",
+  "fetched_pt": "2026-11-27 08:47 PM PT",
   "entry_date": "2026-11-27",
   "session": "pm",
   "entry_key": "2026-11-27",
@@ -1370,10 +1370,10 @@
     "spot": 650.99,
     "net_gex": -946171984.29,
     "net_dex": -22260659266.52,
-    "net_vex": 108306539.47,
-    "net_tex": -111287132.38,
-    "net_vannaex": 1516.28,
-    "net_charmex": -84669.71,
+    "net_vex": 108306539.05,
+    "net_tex": -111287145.32,
+    "net_vannaex": 1512.55,
+    "net_charmex": -85087.97,
     "gamma_ratio": 0.4481,
     "gamma_ratio_note": "call gamma / total gamma (SqueezeMetrics G). 0.5 balanced, >0.5 call-driven, <0.5 put-driven.",
     "exposure_note": "VEX = vega exposure, TEX = theta exposure. VANNAEX and CHARMEX are the real second-order dials (dDelta/dsigma and dDelta/dt), computed closed-form from d1/d2 and verified vs finite differences \u2014 not proxied.",
@@ -1745,7 +1745,7 @@
         "tex": -2424013.11,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 20.1204,
+        "call_gamma_raw": 20.120400000000004,
         "put_gamma_raw": 266.0522,
         "net_gex": -104222937.64
       },
@@ -1986,7 +1986,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 64.5631,
-        "put_gamma_raw": 453.00030000000004,
+        "put_gamma_raw": 453.0003,
         "net_gex": -164615011.44
       },
       {
@@ -2210,8 +2210,8 @@
         "tex": -6549193.61,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 114.2212,
-        "put_gamma_raw": 873.8507999999999,
+        "call_gamma_raw": 114.22119999999998,
+        "put_gamma_raw": 873.8508,
         "net_gex": -321921884.15
       },
       {
@@ -2241,7 +2241,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 19.803,
-        "put_gamma_raw": 43.54820000000001,
+        "put_gamma_raw": 43.5482,
         "net_gex": -10062930.04
       },
       {
@@ -2255,8 +2255,8 @@
         "tex": -345070.13,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 19.479900000000004,
-        "put_gamma_raw": 37.05229999999999,
+        "call_gamma_raw": 19.479900000000008,
+        "put_gamma_raw": 37.0523,
         "net_gex": -7446971.68
       },
       {
@@ -2285,7 +2285,7 @@
         "tex": -5676827.56,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 166.03160000000003,
+        "call_gamma_raw": 166.03159999999997,
         "put_gamma_raw": 840.3152,
         "net_gex": -285753276.29
       },
@@ -2331,7 +2331,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 19.6268,
-        "put_gamma_raw": 15.100899999999998,
+        "put_gamma_raw": 15.1009,
         "net_gex": 1918021.96
       },
       {
@@ -2345,7 +2345,7 @@
         "tex": -207153.67,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 27.7135,
+        "call_gamma_raw": 27.713499999999996,
         "put_gamma_raw": 14.364700000000001,
         "net_gex": 5657060.82
       },
@@ -2405,7 +2405,7 @@
         "tex": -352887.38,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 43.27059999999999,
+        "call_gamma_raw": 43.2706,
         "put_gamma_raw": 25.612699999999997,
         "net_gex": 7483205.55
       },
@@ -2421,7 +2421,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 26.558400000000006,
-        "put_gamma_raw": 31.8379,
+        "put_gamma_raw": 31.837900000000005,
         "net_gex": -2237388.57
       },
       {
@@ -2450,7 +2450,7 @@
         "tex": -453725.13,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 39.39679999999999,
+        "call_gamma_raw": 39.3968,
         "put_gamma_raw": 50.9701,
         "net_gex": -4904625.28
       },
@@ -2525,7 +2525,7 @@
         "tex": -306498.18,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 42.880999999999986,
+        "call_gamma_raw": 42.88099999999999,
         "put_gamma_raw": 32.59470000000001,
         "net_gex": 4359210.17
       },
@@ -2586,7 +2586,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 762.5645999999999,
-        "put_gamma_raw": 722.1861,
+        "put_gamma_raw": 722.1861000000001,
         "net_gex": 17111922.44
       },
       {
@@ -2600,7 +2600,7 @@
         "tex": -221703.33,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 34.95439999999999,
+        "call_gamma_raw": 34.9544,
         "put_gamma_raw": 17.893400000000003,
         "net_gex": 7230246.51
       },
@@ -2615,7 +2615,7 @@
         "tex": -342475.63,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 32.403299999999994,
+        "call_gamma_raw": 32.4033,
         "put_gamma_raw": 49.2353,
         "net_gex": -7133199.07
       },
@@ -2645,7 +2645,7 @@
         "tex": -172365.71,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 20.656999999999996,
+        "call_gamma_raw": 20.657,
         "put_gamma_raw": 22.297500000000003,
         "net_gex": -695224.16
       },
@@ -2721,7 +2721,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 39.2039,
-        "put_gamma_raw": 13.161799999999998,
+        "put_gamma_raw": 13.1618,
         "net_gex": 11036328.63
       },
       {
@@ -2735,7 +2735,7 @@
         "tex": -4211350.36,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 627.5826999999999,
+        "call_gamma_raw": 627.5827,
         "put_gamma_raw": 322.7482,
         "net_gex": 129185193.14
       },
@@ -2751,7 +2751,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 24.6849,
-        "put_gamma_raw": 9.1941,
+        "put_gamma_raw": 9.194100000000002,
         "net_gex": 6564814.65
       },
       {
@@ -2885,7 +2885,7 @@
         "tex": -7458680.57,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 998.5557,
+        "call_gamma_raw": 998.5556999999999,
         "put_gamma_raw": 635.7736,
         "net_gex": 153742688.76
       },
@@ -2901,7 +2901,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 65.27969999999999,
-        "put_gamma_raw": 35.139199999999995,
+        "put_gamma_raw": 35.1392,
         "net_gex": 12773181.23
       },
       {
@@ -2930,7 +2930,7 @@
         "tex": -114411.84,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 16.883100000000002,
+        "call_gamma_raw": 16.8831,
         "put_gamma_raw": 11.3554,
         "net_gex": 2342572.75
       },
@@ -2945,7 +2945,7 @@
         "tex": -160863.75,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 28.081599999999998,
+        "call_gamma_raw": 28.0816,
         "put_gamma_raw": 10.9661,
         "net_gex": 7253342.96
       },
@@ -3066,7 +3066,7 @@
         "vannaex": 0.0,
         "charmex": 0.0,
         "call_gamma_raw": 69.4061,
-        "put_gamma_raw": 16.420099999999998,
+        "put_gamma_raw": 16.4201,
         "net_gex": 22454829.24
       },
       {
@@ -3140,7 +3140,7 @@
         "tex": -128945.88,
         "vannaex": 0.0,
         "charmex": 0.0,
-        "call_gamma_raw": 14.6193,
+        "call_gamma_raw": 14.619299999999999,
         "put_gamma_raw": 19.8056,
         "net_gex": -2197891.54
       },
@@ -3331,12 +3331,12 @@
         "call_oi": 74683,
         "put_oi": 29328,
         "dex": -1361579336.91,
-        "vex": 2382004.29,
-        "tex": -1320607.39,
-        "vannaex": 1516.28,
-        "charmex": -84669.71,
+        "vex": 2382003.87,
+        "tex": -1320620.33,
+        "vannaex": 1512.55,
+        "charmex": -85087.97,
         "call_gamma_raw": 261.0702,
-        "put_gamma_raw": 122.84969765933614,
+        "put_gamma_raw": 122.84969765933617,
         "net_gex": 58576185.74
       },
       {
@@ -3434,7 +3434,7 @@
     "dealer_convention": "dealers long call gamma, short put gamma"
   },
   "time_footprint": {
-    "generated_utc": "2026-11-28 04:34:56",
+    "generated_utc": "2026-11-28 04:47:44",
     "feed": "indicative",
     "near_money_pct": 20,
     "days_out": 400,
@@ -3945,37 +3945,37 @@
       {
         "venue": "Cboe (C,W,E,Z)",
         "today": 28.77,
-        "avg5": 28.42
+        "avg5": 32.04
       },
       {
         "venue": "NASDAQ (Q,T,X,H,I,J)",
         "today": 26.39,
-        "avg5": 26.08
+        "avg5": 25.56
       },
       {
         "venue": "NYSE (A,N)",
         "today": 17.5,
-        "avg5": 18.15
+        "avg5": 16.7
       },
       {
         "venue": "MIAX (M,P,D,S)",
         "today": 16.29,
-        "avg5": 16.6
+        "avg5": 14.89
       },
       {
         "venue": "MEMX (G,U)",
         "today": 5.32,
-        "avg5": 5.0
+        "avg5": 4.44
       },
       {
         "venue": "BOX Options",
         "today": 5.06,
-        "avg5": 5.13
+        "avg5": 5.83
       },
       {
         "venue": "IEX Options (V)",
         "today": 0.68,
-        "avg5": 0.63
+        "avg5": 0.53
       }
     ],
     "total_volume": 49906807,
