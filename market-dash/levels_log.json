@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-27T04:58:38.665Z",
+ "updated": "2026-11-28T04:43:27.841Z",
  "rules": "touch = within $0.25 after being R away (R = 10% of the 10-day avg range) · held / broke = closes R back / through within 60 min · move = best move away on the side it came from within 30 min · random = 15 lines a day drawn between the last 5 days' low and high",
  "site_all": {
   "yesterday high": {
@@ -27,20 +27,20 @@
    "avg_move": 1.83
   },
   "call wall": {
-   "touches": 192,
+   "touches": 193,
    "held": 111,
    "broke": 65,
-   "chop": 16,
+   "chop": 17,
    "held_pct": 58,
    "avg_move": 1.99
   },
   "put wall": {
-   "touches": 179,
-   "held": 99,
-   "broke": 72,
+   "touches": 182,
+   "held": 100,
+   "broke": 74,
    "chop": 8,
    "held_pct": 55,
-   "avg_move": 1.85
+   "avg_move": 1.86
   },
   "value area low": {
    "touches": 156,
@@ -67,18 +67,18 @@
    "avg_move": 2.19
   },
   "ALL site levels": {
-   "touches": 1261,
-   "held": 734,
-   "broke": 458,
-   "chop": 69,
+   "touches": 1265,
+   "held": 735,
+   "broke": 460,
+   "chop": 70,
    "held_pct": 58,
    "avg_move": 1.99
   }
  },
  "random_all": {
-  "touches": 1655,
-  "held": 1014,
-  "broke": 528,
+  "touches": 1662,
+  "held": 1018,
+  "broke": 531,
   "chop": 113,
   "held_pct": 61,
   "avg_move": 1.98
@@ -89,7 +89,8 @@
    "days": [
     "2026-11-23",
     "2026-11-24",
-    "2026-11-25"
+    "2026-11-25",
+    "2026-11-27"
    ],
    "levels": [
     {
@@ -298,6 +299,14 @@
        "res": "chop",
        "move": 1.49,
        "at": null
+      },
+      {
+       "day": "2026-11-27",
+       "t": "9:59",
+       "from": "below",
+       "res": "chop",
+       "move": 1.41,
+       "at": null
       }
      ],
      "closest": 0
@@ -345,6 +354,38 @@
        "res": "held",
        "move": 11.88,
        "at": "9:01"
+      },
+      {
+       "day": "2026-11-27",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 0.61,
+       "at": "6:33"
+      },
+      {
+       "day": "2026-11-27",
+       "t": "7:37",
+       "from": "below",
+       "res": "chop",
+       "move": 1.32,
+       "at": null
+      },
+      {
+       "day": "2026-11-27",
+       "t": "9:03",
+       "from": "above",
+       "res": "held",
+       "move": 2.32,
+       "at": "9:20"
+      },
+      {
+       "day": "2026-11-27",
+       "t": "9:41",
+       "from": "above",
+       "res": "held",
+       "move": 6.32,
+       "at": "9:55"
       }
      ],
      "closest": 0
@@ -376,6 +417,22 @@
        "res": "held",
        "move": 8.06,
        "at": "9:01"
+      },
+      {
+       "day": "2026-11-27",
+       "t": "6:34",
+       "from": "above",
+       "res": "broke",
+       "move": 0.54,
+       "at": "6:39"
+      },
+      {
+       "day": "2026-11-27",
+       "t": "7:13",
+       "from": "below",
+       "res": "broke",
+       "move": 1.7,
+       "at": "7:35"
       }
      ],
      "closest": 0
@@ -479,6 +536,14 @@
        "res": "broke",
        "move": 1.09,
        "at": "12:51"
+      },
+      {
+       "day": "2026-11-27",
+       "t": "7:05",
+       "from": "above",
+       "res": "held",
+       "move": 5.94,
+       "at": "7:06"
       }
      ],
      "closest": 0
@@ -668,29 +733,29 @@
     }
    ],
    "mine": {
-    "touches": 57,
-    "held": 30,
-    "broke": 26,
-    "chop": 1,
-    "held_pct": 53,
-    "avg_move": 3.19
+    "touches": 65,
+    "held": 33,
+    "broke": 29,
+    "chop": 3,
+    "held_pct": 51,
+    "avg_move": 3.11
    },
    "byColor": {
     "blue": {
-     "touches": 7,
-     "held": 4,
-     "broke": 3,
-     "chop": 0,
-     "held_pct": 57,
-     "avg_move": 5.78
+     "touches": 11,
+     "held": 6,
+     "broke": 4,
+     "chop": 1,
+     "held_pct": 55,
+     "avg_move": 4.64
     },
     "orange dashed": {
-     "touches": 16,
+     "touches": 18,
      "held": 9,
-     "broke": 7,
+     "broke": 9,
      "chop": 0,
-     "held_pct": 56,
-     "avg_move": 3.2
+     "held_pct": 50,
+     "avg_move": 2.97
     },
     "yellow": {
      "touches": 9,
@@ -701,29 +766,29 @@
      "avg_move": 2.61
     },
     "red": {
-     "touches": 25,
-     "held": 11,
+     "touches": 27,
+     "held": 12,
      "broke": 13,
-     "chop": 1,
+     "chop": 2,
      "held_pct": 44,
-     "avg_move": 2.68
+     "avg_move": 2.76
     }
    },
    "site": {
-    "touches": 35,
-    "held": 23,
-    "broke": 10,
-    "chop": 2,
-    "held_pct": 66,
-    "avg_move": 3.66
+    "touches": 39,
+    "held": 24,
+    "broke": 12,
+    "chop": 3,
+    "held_pct": 62,
+    "avg_move": 3.5
    },
    "random": {
-    "touches": 38,
-    "held": 20,
-    "broke": 18,
+    "touches": 45,
+    "held": 24,
+    "broke": 21,
     "chop": 0,
     "held_pct": 53,
-    "avg_move": 3.6
+    "avg_move": 3.54
    },
    "site_days": [
     {
@@ -1126,6 +1191,84 @@
        "px": 605,
        "touches": [],
        "closest": 2.74
+      }
+     ]
+    },
+    {
+     "day": "2026-11-27",
+     "R": 1.99,
+     "site": [
+      {
+       "type": "yesterday high",
+       "px": 634.89,
+       "touches": [],
+       "closest": 1.83
+      },
+      {
+       "type": "yesterday low",
+       "px": 607.74,
+       "touches": [],
+       "closest": 28.98
+      },
+      {
+       "type": "yesterday close",
+       "px": 633.95,
+       "touches": [],
+       "closest": 2.77
+      },
+      {
+       "type": "value area low",
+       "px": 612.2,
+       "touches": [],
+       "closest": 24.52
+      },
+      {
+       "type": "value area high",
+       "px": 634.4,
+       "touches": [],
+       "closest": 2.32
+      },
+      {
+       "type": "call wall",
+       "px": 650,
+       "touches": [
+        {
+         "t": "9:59",
+         "from": "below",
+         "res": "chop",
+         "move": 1.53,
+         "at": null
+        }
+       ],
+       "closest": 0
+      },
+      {
+       "type": "put wall",
+       "px": 640,
+       "touches": [
+        {
+         "t": "6:34",
+         "from": "above",
+         "res": "broke",
+         "move": 2,
+         "at": "6:46"
+        },
+        {
+         "t": "6:50",
+         "from": "below",
+         "res": "held",
+         "move": 3.28,
+         "at": "6:59"
+        },
+        {
+         "t": "7:08",
+         "from": "below",
+         "res": "broke",
+         "move": 1.64,
+         "at": "7:24"
+        }
+       ],
+       "closest": 0
       }
      ]
     }
@@ -8546,7 +8689,8 @@
    "days": [
     "2026-11-23",
     "2026-11-24",
-    "2026-11-25"
+    "2026-11-25",
+    "2026-11-27"
    ],
    "levels": [
     {
@@ -8725,6 +8869,14 @@
        "res": "chop",
        "move": 1.17,
        "at": null
+      },
+      {
+       "day": "2026-11-27",
+       "t": "9:59",
+       "from": "below",
+       "res": "held",
+       "move": 3.03,
+       "at": "10:30"
       }
      ],
      "closest": 0
@@ -8819,6 +8971,22 @@
        "res": "held",
        "move": 10.1,
        "at": "9:01"
+      },
+      {
+       "day": "2026-11-27",
+       "t": "6:30",
+       "from": "above",
+       "res": "broke",
+       "move": 2.39,
+       "at": "6:34"
+      },
+      {
+       "day": "2026-11-27",
+       "t": "7:35",
+       "from": "below",
+       "res": "broke",
+       "move": 1.32,
+       "at": "7:43"
       }
      ],
      "closest": 0
@@ -8906,6 +9074,14 @@
        "res": "chop",
        "move": 1.98,
        "at": null
+      },
+      {
+       "day": "2026-11-27",
+       "t": "6:39",
+       "from": "above",
+       "res": "held",
+       "move": 1.97,
+       "at": "7:13"
       }
      ],
      "closest": 0
@@ -9108,18 +9284,18 @@
     }
    ],
    "all": {
-    "touches": 52,
-    "held": 30,
-    "broke": 18,
+    "touches": 56,
+    "held": 32,
+    "broke": 20,
     "chop": 4,
-    "held_pct": 58,
-    "avg_move": 3.65
+    "held_pct": 57,
+    "avg_move": 3.55
    }
   },
   {
    "week": "2026-11-30",
-   "from": "2026-10-29",
-   "to": "2026-11-25",
+   "from": "2026-10-30",
+   "to": "2026-11-27",
    "days": [],
    "levels": [
     {
@@ -9129,13 +9305,13 @@
      "closest": null
     },
     {
-     "px": 697,
+     "px": 696.75,
      "type": "value area high",
      "touches": [],
      "closest": null
     },
     {
-     "px": 609.75,
+     "px": 610,
      "type": "value area low",
      "touches": [],
      "closest": null
@@ -9195,25 +9371,7 @@
      "closest": null
     },
     {
-     "px": 708.75,
-     "type": "thin gap",
-     "touches": [],
-     "closest": null
-    },
-    {
-     "px": 706.5,
-     "type": "thin gap",
-     "touches": [],
-     "closest": null
-    },
-    {
-     "px": 704.25,
-     "type": "thin gap",
-     "touches": [],
-     "closest": null
-    },
-    {
-     "px": 702,
+     "px": 688.75,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -9225,7 +9383,25 @@
      "closest": null
     },
     {
+     "px": 676,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
      "px": 666.5,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 657,
+     "type": "thin gap",
+     "touches": [],
+     "closest": null
+    },
+    {
+     "px": 653.75,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -9237,7 +9413,7 @@
      "closest": null
     },
     {
-     "px": 636.25,
+     "px": 636,
      "type": "thin gap",
      "touches": [],
      "closest": null
@@ -9291,35 +9467,35 @@
    "avg_move": 2.67
   },
   "volume node": {
-   "touches": 230,
-   "held": 145,
+   "touches": 231,
+   "held": 146,
    "broke": 76,
    "chop": 9,
    "held_pct": 63,
    "avg_move": 2.3
   },
   "thin gap": {
-   "touches": 366,
-   "held": 198,
-   "broke": 149,
+   "touches": 369,
+   "held": 199,
+   "broke": 151,
    "chop": 19,
    "held_pct": 54,
    "avg_move": 2.08
   },
   "ALL bot levels": {
-   "touches": 720,
-   "held": 415,
-   "broke": 269,
+   "touches": 724,
+   "held": 417,
+   "broke": 271,
    "chop": 36,
    "held_pct": 58,
    "avg_move": 2.11
   }
  },
  "bot_random": {
-  "touches": 1317,
-  "held": 799,
-  "broke": 445,
-  "chop": 73,
+  "touches": 1328,
+  "held": 804,
+  "broke": 449,
+  "chop": 75,
   "held_pct": 61,
   "avg_move": 2
  }

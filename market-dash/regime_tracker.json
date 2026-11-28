@@ -1,6 +1,6 @@
 {
- "updated": "2026-11-25",
- "mornings": 96,
+ "updated": "2026-11-27",
+ "mornings": 97,
  "first": "2026-07-14",
  "normal_per20": {
   "reverse": 6.8,
@@ -25,9 +25,9 @@
    "late move": 0
   },
   "10": {
-   "reverse": 9,
+   "reverse": 10,
    "one-way then box": 0,
-   "continue": 1,
+   "continue": 0,
    "no move": 0,
    "late move": 0
   },
@@ -41,10 +41,10 @@
  },
  "streak": {
   "type": "reverse",
-  "length": 9
+  "length": 10
  },
  "all_counts": {
-  "reverse": 31,
+  "reverse": 32,
   "one-way then box": 21,
   "continue": 11,
   "no move": 11,
@@ -434,6 +434,11 @@
   },
   {
    "date": "2026-11-25",
+   "reverse": 15,
+   "oneway": 3
+  },
+  {
+   "date": "2026-11-27",
    "reverse": 15,
    "oneway": 3
   }
@@ -1574,6 +1579,18 @@
     "7:03 TREND -8.46",
     "8:44 TREND +13.93",
     "9:27 TREND +7.65"
+   ]
+  },
+  {
+   "date": "2026-11-27",
+   "warmup": false,
+   "type": "reverse",
+   "scenario": "OPEN DRIVE \u2192 reverses",
+   "big": 7.19,
+   "range": 14.62,
+   "moves": [
+    "6:30 TREND -8.39",
+    "7:05 TREND +13.41"
    ]
   }
  ],
