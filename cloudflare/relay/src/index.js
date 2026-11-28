@@ -226,11 +226,22 @@ export class Relay extends DurableObject {
       return { ok: true, body: JSON.stringify({ generated_utc: gen, feed: "sip (15+ min old)", ...n }) };
     }
     if (kind === "vix") {
-      const r = await fetch("https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json", { headers: { "User-Agent": "qqq-greeks-logger" } });
-      if (!r.ok) throw new Error("cboe " + r.status);
-      const d = ((await r.json()) || {}).data || {};
-      if (!(d.current_price > 0)) throw new Error("no vix");
-      return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "VIX", last: d.current_price, pct: d.price_change_percent, src_time: d.last_trade_time, source: "Cboe delayed quote (~15 min)" }) };
+      // Cboe first; Nov 27: Cboe started answering 403 to the relay, so fall back to Yahoo's ^VIX (same read-only chart endpoint as DXY)
+      try {
+        const r = await fetch("https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json", { headers: { "User-Agent": "qqq-greeks-logger" } });
+        if (!r.ok) throw new Error("cboe " + r.status);
+        const d = ((await r.json()) || {}).data || {};
+        if (!(d.current_price > 0)) throw new Error("no vix");
+        return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "VIX", last: d.current_price, pct: d.price_change_percent, src_time: d.last_trade_time, source: "Cboe delayed quote (~15 min)" }) };
+      } catch (e) {
+        const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d", { headers: { "User-Agent": "Mozilla/5.0 (qqq-greeks-logger relay)" } });
+        if (!r.ok) throw new Error(String(e && e.message || e) + "; yahoo " + r.status);
+        const mt = ((((await r.json()) || {}).chart || {}).result || [])[0] || {};
+        const m = mt.meta || {}, closes = ((((mt.indicators || {}).quote || [])[0] || {}).close || []).filter((v) => v > 0);
+        const last = m.regularMarketPrice || closes[closes.length - 1], prev = closes.length >= 2 ? closes[closes.length - 2] : null;
+        if (!(last > 0)) throw new Error("no vix");
+        return { ok: true, body: JSON.stringify({ generated_utc: gen, symbol: "VIX", last, pct: prev > 0 ? (last / prev - 1) * 100 : null, prev_close: prev, src_time: m.regularMarketTime ? iso(m.regularMarketTime * 1000) : null, source: "Yahoo ^VIX (Cboe blocked)" }) };
+      }
     }
     if (kind === "dxy") {   // US dollar index (ICE DX-Y.NYB) from Yahoo's public chart endpoint, read-only. % = last vs the previous daily close.
       const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?interval=1d&range=5d", { headers: { "User-Agent": "Mozilla/5.0 (qqq-greeks-logger relay)" } });
