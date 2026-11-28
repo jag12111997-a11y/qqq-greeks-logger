@@ -3,7 +3,7 @@
  "rules_updated": "2026-11-17",
  "exit_rule": {
   "since": "2026-11-25",
-  "text": "LADDER + 2.00 \u2014 stop $0.15 under entry and a take-profit order at +2.00. At +0.30 stop to breakeven, at +0.60 lock +0.30, keep stepping 0.30 behind. At +2.00 take it all; if the trend holds (pullback under $1) re-enter a fresh $0.80\u20131.20 contract the same way. Trend day = trade with it only, no fades. Flat first 15 min = 2 trades max. Daily stop \u2212$75."
+  "text": "TESTING, NOT PROVEN (Nov 28 independent check: with realistic stop fills the ladder and the +2.00 target did not beat a plain stop; being re-tested on full-day option prices). What held: a $0.15 stop set the moment you enter. Under test: LADDER + 2.00 \u2014 stop $0.15 under entry and a take-profit order at +2.00. At +0.30 stop to breakeven, at +0.60 lock +0.30, keep stepping 0.30 behind. At +2.00 take it all; if the trend holds (pullback under $1) re-enter a fresh $0.80\u20131.20 contract the same way. Trend day = trade with it only, no fades. Flat first 15 min = 2 trades max. Daily stop \u2212$75."
  },
  "entries": [
   {
@@ -15,9 +15,9 @@
    "first": "6:32",
    "last": "7:38",
    "best": "7:35 C 645 +340",
-   "score": 2.0,
+   "score": 1.8,
    "kept": 2,
-   "of": 10,
+   "of": 11,
    "checks": [
     {
      "rule": "8 trades or fewer",
@@ -26,8 +26,8 @@
     },
     {
      "rule": "No entry against the 20-min candle",
-     "ok": null,
-     "why": "no QQQ bars yet"
+     "ok": false,
+     "why": "8 against: 6:44 call, 6:45 call, 6:45 call, 6:50 call"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -67,7 +67,7 @@
     {
      "rule": "Sat out on time (+$60 on a flipping tape)",
      "ok": null,
-     "why": "no QQQ bars yet"
+     "why": "never up $60 on a flipping tape"
     },
     {
      "rule": "Size 2 contracts or less",
@@ -117,7 +117,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "6 against: 7:00 put, 7:06 put, 7:31 put, 7:39 put"
+     "why": "7 against: 7:00 put, 7:06 put, 7:10 put, 7:31 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -208,7 +208,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "5 against: 6:32 call, 6:43 put, 6:49 put, 7:01 put"
+     "why": "5 against: 6:32 call, 6:49 put, 6:57 call, 7:01 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -295,7 +295,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "5 against: 6:36 call, 6:42 call, 6:42 call, 6:43 call"
+     "why": "8 against: 6:36 call, 6:42 call, 6:42 call, 6:43 call"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -473,7 +473,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "4 against: 6:46 put, 6:46 put, 6:51 call, 6:51 call"
+     "why": "2 against: 6:46 put, 6:46 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -563,7 +563,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "7 against: 6:31 put, 6:33 call, 7:02 put, 7:13 put"
+     "why": "7 against: 6:31 put, 7:02 put, 7:11 call, 7:13 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -648,7 +648,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "2 against: 8:03 put, 8:21 call"
+     "why": "3 against: 8:03 put, 8:21 call, 9:03 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -733,7 +733,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "7 against: 6:33 call, 6:34 call, 6:36 call, 6:37 call"
+     "why": "9 against: 6:33 call, 6:34 call, 6:36 call, 6:37 call"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -818,7 +818,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "3 against: 6:34 call, 6:47 call, 7:19 call"
+     "why": "5 against: 6:34 call, 6:47 call, 6:55 put, 6:55 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -988,7 +988,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "3 against: 6:37 call, 6:46 call, 7:18 call"
+     "why": "4 against: 6:37 call, 6:46 call, 6:50 call, 7:18 call"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -1073,7 +1073,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "3 against: 6:32 call, 6:33 call, 6:33 call"
+     "why": "4 against: 6:32 call, 6:33 call, 6:33 call, 6:51 call"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -1158,7 +1158,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "7 against: 6:46 put, 6:49 put, 6:52 put, 6:52 put"
+     "why": "7 against: 6:46 put, 6:49 put, 6:50 put, 6:52 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -1243,7 +1243,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "2 against: 6:36 call, 7:00 put"
+     "why": "1 against: 6:36 call"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -1413,7 +1413,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "2 against: 7:54 call, 12:20 put"
+     "why": "3 against: 7:12 call, 7:54 call, 12:20 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -1583,7 +1583,7 @@
     {
      "rule": "No entry against the 20-min candle",
      "ok": false,
-     "why": "1 against: 11:52 put"
+     "why": "2 against: 10:31 put, 11:52 put"
     },
     {
      "rule": "Max 2 entries per 20-min candle",
@@ -1656,9 +1656,9 @@
    "pnl": -151.0,
    "trades": 72,
    "wins": 12,
-   "score": 2.7,
+   "score": 2.6,
    "kept": 12,
-   "of": 44,
+   "of": 45,
    "best2": 796.0,
    "rest": -947.0,
    "first20": -550.0,
@@ -1687,7 +1687,7 @@
     {
      "date": "2026-11-27",
      "pnl": 127.0,
-     "score": 2.0,
+     "score": 1.8,
      "trades": 18
     }
    ],
@@ -1698,7 +1698,7 @@
     ],
     "No entry against the 20-min candle": [
      0,
-     3
+     4
     ],
     "Max 2 entries per 20-min candle": [
      0,

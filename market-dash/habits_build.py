@@ -10,20 +10,18 @@ DEFS = {
     # good habits — trade level
     "winner_030":   {"kind": "good", "label": "Let a winner get to +0.30 or more", "vs": "winners sold under +0.30"},
     "winner_8min":  {"kind": "good", "label": "Held a winner 8+ min", "vs": "winners cut under 8 min"},
-    "green_light":  {"kind": "good", "label": "Traded on a 🟢 / 🔥 light day", "vs": "🟡 / ⚫ days"},
+    "green_light":  {"kind": "unproven", "label": "Traded on a 🟢 / 🔥 light day", "vs": "🟡 / ⚫ days"},
     "tue_fri":      {"kind": "good", "label": "Tuesday – Friday", "vs": "Mondays"},
-    "with_candle":  {"kind": "good", "label": "With the 20-min candle", "vs": "against it"},
-    "trend_way":    {"kind": "good", "label": "Rode a trend day its way", "vs": "fading it"},
+    "with_candle":  {"kind": "unproven", "label": "With the 20-min candle", "vs": "against it"},
     "small_loss":   {"kind": "good", "label": "Kept the loss to $0.20 or less", "vs": "bigger losses"},
     # good habits — day level
     "stopped_green": {"kind": "good", "scope": "day", "label": "Stopped while green (ended within $25 of the day high)", "vs": "gave back more"},
     "le8":           {"kind": "good", "scope": "day", "label": "8 trades or fewer", "vs": "more than 8"},
     # bad habits — trade level
-    "light_bad":    {"kind": "bad", "label": "Traded on a 🟡 / ⚫ light day"},
+    "light_bad":    {"kind": "unproven", "label": "Traded on a 🟡 / ⚫ light day"},
     "monday":       {"kind": "bad", "label": "Monday"},
-    "against_candle": {"kind": "bad", "label": "Against the 20-min candle"},
-    "fade_trend":   {"kind": "bad", "label": "Faded a trend day"},
-    "in_box":       {"kind": "bad", "label": "Bought inside a box before the break"},
+    "against_candle": {"kind": "unproven", "label": "Against the 20-min candle"},
+    "in_box":       {"kind": "unproven", "label": "Bought inside a box before the break"},
     "open_whiplash": {"kind": "bad", "label": "Open whiplash (both sides 6:30–6:45)"},
     "pricey_open":  {"kind": "bad", "label": "Contract over $1.20 at the open"},
     "flip_flop":    {"kind": "bad", "label": "Flip-flopped calls ↔ puts within 5 min"},
@@ -70,7 +68,6 @@ def main():
         h = H.get(d)
         prev = [k for k in spk if k[0] < d]; light = SP[prev[-1]] if prev else None
         typ = rt.get(d, {}).get("type"); big = rt.get(d, {}).get("big") or 3.6
-        early = [t for t in L if t["m"] < 15]; whip = len(early) >= 3 and len({t["side"] for t in early}) == 2
         mon = dt.date.fromisoformat(d).weekday() == 0
         for i, t in enumerate(L):
             tg = []; sg = 1 if t["side"] == "call" else -1
@@ -81,23 +78,29 @@ def main():
             tg.append("monday" if mon else "tue_fri")
             if light is not None: tg.append("green_light" if light >= 3.5 else "light_bad")
             if t["paid"] > 1.20 and t["m"] < 30: tg.append("pricey_open")
-            if whip and t["m"] < 15: tg.append("open_whiplash")
+            if t["m"] < 15:   # Nov 28 fix: only entries made up to this one (it used later trades before)
+                early = [u for u in L[:i + 1] if u["m"] < 15]
+                if len(early) >= 3 and len({u["side"] for u in early}) == 2: tg.append("open_whiplash")
             if i > 0 and L[i - 1]["side"] != t["side"] and t["m"] - L[i - 1]["exit_m"] <= 5: tg.append("flip_flop")
             r2 = sum(u["pnl"] for u in L[:i] if u["exit_m"] <= t["m"])
             if r2 <= -75: tg.append("after_75")
             if h:
-                c = h["c"]; m = int(t["m"]); k = min(max(m, 0), len(c) - 1); cs = (max(m, 0) // 20) * 20
-                ref = (c[cs - 21] if cs >= 20 else h["o"]) if m - cs < 3 else (c[cs - 1] if cs > 0 else h["o"])
-                if (c[k] - ref) * sg > 0: tg.append("with_candle")
-                elif (c[k] - ref) * sg < 0: tg.append("against_candle")
-                if typ in ("continue", "one-way then box"):
-                    tg.append("trend_way" if (c[k] - h["o"]) * sg > 0 else "fade_trend")
+                # Nov 28 fix (independent check): only prices known BEFORE the entry — the last completed minute (m-1),
+                # never the close of the entry minute (that leaked up to 59 s of the future). Fixed the c[cs-21] -> c[-1] bug too.
+                c = h["c"]; m = int(t["m"]); k = min(m - 1, len(c) - 1); cs = (max(m, 0) // 20) * 20
+                now = c[k] if k >= 0 else h["o"]
+                if m - cs < 3 and cs >= 20:   # barely into a new candle: use the candle before it (fully known)
+                    ps = cs - 20; d = c[cs - 1] - (c[ps - 1] if ps > 0 else h["o"])
+                else:
+                    d = now - (c[cs - 1] if cs > 0 else h["o"])
+                if d * sg > 0: tg.append("with_candle")
+                elif d * sg < 0: tg.append("against_candle")
                 if k >= 15:
                     box = c[k - 15:k]
-                    if max(box) - min(box) <= 0.5 * big and min(box) <= c[k] <= max(box): tg.append("in_box")
+                    if max(box) - min(box) <= 0.5 * big and min(box) <= now <= max(box): tg.append("in_box")
             trades.append(dict(d=d, pnl=round(t["pnl"], 2), win=t["pnl"] > 0, loss=t["pnl"] < 0, tags=tg))
     out = dict(updated=max(by) if by else None, defs=DEFS, trades=trades, days=days,
-               note="Nov 27 study: claude/3v3_habits (project). Good = what the habit made; bad = what it cost. A trade can carry several tags.")
+               note="Nov 28: candle / box / light tags moved to UNPROVEN after the independent check (they flip between Sep–Oct and Nov). Nov 27 study: claude/3v3_habits (project). Good = what the habit made; bad = what it cost. A trade can carry several tags.")
     f = os.path.join(MD, "habits.json"); json.dump(out, open(f, "w"), ensure_ascii=False, separators=(",", ":"))
     print(os.path.relpath(f, ROOT))
 

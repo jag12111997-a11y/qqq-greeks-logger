@@ -53,7 +53,8 @@ def candle_dir(bars, t0):
         if kk < 0:
             break
         first = bars.get(kk * 20)
-        last = next((bars[j] for j in range(min(m, kk * 20 + 19), kk * 20 - 1, -1) if j in bars), None)
+        # Nov 28 fix: last COMPLETED minute (m-1) — the entry minute's close is after the fill
+        last = next((bars[j] for j in range(min(m - 1, kk * 20 + 19), kk * 20 - 1, -1) if j in bars), None)
         if first and last:
             d = last[1] - first[0]
             if abs(d) >= 0.05 or kk < k:
@@ -247,7 +248,7 @@ def main():
     with open(P("journal_log.json"), "w") as fh:
         json.dump({"rules_since": "2026-11-16", "rules_updated": "2026-11-17",
                    # Nov 25: the user's exit rule (agreed in chat) — shown on the Daily Log and on every card from this date
-                   "exit_rule": {"since": "2026-11-25", "text": "LADDER + 2.00 — stop $0.15 under entry and a take-profit order at +2.00. "
+                   "exit_rule": {"since": "2026-11-25", "text": "TESTING, NOT PROVEN (Nov 28 independent check: with realistic stop fills the ladder and the +2.00 target did not beat a plain stop; being re-tested on full-day option prices). What held: a $0.15 stop set the moment you enter. Under test: LADDER + 2.00 — stop $0.15 under entry and a take-profit order at +2.00. "
                                  "At +0.30 stop to breakeven, at +0.60 lock +0.30, keep stepping 0.30 behind. At +2.00 take it all; "
                                  "if the trend holds (pullback under $1) re-enter a fresh $0.80–1.20 contract the same way. "
                                  "Trend day = trade with it only, no fades. Flat first 15 min = 2 trades max. Daily stop −$75."},

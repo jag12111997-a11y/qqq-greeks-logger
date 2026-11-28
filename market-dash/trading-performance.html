@@ -669,7 +669,7 @@ function _habits(){
   var money=function(v){return (v<0?'−$':'+$')+Math.abs(Math.round(v)).toLocaleString();},col=function(v){return v>=0?SC.up:SC.dn;};
   var agg=function(L){var p=L.reduce(function(s,x){return s+x.pnl;},0);return {n:L.length,p:p,a:L.length?p/L.length:0};};
   var AVG={winner_030:function(t){return t.win;},winner_8min:function(t){return t.win;},small_loss:function(t){return t.loss;}};
-  var rows={good:[],bad:[],alarm:[]};
+  var rows={good:[],bad:[],alarm:[],unproven:[]};
   Object.keys(HAB.defs).forEach(function(k){var df=HAB.defs[k],day=df.scope==='day',src=day?Dy:T;
     var hit=src.filter(function(x){return x.tags.indexOf(k)>=0;}),A=agg(hit),txt;
     if(AVG[k]){var pool=T.filter(AVG[k]),rest=agg(pool.filter(function(x){return x.tags.indexOf(k)<0;}));
@@ -683,6 +683,7 @@ function _habits(){
   h+='<div style="flex:1;min-width:260px"><div style="color:'+SC.up+';font-size:9px;letter-spacing:.14em;margin-bottom:4px">GOOD HABITS · WHAT THEY MADE</div>'+rows.good.map(li).join('')+'</div>';
   h+='<div style="flex:1;min-width:260px"><div style="color:'+SC.dn+';font-size:9px;letter-spacing:.14em;margin-bottom:4px">BAD HABITS · WHAT THEY COST</div>'+rows.bad.map(li).join('')+
      rows.alarm.map(function(r){return '<div style="margin-top:6px;padding:5px 7px;border:1px solid rgba(240,56,31,0.45);border-radius:6px;font-size:9.5px"><span style="color:'+SC.dn+'">⚠ '+r.lab+'</span> <span style="color:'+SC.mute+'">('+r.n+' trades)</span> '+r.txt+'</div>';}).join('')+'</div>';
+  if(rows.unproven.length) h+='</div><div style="margin-top:8px"><div style="color:'+SC.mute+';font-size:9px;letter-spacing:.14em;margin-bottom:4px">NOT PROVEN EITHER WAY · flipped between Sep–Oct and Nov (Nov 28 check)</div>'+rows.unproven.map(li).join('');
   h+='</div><div style="font-size:8.5px;color:'+SC.mute+';margin-top:5px">A trade can carry several habits. Day habits count the whole day. Updates every time a day is logged · through '+(HAB.updated||'')+'.</div>';
   return _sBox('HABITS · '+f, h);
 }

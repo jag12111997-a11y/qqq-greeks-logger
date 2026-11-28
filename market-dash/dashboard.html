@@ -9033,8 +9033,8 @@
           for (var i = H.length - 1; i >= 0 && !lt; i--) { var x = H[i]; if (!x || x.partial) continue; var raw = get(x, "quant.realized_vs_implied.spread_pct", null), v = Number(raw); if (raw != null && isFinite(v)) lt = { v: v, d: x.entry_date, s: x.session }; }
           if (!lt) return;
           var L = lt.v < -5 ? ["OFF", "#cfd8d0", "#1c201d", "#8E9C8F"] : lt.v < 3.5 ? ["SMALL", "#F4C95D", "#2a2410", "#8a7330"] : lt.v < 15 ? ["GO", "#A8D8B4", "#12241a", "#4f8a62"] : ["CAREFUL", "#FF8A3D", "#3a1d12", "#FF8A3D"];
-          row1.push(chip('◉ <b>' + L[0] + "</b> " + (lt.v > 0 ? "+" : "") + lt.v.toFixed(1), L[1], L[2], L[3],
-            "Light = realized − implied vol spread (" + lt.d + " " + (lt.s || "") + " pull). Under −5 off · −5 to 3.5 small · 3.5 to 15 go · 15+ careful.  " + extra.join(" · "), true));
+          row1.push(chip('◉ <b>' + L[0] + "</b> " + (lt.v > 0 ? "+" : "") + lt.v.toFixed(1) + ' <span style="opacity:.65">· testing</span>', L[1], L[2], L[3],
+            "TESTING, not proven (every green evening so far was in November). Light = realized − implied vol spread (" + lt.d + " " + (lt.s || "") + " pull). Under −5 off · −5 to 3.5 small · 3.5 to 15 go · 15+ careful.  " + extra.join(" · "), true));
         })();
         var g = Q.gex; if (g && g.regime) { var neg = /NEG/i.test(g.regime); row1.push(chip("GEX " + (neg ? "neg · runs" : "pos · stalls"), neg ? RED[0] : GRN[0], neg ? RED[1] : GRN[1], neg ? RED[2] : GRN[2], neg ? "Dealers short gamma: price tends to run." : "Dealers long gamma: price tends to stall.", true)); }
         // Nov 17: our own Fear & Greed — VIX and equity put/call, each ranked against every logged session since Jul 14
